@@ -1,8 +1,8 @@
 package urlcategories
 
 import (
-	"github.com/willguibr/terraform-provider-zpa/gozscaler"
-	"github.com/willguibr/terraform-provider-zpa/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 )
 
 type Service struct {
