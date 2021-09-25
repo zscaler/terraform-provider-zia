@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -262,3 +263,4 @@ func flattenExecMobileAppTokens(mobileAppTokens *adminrolemgmt.AdminUsers) []int
 
 	return execMobileAppTokens
 }
+*/

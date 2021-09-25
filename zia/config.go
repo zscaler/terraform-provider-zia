@@ -3,9 +3,10 @@ package zia
 import (
 	"log"
 
-	"github.com/willguibr/terraform-provider-zia/gozscaler"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminauditlogs"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
 
 func init() {
@@ -16,6 +17,7 @@ func init() {
 type Client struct {
 	adminauditlogs adminauditlogs.Service
 	adminrolemgmt  adminrolemgmt.Service
+	usermanagement usermanagement.Service
 }
 
 type Config struct {
@@ -26,7 +28,7 @@ type Config struct {
 }
 
 func (c *Config) Client() (*Client, error) {
-	config, err := gozscaler.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
+	config, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
 	if err != nil {
 		return nil, err
 	}
@@ -34,8 +36,9 @@ func (c *Config) Client() (*Client, error) {
 	client := &Client{
 		adminauditlogs: *adminauditlogs.New(config),
 		adminrolemgmt:  *adminrolemgmt.New(config),
+		usermanagement: *usermanagement.New(config),
 	}
 
-	log.Println("[INFO] initialized ZPA client")
+	log.Println("[INFO] initialized ZIA client")
 	return client, nil
 }

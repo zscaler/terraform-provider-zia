@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"reflect"
-	"time"
 )
 
 // Request ... // Needs to review this function
@@ -29,27 +28,6 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 
 		req.Header.Set("Content-Type", contentType)
 		req.Header.Add("Cookie", session.JSessionID)
-	} else {
-		// Do we need to refresh the token? Do this first because the token might be expired, but the refresh token is ok.
-		now := time.Now()
-		expiry, err := c.OAUTHToken.Expiry.Int64()
-		if err != nil {
-			return nil, err
-		}
-		if ((c.TokenRefreshed + expiry) - now.Unix()) < 30 {
-			err := c.RefreshToken()
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		req, err = http.NewRequest(method, c.URL+endpoint, bytes.NewReader(data))
-
-		if err != nil {
-			return nil, err
-		}
-		req.Header.Set("Content-Type", contentType)
-		req.Header.Add("Authorization", "Bearer "+c.OAUTHToken.Token)
 	}
 
 	resp, err := c.HTTPClient.Do(req)

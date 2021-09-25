@@ -39,6 +39,7 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			//"zia_admin_role_mgmt": dataSourceAdminRoleMgmt(),
 			//"zia_dlp_dictionary":  dataSourceDLPDictionary(),
+			"zia_user_management": dataSourceUserManagement(),
 		},
 
 		ConfigureFunc: zscalerConfigure,
