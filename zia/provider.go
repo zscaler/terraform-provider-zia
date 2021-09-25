@@ -1,4 +1,4 @@
-package zscaler
+package zia
 
 import (
 	"log"
@@ -27,9 +27,9 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				Sensitive:   true,
 			},
-			"zia_url": {
+			"zia_base_url": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("ZIA_URL", nil),
+				DefaultFunc: schema.EnvDefaultFunc("ZIA_BASE_URL", nil),
 				Optional:    true,
 			},
 		},
@@ -37,8 +37,8 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"zia_admin_role_mgmt": dataSourceAdminRoleMgmt(),
-			"zia_dlp_dictionary":  dataSourceDLPDictionary(),
+			//"zia_admin_role_mgmt": dataSourceAdminRoleMgmt(),
+			//"zia_dlp_dictionary":  dataSourceDLPDictionary(),
 		},
 
 		ConfigureFunc: zscalerConfigure,
@@ -48,10 +48,10 @@ func Provider() *schema.Provider {
 func zscalerConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[INFO] Initializing ZIA client")
 	config := Config{
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-		APIKey:   d.Get("api_key").(string),
-		ZIAUrl:   d.Get("zia_url").(string),
+		Username:   d.Get("username").(string),
+		Password:   d.Get("password").(string),
+		APIKey:     d.Get("api_key").(string),
+		ZIABaseURL: d.Get("zia_base_url").(string),
 	}
 
 	return config.Client()

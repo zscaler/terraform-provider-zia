@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
-	"github.com/willguibr/terraform-provider-zia/zscaler"
+	"github.com/willguibr/terraform-provider-zia/zia"
 )
 
 func main() {
@@ -18,13 +18,13 @@ func main() {
 	if debugMode {
 		err := plugin.Debug(context.Background(), "github.com/willguibr/terraform-provider-zia",
 			&plugin.ServeOpts{
-				ProviderFunc: zscaler.Provider,
+				ProviderFunc: zia.Provider,
 			})
 		if err != nil {
 			log.Println(err.Error())
 		}
 	} else {
 		plugin.Serve(&plugin.ServeOpts{
-			ProviderFunc: zscaler.Provider})
+			ProviderFunc: zia.Provider})
 	}
 }
