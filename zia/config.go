@@ -3,9 +3,9 @@ package zia
 import (
 	"log"
 
-	"github.com/willguibr/terraform-provider-zpa/gozscaler"
-	"github.com/willguibr/terraform-provider-zpa/gozscaler/adminauditlogs"
-	"github.com/willguibr/terraform-provider-zpa/gozscaler/adminrolemgmt"
+	"github.com/willguibr/terraform-provider-zia/gozscaler"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/adminauditlogs"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
 )
 
 func init() {
@@ -26,7 +26,7 @@ type Config struct {
 }
 
 func (c *Config) Client() (*Client, error) {
-	config, err := gozscaler.NewConfig(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
+	config, err := gozscaler.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
 	if err != nil {
 		return nil, err
 	}

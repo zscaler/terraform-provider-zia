@@ -108,7 +108,7 @@ func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
 }
 
 // NewClientZIA NewClient Returns a Client from credentials passed as parameters
-func NewClientZIA(username, password, apiKey, url, customerID string) (*Client, error) {
+func NewClientZIA(username, password, apiKey, url string) (*Client, error) {
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: maxIdleConnections,
