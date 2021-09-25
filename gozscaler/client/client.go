@@ -1,4 +1,4 @@
-package gozscaler
+package client
 
 import (
 	"bytes"
