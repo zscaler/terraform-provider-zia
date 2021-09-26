@@ -42,11 +42,11 @@ func Provider() *schema.Provider {
 			"zia_user_management": dataSourceUserManagement(),
 		},
 
-		ConfigureFunc: zscalerConfigure,
+		ConfigureFunc: ziaConfigure,
 	}
 }
 
-func zscalerConfigure(d *schema.ResourceData) (interface{}, error) {
+func ziaConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[INFO] Initializing ZIA client")
 	config := Config{
 		Username:   d.Get("username").(string),
