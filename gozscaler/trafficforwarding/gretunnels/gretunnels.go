@@ -1,4 +1,4 @@
-package trafficforwarding
+package gretunnels
 
 import (
 	"errors"
@@ -7,7 +7,9 @@ import (
 )
 
 const (
-	greTunnelsEndpoint = "/greTunnels"
+	greTunnelsEndpoint       = "/greTunnels"
+	ipGreTunnelInfoEndpoint  = "/orgProvisioning/ipGreTunnelInfo"
+	greTunnelIPRangeEndpoint = "/greTunnels/availableInternalIpRanges"
 )
 
 type GreTunnels struct {
@@ -41,13 +43,13 @@ type SecondaryDestVip struct {
 type ManagedBy struct {
 	ID         string                 `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
 }
 
 type LastModifiedBy struct {
 	ID         string                 `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // Gets a list of IP addresses with GRE tunnel details.
@@ -60,6 +62,12 @@ type IPGreTunnelInfo struct {
 	TunID             string `json:"tunID,omitempty"`
 	GreRangePrimary   string `json:"greRangePrimary,omitempty"`
 	GreRangeSecondary string `json:"greRangeSecondary,omitempty"`
+}
+
+// Gets the next available GRE tunnel internal IP address ranges.
+type GRETunnelIPRange struct {
+	StartIPAddress string `json:"startIPAddress,omitempty"`
+	EndIPAddress   bool   `json:"endIPAddress,omitempty"`
 }
 
 // Gets all provisioned static IP addresses.
@@ -76,6 +84,7 @@ type StaticIP struct {
 	Comment              string           `json:"comment,omitempty"`
 }
 
+// Gets all provisioned GRE tunnel information.
 func (service *Service) GetGreTunnels(greTunnelID string) (*GreTunnels, error) {
 	var greTunnels GreTunnels
 	err := service.Client.Read(greTunnelsEndpoint+"/"+greTunnelID, &greTunnels)
@@ -87,6 +96,28 @@ func (service *Service) GetGreTunnels(greTunnelID string) (*GreTunnels, error) {
 	return &greTunnels, nil
 }
 
+// Gets a list of IP addresses with GRE tunnel details.
+func (service *Service) GetIPGreTunnelInfo() ([]IPGreTunnelInfo, error) {
+	var ipGreTunnelInfo []IPGreTunnelInfo
+	err := service.Client.Read(ipGreTunnelInfoEndpoint, &ipGreTunnelInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	return ipGreTunnelInfo, nil
+}
+
+func (service *Service) GetGRETunnelIPRange() ([]GRETunnelIPRange, error) {
+	var greTunnelIPRange []GRETunnelIPRange
+	err := service.Client.Read(greTunnelIPRangeEndpoint, &greTunnelIPRange)
+	if err != nil {
+		return nil, err
+	}
+
+	return greTunnelIPRange, nil
+}
+
+// Adds a GRE tunnel configuration.
 func (service *Service) CreateGreTunnels(greTunnelID *GreTunnels) (*GreTunnels, *http.Response, error) {
 	resp, err := service.Client.Create(greTunnelsEndpoint, *greTunnelID)
 	if err != nil {
