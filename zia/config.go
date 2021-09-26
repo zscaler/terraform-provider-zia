@@ -7,7 +7,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/grevirtualiplist"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/publicnodevips"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/publicnodevips"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
 
