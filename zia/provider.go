@@ -42,6 +42,7 @@ func Provider() *schema.Provider {
 			"zia_user_management":             dataSourceUserManagement(),
 			"zia_public_node_virtual_address": dataSourcePublicNodeVirtualAddress(),
 			"zia_gre_virtual_ip_address_list": dataSourceGreVirtualIPAddressesList(),
+			"zia_activation_status":           dataSourceActivationStatus(),
 		},
 
 		ConfigureFunc: ziaConfigure,
