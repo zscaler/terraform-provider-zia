@@ -6,8 +6,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminauditlogs"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/grevirtualiplist"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/grevirtualiplist"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/publicnodevips"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
 
@@ -22,6 +23,7 @@ type Client struct {
 	usermanagement   usermanagement.Service
 	publicnodevips   publicnodevips.Service
 	grevirtualiplist grevirtualiplist.Service
+	vpncredentials   vpncredentials.Service
 }
 
 type Config struct {
@@ -43,6 +45,7 @@ func (c *Config) Client() (*Client, error) {
 		usermanagement:   *usermanagement.New(config),
 		grevirtualiplist: *grevirtualiplist.New(config),
 		publicnodevips:   *publicnodevips.New(config),
+		vpncredentials:   *vpncredentials.New(config),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
