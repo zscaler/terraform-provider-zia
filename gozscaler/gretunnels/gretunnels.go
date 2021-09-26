@@ -1,4 +1,4 @@
-package gretunnels
+package trafficforwarding
 
 import (
 	"errors"
@@ -16,8 +16,8 @@ type GreTunnels struct {
 	PrimaryDestVip       []PrimaryDestVip   `json:"primaryDestVip,omitempty"`
 	SecondaryDestVip     []SecondaryDestVip `json:"secondaryDestVip,omitempty"`
 	InternalIpRange      string             `json:"internalIpRange,omitempty"`
-	ManagedBy            []ManagedBy        `json:"managedBy,omitempty"`
-	LastModifiedBy       []LastModifiedBy   `json:"lastModifiedBy,omitempty"`
+	ManagedBy            []ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       []LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
 	LastModificationTime string             `json:"lastModificationTime,omitempty"`
 	WithinCountry        bool               `json:"withinCountry"`
 	Comment              string             `json:"comment,omitempty"`
@@ -48,6 +48,32 @@ type LastModifiedBy struct {
 	ID         string                 `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
+}
+
+// Gets a list of IP addresses with GRE tunnel details.
+type IPGreTunnelInfo struct {
+	IpAddress         string `json:"ipAddress,omitempty"`
+	GreEnabled        bool   `json:"greEnabled,omitempty"`
+	GreTunnelIP       string `json:"greTunnelIP,omitempty"`
+	PrimaryGW         string `json:"primaryGW,omitempty"`
+	SecondaryGW       string `json:"secondaryGW,omitempty"`
+	TunID             string `json:"tunID,omitempty"`
+	GreRangePrimary   string `json:"greRangePrimary,omitempty"`
+	GreRangeSecondary string `json:"greRangeSecondary,omitempty"`
+}
+
+// Gets all provisioned static IP addresses.
+type StaticIP struct {
+	ID                   string           `json:"id,omitempty"`
+	IpAddress            string           `json:"ipAddress,omitempty"`
+	GeoOverride          bool             `json:"geoOverride"`
+	Latitude             float64          `json:"latitude,omitempty"`
+	Longitude            float64          `json:"longitude,omitempty"`
+	RoutableIP           bool             `json:"routableIP,omitempty"`
+	LastModificationTime string           `json:"lastModificationTime,omitempty"`
+	ManagedBy            []ManagedBy      `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       []LastModifiedBy `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
+	Comment              string           `json:"comment,omitempty"`
 }
 
 func (service *Service) GetGreTunnels(greTunnelID string) (*GreTunnels, error) {

@@ -1,4 +1,4 @@
-package trafficforwarding
+package staticips
 
 import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"

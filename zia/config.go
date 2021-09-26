@@ -6,6 +6,8 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminauditlogs"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/grevirtualiplist"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/publicnodevips"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
 
@@ -15,9 +17,11 @@ func init() {
 }
 
 type Client struct {
-	adminauditlogs adminauditlogs.Service
-	adminrolemgmt  adminrolemgmt.Service
-	usermanagement usermanagement.Service
+	adminauditlogs   adminauditlogs.Service
+	adminrolemgmt    adminrolemgmt.Service
+	usermanagement   usermanagement.Service
+	publicnodevips   publicnodevips.Service
+	grevirtualiplist grevirtualiplist.Service
 }
 
 type Config struct {
@@ -34,9 +38,11 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	client := &Client{
-		adminauditlogs: *adminauditlogs.New(config),
-		adminrolemgmt:  *adminrolemgmt.New(config),
-		usermanagement: *usermanagement.New(config),
+		adminauditlogs:   *adminauditlogs.New(config),
+		adminrolemgmt:    *adminrolemgmt.New(config),
+		usermanagement:   *usermanagement.New(config),
+		grevirtualiplist: *grevirtualiplist.New(config),
+		publicnodevips:   *publicnodevips.New(config),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
