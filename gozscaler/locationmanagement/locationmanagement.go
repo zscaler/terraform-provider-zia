@@ -7,55 +7,63 @@ import (
 )
 
 const (
-	locationsEndpoint     = "/locations"
-	locationsLiteEndpoint = "/locations/lite"
+	locationsEndpoint     = "/api/v1/locations"
+	locationsLiteEndpoint = "/api/v1/locations/lite"
 )
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.
 type Locations struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name,omitempty"`
-	ParentID    int    `json:"parentId,omitempty"`
-	UpBandwidth int    `json:"upBandwidth,omitempty"`
-	DnBandwidth int    `json:"dnBandwidth,omitempty"`
-	Country     string `json:"country"`
-	TZ          string `json:"tz"`
-	IPAddresses string `json:"ipAddresses"`
-	// Country                             map[string]interface{}           `json:"country"`
-	// TZ                                  map[string]interface{}           `json:"tz"`
-	// IPAddresses                         map[string]interface{}           `json:"ipAddresses"`
-	// Ports                               map[int]interface{}              `json:"ports"`
-	Ports int `json:"ports"`
-	// VPNCredentials                      []*vpncredentials.VPNCredentials `json:"vpnCredentials,omitempty"`
-	AuthRequired                        bool   `json:"authRequired"`
-	SSLScanEnabled                      bool   `json:"sslScanEnabled"`
-	ZappSSLScanEnabled                  bool   `json:"zappSSLScanEnabled"`
-	XFFForwardEnabled                   bool   `json:"xffForwardEnabled"`
-	SurrogateIP                         bool   `json:"surrogateIP"`
-	IdleTimeInMinutes                   int    `json:"idleTimeInMinutes"`
-	DisplayTimeUnit                     int    `json:"displayTimeUnit"`
-	SurrogateIPEnforcedForKnownBrowsers bool   `json:"surrogateIPEnforcedForKnownBrowsers"`
-	SurrogateRefreshTimeInMinutes       int    `json:"surrogateRefreshTimeInMinutes"`
-	SurrogateRefreshTimeUnit            string `json:"surrogateRefreshTimeUnit"`
-	OFWEnabled                          bool   `json:"ofwEnabled"`
-	IPSControl                          bool   `json:"ipsControl"`
-	AUPEnabled                          bool   `json:"aupEnabled"`
-	CautionEnabled                      bool   `json:"cautionEnabled"`
-	AUPBlockInternetUntilAccepted       bool   `json:"aupBlockInternetUntilAccepted"`
-	AUPForceSSLInspection               bool   `json:"aupForceSslInspection"`
-	AUPTimeoutInDays                    int    `json:"aupTimeoutInDays"`
-	// ManagedBy                           []ManagedBy                      `json:"managedBy"`
-	Profile     string `json:"profile"`
-	Description string `json:"description"`
+	ID                                  int              `json:"id"`
+	Name                                string           `json:"name,omitempty"`
+	ParentID                            int              `json:"parentId,omitempty"`
+	UpBandwidth                         int              `json:"upBandwidth,omitempty"`
+	DnBandwidth                         int              `json:"dnBandwidth,omitempty"`
+	Country                             string           `json:"country"`
+	TZ                                  string           `json:"tz"`
+	IPAddresses                         []string         `json:"ipAddresses"`
+	Ports                               string           `json:"ports"`
+	VPNCredentials                      []VPNCredentials `json:"vpnCredentials"`
+	AuthRequired                        bool             `json:"authRequired"`
+	SSLScanEnabled                      bool             `json:"sslScanEnabled"`
+	ZappSSLScanEnabled                  bool             `json:"zappSSLScanEnabled"`
+	XFFForwardEnabled                   bool             `json:"xffForwardEnabled"`
+	SurrogateIP                         bool             `json:"surrogateIP"`
+	IdleTimeInMinutes                   int              `json:"idleTimeInMinutes"`
+	DisplayTimeUnit                     string           `json:"displayTimeUnit"`
+	SurrogateIPEnforcedForKnownBrowsers bool             `json:"surrogateIPEnforcedForKnownBrowsers"`
+	SurrogateRefreshTimeInMinutes       int              `json:"surrogateRefreshTimeInMinutes"`
+	SurrogateRefreshTimeUnit            string           `json:"surrogateRefreshTimeUnit"`
+	OFWEnabled                          bool             `json:"ofwEnabled"`
+	IPSControl                          bool             `json:"ipsControl"`
+	AUPEnabled                          bool             `json:"aupEnabled"`
+	CautionEnabled                      bool             `json:"cautionEnabled"`
+	AUPBlockInternetUntilAccepted       bool             `json:"aupBlockInternetUntilAccepted"`
+	AUPForceSSLInspection               bool             `json:"aupForceSslInspection"`
+	AUPTimeoutInDays                    int              `json:"aupTimeoutInDays"`
+	Profile                             string           `json:"profile"`
+	Description                         string           `json:"description"`
 }
 
-/*
-type ManagedBy struct {
-	ID         string                 `json:"id"`
+type Location struct {
+	ID         int                    `json:"id"`
 	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
 }
-*/
+type ManagedBy struct {
+	ID         int                    `json:"id"`
+	Name       string                 `json:"name,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
+}
+
+type VPNCredentials struct {
+	ID           int         `json:"id"`
+	Type         string      `json:"type,omitempty"`
+	FQDN         string      `json:"fqdn"`
+	PreSharedKey string      `json:"preSharedKey,omitempty"`
+	Comments     string      `json:"comments,omitempty"`
+	Location     []Location  `json:"location"`
+	ManagedBy    []ManagedBy `json:"managedBy"`
+}
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
 func (service *Service) GetLocations(locationID int) (*Locations, error) {

@@ -41,70 +41,89 @@ func dataSourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"ip_addresses": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"ports": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// "country": {
-			// 	Type:     schema.TypeMap,
-			// 	Computed: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
-			// "tz": {
-			// 	Type:     schema.TypeMap,
-			// 	Computed: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
-			// "ip_addresses": {
-			// 	Type:     schema.TypeMap,
-			// 	Computed: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
-			// "ports": {
-			// 	Type:     schema.TypeMap,
-			// 	Computed: true,
-			// 	Elem: &schema.Schema{
-			// 		Type: schema.TypeString,
-			// 	},
-			// },
-			// "vpn_credentials": {
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:     schema.TypeInt,
-			// 				Computed: true,
-			// 			},
-			// 			"type": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"fqdn": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"pre_shared_key": {
-			// 				Type:      schema.TypeString,
-			// 				Computed:  true,
-			// 				Sensitive: true,
-			// 			},
-			// 			"comments": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
+			"vpn_credentials": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fqdn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pre_shared_key": {
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
+						},
+						"comments": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"managed_by": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"location": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"auth_required": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -173,29 +192,6 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			// "managed_by": {
-			// 	Type:     schema.TypeList,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:     schema.TypeInt,
-			// 				Computed: true,
-			// 			},
-			// 			"name": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"extensions": {
-			// 				Type:     schema.TypeMap,
-			// 				Computed: true,
-			// 				Elem: &schema.Schema{
-			// 					Type: schema.TypeString,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"profile": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -261,6 +257,11 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("aup_timeout_in_days", resp.AUPTimeoutInDays)
 		_ = d.Set("profile", resp.Profile)
 		_ = d.Set("description", resp.Description)
+
+		if err := d.Set("vpn_credentials", flattenLocationVPNCredentials(resp.VPNCredentials)); err != nil {
+			return err
+		}
+
 	} else {
 		return fmt.Errorf("couldn't find any location with name '%s' or id '%d'", name, id)
 	}
@@ -268,4 +269,45 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	return nil
 }
 
-// Need to flatten managedby, lastModifiedBy and vpnCredentials
+func flattenLocationVPNCredentials(vpnCredential []locationmanagement.VPNCredentials) []interface{} {
+	vpnCredentials := make([]interface{}, len(vpnCredential))
+	for i, vpnCredential := range vpnCredential {
+		vpnCredentials[i] = map[string]interface{}{
+			"id":             vpnCredential.ID,
+			"type":           vpnCredential.Type,
+			"fqdn":           vpnCredential.FQDN,
+			"pre_shared_key": vpnCredential.PreSharedKey,
+			"comments":       vpnCredential.Comments,
+			"managed_by":     flattenLocationManagedBy(vpnCredential),
+			"location":       flattenVPNCredentialLocation(vpnCredential),
+		}
+	}
+
+	return vpnCredentials
+}
+
+func flattenLocationManagedBy(managedBy locationmanagement.VPNCredentials) []interface{} {
+	managed := make([]interface{}, len(managedBy.ManagedBy))
+	for i, val := range managedBy.ManagedBy {
+		managed[i] = map[string]interface{}{
+			"id":         val.ID,
+			"name":       val.Name,
+			"extensions": val.Extensions,
+		}
+	}
+
+	return managed
+}
+
+func flattenVPNCredentialLocation(location locationmanagement.VPNCredentials) []interface{} {
+	locations := make([]interface{}, len(location.Location))
+	for i, val := range location.Location {
+		locations[i] = map[string]interface{}{
+			"id":         val.ID,
+			"name":       val.Name,
+			"extensions": val.Extensions,
+		}
+	}
+
+	return locations
+}

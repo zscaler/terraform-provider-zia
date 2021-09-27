@@ -7,11 +7,11 @@ import (
 )
 
 const (
-	vpnCredentialsEndpoint = "/vpnCredentials"
+	vpnCredentialsEndpoint = "/api/v1/vpnCredentials"
 )
 
 type VPNCredentials struct {
-	ID           string      `json:"id,omitempty"`
+	ID           int         `json:"id"`
 	Type         string      `json:"type,omitempty"`
 	FQDN         []string    `json:"fqdn"`
 	PreSharedKey string      `json:"preSharedKey,omitempty"`
@@ -21,13 +21,13 @@ type VPNCredentials struct {
 }
 
 type Location struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 type ManagedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
