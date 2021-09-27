@@ -1,4 +1,4 @@
-package dlpdictionaries
+package dlpdictionary
 
 import (
 	"errors"

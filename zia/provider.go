@@ -39,10 +39,11 @@ func Provider() *schema.Provider {
 		DataSourcesMap: map[string]*schema.Resource{
 			//"zia_admin_role_mgmt": dataSourceAdminRoleMgmt(),
 			//"zia_dlp_dictionary":  dataSourceDLPDictionary(),
-			"zia_user_management":             dataSourceUserManagement(),
-			"zia_public_node_virtual_address": dataSourcePublicNodeVirtualAddress(),
-			"zia_gre_virtual_ip_address_list": dataSourceGreVirtualIPAddressesList(),
-			"zia_activation_status":           dataSourceActivationStatus(),
+			"zia_user_management":              dataSourceUserManagement(),
+			"zia_public_node_virtual_address":  dataSourcePublicNodeVirtualAddress(),
+			"zia_gre_virtual_ip_address_list":  dataSourceGreVirtualIPAddressesList(),
+			"zia_traffic_forwarding_static_ip": dataSourceTrafficForwardingStaticIP(),
+			"zia_activation_status":            dataSourceActivationStatus(),
 		},
 
 		ConfigureFunc: ziaConfigure,

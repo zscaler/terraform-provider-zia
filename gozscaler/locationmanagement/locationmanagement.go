@@ -3,7 +3,6 @@ package locationmanagement
 import (
 	"log"
 
-	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 )
 
@@ -41,7 +40,7 @@ type Locations struct {
 	AUPBlockInternetUntilAccepted       bool                             `json:"aupBlockInternetUntilAccepted"`
 	AUPForceSSLInspection               bool                             `json:"aupForceSslInspection"`
 	AUPTimeoutInDays                    string                           `json:"aupTimeoutInDays"`
-	ManagedBy                           []*common.ManagedBy              `json:"managedBy"`
+	ManagedBy                           []ManagedBy                      `json:"managedBy"`
 	Profile                             string                           `json:"profile"`
 	Description                         string                           `json:"description"`
 }

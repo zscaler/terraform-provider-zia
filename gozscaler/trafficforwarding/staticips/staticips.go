@@ -16,8 +16,8 @@ type StaticIP struct {
 	ID                   string           `json:"id,omitempty"`
 	IpAddress            string           `json:"ipAddress,omitempty"`
 	GeoOverride          bool             `json:"geoOverride"`
-	Latitude             float64          `json:"latitude,omitempty"`
-	Longitude            float64          `json:"longitude,omitempty"`
+	Latitude             string           `json:"latitude,omitempty"`
+	Longitude            string           `json:"longitude,omitempty"`
 	RoutableIP           bool             `json:"routableIP,omitempty"`
 	LastModificationTime string           `json:"lastModificationTime,omitempty"`
 	ManagedBy            []ManagedBy      `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources

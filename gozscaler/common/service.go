@@ -1,4 +1,4 @@
-package dlpdictionary
+package common
 
 import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
