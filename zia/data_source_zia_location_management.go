@@ -1,7 +1,7 @@
 package zia
 
-/*
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,82 +13,98 @@ func dataSourceLocationManagement() *schema.Resource {
 		Read: dataSourceLocationManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"parent_id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"up_bandwidth": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"dn_bandwidth": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"country": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"tz": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"ip_addresses": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"ports": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
-			"vpn_credentials": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"fqdn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"pre_shared_key": {
-							Type:      schema.TypeString,
-							Computed:  true,
-							Sensitive: true,
-						},
-						"comments": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			// "country": {
+			// 	Type:     schema.TypeMap,
+			// 	Computed: true,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// },
+			// "tz": {
+			// 	Type:     schema.TypeMap,
+			// 	Computed: true,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// },
+			// "ip_addresses": {
+			// 	Type:     schema.TypeMap,
+			// 	Computed: true,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// },
+			// "ports": {
+			// 	Type:     schema.TypeMap,
+			// 	Computed: true,
+			// 	Elem: &schema.Schema{
+			// 		Type: schema.TypeString,
+			// 	},
+			// },
+			// "vpn_credentials": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:     schema.TypeInt,
+			// 				Computed: true,
+			// 			},
+			// 			"type": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"fqdn": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"pre_shared_key": {
+			// 				Type:      schema.TypeString,
+			// 				Computed:  true,
+			// 				Sensitive: true,
+			// 			},
+			// 			"comments": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"auth_required": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -110,7 +126,7 @@ func dataSourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"idle_time_in_minutes": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"display_time_unit": {
@@ -122,7 +138,7 @@ func dataSourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"surrogate_refresh_time_in_minutes": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"surrogate_refresh_time_unit": {
@@ -154,32 +170,32 @@ func dataSourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"aup_timeout_in_days": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"managed_by": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
+			// "managed_by": {
+			// 	Type:     schema.TypeList,
+			// 	Computed: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:     schema.TypeInt,
+			// 				Computed: true,
+			// 			},
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 			},
+			// 			"extensions": {
+			// 				Type:     schema.TypeMap,
+			// 				Computed: true,
+			// 				Elem: &schema.Schema{
+			// 					Type: schema.TypeString,
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"profile": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -196,27 +212,28 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	zClient := m.(*Client)
 
 	var resp *locationmanagement.Locations
-	id, ok := d.Get("id").(string)
-	if ok && id != "" {
-		log.Printf("[INFO] Getting location information %s\n", id)
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if idSet && idIsInt && id > 0 {
+		log.Printf("[INFO] Getting data for location id: %d\n", id)
 		res, err := zClient.locationmanagement.GetLocations(id)
 		if err != nil {
 			return err
 		}
 		resp = res
 	}
-	/*name, ok := d.Get("name").(string)
-	if id == "" && ok && name != "" {
-		log.Printf("[INFO] Getting data for server group name %s\n", name)
-		res, err := zClient.locationmanagement.GetByName(name)
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting data for location name: %s\n", name)
+		res, err := zClient.locationmanagement.GetLocationByName(name)
 		if err != nil {
 			return err
 		}
 		resp = res
 	}
-	if resp != nil {
 
-		d.SetId(resp.ID)
+	if resp != nil {
+		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("parent_id", resp.ParentID)
 		_ = d.Set("up_bandwidth", resp.UpBandwidth)
@@ -247,5 +264,5 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	}
 	return nil
 }
-*/
+
 // Need to flatten managedby, lastModifiedBy and vpnCredentials
