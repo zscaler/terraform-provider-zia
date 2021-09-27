@@ -18,7 +18,7 @@ func dataSourceUserManagement() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"email": {
 				Type:     schema.TypeString,

@@ -6,10 +6,11 @@ import (
 
 const (
 	adminUsersEndpoint = "/adminUsers"
+	adminRolesEndpoint = "/adminRoles/lite"
 )
 
 type AdminUsers struct {
-	ID                          string                `json:"id,omitempty"`
+	ID                          int                   `json:"id,omitempty"`
 	LoginName                   string                `json:"loginName,omitempty"`
 	UserName                    string                `json:"userName,omitempty"`
 	Email                       string                `json:"email,omitempty"`
@@ -36,19 +37,19 @@ type AdminScope struct {
 }
 
 type ScopeEntities struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 type ScopeGroupMemberEntities struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 type Role struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }

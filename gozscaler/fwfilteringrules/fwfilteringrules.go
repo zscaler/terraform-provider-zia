@@ -1,10 +1,5 @@
 package fwfilteringrules
 
-import (
-	"fmt"
-	"net/http"
-)
-
 const (
 	firewallPoliciesEndpoint = "/firewallFilteringRules"
 )
@@ -124,6 +119,7 @@ type Labels struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
+/*
 func (service *Service) Get(ruleId string) (*FirewallFilteringPolicies, *http.Response, error) {
 	v := new(FirewallFilteringPolicies)
 	relativeURL := fmt.Sprintf("%s/%s", firewallPoliciesEndpoint, ruleId)
@@ -160,3 +156,4 @@ func (service *Service) Delete(ruleId string) (*http.Response, error) {
 	}
 	return resp, err
 }
+*/

@@ -12,24 +12,24 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("ZIA_USERNAME", nil),
+				DefaultFunc: envDefaultFunc("ZIA_USERNAME"),
 				Required:    true,
 			},
 			"password": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("ZIA_PASSWORD", nil),
+				DefaultFunc: envDefaultFunc("ZIA_PASSWORD"),
 				Required:    true,
 				Sensitive:   true,
 			},
 			"api_key": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("ZIA_API_KEY", nil),
+				DefaultFunc: envDefaultFunc("ZIA_API_KEY"),
 				Required:    true,
 				Sensitive:   true,
 			},
 			"zia_base_url": {
 				Type:        schema.TypeString,
-				DefaultFunc: schema.EnvDefaultFunc("ZIA_BASE_URL", nil),
+				DefaultFunc: envDefaultFunc("ZIA_BASE_URL"),
 				Required:    true,
 			},
 		},
@@ -43,8 +43,8 @@ func Provider() *schema.Provider {
 			"zia_public_node_virtual_address":  dataSourcePublicNodeVirtualAddress(),
 			"zia_gre_virtual_ip_address_list":  dataSourceGreVirtualIPAddressesList(),
 			"zia_traffic_forwarding_static_ip": dataSourceTrafficForwardingStaticIP(),
-			"zia_location_management":          dataSourceLocationManagement(),
-			"zia_activation_status":            dataSourceActivationStatus(),
+			//"zia_location_management":          dataSourceLocationManagement(),
+			"zia_activation_status": dataSourceActivationStatus(),
 		},
 
 		ConfigureFunc: ziaConfigure,

@@ -9,7 +9,15 @@ terraform {
 
 provider "zia" {}
 
+data "zia_user_management" "adam" {
+ name = "Adam Ashcroft"
+}
 
+output "zia_user_management_adam_name" {
+  value = data.zia_user_management.adam
+}
+
+/*
 data "zia_user_management" "albert" {
  id = "29309058"
 }
@@ -18,6 +26,7 @@ data "zia_user_management" "albert" {
 data "zia_user_management" "adam" {
  id = "29309057"
 }
+
 
 output "zia_user_management_adam_name" {
   value = data.zia_user_management.adam.name
@@ -31,7 +40,6 @@ output "zia_user_management_adam_department" {
   value = data.zia_user_management.adam.department
 }
 
-
 output "zia_user_management_albert_name" {
   value = data.zia_user_management.albert.name
 }
@@ -43,3 +51,4 @@ output "zia_user_management_albert_groups" {
 output "zia_user_management_albert_department" {
   value = data.zia_user_management.albert.department
 }
+*/

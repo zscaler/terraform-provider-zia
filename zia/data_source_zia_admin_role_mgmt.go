@@ -15,7 +15,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 		Read: dataSourceAdminRoleMgmtRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"login_name": {
@@ -37,6 +37,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			"is_non_editable": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
@@ -45,6 +46,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			"is_auditor": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"password": {
 				Type:      schema.TypeString,
@@ -58,22 +60,27 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			"is_security_report_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"is_service_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"is_product_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"is_password_expired": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"is_exec_mobile_app_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Default:  false,
 			},
 			"role": {
 				Type:     schema.TypeList,
@@ -81,7 +88,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
@@ -109,7 +116,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"name": {
@@ -132,7 +139,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"name": {
@@ -166,7 +173,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 							Computed: true,
 						},
 						"org_id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
@@ -182,11 +189,11 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 							Computed: true,
 						},
 						"token_expiry": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"create_time": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"device_id": {

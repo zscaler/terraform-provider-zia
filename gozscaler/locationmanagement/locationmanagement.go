@@ -1,8 +1,6 @@
 package locationmanagement
 
 import (
-	"log"
-
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 )
 
@@ -13,25 +11,25 @@ const (
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.
 type Locations struct {
-	ID                                  string                           `json:"id,omitempty"`
+	ID                                  int                              `json:"id,omitempty"`
 	Name                                string                           `json:"name,omitempty"`
-	ParentID                            string                           `json:"parentId,omitempty"`
-	UpBandwidth                         string                           `json:"upBandwidth,omitempty"`
-	DnBandwidth                         string                           `json:"dnBandwidth,omitempty"`
+	ParentID                            int                              `json:"parentId,omitempty"`
+	UpBandwidth                         int                              `json:"upBandwidth,omitempty"`
+	DnBandwidth                         int                              `json:"dnBandwidth,omitempty"`
 	Country                             map[string]interface{}           `json:"country"`
 	TZ                                  map[string]interface{}           `json:"tz"`
 	IPAddresses                         map[string]interface{}           `json:"ipAddresses"`
-	Ports                               map[string]interface{}           `json:"ports"`
+	Ports                               map[int]interface{}              `json:"ports"`
 	VPNCredentials                      []*vpncredentials.VPNCredentials `json:"vpnCredentials,omitempty"`
 	AuthRequired                        bool                             `json:"authRequired"`
 	SSLScanEnabled                      bool                             `json:"sslScanEnabled"`
 	ZappSSLScanEnabled                  bool                             `json:"zappSSLScanEnabled"`
 	XFFForwardEnabled                   bool                             `json:"xffForwardEnabled"`
 	SurrogateIP                         bool                             `json:"surrogateIP"`
-	IdleTimeInMinutes                   string                           `json:"idleTimeInMinutes"`
-	DisplayTimeUnit                     string                           `json:"displayTimeUnit"`
+	IdleTimeInMinutes                   int                              `json:"idleTimeInMinutes"`
+	DisplayTimeUnit                     int                              `json:"displayTimeUnit"`
 	SurrogateIPEnforcedForKnownBrowsers bool                             `json:"surrogateIPEnforcedForKnownBrowsers"`
-	SurrogateRefreshTimeInMinutes       string                           `json:"surrogateRefreshTimeInMinutes"`
+	SurrogateRefreshTimeInMinutes       int                              `json:"surrogateRefreshTimeInMinutes"`
 	SurrogateRefreshTimeUnit            string                           `json:"surrogateRefreshTimeUnit"`
 	OFWEnabled                          bool                             `json:"ofwEnabled"`
 	IPSControl                          bool                             `json:"ipsControl"`
@@ -59,7 +57,6 @@ func (service *Service) GetLocations(locationID string) (*Locations, error) {
 		return nil, err
 	}
 
-	log.Printf("Returning Location from Get: %s", location.ID)
 	return &location, nil
 }
 
@@ -71,7 +68,6 @@ func (service *Service) GetLocationLite(locationLite string) (*Locations, error)
 		return nil, err
 	}
 
-	log.Printf("Returning Location from Get: %s", lite.ID)
 	return &lite, nil
 }
 
@@ -83,6 +79,5 @@ func (service *Service) GetSublocations(sublocations string) (*Locations, error)
 		return nil, err
 	}
 
-	log.Printf("Returning Sublocations from Get: %s", subLocations.ID)
 	return &subLocations, nil
 }

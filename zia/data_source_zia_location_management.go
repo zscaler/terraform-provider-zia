@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"log"
 
@@ -212,7 +213,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 			return err
 		}
 		resp = res
-	}*/
+	}
 	if resp != nil {
 
 		d.SetId(resp.ID)
@@ -246,5 +247,5 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	}
 	return nil
 }
-
+*/
 // Need to flatten managedby, lastModifiedBy and vpnCredentials
