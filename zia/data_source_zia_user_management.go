@@ -13,7 +13,7 @@ func dataSourceUserManagement() *schema.Resource {
 		Read: dataSourceUserManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"name": {
@@ -30,7 +30,7 @@ func dataSourceUserManagement() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
@@ -38,7 +38,7 @@ func dataSourceUserManagement() *schema.Resource {
 							Computed: true,
 						},
 						"idp_id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"comments": {
@@ -49,12 +49,12 @@ func dataSourceUserManagement() *schema.Resource {
 				},
 			},
 			"department": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
@@ -62,7 +62,7 @@ func dataSourceUserManagement() *schema.Resource {
 							Computed: true,
 						},
 						"idp_id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"comments": {
@@ -108,11 +108,11 @@ func dataSourceUserManagement() *schema.Resource {
 func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Users
-	id, ok := d.Get("id").(string)
-	if ok && id != "" {
-		log.Printf("[INFO] Getting data for admin role management  %s\n", id)
-		res, _, err := zClient.usermanagement.GetUsers(id)
+	var resp *usermanagement.User
+	id, ok := d.Get("id").(int)
+	if ok {
+		log.Printf("[INFO] Getting data for admin role management user id: %d\n", id)
+		res, err := zClient.usermanagement.GetUser(id)
 		if err != nil {
 			return err
 		}
@@ -120,13 +120,13 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if resp != nil {
-		d.SetId(resp.ID)
+		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("email", resp.Email)
 		_ = d.Set("comments", resp.Comments)
 		_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 		_ = d.Set("password", resp.Password)
-		_ = d.Set("adminUser", resp.AdminUser)
+		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
 
 		if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
@@ -137,13 +137,13 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("couldn't find any user with name '%s' or id '%s'", id)
+		return fmt.Errorf("couldn't find any user with  id '%d'", id)
 	}
 
 	return nil
 }
 
-func flattenGroups(groups []usermanagement.Groups) []interface{} {
+func flattenGroups(groups []usermanagement.Group) []interface{} {
 	group := make([]interface{}, len(groups))
 	for i, val := range groups {
 		group[i] = map[string]interface{}{
@@ -157,17 +157,14 @@ func flattenGroups(groups []usermanagement.Groups) []interface{} {
 	return group
 }
 
-func flattenDepartment(department []usermanagement.Department) []interface{} {
-	departments := make([]interface{}, len(department))
-	for i, val := range department {
-		departments[i] = map[string]interface{}{
-			"id":       val.ID,
-			"name":     val.Name,
-			"idp_id":   val.IdpID,
-			"comments": val.Comments,
-			"deleted":  val.Deleted,
-		}
+func flattenDepartment(department usermanagement.Department) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":       department.ID,
+			"name":     department.Name,
+			"idp_id":   department.IdpID,
+			"comments": department.Comments,
+			"deleted":  department.Deleted,
+		},
 	}
-
-	return departments
 }

@@ -13,24 +13,24 @@ func Provider() *schema.Provider {
 			"username": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.EnvDefaultFunc("ZIA_USERNAME", nil),
-				Optional:    true,
+				Required:    true,
 			},
 			"password": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.EnvDefaultFunc("ZIA_PASSWORD", nil),
-				Optional:    true,
+				Required:    true,
 				Sensitive:   true,
 			},
 			"api_key": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.EnvDefaultFunc("ZIA_API_KEY", nil),
-				Optional:    true,
+				Required:    true,
 				Sensitive:   true,
 			},
 			"zia_base_url": {
 				Type:        schema.TypeString,
 				DefaultFunc: schema.EnvDefaultFunc("ZIA_BASE_URL", nil),
-				Optional:    true,
+				Required:    true,
 			},
 		},
 

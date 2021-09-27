@@ -2,84 +2,71 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/cookiejar"
+	"net/url"
+	"os"
 	"regexp"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 )
 
 const (
-	maxIdleConnections    int    = 10
-	requestTimeout        int    = 60
-	jSessionIDTimeout            = 30 // minutes
-	jSessionTimeoutOffset        = 5 * time.Minute
-	configPath            string = ".zscaler/credentials.json"
-	contentTypeJSON              = "application/json"
-
+	maxIdleConnections    int = 40
+	requestTimeout        int = 60
+	jSessionIDTimeout         = 30 // minutes
+	jSessionTimeoutOffset     = 5 * time.Minute
+	contentTypeJSON           = "application/json"
+	cookieName                = "JSESSIONID"
+	MaxNumOfRetries           = 100
+	RetryWaitMaxSeconds       = 20
+	RetryWaitMinSeconds       = 5
 	// API types
-	ziaAPI        = "ZIA"
 	ziaAPIVersion = "/api/v1"
 	ziaAPIAuthURL = "/authenticatedSession"
+	loggerPrefix  = "zia-logger: "
 )
-
-// Needs to refactor this as it is not required.
-var (
-	api2ContentType = map[string]string{
-		ziaAPI: contentTypeJSON,
-	}
-	mutex = &sync.Mutex{}
-)
-
-// Config contains all the configuration data for the API client
-type Config struct {
-	APIType             string `json:"api_type"` //This field needs to be removed
-	UserName            string `json:"username"`
-	Password            string `json:"password"`
-	APIKey              string `json:"api_key"`
-	ZIABaseURL          string `json:"zia_url"`
-	ZIASessionIDTimeout string `json:"zia_session_id_timeout"`
-}
 
 // Client ...
 type Client struct {
-	APIType          string //This field needs to be removed
-	UserName         string
-	Password         string
-	APIKey           string
-	Session          *Session
-	SessionRefreshed time.Time     // Also indicates last usage
-	SessionTimeout   time.Duration // in minutes
+	userName         string
+	password         string
+	apiKey           string
+	session          *Session
+	sessionRefreshed time.Time     // Also indicates last usage
+	sessionTimeout   time.Duration // in minutes
 	URL              string
 	HTTPClient       *http.Client
+	Logger           *log.Logger
+	sync.Mutex
 }
 
 // Session ...
 type Session struct {
-	AuthType           string      `json:"authType"`
-	ObfuscateAPIKey    bool        `json:"obfuscateApiKey"`
-	PasswordExpiryTime json.Number `json:"passwordExpiryTime"`
-	PasswordExpiryDays json.Number `json:"passwordExpiryDays"`
-	Source             string      `json:"source"`
-	JSessionID         string      `json:"jSessionID,omitempty"`
-}
-
-// ZIACredentials ...
-type ZIACredentials struct {
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	APIKey    string `json:"apiKey"`
-	TimeStamp string `json:"timestamp"`
+	AuthType           string `json:"authType"`
+	ObfuscateAPIKey    bool   `json:"obfuscateApiKey"`
+	PasswordExpiryTime int    `json:"passwordExpiryTime"`
+	PasswordExpiryDays int    `json:"passwordExpiryDays"`
+	Source             string `json:"source"`
+	JSessionID         string `json:"jSessionID,omitempty"`
 }
 
 // Credentials ...
 type Credentials struct {
-	Type           string         `json:"type"`
-	ZIACredentials ZIACredentials `json:"zia_credentials"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	APIKey    string `json:"apiKey"`
+	TimeStamp string `json:"timestamp"`
 }
 
 func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
@@ -90,17 +77,17 @@ func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
 
 	seed := apiKey
 
-	n := timeStamp[len(timeStamp)-6:]
-	nInt, _ := strconv.Atoi(n)
-	r := fmt.Sprintf("%06d", nInt>>1)
+	high := timeStamp[len(timeStamp)-6:]
+	highInt, _ := strconv.Atoi(high)
+	low := fmt.Sprintf("%06d", highInt>>1)
 	key := ""
 
-	for i := 0; i < len(n); i++ {
-		index, _ := strconv.Atoi((string)(n[i]))
+	for i := 0; i < len(high); i++ {
+		index, _ := strconv.Atoi((string)(high[i]))
 		key += (string)(seed[index])
 	}
-	for i := 0; i < len(r); i++ {
-		index, _ := strconv.Atoi((string)(r[i]))
+	for i := 0; i < len(low); i++ {
+		index, _ := strconv.Atoi((string)(low[i]))
 		key += (string)(seed[index+2])
 	}
 
@@ -109,43 +96,21 @@ func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
 
 // NewClientZIA NewClient Returns a Client from credentials passed as parameters
 func NewClientZIA(username, password, apiKey, url string) (*Client, error) {
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConnsPerHost: maxIdleConnections,
-		},
-		Timeout: time.Duration(requestTimeout) * time.Second,
+	httpClient := getHTTPClient()
+	var logger *log.Logger
+	if loggerEnv := os.Getenv("ZSCALER_SDK_LOG"); loggerEnv == "true" {
+		logger = getDefaultLogger()
 	}
-
-	timeStamp := fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
-	newKey, err := obfuscateAPIKey(apiKey, timeStamp)
-	if err != nil {
-		return nil, err
+	cli := Client{
+		userName:   username,
+		password:   password,
+		apiKey:     apiKey,
+		HTTPClient: httpClient,
+		URL:        url,
+		Logger:     logger,
 	}
-	credentialData := Credentials{
-		Type: ziaAPI,
-		ZIACredentials: ZIACredentials{
-			Username:  username,
-			Password:  password,
-			APIKey:    newKey,
-			TimeStamp: timeStamp,
-		},
-	}
-
-	session, err := MakeAuthRequestZIA(&credentialData, url, httpClient)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Client{
-		APIType:          ziaAPI,
-		UserName:         username,
-		Password:         password,
-		APIKey:           apiKey,
-		Session:          session,
-		SessionRefreshed: time.Now(),
-		HTTPClient:       httpClient,
-		URL:              url,
-	}, nil
+	cli.refreshSession()
+	return &cli, nil
 }
 
 // MakeAuthRequestZIA ...
@@ -154,11 +119,10 @@ func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Clien
 		return nil, fmt.Errorf("empty credentials")
 	}
 
-	data, err := json.Marshal(credentials.ZIACredentials)
+	data, err := json.Marshal(credentials)
 	if err != nil {
 		return nil, err
 	}
-
 	resp, err := client.Post(url+ziaAPIVersion+ziaAPIAuthURL, contentTypeJSON, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -167,98 +131,151 @@ func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Clien
 		return nil, fmt.Errorf("un-successful request with status code: %v", resp.Status)
 	}
 
-	var cookieList []string
-	var ok bool
-	var sessionIdStr string
-	if cookieList, ok = resp.Header["Set-Cookie"]; !ok {
-		return nil, fmt.Errorf("no Set-Cookie header receieved")
-	}
-	if len(cookieList) == 0 {
-		return nil, fmt.Errorf("empty JSESSIONID receieved")
-	}
-
-	var session Session
-	sessionIdStr = cookieList[0]
-	regex := regexp.MustCompile("JSESSIONID=(.*?);")
-	// look for the first match we find
-	result := regex.FindStringSubmatch(sessionIdStr)
-
-	if len(result) < 2 {
-		return nil, fmt.Errorf("couldn't find JSESSIONID in header value")
-	}
-
-	// We get the whole string match as session ID
-	session.JSessionID = result[0][:len(result[0])-1]
-
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
-
 	if err != nil {
 		return nil, err
 	}
-
+	var session Session
 	err = json.Unmarshal(body, &session)
+	if err != nil {
+		return nil, err
+	}
+	// We get the whole string match as session ID
+	session.JSessionID, err = extractJSessionIDFromHeaders(resp.Header)
 	if err != nil {
 		return nil, err
 	}
 	return &session, nil
 }
 
-// GetContentType ..
-func (c Client) GetContentType() string {
-	var contentType string
-	var ok bool
-	if contentType, ok = api2ContentType[c.APIType]; ok {
-		return contentType
+func extractJSessionIDFromHeaders(header http.Header) (string, error) {
+	sessionIdStr := header.Get("Set-Cookie")
+	if sessionIdStr == "" {
+		return "", fmt.Errorf("no Set-Cookie header received")
 	}
-	return ""
+	regex := regexp.MustCompile("JSESSIONID=(.*?);")
+	// look for the first match we find
+	result := regex.FindStringSubmatch(sessionIdStr)
+	if len(result) < 2 {
+		return "", fmt.Errorf("couldn't find JSESSIONID in header value")
+	}
+	return result[1], nil
 }
 
-// RefreshSession ..
-func (c *Client) RefreshSession() error {
-	if c.APIType != ziaAPI {
-		return fmt.Errorf("client's API type doesn't include refreshing sessions")
-	}
+func getCurrentTimestampMilisecond() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
+}
 
-	timeStamp := fmt.Sprintf("%d", time.Now().UnixNano()/int64(time.Millisecond))
-	newKey, err := obfuscateAPIKey(c.APIKey, timeStamp)
+// RefreshSession .. the caller should require lock
+func (c *Client) refreshSession() error {
+	timeStamp := getCurrentTimestampMilisecond()
+	obfuscatedKey, err := obfuscateAPIKey(c.apiKey, timeStamp)
 	if err != nil {
 		return err
 	}
 	credentialData := Credentials{
-		Type: ziaAPI,
-		ZIACredentials: ZIACredentials{
-			Username:  c.UserName,
-			Password:  c.Password,
-			APIKey:    newKey,
-			TimeStamp: timeStamp,
-		},
+		Username:  c.userName,
+		Password:  c.password,
+		APIKey:    obfuscatedKey,
+		TimeStamp: timeStamp,
 	}
-
 	session, err := MakeAuthRequestZIA(&credentialData, c.URL, c.HTTPClient)
 	if err != nil {
 		return err
 	}
-
-	c.Session = session
-	c.SessionRefreshed = time.Now()
+	c.session = session
+	c.sessionRefreshed = time.Now()
 	return nil
 }
 
-// GetSession return new session if its over the timeout limit.
-func (c *Client) GetSession() *Session {
-	// One call to this function is allowed at a time.
-	mutex.Lock()
-	if c.Session == nil {
-		c.RefreshSession()
-		return c.Session
+// checkSession synce new session if its over the timeout limit.
+func (c *Client) checkSession() error {
+	// One call to this function is allowed at a time caller must call lock.
+	if c.session == nil {
+		err := c.refreshSession()
+		if err != nil {
+			log.Printf("[ERROR] failed to get session id: %v\n", err)
+			return err
+		}
+	} else {
+		now := time.Now()
+		// Refresh if session has expire time (diff than -1)  & c.sessionTimeout less than jSessionTimeoutOffset time remaining. You never refresh on exact timeout.
+		if c.session.PasswordExpiryTime > 0 && c.sessionRefreshed.Add(c.sessionTimeout-jSessionTimeoutOffset).Before(now) {
+			err := c.refreshSession()
+			if err != nil {
+				log.Printf("[ERROR] failed to refresh session id: %v\n", err)
+				return err
+			}
+		}
 	}
+	url, err := url.Parse(c.URL)
+	if err != nil {
+		log.Printf("[ERROR] failed to parse url %s: %v\n", c.URL, err)
+		return err
+	}
+	if c.HTTPClient.Jar == nil {
+		c.HTTPClient.Jar, err = cookiejar.New(nil)
+		if err != nil {
+			log.Printf("[ERROR] failed to create new http cookie jar %v\n", err)
+			return err
+		}
+	}
+	c.HTTPClient.Jar.SetCookies(url, []*http.Cookie{
+		{
+			Name:  cookieName,
+			Value: c.session.JSessionID,
+		},
+	})
+	return nil
+}
 
-	now := time.Now()
-	// Refresh if less than jSessionTimeoutOffset time remaining. You never refresh on exact timeout.
-	if c.SessionRefreshed.Add(c.SessionTimeout - jSessionTimeoutOffset).Before(now) {
-		c.RefreshSession()
+func (c *Client) GetContentType() string {
+	return contentTypeJSON
+}
+
+func getHTTPClient() *http.Client {
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.RetryWaitMin = time.Second * time.Duration(RetryWaitMinSeconds)
+	retryableClient.RetryWaitMax = time.Second * time.Duration(RetryWaitMaxSeconds)
+	retryableClient.RetryMax = MaxNumOfRetries
+	retryableClient.CheckRetry = checkRetry
+	retryableClient.HTTPClient.Timeout = time.Duration(requestTimeout) * time.Second
+	retryableClient.HTTPClient.Transport = &http.Transport{
+		MaxIdleConnsPerHost: maxIdleConnections,
 	}
-	mutex.Unlock()
-	return c.Session
+	retryableClient.HTTPClient.Transport = logging.NewTransport("gozscaler-zia", retryableClient.HTTPClient.Transport)
+
+	return retryableClient.StandardClient()
+}
+
+func containsInt(codes []int, code int) bool {
+	for _, a := range codes {
+		if a == code {
+			return true
+		}
+	}
+	return false
+}
+
+// getRetryOnStatusCodes return a list of http status codes we want to apply retry on.
+// return empty slice to enable retry on all connection & server errors.
+// or return []int{429}  to retry on only TooManyRequests error
+func getRetryOnStatusCodes() []int {
+	return []int{http.StatusTooManyRequests}
+}
+
+// Used to make http client retry on provided list of response status codes
+func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	// do not retry on context.Canceled or context.DeadlineExceeded
+	if ctx.Err() != nil {
+		return false, ctx.Err()
+	}
+	if resp != nil && containsInt(getRetryOnStatusCodes(), resp.StatusCode) {
+		return true, nil
+	}
+	return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+}
+func getDefaultLogger() *log.Logger {
+	return log.New(os.Stdout, loggerPrefix, log.LstdFlags|log.Lshortfile)
 }
