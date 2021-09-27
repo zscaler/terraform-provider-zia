@@ -261,7 +261,10 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("aup_timeout_in_days", resp.AUPTimeoutInDays)
 		_ = d.Set("profile", resp.Profile)
 		_ = d.Set("description", resp.Description)
+	} else {
+		return fmt.Errorf("couldn't find any location with name '%s' or id '%d'", name, id)
 	}
+
 	return nil
 }
 

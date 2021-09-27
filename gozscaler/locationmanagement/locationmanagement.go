@@ -3,7 +3,6 @@ package locationmanagement
 import (
 	"fmt"
 	"log"
-	"net/url"
 	"strings"
 )
 
@@ -72,7 +71,8 @@ func (service *Service) GetLocations(locationID int) (*Locations, error) {
 
 func (service *Service) GetLocationByName(locationName string) (*Locations, error) {
 	var locations []Locations
-	err := service.Client.Read(fmt.Sprintf("%s?name=%s", locationsEndpoint, url.QueryEscape(locationName)), &locations)
+	// We are assuming this location name will be in the firsy 1000 obejcts
+	err := service.Client.Read(fmt.Sprintf("%s?page=1&pageSize=1000", locationsEndpoint), &locations)
 	if err != nil {
 		return nil, err
 	}

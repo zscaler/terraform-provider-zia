@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -33,6 +34,9 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("api responded with code: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
