@@ -8,6 +8,6 @@ type Service struct {
 	Client *client.Client
 }
 
-func New(c *client.Config) *Service {
-	return &Service{Client: client.NewClientZIA(c)}
+func New(c *client.Client) *Service {
+	return &Service{Client: c}
 }

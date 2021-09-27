@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,23 +12,24 @@ import (
 
 // Request ... // Needs to review this function
 func (c *Client) Request(endpoint, method string, data []byte, contentType string) ([]byte, error) {
-	if len(contentType) == 0 {
-		return nil, fmt.Errorf("content type not defined")
+	c.Lock()
+	defer c.Unlock()
+	if contentType == "" {
+		contentType = contentTypeJSON
 	}
 
 	var req *http.Request
 	var err error
-	if c.APIType == ziaAPI {
-		session := c.GetSession()
-		req, err = http.NewRequest(method, c.URL+endpoint, bytes.NewReader(data))
-		if err != nil {
-			return nil, err
-		}
-
-		req.Header.Set("Content-Type", contentType)
-		req.Header.Add("Cookie", session.JSessionID)
+	err = c.checkSession()
+	if err != nil {
+		return nil, err
+	}
+	req, err = http.NewRequest(method, c.URL+endpoint, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
 	}
 
+	req.Header.Set("Content-Type", contentType)
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -43,8 +43,6 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	if resp.StatusCode != 200 {
 		return nil, errors.New(string(body))
 	}
-
-	log.Printf("Response: %s", body)
 	return body, nil
 }
 
@@ -92,6 +90,9 @@ func (c *Client) Create(endpoint string, o interface{}) (interface{}, error) {
 
 	responseObject := reflect.New(t).Interface()
 	err = json.Unmarshal(resp, &responseObject)
+	if err != nil {
+		return nil, err
+	}
 	id := reflect.Indirect(reflect.ValueOf(responseObject)).FieldByName("ID")
 
 	log.Printf("Created Object with ID " + id.String())
@@ -130,7 +131,6 @@ func (c *Client) Update(endpoint string, o interface{}) (interface{}, error) {
 	if t.Kind() != reflect.Struct {
 		return nil, errors.New("Tried to update with a " + t.Kind().String() + " not a Struct")
 	}
-
 	requestObject := reflect.Indirect(reflect.New(t))
 	for i := 0; i < t.NumField(); i++ {
 
@@ -168,8 +168,7 @@ func (c *Client) Update(endpoint string, o interface{}) (interface{}, error) {
 
 	responseObject := reflect.New(t).Interface()
 	err = json.Unmarshal(resp, &responseObject)
-
-	return responseObject, nil
+	return responseObject, err
 }
 
 // Delete ...

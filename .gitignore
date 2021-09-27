@@ -1,0 +1,7 @@
+vendor/
+examples/script.sh
+*.tfstate
+*.tfstate.backup
+.terraform
+*.log
+*.lock*

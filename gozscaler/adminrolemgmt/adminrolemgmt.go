@@ -2,7 +2,6 @@ package adminrolemgmt
 
 import (
 	"fmt"
-	"net/http"
 )
 
 const (
@@ -66,39 +65,39 @@ type ExecMobileAppTokens struct {
 	DeviceName  string `json:"deviceName,omitempty"`
 }
 
-func (service *Service) Get(userId string) (*AdminUsers, *http.Response, error) {
+func (service *Service) Get(userId string) (*AdminUsers, error) {
 	v := new(AdminUsers)
 	relativeURL := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
-	resp, err := service.Client.NewRequestDo("GET", relativeURL, nil, nil, v)
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, resp, nil
-}
-
-func (service *Service) Create(server AdminUsers) (*AdminUsers, *http.Response, error) {
-	v := new(AdminUsers)
-	resp, err := service.Client.NewRequestDo("POST", adminUsersEndpoint, nil, server, &v)
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, resp, nil
-}
-
-func (service *Service) Update(userId string, appServer AdminUsers) (*http.Response, error) {
-	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
-	resp, err := service.Client.NewRequestDo("PUT", path, nil, appServer, nil)
+	err := service.Client.Read(relativeURL, v)
 	if err != nil {
 		return nil, err
 	}
-	return resp, err
+	return v, nil
 }
 
-func (service *Service) Delete(userId string) (*http.Response, error) {
-	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
-	resp, err := service.Client.NewRequestDo("DELETE", path, nil, nil, nil)
+func (service *Service) Create(server AdminUsers) (*AdminUsers, error) {
+	resp, err := service.Client.Create(adminUsersEndpoint, server)
 	if err != nil {
 		return nil, err
 	}
-	return resp, err
+	res, ok := resp.(AdminUsers)
+	if !ok {
+		return nil, fmt.Errorf("could marshal response to a valid object")
+	}
+	return &res, nil
+}
+
+func (service *Service) Update(userId string, appServer AdminUsers) (*AdminUsers, error) {
+	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
+	resp, err := service.Client.Update(path, appServer)
+	if err != nil {
+		return nil, err
+	}
+	res, _ := resp.(AdminUsers)
+	return &res, err
+}
+
+func (service *Service) Delete(userId string) error {
+	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
+	return service.Client.Delete(path)
 }
