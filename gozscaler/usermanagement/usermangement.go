@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 const (
@@ -118,4 +120,18 @@ func (service *Service) GetUser(userID int) (*User, error) {
 
 	log.Printf("Returning Groups from Get: %d", user.ID)
 	return &user, nil
+}
+
+func (service *Service) GetUserByName(userName string) (*User, error) {
+	var users []User
+	err := service.Client.Read(fmt.Sprintf("%s?name=%s", usersEndpoint, url.QueryEscape(userName)), &users)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		if strings.EqualFold(user.Name, userName) {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("no user found with name: %s", userName)
 }

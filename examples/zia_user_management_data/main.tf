@@ -14,9 +14,17 @@ data "zia_user_management" "adam" {
 }
 
 output "zia_user_management_adam_name" {
-  value = data.zia_user_management.adam
+  value = data.zia_user_management.adam.name
 }
 
+
+output "zia_user_management_adam_groups" {
+  value = data.zia_user_management.adam.groups
+}
+
+output "zia_user_management_adam_department" {
+  value = data.zia_user_management.adam.department
+}
 /*
 data "zia_user_management" "albert" {
  id = "29309058"

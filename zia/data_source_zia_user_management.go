@@ -109,10 +109,20 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *usermanagement.User
-	id, ok := d.Get("id").(int)
-	if ok {
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if idSet && idIsInt && id > 0 {
 		log.Printf("[INFO] Getting data for admin role management user id: %d\n", id)
 		res, err := zClient.usermanagement.GetUser(id)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting data for admin role management user name: %s\n", name)
+		res, err := zClient.usermanagement.GetUserByName(name)
 		if err != nil {
 			return err
 		}
@@ -137,7 +147,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 	} else {
-		return fmt.Errorf("couldn't find any user with  id '%d'", id)
+		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
 	}
 
 	return nil

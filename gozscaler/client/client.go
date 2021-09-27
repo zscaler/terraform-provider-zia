@@ -46,39 +46,16 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	return body, nil
 }
 
-// Create ... // Need to review this function.
+// Create send HTTP Post request
 func (c *Client) Create(endpoint string, o interface{}) (interface{}, error) {
-	v := reflect.ValueOf(o)
+	if o == nil {
+		return nil, errors.New("tried to create with a nil payload not a Struct")
+	}
 	t := reflect.TypeOf(o)
 	if t.Kind() != reflect.Struct {
-		return nil, errors.New("Tried to create with a " + t.Kind().String() + " not a Struct")
+		return nil, errors.New("tried to create with a " + t.Kind().String() + " not a Struct")
 	}
-
-	requestObject := reflect.Indirect(reflect.New(t))
-	needsUpdate := false
-
-	for i := 0; i < t.NumField(); i++ {
-
-		// this is a field struct
-		structField := t.Field(i)
-		// these are reflect values
-		requestField := requestObject.FieldByName(structField.Name)
-		valueField := v.FieldByName(structField.Name)
-
-		switch n := structField.Tag.Get("meta_api"); n {
-		case "read_only":
-			continue
-		case "update_only":
-			needsUpdate = true
-		default:
-			log.Printf("Field Name " + structField.Name + " with " + valueField.String())
-			if requestField.CanSet() {
-				requestField.Set(valueField)
-			}
-		}
-	}
-
-	data, err := json.Marshal(requestObject.Interface())
+	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
@@ -96,15 +73,6 @@ func (c *Client) Create(endpoint string, o interface{}) (interface{}, error) {
 	id := reflect.Indirect(reflect.ValueOf(responseObject)).FieldByName("ID")
 
 	log.Printf("Created Object with ID " + id.String())
-
-	if needsUpdate {
-		responseObject, err = c.Update(endpoint+"/"+id.String(), o)
-		if err != nil {
-			return nil, err
-		}
-		return responseObject, nil
-	}
-
 	return responseObject, nil
 }
 
@@ -126,37 +94,14 @@ func (c *Client) Read(endpoint string, o interface{}) error {
 
 // Update ...
 func (c *Client) Update(endpoint string, o interface{}) (interface{}, error) {
-	v := reflect.ValueOf(o)
+	if o == nil {
+		return nil, errors.New("tried to update with a nil payload not a Struct")
+	}
 	t := reflect.TypeOf(o)
 	if t.Kind() != reflect.Struct {
-		return nil, errors.New("Tried to update with a " + t.Kind().String() + " not a Struct")
+		return nil, errors.New("tried to update with a " + t.Kind().String() + " not a Struct")
 	}
-	requestObject := reflect.Indirect(reflect.New(t))
-	for i := 0; i < t.NumField(); i++ {
-
-		// this is a field struct
-		structField := t.Field(i)
-		// these are reflect values
-		requestField := requestObject.FieldByName(structField.Name)
-		valueField := v.FieldByName(structField.Name)
-
-		switch n := structField.Tag.Get("meta_api"); n {
-		case "read_only":
-			continue
-		case "update_only":
-			log.Printf("Update Field Name " + structField.Name + " with " + valueField.String())
-			if requestField.CanSet() {
-				requestField.Set(valueField)
-			}
-		default:
-			log.Printf("Field Name " + structField.Name + " with " + valueField.String())
-			if requestField.CanSet() {
-				requestField.Set(valueField)
-			}
-		}
-	}
-
-	data, err := json.Marshal(requestObject.Interface())
+	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, err
 	}
