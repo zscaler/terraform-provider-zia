@@ -107,7 +107,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	_ = d.Set("routable_ip", resp.RoutableIP)
 	_ = d.Set("last_nodification_time", resp.LastModificationTime)
 	_ = d.Set("managed_by", flattenManagedBy(resp))
-	_ = d.Set("managed_by", flattenLastModifiedBy(resp))
+	_ = d.Set("last_modified_by", flattenLastModifiedBy(resp))
 	return nil
 }
 

@@ -45,6 +45,12 @@ type Locations struct {
 	Description                         string                           `json:"description"`
 }
 
+type ManagedBy struct {
+	ID         string                 `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
+}
+
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
 func (service *Service) GetLocations(locationID string) (*Locations, error) {
 	var location Locations
