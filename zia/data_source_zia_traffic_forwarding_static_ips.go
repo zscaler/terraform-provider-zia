@@ -29,7 +29,7 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"routableIP": {
+			"routable_ip": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 					},
 				},
 			},
-			"Comment": {
+			"comment": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,6 +105,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	_ = d.Set("latitude", resp.Latitude)
 	_ = d.Set("longitude", resp.Longitude)
 	_ = d.Set("routable_ip", resp.RoutableIP)
+	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("last_nodification_time", resp.LastModificationTime)
 	_ = d.Set("managed_by", flattenManagedBy(resp))
 	_ = d.Set("last_modified_by", flattenLastModifiedBy(resp))

@@ -96,7 +96,7 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"zapp_ssl_scanEnabled": {
+			"zapp_ssl_scan_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -198,21 +198,21 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	id, ok := d.Get("id").(string)
 	if ok && id != "" {
 		log.Printf("[INFO] Getting location information %s\n", id)
-		res, _, err := zClient.locationmanagement.GetLocations()(id)
+		res, err := zClient.locationmanagement.GetLocations(id)
 		if err != nil {
 			return err
 		}
 		resp = res
 	}
-	name, ok := d.Get("name").(string)
+	/*name, ok := d.Get("name").(string)
 	if id == "" && ok && name != "" {
 		log.Printf("[INFO] Getting data for server group name %s\n", name)
-		res, _, err := zClient.locationmanagement.GetByName(name)
+		res, err := zClient.locationmanagement.GetByName(name)
 		if err != nil {
 			return err
 		}
 		resp = res
-	}
+	}*/
 	if resp != nil {
 
 		d.SetId(resp.ID)
@@ -226,7 +226,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("ports", resp.Ports)
 		_ = d.Set("auth_required", resp.AuthRequired)
 		_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
-		_ = d.Set("zapp_ssl_scanEnabled", resp.ZappSSLScanEnabled)
+		_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 		_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
 		_ = d.Set("surrogate_ip", resp.SurrogateIP)
 		_ = d.Set("idle_time_in_minutes", resp.IdleTimeInMinutes)

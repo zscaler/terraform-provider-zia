@@ -23,17 +23,17 @@ func init() {
 }
 
 type Client struct {
-	adminauditlogs     adminauditlogs.Service
-	adminrolemgmt      adminrolemgmt.Service
-	dlpdictionary      dlpdictionary.Service
-	usermanagement     usermanagement.Service
-	gretunnels         gretunnels.Service
-	staticips          staticips.Service
-	publicnodevips     publicnodevips.Service
-	grevirtualiplist   grevirtualiplist.Service
-	vpncredentials     vpncredentials.Service
-	locationmanagement locationmanagement.Service
-	activation         activation.Service
+	adminauditlogs     *adminauditlogs.Service
+	adminrolemgmt      *adminrolemgmt.Service
+	dlpdictionary      *dlpdictionary.Service
+	usermanagement     *usermanagement.Service
+	gretunnels         *gretunnels.Service
+	staticips          *staticips.Service
+	publicnodevips     *publicnodevips.Service
+	grevirtualiplist   *grevirtualiplist.Service
+	vpncredentials     *vpncredentials.Service
+	locationmanagement *locationmanagement.Service
+	activation         *activation.Service
 }
 
 type Config struct {
@@ -44,25 +44,25 @@ type Config struct {
 }
 
 func (c *Config) Client() (*Client, error) {
-	config, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
+	cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
 	if err != nil {
 		return nil, err
 	}
 
-	client := &Client{
-		adminauditlogs:     *adminauditlogs.New(config),
-		adminrolemgmt:      *adminrolemgmt.New(config),
-		dlpdictionary:      *dlpdictionary.New(config),
-		usermanagement:     *usermanagement.New(config),
-		grevirtualiplist:   *grevirtualiplist.New(config),
-		publicnodevips:     *publicnodevips.New(config),
-		vpncredentials:     *vpncredentials.New(config),
-		gretunnels:         *gretunnels.New(config),
-		staticips:          *staticips.New(config),
-		locationmanagement: *locationmanagement.New(config),
-		activation:         *activation.New(config),
+	ziaClient := &Client{
+		adminauditlogs:     adminauditlogs.New(cli),
+		adminrolemgmt:      adminrolemgmt.New(cli),
+		dlpdictionary:      dlpdictionary.New(cli),
+		usermanagement:     usermanagement.New(cli),
+		grevirtualiplist:   grevirtualiplist.New(cli),
+		publicnodevips:     publicnodevips.New(cli),
+		vpncredentials:     vpncredentials.New(cli),
+		gretunnels:         gretunnels.New(cli),
+		staticips:          staticips.New(cli),
+		locationmanagement: locationmanagement.New(cli),
+		activation:         activation.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
-	return client, nil
+	return ziaClient, nil
 }
