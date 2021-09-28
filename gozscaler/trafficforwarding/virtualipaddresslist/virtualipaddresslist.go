@@ -11,10 +11,10 @@ const (
 )
 
 type ZscalerVIPs struct {
-	Cloudname     string   `json:"cloudName"`
+	CloudName     string   `json:"cloudName"`
 	Region        string   `json:"region"`
 	City          string   `json:"city"`
-	Datacenter    string   `json:"dataCenter"`
+	DataCenter    string   `json:"dataCenter"`
 	Location      string   `json:"location"`
 	VPNIPs        []string `json:"vpnIps"`
 	VPNDomainName string   `json:"vpnDomainName"`
@@ -32,17 +32,17 @@ type GREVirtualIPList struct {
 }
 
 // Gets a paginated list of the virtual IP addresses (VIPs) available in the Zscaler cloud, including region and data center information. By default, the request gets all public VIPs in the cloud, but you can also include private or all VIPs in the request, if necessary.
-func (service *Service) ZscalerVIPs(cloudName string) (*ZscalerVIPs, error) {
+func (service *Service) GetZscalerVIPs(datacenter string) (*ZscalerVIPs, error) {
 	var zscalerVips []ZscalerVIPs
-	// We are assuming this location name will be in the firsy 1000 obejcts
-	err := service.Client.Read(fmt.Sprintf("%s?page=1&pageSize=1000", vipsEndpoint), &zscalerVips)
+
+	err := service.Client.Read(vipsEndpoint, &zscalerVips)
 	if err != nil {
 		return nil, err
 	}
 	for _, vips := range zscalerVips {
-		if strings.EqualFold(vips.Cloudname, cloudName) {
+		if strings.EqualFold(vips.DataCenter, datacenter) {
 			return &vips, nil
 		}
 	}
-	return nil, fmt.Errorf("no cloud found with name: %s", cloudName)
+	return nil, fmt.Errorf("no datacenter found with name: %s", datacenter)
 }

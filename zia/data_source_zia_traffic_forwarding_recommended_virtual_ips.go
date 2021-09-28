@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -39,3 +40,4 @@ func dataSourceGreVirtualIPAddressesListRead(d *schema.ResourceData, m interface
 
 	return nil
 }
+*/

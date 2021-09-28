@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	dlpDictionariesEndpoint     = "/api/v1/dlpDictionaries"
+	dlpDictionariesEndpoint     = "/dlpDictionaries"
 	dlpDictionariesLiteEndpoint = "/dlpDictionaries/lite"
 )
 

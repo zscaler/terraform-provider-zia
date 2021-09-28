@@ -1,10 +1,14 @@
 package zia
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 )
 
-func dataSourcePublicNodeVirtualAddress() *schema.Resource {
+func dataSourcePublicNodeVIPs() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourcePublicNodeVirtualAddressRead,
 		Schema: map[string]*schema.Schema{
@@ -20,9 +24,9 @@ func dataSourcePublicNodeVirtualAddress() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"data_center": {
+			"datacenter": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"location": {
 				Type:     schema.TypeString,
@@ -62,21 +66,33 @@ func dataSourcePublicNodeVirtualAddress() *schema.Resource {
 func dataSourcePublicNodeVirtualAddressRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.publicnodevips.GetPublicNodeVipAddresses()
-	if err != nil {
-		return nil
+	var resp *virtualipaddresslist.ZscalerVIPs
+	datacenter, _ := d.Get("datacenter").(string)
+	if resp == nil && datacenter != "" {
+		log.Printf("[INFO] Getting data for datacenter name: %s\n", datacenter)
+		res, err := zClient.virtualipaddresslist.GetZscalerVIPs(datacenter)
+		if err != nil {
+			return err
+		}
+		resp = res
 	}
-	_ = d.Set("cloud_name", resp.CloudName)
-	_ = d.Set("region", resp.Region)
-	_ = d.Set("city", resp.City)
-	_ = d.Set("dataCenter", resp.DataCenter)
-	_ = d.Set("location", resp.Location)
-	_ = d.Set("vpn_domain_name", resp.VpnDomainName)
-	_ = d.Set("gre_domain_name", resp.GreDomainName)
-	_ = d.Set("vpn_ips", resp.VpnIps)
-	_ = d.Set("gre_ips", resp.GreIps)
-	_ = d.Set("pac_ips", resp.PacIps)
-	_ = d.Set("pac_domain_name", resp.PacDomainName)
+
+	if resp != nil {
+		_ = d.Set("cloud_name", resp.CloudName)
+		_ = d.Set("region", resp.Region)
+		_ = d.Set("city", resp.City)
+		_ = d.Set("datacenter", resp.DataCenter)
+		_ = d.Set("location", resp.Location)
+		_ = d.Set("vpn_domain_name", resp.VPNDomainName)
+		_ = d.Set("gre_domain_name", resp.GREDomainName)
+		_ = d.Set("vpn_ips", resp.VPNIPs)
+		_ = d.Set("gre_ips", resp.GREIPs)
+		_ = d.Set("pac_ips", resp.PACIPs)
+		_ = d.Set("pac_domain_name", resp.PACDomainName)
+
+	} else {
+		return fmt.Errorf("couldn't find any datacenter with name '%s'", datacenter)
+	}
 
 	return nil
 }
