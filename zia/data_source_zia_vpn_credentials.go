@@ -46,13 +46,6 @@ func dataSourceVPNCredentials() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -68,13 +61,6 @@ func dataSourceVPNCredentials() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -113,16 +99,35 @@ func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("fqdn", resp.FQDN)
 		_ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
-		_ = d.Set("id", resp.ManagedBy.ID)
-		_ = d.Set("name", resp.ManagedBy.Name)
-		_ = d.Set("extensions", resp.ManagedBy.Extensions)
-		_ = d.Set("id", resp.Location.ID)
-		_ = d.Set("name", resp.Location.Name)
-		_ = d.Set("extensions", resp.Location.Extensions)
+		if err := d.Set("location", flattenLocation(resp.Location)); err != nil {
+			return err
+		}
+
+		if err := d.Set("managed_by", flattenVPNCredentialManagedBy(resp.ManagedBy)); err != nil {
+			return err
+		}
 
 	} else {
 		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)
 	}
 
 	return nil
+}
+
+func flattenLocation(location vpncredentials.Location) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   location.ID,
+			"name": location.Name,
+		},
+	}
+}
+
+func flattenVPNCredentialManagedBy(managedBy vpncredentials.ManagedBy) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   managedBy.ID,
+			"name": managedBy.Name,
+		},
+	}
 }
