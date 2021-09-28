@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	departmentEndpoint = "/api/v1/departments"
-	groupsEndpoint     = "/api/v1/groups"
-	usersEndpoint      = "/api/v1/users"
+	departmentEndpoint = "/departments"
+	groupsEndpoint     = "/groups"
+	usersEndpoint      = "/users"
 )
 
 type Department struct {

@@ -9,11 +9,10 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/grevirtualiplist"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/publicnodevips"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
@@ -24,18 +23,17 @@ func init() {
 }
 
 type Client struct {
-	adminauditlogs      *adminauditlogs.Service
-	adminrolemgmt       *adminrolemgmt.Service
-	dlpdictionaries     *dlpdictionaries.Service
-	usermanagement      *usermanagement.Service
-	gretunnels          *gretunnels.Service
-	greinternalipranges *greinternalipranges.Service
-	staticips           *staticips.Service
-	publicnodevips      *publicnodevips.Service
-	grevirtualiplist    *grevirtualiplist.Service
-	vpncredentials      *vpncredentials.Service
-	locationmanagement  *locationmanagement.Service
-	activation          *activation.Service
+	adminauditlogs       *adminauditlogs.Service
+	adminrolemgmt        *adminrolemgmt.Service
+	dlpdictionaries      *dlpdictionaries.Service
+	usermanagement       *usermanagement.Service
+	gretunnels           *gretunnels.Service
+	staticips            *staticips.Service
+	publicnodevips       *publicnodevips.Service
+	virtualipaddresslist *virtualipaddresslist.Service
+	vpncredentials       *vpncredentials.Service
+	locationmanagement   *locationmanagement.Service
+	activation           *activation.Service
 }
 
 type Config struct {
@@ -52,18 +50,17 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	ziaClient := &Client{
-		adminauditlogs:      adminauditlogs.New(cli),
-		adminrolemgmt:       adminrolemgmt.New(cli),
-		dlpdictionaries:     dlpdictionaries.New(cli),
-		usermanagement:      usermanagement.New(cli),
-		grevirtualiplist:    grevirtualiplist.New(cli),
-		publicnodevips:      publicnodevips.New(cli),
-		vpncredentials:      vpncredentials.New(cli),
-		gretunnels:          gretunnels.New(cli),
-		greinternalipranges: greinternalipranges.New(cli),
-		staticips:           staticips.New(cli),
-		locationmanagement:  locationmanagement.New(cli),
-		activation:          activation.New(cli),
+		adminauditlogs:       adminauditlogs.New(cli),
+		adminrolemgmt:        adminrolemgmt.New(cli),
+		dlpdictionaries:      dlpdictionaries.New(cli),
+		usermanagement:       usermanagement.New(cli),
+		virtualipaddresslist: virtualipaddresslist.New(cli),
+		publicnodevips:       publicnodevips.New(cli),
+		vpncredentials:       vpncredentials.New(cli),
+		gretunnels:           gretunnels.New(cli),
+		staticips:            staticips.New(cli),
+		locationmanagement:   locationmanagement.New(cli),
+		activation:           activation.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

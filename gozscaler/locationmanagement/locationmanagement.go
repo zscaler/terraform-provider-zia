@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	locationsEndpoint     = "/api/v1/locations"
-	locationsLiteEndpoint = "/api/v1/locations/lite"
+	locationsEndpoint     = "/locations"
+	locationsLiteEndpoint = "/locations/lite"
 )
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.

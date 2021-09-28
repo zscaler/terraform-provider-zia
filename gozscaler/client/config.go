@@ -14,6 +14,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,9 +33,10 @@ const (
 	RetryWaitMaxSeconds       = 20
 	RetryWaitMinSeconds       = 5
 	// API types
-	ziaAPIVersion = "/api/v1"
-	ziaAPIAuthURL = "/authenticatedSession"
-	loggerPrefix  = "zia-logger: "
+	ziaAPIVersion   = "api/v1"
+	defaultProtocol = "https://"
+	ziaAPIAuthURL   = "/authenticatedSession"
+	loggerPrefix    = "zia-logger: "
 )
 
 // Client ...
@@ -101,6 +103,15 @@ func NewClientZIA(username, password, apiKey, url string) (*Client, error) {
 	if loggerEnv := os.Getenv("ZSCALER_SDK_LOG"); loggerEnv == "true" {
 		logger = getDefaultLogger()
 	}
+	if strings.HasSuffix(url, "/") {
+		url = fmt.Sprintf("%s%s", url, ziaAPIVersion)
+	} else {
+		url = fmt.Sprintf("%s/%s", url, ziaAPIVersion)
+	}
+	// 	Make sure http protocol is in use
+	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
+		url = fmt.Sprintf("%s%s", defaultProtocol, url)
+	}
 	cli := Client{
 		userName:   username,
 		password:   password,
@@ -123,7 +134,7 @@ func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Clien
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.Post(url+ziaAPIVersion+ziaAPIAuthURL, contentTypeJSON, bytes.NewReader(data))
+	resp, err := client.Post(url+ziaAPIAuthURL, contentTypeJSON, bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
