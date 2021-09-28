@@ -1,18 +1,20 @@
-package dlpdictionary
+package dlpdictionaries
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
-	dlpDictionariesEndpoint     = "/dlpDictionaries"
+	dlpDictionariesEndpoint     = "/api/v1/dlpDictionaries"
 	dlpDictionariesLiteEndpoint = "/dlpDictionaries/lite"
 )
 
 type DlpDictionary struct {
-	ID                    string     `json:"id,omitempty"`
+	ID                    int        `json:"id"`
 	Name                  string     `json:"name,omitempty"`
 	Description           string     `json:"description,omitempty"`
 	ConfidenceThreshold   string     `json:"confidenceThreshold,omitempty"`
@@ -34,15 +36,29 @@ type Patterns struct {
 	Pattern string `json:"pattern,omitempty"`
 }
 
-func (service *Service) GetDlpDictionary(dlpDictionariesID string) (*DlpDictionary, error) {
+func (service *Service) GetDlpDictionaries(dlpDictionariesID int) (*DlpDictionary, error) {
 	var dlpDictionary DlpDictionary
-	err := service.Client.Read(dlpDictionariesEndpoint+"/"+dlpDictionariesID, &dlpDictionary)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning information on all custom and predefined DLP dictionaries from Get: %s", dlpDictionary.ID)
+	log.Printf("Returning dictionary from Get: %d", dlpDictionary.ID)
 	return &dlpDictionary, nil
+}
+
+func (service *Service) GetDlpDictionaryByName(dictionaryName string) (*DlpDictionary, error) {
+	var dictionaries []DlpDictionary
+	err := service.Client.Read(dlpDictionariesEndpoint, &dictionaries)
+	if err != nil {
+		return nil, err
+	}
+	for _, dictionary := range dictionaries {
+		if strings.EqualFold(dictionary.Name, dictionaryName) {
+			return &dictionary, nil
+		}
+	}
+	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryName)
 }
 
 func (service *Service) GetDlpDictionaryLite() (*DlpDictionary, error) {

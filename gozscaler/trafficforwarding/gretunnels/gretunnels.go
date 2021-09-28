@@ -8,9 +8,7 @@ import (
 )
 
 const (
-	greTunnelsEndpoint       = "/api/v1/greTunnels"
-	ipGreTunnelInfoEndpoint  = "/api/v1/orgProvisioning/ipGreTunnelInfo"
-	greTunnelIPRangeEndpoint = "/api/v1/greTunnels/availableInternalIpRanges"
+	greTunnelsEndpoint = "/api/v1/greTunnels"
 )
 
 type GreTunnels struct {
