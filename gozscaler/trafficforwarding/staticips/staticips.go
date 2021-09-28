@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	staticIPEndpoint         = "/api/v1/staticIP"
+	staticIPEndpoint         = "/staticIP"
 	staticIPValidateEndpoint = "/staticIP/validate"
 )
 

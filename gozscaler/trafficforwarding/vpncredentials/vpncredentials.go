@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	vpnCredentialsEndpoint = "/api/v1/vpnCredentials"
+	vpnCredentialsEndpoint = "/vpnCredentials"
 )
 
 type VPNCredentials struct {
