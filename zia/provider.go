@@ -37,7 +37,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			//"zia_admin_role_mgmt": dataSourceAdminRoleMgmt(),
+			"zia_admin_user_role_mgmt": dataSourceAdminUserRoleMgmt(),
 			//"zia_dlp_dictionary":  dataSourceDLPDictionary(),
 			"zia_user_management":  dataSourceUserManagement(),
 			"zia_public_node_vips": dataSourcePublicNodeVIPs(),

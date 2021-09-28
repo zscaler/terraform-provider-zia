@@ -1,18 +1,16 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
 )
 
-func dataSourceAdminRoleMgmt() *schema.Resource {
+func dataSourceAdminUserRoleMgmt() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAdminRoleMgmtRead,
+		Read: dataSourceAdminUserRoleMgmtRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -20,7 +18,7 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			},
 			"login_name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"user_name": {
 				Type:     schema.TypeString,
@@ -37,7 +35,6 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			"is_non_editable": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
@@ -46,41 +43,38 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 			"is_auditor": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
-			},
-			"password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
 			},
 			"is_password_login_allowed": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"pwd_last_modified_time": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"is_security_report_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 			"is_service_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 			"is_product_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 			"is_password_expired": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
 			},
 			"is_exec_mobile_app_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Default:  false,
+			},
+			"admin_scope_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"role": {
 				Type:     schema.TypeList,
@@ -93,6 +87,10 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_name_l10n_tag": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"extensions": {
@@ -123,17 +121,14 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
 								},
 							},
 						},
-						"Scope_entities": {
+						"type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"scope_entities": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -146,22 +141,11 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"exec_mobile_app_tokens": {
 				Type:     schema.TypeList,
@@ -211,14 +195,24 @@ func dataSourceAdminRoleMgmt() *schema.Resource {
 	}
 }
 
-func dataSourceAdminRoleMgmtRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*gozscaler.Client)
+func dataSourceAdminUserRoleMgmtRead(d *schema.ResourceData, m interface{}) error {
+	zClient := m.(*Client)
 
 	var resp *adminrolemgmt.AdminUsers
-	id, ok := d.Get("id").(string)
-	if ok && id != "" {
-		log.Printf("[INFO] Getting data for admin role management  %s\n", id)
-		res, _, err := zClient.adminrolemgmt.Get(id)
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if idSet && idIsInt && id > 0 {
+		log.Printf("[INFO] Getting data for location id: %d\n", id)
+		res, err := zClient.adminrolemgmt.GetAdminUsers(id)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+	loginName, _ := d.Get("login_name").(string)
+	if resp == nil && loginName != "" {
+		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
+		res, err := zClient.adminrolemgmt.GetAdminUsersByName(loginName)
 		if err != nil {
 			return err
 		}
@@ -226,7 +220,7 @@ func dataSourceAdminRoleMgmtRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	if resp != nil {
-		d.SetId(resp.ID)
+		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("login_name", resp.LoginName)
 		_ = d.Set("user_name", resp.UserName)
 		_ = d.Set("email", resp.Email)
@@ -234,22 +228,38 @@ func dataSourceAdminRoleMgmtRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("is_non_editable", resp.IsNonEditable)
 		_ = d.Set("disabled", resp.Disabled)
 		_ = d.Set("is_auditor", resp.IsAuditor)
-		_ = d.Set("password", resp.Password)
 		_ = d.Set("is_password_login_allowed", resp.IsPasswordLoginAllowed)
+		_ = d.Set("pwd_last_modified_time", resp.PasswordLastModifiedTime)
 		_ = d.Set("is_security_report_comm_enabled", resp.IsSecurityReportCommEnabled)
 		_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
-		_ = d.Set("is_product_update_comm_enabled	", resp.IsProductUpdateCommEnabled)
+		_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 		_ = d.Set("is_password_expired", resp.IsPasswordExpired)
+		_ = d.Set("admin_scope_type", resp.AdminScopeType)
 		_ = d.Set("is_exec_mobile_app_enabled", resp.IsExecMobileAppEnabled)
+
+		if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
+			return fmt.Errorf("failed to read mobile app tokens %s", err)
+		}
 
 		if err := d.Set("exec_mobile_app_tokens", flattenExecMobileAppTokens(resp)); err != nil {
 			return fmt.Errorf("failed to read mobile app tokens %s", err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any app connector group with name '%s' or id '%s'", name, id)
+		return fmt.Errorf("couldn't find any admin user login name '%s' or id '%d'", loginName, id)
 	}
 
 	return nil
+}
+
+func flattenAdminUserRole(role adminrolemgmt.Role) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":               role.ID,
+			"name":             role.Name,
+			"is_name_l10n_tag": role.IsNameL10Tag,
+			"extensions":       role.Extensions,
+		},
+	}
 }
 
 func flattenExecMobileAppTokens(mobileAppTokens *adminrolemgmt.AdminUsers) []interface{} {
@@ -270,4 +280,3 @@ func flattenExecMobileAppTokens(mobileAppTokens *adminrolemgmt.AdminUsers) []int
 
 	return execMobileAppTokens
 }
-*/
