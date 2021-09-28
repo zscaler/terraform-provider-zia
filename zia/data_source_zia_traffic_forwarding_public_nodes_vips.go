@@ -29,33 +29,27 @@ func dataSourcePublicNodeVirtualAddress() *schema.Resource {
 				Computed: true,
 			},
 			"vpn_ips": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"vpn_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"gre_ips": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"gre_domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"pac_ips": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"pac_domain_name": {
 				Type:     schema.TypeBool,

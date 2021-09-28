@@ -27,7 +27,7 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 func dataSourceGreVirtualIPAddressesListRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.grevirtualiplist.GetZSGREVirtualIPList()
+	resp, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList()
 	if err != nil {
 		return nil
 	}
