@@ -113,12 +113,12 @@ func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("fqdn", resp.FQDN)
 		_ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
-		_ = d.Set("managed_by.id", resp.ManagedBy.ID)
-		_ = d.Set("managed_by.name", resp.ManagedBy.Name)
-		_ = d.Set("managed_by.extensions", resp.ManagedBy.Extensions)
-		_ = d.Set("location.id", resp.Location.ID)
-		_ = d.Set("location.name", resp.Location.Name)
-		_ = d.Set("location.extensions", resp.Location.Extensions)
+		_ = d.Set("id", resp.ManagedBy.ID)
+		_ = d.Set("name", resp.ManagedBy.Name)
+		_ = d.Set("extensions", resp.ManagedBy.Extensions)
+		_ = d.Set("id", resp.Location.ID)
+		_ = d.Set("name", resp.Location.Name)
+		_ = d.Set("extensions", resp.Location.Extensions)
 
 	} else {
 		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)

@@ -16,19 +16,19 @@ type VPNCredentials struct {
 	FQDN         string    `json:"fqdn"`
 	PreSharedKey string    `json:"preSharedKey,omitempty"`
 	Comments     string    `json:"comments,omitempty"`
-	Location     *Location `json:"location"`
+	Location     Location  `json:"location"`
 	ManagedBy    ManagedBy `json:"managedBy"`
 }
 
 type Location struct {
 	ID         int                    `json:"id"`
-	Name       string                 `json:"name,omitempty"`
+	Name       string                 `json:"name"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 type ManagedBy struct {
 	ID         int                    `json:"id"`
-	Name       string                 `json:"name,omitempty"`
+	Name       string                 `json:"name"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
