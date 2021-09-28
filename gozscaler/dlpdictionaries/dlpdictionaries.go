@@ -22,6 +22,7 @@ type DlpDictionary struct {
 	CustomPhraseMatchType string     `json:"customPhraseMatchType"`
 	Patterns              []Patterns `json:"patterns"`
 	NameL10nTag           bool       `json:"nameL10nTag"`
+	Custom                bool       `json:"custom"`
 	ThresholdType         string     `json:"thresholdType"`
 	DictionaryType        string     `json:"dictionaryType"`
 }
@@ -61,15 +62,31 @@ func (service *Service) GetDlpDictionaryByName(dictionaryName string) (*DlpDicti
 	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryName)
 }
 
-func (service *Service) GetDlpDictionaryLite() (*DlpDictionary, error) {
-	var dlpDictionary DlpDictionary
-	err := service.Client.Read(dlpDictionariesLiteEndpoint, &dlpDictionary)
+// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
+func (service *Service) GetDlpDictionaryLite(dlpDictionariesLiteID int) (*DlpDictionary, error) {
+	var dlpDictionariesLite DlpDictionary
+	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesLiteEndpoint, dlpDictionariesLiteID), &dlpDictionariesLite)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning name and ID dictionary of all custom and predefined DLP dictionaries from Get: %s", dlpDictionary.ID)
-	return &dlpDictionary, nil
+	log.Printf("Returning dictionary from Get: %d", dlpDictionariesLite.ID)
+	return &dlpDictionariesLite, nil
+}
+
+// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
+func (service *Service) GetDlpDictionaryLiteByName(dictionaryLiteName string) (*DlpDictionary, error) {
+	var dictionariesLite []DlpDictionary
+	err := service.Client.Read(dlpDictionariesLiteEndpoint, &dictionariesLite)
+	if err != nil {
+		return nil, err
+	}
+	for _, dictionaryLite := range dictionariesLite {
+		if strings.EqualFold(dictionaryLite.Name, dictionaryLiteName) {
+			return &dictionaryLite, nil
+		}
+	}
+	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryLiteName)
 }
 
 func (service *Service) CreateDlpDictionary(dlpDictionariesID *DlpDictionary) (*DlpDictionary, *http.Response, error) {

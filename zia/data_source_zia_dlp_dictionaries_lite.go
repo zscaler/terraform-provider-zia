@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 )
 
-func dataSourceDLPDictionaries() *schema.Resource {
+func dataSourceDLPDictionariesLite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPDictionariesRead,
+		Read: dataSourceDLPDictionariesLiteRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -72,6 +72,10 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"custom": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"dictionary_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -80,7 +84,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 	}
 }
 
-func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceDLPDictionariesLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *dlpdictionaries.DlpDictionary
@@ -88,7 +92,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
-		res, err := zClient.dlpdictionaries.GetDlpDictionaries(id)
+		res, err := zClient.dlpdictionaries.GetDlpDictionaryLite(id)
 		if err != nil {
 			return err
 		}
@@ -97,7 +101,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", name)
-		res, err := zClient.dlpdictionaries.GetDlpDictionaryByName(name)
+		res, err := zClient.dlpdictionaries.GetDlpDictionaryLiteByName(name)
 		if err != nil {
 			return err
 		}
@@ -111,6 +115,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 		_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)
+		_ = d.Set("custom", resp.Custom)
 		_ = d.Set("threshold_type", resp.ThresholdType)
 		_ = d.Set("dictionary_type", resp.DictionaryType)
 		if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
@@ -126,28 +131,4 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	return nil
-}
-
-func flattenPhrases(phrases *dlpdictionaries.DlpDictionary) []interface{} {
-	dlpPhrases := make([]interface{}, len(phrases.Phrases))
-	for i, val := range phrases.Phrases {
-		dlpPhrases[i] = map[string]interface{}{
-			"action": val.Action,
-			"phrase": val.Phrase,
-		}
-	}
-
-	return dlpPhrases
-}
-
-func flattenPatterns(patterns *dlpdictionaries.DlpDictionary) []interface{} {
-	dlpPatterns := make([]interface{}, len(patterns.Patterns))
-	for i, val := range patterns.Patterns {
-		dlpPatterns[i] = map[string]interface{}{
-			"action":  val.Action,
-			"pattern": val.Pattern,
-		}
-	}
-
-	return dlpPatterns
 }
