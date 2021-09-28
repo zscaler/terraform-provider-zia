@@ -2,50 +2,67 @@ package staticips
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
-	staticIPEndpoint         = "/staticIP"
+	staticIPEndpoint         = "/api/v1/staticIP"
 	staticIPValidateEndpoint = "/staticIP/validate"
 )
 
 // Gets all provisioned static IP addresses.
 type StaticIP struct {
-	ID                   string           `json:"id,omitempty"`
-	IpAddress            string           `json:"ipAddress,omitempty"`
-	GeoOverride          bool             `json:"geoOverride"`
-	Latitude             string           `json:"latitude,omitempty"`
-	Longitude            string           `json:"longitude,omitempty"`
-	RoutableIP           bool             `json:"routableIP,omitempty"`
-	LastModificationTime string           `json:"lastModificationTime,omitempty"`
-	ManagedBy            []ManagedBy      `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
-	LastModifiedBy       []LastModifiedBy `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
-	Comment              string           `json:"comment,omitempty"`
+	ID                   int            `json:"id,omitempty"`
+	IpAddress            string         `json:"ipAddress,omitempty"`
+	GeoOverride          bool           `json:"geoOverride"`
+	Latitude             float64        `json:"latitude,omitempty"`
+	Longitude            float64        `json:"longitude,omitempty"`
+	RoutableIP           bool           `json:"routableIP,omitempty"`
+	LastModificationTime int            `json:"lastModificationTime"`
+	Comment              string         `json:"comment,omitempty"`
+	ManagedBy            ManagedBy      `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       LastModifiedBy `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
 }
 
 type ManagedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 type LastModifiedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-func (service *Service) GetStaticIP(staticIpID string) (*StaticIP, error) {
+func (service *Service) GetStaticIP(staticIpID int) (*StaticIP, error) {
 	var staticIP StaticIP
-	err := service.Client.Read(staticIPEndpoint+"/"+staticIpID, &staticIP)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", staticIPEndpoint, staticIpID), &staticIP)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning Static IP from Get: %s", staticIP.ID)
+	log.Printf("Returning static ip from Get: %d", staticIP.ID)
 	return &staticIP, nil
+}
+
+func (service *Service) GetStaticByIP(staticIP string) (*StaticIP, error) {
+	var staticips []StaticIP
+	// We are assuming this location name will be in the firsy 1000 obejcts
+	err := service.Client.Read(staticIPEndpoint, &staticips)
+	if err != nil {
+		return nil, err
+	}
+	for _, static := range staticips {
+		if strings.EqualFold(static.IpAddress, staticIP) {
+			return &static, nil
+		}
+	}
+	return nil, fmt.Errorf("no location found with name: %s", staticIP)
 }
 
 func (service *Service) CreateStaticIP(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {

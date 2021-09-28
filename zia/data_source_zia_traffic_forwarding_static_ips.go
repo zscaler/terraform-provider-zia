@@ -1,7 +1,9 @@
 package zia
 
-/*
 import (
+	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
 )
@@ -11,75 +13,61 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 		Read: dataSourceTrafficForwardingStaticIPRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"geo_override": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"latitude": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"longitude": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"routable_ip": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"last_modification_time": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"managed_by": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
 			},
 			"last_modified_by": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -95,49 +83,67 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.staticips.GetStaticIP(d.Id())
-	if err != nil {
-		return nil
+	var resp *staticips.StaticIP
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if idSet && idIsInt && id > 0 {
+		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
+		res, err := zClient.staticips.GetStaticIP(id)
+		if err != nil {
+			return err
+		}
+		resp = res
 	}
 
-	d.SetId(resp.ID)
-	_ = d.Set("ip_address", resp.IpAddress)
-	_ = d.Set("geo_override", resp.GeoOverride)
-	_ = d.Set("latitude", resp.Latitude)
-	_ = d.Set("longitude", resp.Longitude)
-	_ = d.Set("routable_ip", resp.RoutableIP)
-	_ = d.Set("comment", resp.Comment)
-	_ = d.Set("last_nodification_time", resp.LastModificationTime)
-	_ = d.Set("managed_by", flattenManagedBy(resp))
-	_ = d.Set("last_modified_by", flattenLastModifiedBy(resp))
+	ipaddress, _ := d.Get("ip_address").(string)
+	if resp == nil && ipaddress != "" {
+		log.Printf("[INFO] Getting data for location name: %s\n", ipaddress)
+		res, err := zClient.staticips.GetStaticByIP(ipaddress)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	if resp != nil {
+		d.SetId(fmt.Sprintf("%d", resp.ID))
+		_ = d.Set("ip_address", resp.IpAddress)
+		_ = d.Set("geo_override", resp.GeoOverride)
+		_ = d.Set("latitude", resp.Latitude)
+		_ = d.Set("longitude", resp.Longitude)
+		_ = d.Set("routable_ip", resp.RoutableIP)
+		_ = d.Set("comment", resp.Comment)
+		_ = d.Set("last_modification_time", resp.LastModificationTime)
+
+		if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
+			return err
+		}
+
+		if err := d.Set("last_modified_by", flattenStaticLastModifiedBy(resp.LastModifiedBy)); err != nil {
+			return err
+		}
+
+	} else {
+		return fmt.Errorf("couldn't find any gre tunnel with id '%d'", id)
+	}
+
 	return nil
 }
 
-func flattenManagedBy(managedBy *staticips.StaticIP) []interface{} {
-	managed := make([]interface{}, len(managedBy.ManagedBy))
-	for i, managedItem := range managedBy.ManagedBy {
-		managed[i] = map[string]interface{}{
-
-			"id":         managedItem.ID,
-			"name":       managedItem.Name,
-			"extensions": managedItem.Extensions,
-		}
+func flattenStaticManagedBy(managedBy staticips.ManagedBy) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   managedBy.ID,
+			"name": managedBy.Name,
+		},
 	}
-
-	return managed
 }
 
-func flattenLastModifiedBy(lastModifiedBy *staticips.StaticIP) []interface{} {
-	lastModified := make([]interface{}, len(lastModifiedBy.LastModifiedBy))
-	for i, lastModifiedByItem := range lastModifiedBy.LastModifiedBy {
-		lastModified[i] = map[string]interface{}{
-
-			"id":         lastModifiedByItem.ID,
-			"name":       lastModifiedByItem.Name,
-			"extensions": lastModifiedByItem.Extensions,
-		}
+func flattenStaticLastModifiedBy(managedBy staticips.LastModifiedBy) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   managedBy.ID,
+			"name": managedBy.Name,
+		},
 	}
-
-	return lastModified
 }
-*/
