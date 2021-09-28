@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
@@ -139,3 +140,4 @@ func flattenLastModifiedBy(lastModifiedBy *staticips.StaticIP) []interface{} {
 
 	return lastModified
 }
+*/

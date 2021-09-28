@@ -19,44 +19,29 @@ type Location struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-func flattenManagedBy(managedBy []ManagedBy) []interface{} {
-	managed := make([]interface{}, len(managedBy))
-	for i, managedItem := range managedBy {
-		managed[i] = map[string]interface{}{
-
-			"id":         managedItem.ID,
-			"name":       managedItem.Name,
-			"extensions": managedItem.Extensions,
-		}
+func flattenManagedBy(managedBy ManagedBy) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   managedBy.ID,
+			"name": managedBy.Name,
+		},
 	}
-
-	return managed
 }
 
-func flattenLastModifiedBy(lastModifiedBy []LastModifiedBy) []interface{} {
-	lastModified := make([]interface{}, len(lastModifiedBy))
-	for i, lastModifiedByItem := range lastModifiedBy {
-		lastModified[i] = map[string]interface{}{
-
-			"id":         lastModifiedByItem.ID,
-			"name":       lastModifiedByItem.Name,
-			"extensions": lastModifiedByItem.Extensions,
-		}
+func flattenLastModifiedBy(lastModifiedBy LastModifiedBy) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   lastModifiedBy.ID,
+			"name": lastModifiedBy.Name,
+		},
 	}
-
-	return lastModified
 }
 
-func flattenLocation(location []Location) []interface{} {
-	locations := make([]interface{}, len(location))
-	for i, locationItem := range location {
-		locations[i] = map[string]interface{}{
-
-			"id":         locationItem.ID,
-			"name":       locationItem.Name,
-			"extensions": locationItem.Extensions,
-		}
+func flattenLocation(location Location) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":   location.ID,
+			"name": location.Name,
+		},
 	}
-
-	return locations
 }

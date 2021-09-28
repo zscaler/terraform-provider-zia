@@ -114,6 +114,7 @@ func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+// Want to simplify this. This flattening function will be used in multiple places.
 func flattenLocation(location vpncredentials.Location) interface{} {
 	return []map[string]interface{}{
 		{
@@ -123,6 +124,7 @@ func flattenLocation(location vpncredentials.Location) interface{} {
 	}
 }
 
+// Want to simplify this. This flattening function will be used in multiple places.
 func flattenVPNCredentialManagedBy(managedBy vpncredentials.ManagedBy) interface{} {
 	return []map[string]interface{}{
 		{

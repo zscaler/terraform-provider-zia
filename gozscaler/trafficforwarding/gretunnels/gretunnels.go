@@ -7,23 +7,23 @@ import (
 )
 
 const (
-	greTunnelsEndpoint       = "/greTunnels"
-	ipGreTunnelInfoEndpoint  = "/orgProvisioning/ipGreTunnelInfo"
-	greTunnelIPRangeEndpoint = "/greTunnels/availableInternalIpRanges"
+	greTunnelsEndpoint       = "/api/v1/greTunnels"
+	ipGreTunnelInfoEndpoint  = "/api/v1/orgProvisioning/ipGreTunnelInfo"
+	greTunnelIPRangeEndpoint = "/api/v1/greTunnels/availableInternalIpRanges"
 )
 
 type GreTunnels struct {
-	ID                   string             `json:"id,omitempty"`
-	SourceIP             string             `json:"sourceIp,omitempty"`
-	PrimaryDestVip       []PrimaryDestVip   `json:"primaryDestVip,omitempty"`
-	SecondaryDestVip     []SecondaryDestVip `json:"secondaryDestVip,omitempty"`
-	InternalIpRange      string             `json:"internalIpRange,omitempty"`
-	ManagedBy            []ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
-	LastModifiedBy       []LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
-	LastModificationTime string             `json:"lastModificationTime,omitempty"`
-	WithinCountry        bool               `json:"withinCountry"`
-	Comment              string             `json:"comment,omitempty"`
-	IpUnnumbered         bool               `json:"ipUnnumbered"`
+	ID                   int              `json:"id,omitempty"`
+	SourceIP             string           `json:"sourceIp,omitempty"`
+	PrimaryDestVip       PrimaryDestVip   `json:"primaryDestVip,omitempty"`
+	SecondaryDestVip     SecondaryDestVip `json:"secondaryDestVip,omitempty"`
+	InternalIpRange      string           `json:"internalIpRange,omitempty"`
+	ManagedBy            ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
+	LastModificationTime string           `json:"lastModificationTime,omitempty"`
+	WithinCountry        bool             `json:"withinCountry"`
+	Comment              string           `json:"comment,omitempty"`
+	IpUnnumbered         bool             `json:"ipUnnumbered"`
 }
 
 type PrimaryDestVip struct {
