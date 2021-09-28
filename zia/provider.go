@@ -43,9 +43,10 @@ func Provider() *schema.Provider {
 			"zia_public_node_virtual_address": dataSourcePublicNodeVirtualAddress(),
 			"zia_gre_virtual_ip_address_list": dataSourceGreVirtualIPAddressesList(),
 			//"zia_traffic_forwarding_static_ip": dataSourceTrafficForwardingStaticIP(),
-			"zia_location_management": dataSourceLocationManagement(),
-			"zia_vpn_credentials":     dataSourceVPNCredentials(),
-			"zia_activation_status":   dataSourceActivationStatus(),
+			"zia_traffic_forwarding_gre_tunnels": dataSourceTrafficForwardingGreTunnels(),
+			"zia_location_management":            dataSourceLocationManagement(),
+			"zia_vpn_credentials":                dataSourceVPNCredentials(),
+			"zia_activation_status":              dataSourceActivationStatus(),
 		},
 
 		ConfigureFunc: ziaConfigure,

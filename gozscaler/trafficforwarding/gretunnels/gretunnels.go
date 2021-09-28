@@ -2,6 +2,7 @@ package gretunnels
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -15,106 +16,54 @@ const (
 type GreTunnels struct {
 	ID                   int              `json:"id,omitempty"`
 	SourceIP             string           `json:"sourceIp,omitempty"`
-	PrimaryDestVip       PrimaryDestVip   `json:"primaryDestVip,omitempty"`
-	SecondaryDestVip     SecondaryDestVip `json:"secondaryDestVip,omitempty"`
 	InternalIpRange      string           `json:"internalIpRange,omitempty"`
-	ManagedBy            ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
-	LastModifiedBy       LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
-	LastModificationTime string           `json:"lastModificationTime,omitempty"`
+	LastModificationTime int              `json:"lastModificationTime,omitempty"`
 	WithinCountry        bool             `json:"withinCountry"`
 	Comment              string           `json:"comment,omitempty"`
 	IpUnnumbered         bool             `json:"ipUnnumbered"`
+	ManagedBy            ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
+	PrimaryDestVip       PrimaryDestVip   `json:"primaryDestVip,omitempty"`
+	SecondaryDestVip     SecondaryDestVip `json:"secondaryDestVip,omitempty"`
 }
 
 type PrimaryDestVip struct {
-	ID                 string `json:"id,omitempty"`
+	ID                 int    `json:"id,omitempty"`
 	VirtualIP          string `json:"virtualIp,omitempty"`
 	PrivateServiceEdge bool   `json:"privateServiceEdge"`
 	Datacenter         string `json:"datacenter,omitempty"`
 }
 
 type SecondaryDestVip struct {
-	ID                 string `json:"id,omitempty"`
+	ID                 int    `json:"id,omitempty"`
 	VirtualIP          string `json:"virtualIp,omitempty"`
 	PrivateServiceEdge bool   `json:"privateServiceEdge"`
 	Datacenter         string `json:"datacenter,omitempty"`
 }
 
 type ManagedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 type LastModifiedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-// Gets a list of IP addresses with GRE tunnel details.
-type IPGreTunnelInfo struct {
-	IpAddress         string `json:"ipAddress,omitempty"`
-	GreEnabled        bool   `json:"greEnabled,omitempty"`
-	GreTunnelIP       string `json:"greTunnelIP,omitempty"`
-	PrimaryGW         string `json:"primaryGW,omitempty"`
-	SecondaryGW       string `json:"secondaryGW,omitempty"`
-	TunID             string `json:"tunID,omitempty"`
-	GreRangePrimary   string `json:"greRangePrimary,omitempty"`
-	GreRangeSecondary string `json:"greRangeSecondary,omitempty"`
-}
-
-// Gets the next available GRE tunnel internal IP address ranges.
-type GRETunnelIPRange struct {
-	StartIPAddress string `json:"startIPAddress,omitempty"`
-	EndIPAddress   bool   `json:"endIPAddress,omitempty"`
-}
-
-// Gets all provisioned static IP addresses.
-type StaticIP struct {
-	ID                   string           `json:"id,omitempty"`
-	IpAddress            string           `json:"ipAddress,omitempty"`
-	GeoOverride          bool             `json:"geoOverride"`
-	Latitude             float64          `json:"latitude,omitempty"`
-	Longitude            float64          `json:"longitude,omitempty"`
-	RoutableIP           bool             `json:"routableIP,omitempty"`
-	LastModificationTime string           `json:"lastModificationTime,omitempty"`
-	ManagedBy            []ManagedBy      `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
-	LastModifiedBy       []LastModifiedBy `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
-	Comment              string           `json:"comment,omitempty"`
-}
-
 // Gets all provisioned GRE tunnel information.
-func (service *Service) GetGreTunnels(greTunnelID string) (*GreTunnels, error) {
+
+func (service *Service) GetGreTunnels(greTunnelID int) (*GreTunnels, error) {
 	var greTunnels GreTunnels
-	err := service.Client.Read(greTunnelsEndpoint+"/"+greTunnelID, &greTunnels)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID), &greTunnels)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning GRE Tunnels from Get: %s", greTunnels.ID)
+	log.Printf("Returning VPN Credentials from Get: %d", greTunnels.ID)
 	return &greTunnels, nil
-}
-
-// Gets a list of IP addresses with GRE tunnel details.
-func (service *Service) GetIPGreTunnelInfo() ([]IPGreTunnelInfo, error) {
-	var ipGreTunnelInfo []IPGreTunnelInfo
-	err := service.Client.Read(ipGreTunnelInfoEndpoint, &ipGreTunnelInfo)
-	if err != nil {
-		return nil, err
-	}
-
-	return ipGreTunnelInfo, nil
-}
-
-func (service *Service) GetGRETunnelIPRange() ([]GRETunnelIPRange, error) {
-	var greTunnelIPRange []GRETunnelIPRange
-	err := service.Client.Read(greTunnelIPRangeEndpoint, &greTunnelIPRange)
-	if err != nil {
-		return nil, err
-	}
-
-	return greTunnelIPRange, nil
 }
 
 // Adds a GRE tunnel configuration.
