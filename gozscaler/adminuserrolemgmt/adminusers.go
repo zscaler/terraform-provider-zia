@@ -1,4 +1,4 @@
-package adminrolemgmt
+package adminuserrolemgmt
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 
 const (
 	adminUsersEndpoint = "/adminUsers"
-	adminRolesEndpoint = "/adminRoles/lite"
 )
 
 type AdminUsers struct {

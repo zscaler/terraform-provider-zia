@@ -5,12 +5,12 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/adminrolemgmt"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 )
 
-func dataSourceAdminUserRoleMgmt() *schema.Resource {
+func dataSourceAdminUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAdminUserRoleMgmtRead,
+		Read: dataSourceAdminUsersRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -195,15 +195,15 @@ func dataSourceAdminUserRoleMgmt() *schema.Resource {
 	}
 }
 
-func dataSourceAdminUserRoleMgmtRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *adminrolemgmt.AdminUsers
+	var resp *adminuserrolemgmt.AdminUsers
 	idObj, idSet := d.GetOk("id")
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.adminrolemgmt.GetAdminUsers(id)
+		res, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func dataSourceAdminUserRoleMgmtRead(d *schema.ResourceData, m interface{}) erro
 	loginName, _ := d.Get("login_name").(string)
 	if resp == nil && loginName != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
-		res, err := zClient.adminrolemgmt.GetAdminUsersByName(loginName)
+		res, err := zClient.adminuserrolemgmt.GetAdminUsersByName(loginName)
 		if err != nil {
 			return err
 		}
@@ -251,7 +251,7 @@ func dataSourceAdminUserRoleMgmtRead(d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func flattenAdminUserRole(role adminrolemgmt.Role) interface{} {
+func flattenAdminUserRole(role adminuserrolemgmt.Role) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":               role.ID,
@@ -262,7 +262,7 @@ func flattenAdminUserRole(role adminrolemgmt.Role) interface{} {
 	}
 }
 
-func flattenExecMobileAppTokens(mobileAppTokens *adminrolemgmt.AdminUsers) []interface{} {
+func flattenExecMobileAppTokens(mobileAppTokens *adminuserrolemgmt.AdminUsers) []interface{} {
 	execMobileAppTokens := make([]interface{}, len(mobileAppTokens.ExecMobileAppTokens))
 	for i, execMobileApp := range mobileAppTokens.ExecMobileAppTokens {
 		execMobileAppTokens[i] = map[string]interface{}{
