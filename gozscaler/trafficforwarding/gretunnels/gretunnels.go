@@ -28,17 +28,27 @@ type GreTunnels struct {
 }
 
 type PrimaryDestVip struct {
-	ID                 int    `json:"id,omitempty"`
-	VirtualIP          string `json:"virtualIp,omitempty"`
-	PrivateServiceEdge bool   `json:"privateServiceEdge"`
-	Datacenter         string `json:"datacenter,omitempty"`
+	ID                 int     `json:"id,omitempty"`
+	VirtualIP          string  `json:"virtualIp,omitempty"`
+	PrivateServiceEdge bool    `json:"privateServiceEdge"`
+	Datacenter         string  `json:"datacenter,omitempty"`
+	Latitude           float64 `json:"latitude,omitempty"`
+	Longitude          float64 `json:"longitude,omitempty"`
+	City               string  `json:"city,omitempty"`
+	CountryCode        string  `json:"countryCode,omitempty"`
+	Region             string  `json:"region,omitempty"`
 }
 
 type SecondaryDestVip struct {
-	ID                 int    `json:"id,omitempty"`
-	VirtualIP          string `json:"virtualIp,omitempty"`
-	PrivateServiceEdge bool   `json:"privateServiceEdge"`
-	Datacenter         string `json:"datacenter,omitempty"`
+	ID                 int     `json:"id,omitempty"`
+	VirtualIP          string  `json:"virtualIp,omitempty"`
+	PrivateServiceEdge bool    `json:"privateServiceEdge"`
+	Datacenter         string  `json:"datacenter,omitempty"`
+	Latitude           float64 `json:"latitude,omitempty"`
+	Longitude          float64 `json:"longitude,omitempty"`
+	City               string  `json:"city,omitempty"`
+	CountryCode        string  `json:"countryCode,omitempty"`
+	Region             string  `json:"region,omitempty"`
 }
 
 type ManagedBy struct {

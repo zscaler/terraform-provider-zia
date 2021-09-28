@@ -41,6 +41,26 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"latitude": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"longitude": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"city": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"country_code": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -62,6 +82,26 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 							Computed: true,
 						},
 						"datacenter": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"latitude": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"longitude": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"city": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"country_code": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"region": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -177,6 +217,11 @@ func flattenGrePrimaryDestVip(primaryDestVip gretunnels.PrimaryDestVip) interfac
 			"virtual_ip":           primaryDestVip.VirtualIP,
 			"private_service_edge": primaryDestVip.PrivateServiceEdge,
 			"datacenter":           primaryDestVip.Datacenter,
+			"latitude":             primaryDestVip.Latitude,
+			"longitude":            primaryDestVip.Longitude,
+			"city":                 primaryDestVip.City,
+			"country_code":         primaryDestVip.CountryCode,
+			"region":               primaryDestVip.Region,
 		},
 	}
 }
@@ -188,6 +233,11 @@ func flattenGreSecondaryDestVip(secondaryDestVip gretunnels.SecondaryDestVip) in
 			"virtual_ip":           secondaryDestVip.VirtualIP,
 			"private_service_edge": secondaryDestVip.PrivateServiceEdge,
 			"datacenter":           secondaryDestVip.Datacenter,
+			"latitude":             secondaryDestVip.Latitude,
+			"longitude":            secondaryDestVip.Longitude,
+			"city":                 secondaryDestVip.City,
+			"country_code":         secondaryDestVip.CountryCode,
+			"region":               secondaryDestVip.Region,
 		},
 	}
 }
