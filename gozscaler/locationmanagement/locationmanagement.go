@@ -84,9 +84,9 @@ func (service *Service) GetLocationByName(locationName string) (*Locations, erro
 	if err != nil {
 		return nil, err
 	}
-	for _, user := range locations {
-		if strings.EqualFold(user.Name, locationName) {
-			return &user, nil
+	for _, location := range locations {
+		if strings.EqualFold(location.Name, locationName) {
+			return &location, nil
 		}
 	}
 	return nil, fmt.Errorf("no location found with name: %s", locationName)

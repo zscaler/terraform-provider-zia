@@ -1,9 +1,9 @@
 package vpncredentials
 
 import (
-	"errors"
+	"fmt"
 	"log"
-	"net/http"
+	"strings"
 )
 
 const (
@@ -11,13 +11,13 @@ const (
 )
 
 type VPNCredentials struct {
-	ID           int         `json:"id"`
-	Type         string      `json:"type,omitempty"`
-	FQDN         []string    `json:"fqdn"`
-	PreSharedKey string      `json:"preSharedKey,omitempty"`
-	Comments     string      `json:"comments,omitempty"`
-	Location     []Location  `json:"location"`
-	ManagedBy    []ManagedBy `json:"managedBy"`
+	ID           int       `json:"id"`
+	Type         string    `json:"type,omitempty"`
+	FQDN         string    `json:"fqdn"`
+	PreSharedKey string    `json:"preSharedKey,omitempty"`
+	Comments     string    `json:"comments,omitempty"`
+	Location     *Location `json:"location"`
+	ManagedBy    ManagedBy `json:"managedBy"`
 }
 
 type Location struct {
@@ -32,17 +32,33 @@ type ManagedBy struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-func (service *Service) GetVPNCredentials(vpnCredentialID string) (*VPNCredentials, error) {
+func (service *Service) GetVPNCredentials(vpnCredentialID int) (*VPNCredentials, error) {
 	var vpnCredentials VPNCredentials
-	err := service.Client.Read(vpnCredentialsEndpoint+"/"+vpnCredentialID, &vpnCredentials)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", vpnCredentialsEndpoint, vpnCredentialID), &vpnCredentials)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning VPN Credentials from Get: %s", vpnCredentials.ID)
+	log.Printf("Returning VPN Credentials from Get: %d", vpnCredentials.ID)
 	return &vpnCredentials, nil
 }
 
+func (service *Service) GetVPNCredentialsByFQDN(vpnCredentialName string) (*VPNCredentials, error) {
+	var vpnCredentials []VPNCredentials
+
+	err := service.Client.Read(vpnCredentialsEndpoint, &vpnCredentials)
+	if err != nil {
+		return nil, err
+	}
+	for _, vpnCredential := range vpnCredentials {
+		if strings.EqualFold(vpnCredential.FQDN, vpnCredentialName) {
+			return &vpnCredential, nil
+		}
+	}
+	return nil, fmt.Errorf("no vpn credentials found with fqdn: %s", vpnCredentialName)
+}
+
+/*
 func (service *Service) CreateVPNCredentials(vpnCredentialID *VPNCredentials) (*VPNCredentials, *http.Response, error) {
 	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentialID)
 	if err != nil {
@@ -77,3 +93,4 @@ func (service *Service) DeleteVPNCredentials(vpnCredentialID string) (*http.Resp
 
 	return nil, nil
 }
+*/
