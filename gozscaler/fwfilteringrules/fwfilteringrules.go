@@ -5,13 +5,14 @@ const (
 )
 
 type FirewallFilteringPolicies struct {
-	ID                  string                `json:"id,omitempty"`
+	ID                  int                   `json:"id,omitempty"`
 	Name                string                `json:"name,omitempty"`
-	Order               string                `json:"order,omitempty"`
-	Rank                string                `json:"rank,omitempty"`
+	Order               int                   `json:"order,omitempty"`
+	Rank                int                   `json:"rank,omitempty"`
 	Locations           []Locations           `json:"locations"`
 	LocationsGroups     []LocationsGroups     `json:"locationGroups"`
 	Departments         []Departments         `json:"departments"`
+	Groups              []Groups              `json:"groups"`
 	Users               []Users               `json:"users"`
 	TimeWindows         []TimeWindows         `json:"timeWindows"`
 	Action              string                `json:"action,omitempty"`
@@ -32,90 +33,110 @@ type FirewallFilteringPolicies struct {
 	AppServices         []AppServices         `json:"appServices"`
 	AppServiceGroups    []AppServiceGroups    `json:"appServiceGroups"`
 	Labels              []Labels              `json:"labels"`
-	DefaultRule         bool                  `json:"defaultRule,omitempty"`
-	Predefined          bool                  `json:"predefined,omitempty"`
+	DefaultRule         bool                  `json:"defaultRule"`
+	Predefined          bool                  `json:"predefined"`
 }
 
 // The locations to which the Firewall Filtering policy rule applies
 // This is an immutable reference to an entity. which mainly consists of id and name
 type Locations struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // The location groups to which the Firewall Filtering policy rule applies
 type LocationsGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // The departments to which the Firewall Filtering policy rule applies
 type Departments struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
+}
+
+// The groups to which the Firewall Filtering policy rule applies
+type Groups struct {
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // The users to which the Firewall Filtering policy rule applies
 type Users struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // The time interval in which the Firewall Filtering policy rule applies
 type TimeWindows struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 type LastModifiedBy struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // User-defined source IP address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address group.
 type SrcIpGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // User-defined destination IP address groups on which the rule is applied. If not set, the rule is not restricted to a specific destination IP address group.
 type DestIpGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
-
 type NwServices struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // User-defined network service applications on which the rule is applied. If not set, the rule is not restricted to a specific network service application.
 type NwServiceGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // User-defined network service application group on which the rule is applied. If not set, the rule is not restricted to a specific network service application group.
 type NwApplicationGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // Application services on which this rule is applied
 type AppServices struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // Application service groups on which this rule is applied
 type AppServiceGroups struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
 // Application service groups on which this rule is applied
 type Labels struct {
-	ID         string                 `json:"id,omitempty"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 

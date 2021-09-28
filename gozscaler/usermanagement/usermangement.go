@@ -15,7 +15,7 @@ const (
 	usersEndpoint      = "/users"
 )
 
-type Department struct {
+type Departments struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name,omitempty"`
 	IdpID    int    `json:"idpId"`
@@ -31,21 +31,21 @@ type Group struct {
 }
 
 type User struct {
-	ID            int        `json:"id"`
-	Name          string     `json:"name,omitempty"`
-	Email         string     `json:"email,omitempty"`
-	Groups        []Group    `json:"groups"`
-	Department    Department `json:"department"`
-	Comments      string     `json:"comments,omitempty"`
-	TempAuthEmail string     `json:"tempAuthEmail,omitempty"`
-	Password      string     `json:"password,omitempty"`
-	AdminUser     bool       `json:"adminUser"`
-	Type          string     `json:"type,omitempty"`
-	Deleted       bool       `json:"deleted"`
+	ID            int         `json:"id"`
+	Name          string      `json:"name,omitempty"`
+	Email         string      `json:"email,omitempty"`
+	Groups        []Group     `json:"groups"`
+	Department    Departments `json:"department"`
+	Comments      string      `json:"comments,omitempty"`
+	TempAuthEmail string      `json:"tempAuthEmail,omitempty"`
+	Password      string      `json:"password,omitempty"`
+	AdminUser     bool        `json:"adminUser"`
+	Type          string      `json:"type,omitempty"`
+	Deleted       bool        `json:"deleted"`
 }
 
-func (service *Service) GetDepartment(departmentID string) (*Department, error) {
-	var department Department
+func (service *Service) GetDepartment(departmentID string) (*Departments, error) {
+	var department Departments
 	err := service.Client.Read(departmentEndpoint+"/"+departmentID, &department)
 	if err != nil {
 		return nil, err
