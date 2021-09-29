@@ -167,7 +167,7 @@ func flattenGroups(groups []usermanagement.Group) []interface{} {
 	return group
 }
 
-func flattenDepartment(department usermanagement.Department) interface{} {
+func flattenDepartment(department usermanagement.Departments) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":       department.ID,
