@@ -139,7 +139,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
 
-		if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenGroup(resp.Groups)); err != nil {
 			return err
 		}
 
@@ -153,7 +153,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenGroups(groups []usermanagement.Group) []interface{} {
+func flattenGroup(groups []usermanagement.Group) []interface{} {
 	group := make([]interface{}, len(groups))
 	for i, val := range groups {
 		group[i] = map[string]interface{}{

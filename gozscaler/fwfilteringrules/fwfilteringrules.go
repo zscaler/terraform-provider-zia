@@ -1,14 +1,22 @@
 package fwfilteringrules
 
-const (
-	firewallPoliciesEndpoint = "/firewallFilteringRules"
+import (
+	"fmt"
+	"log"
+	"strings"
 )
 
-type FirewallFilteringPolicies struct {
+const (
+	firewallRulesEndpoint = "/firewallFilteringRules"
+)
+
+type FirewallFilteringRules struct {
 	ID                  int                   `json:"id,omitempty"`
 	Name                string                `json:"name,omitempty"`
 	Order               int                   `json:"order,omitempty"`
 	Rank                int                   `json:"rank,omitempty"`
+	AccessControl       string                `json:"accessControl,omitempty"`
+	EnableFullLogging   bool                  `json:"enableFullLogging"`
 	Locations           []Locations           `json:"locations"`
 	LocationsGroups     []LocationsGroups     `json:"locationGroups"`
 	Departments         []Departments         `json:"departments"`
@@ -20,15 +28,15 @@ type FirewallFilteringPolicies struct {
 	Description         string                `json:"description,omitempty"`
 	LastModifiedTime    string                `json:"lastModifiedTime,omitempty"`
 	LastModifiedBy      []LastModifiedBy      `json:"lastModifiedBy"`
-	SrcIps              string                `json:"srcIps,omitempty"`
+	SrcIps              []string              `json:"srcIps,omitempty"`
 	SrcIpGroups         []SrcIpGroups         `json:"srcIpGroups,omitempty"`
-	DestAddresses       string                `json:"destAddresses,omitempty"`
-	DestIpCategories    string                `json:"destIpCategories,omitempty"`
-	DestCountries       string                `json:"destCountries,omitempty"`
+	DestAddresses       []string              `json:"destAddresses,omitempty"`
+	DestIpCategories    []string              `json:"destIpCategories,omitempty"`
+	DestCountries       []string              `json:"destCountries,omitempty"`
 	DestIpGroups        []DestIpGroups        `json:"destIpGroups"`
 	NwServices          []NwServices          `json:"nwServices"`
 	NwServiceGroups     []NwServiceGroups     `json:"nwServiceGroups"`
-	NwApplications      string                `json:"nwApplications,omitempty"`
+	NwApplications      []string              `json:"nwApplications,omitempty"`
 	NwApplicationGroups []NwApplicationGroups `json:"nwApplicationGroups"`
 	AppServices         []AppServices         `json:"appServices"`
 	AppServiceGroups    []AppServiceGroups    `json:"appServiceGroups"`
@@ -133,48 +141,34 @@ type AppServiceGroups struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-// Application service groups on which this rule is applied
+// Labels that are applicable to the rule.
 type Labels struct {
 	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-/*
-func (service *Service) Get(ruleId string) (*FirewallFilteringPolicies, *http.Response, error) {
-	v := new(FirewallFilteringPolicies)
-	relativeURL := fmt.Sprintf("%s/%s", firewallPoliciesEndpoint, ruleId)
-	resp, err := service.Client.NewRequestDo("GET", relativeURL, nil, nil, v)
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, resp, nil
-}
-
-func (service *Service) Create(rules FirewallFilteringPolicies) (*FirewallFilteringPolicies, *http.Response, error) {
-	v := new(FirewallFilteringPolicies)
-	resp, err := service.Client.NewRequestDo("POST", firewallPoliciesEndpoint, nil, rules, &v)
-	if err != nil {
-		return nil, nil, err
-	}
-	return v, resp, nil
-}
-
-func (service *Service) Update(ruleId string, rule FirewallFilteringPolicies) (*http.Response, error) {
-	path := fmt.Sprintf("%s/%s", firewallPoliciesEndpoint, ruleId)
-	resp, err := service.Client.NewRequestDo("PUT", path, nil, ruleId, nil)
+func (service *Service) GetFirewallFilteringRules(ruleID int) (*FirewallFilteringRules, error) {
+	var rule FirewallFilteringRules
+	err := service.Client.Read(fmt.Sprintf("%s/%d", firewallRulesEndpoint, ruleID), &rule)
 	if err != nil {
 		return nil, err
 	}
-	return resp, err
+
+	log.Printf("Returning firewall rule from Get: %d", rule.ID)
+	return &rule, nil
 }
 
-func (service *Service) Delete(ruleId string) (*http.Response, error) {
-	path := fmt.Sprintf("%s/%s", firewallPoliciesEndpoint, ruleId)
-	resp, err := service.Client.NewRequestDo("DELETE", path, nil, nil, nil)
+func (service *Service) GetFirewallFilteringRulesByName(ruleName string) (*FirewallFilteringRules, error) {
+	var rules []FirewallFilteringRules
+	err := service.Client.Read(firewallRulesEndpoint, &rules)
 	if err != nil {
 		return nil, err
 	}
-	return resp, err
+	for _, rule := range rules {
+		if strings.EqualFold(rule.Name, ruleName) {
+			return &rule, nil
+		}
+	}
+	return nil, fmt.Errorf("no firewall rule found with name: %s", ruleName)
 }
-*/

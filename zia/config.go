@@ -8,6 +8,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/fwfilteringrules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
@@ -24,6 +25,7 @@ func init() {
 type Client struct {
 	adminauditlogs       *adminauditlogs.Service
 	adminuserrolemgmt    *adminuserrolemgmt.Service
+	fwfilteringrules     *fwfilteringrules.Service
 	dlpdictionaries      *dlpdictionaries.Service
 	usermanagement       *usermanagement.Service
 	gretunnels           *gretunnels.Service
@@ -50,6 +52,7 @@ func (c *Config) Client() (*Client, error) {
 	ziaClient := &Client{
 		adminauditlogs:       adminauditlogs.New(cli),
 		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
+		fwfilteringrules:     fwfilteringrules.New(cli),
 		dlpdictionaries:      dlpdictionaries.New(cli),
 		usermanagement:       usermanagement.New(cli),
 		virtualipaddresslist: virtualipaddresslist.New(cli),
