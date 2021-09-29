@@ -7,21 +7,8 @@ import (
 )
 
 const (
-	//	ipDestinationGroupsEndpoint     = "/ipDestinationGroups"
 	ipDestinationGroupsLiteEndpoint = "/ipDestinationGroups/lite"
 )
-
-/*
-type IPDestinationGroups struct {
-	ID           int      `json:"id"`
-	Name         string   `json:"name,omitempty"`
-	Type         string   `json:"type,omitempty"`
-	Addresses    []string `json:"addresses,omitempty"`
-	Description  string   `json:"description"`
-	IPCategories []string `json:"ipCategories"`
-	Countries    []string `json:"countries"`
-}
-*/
 
 type IPDestinationGroupsLite struct {
 	ID         int                    `json:"id"`
@@ -29,32 +16,6 @@ type IPDestinationGroupsLite struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-/*
-func (service *Service) GetIPDestinationGroups(ipDestinationGroupID int) (*IPDestinationGroups, error) {
-	var ipDestinationGroups IPDestinationGroups
-	err := service.Client.Read(fmt.Sprintf("%s/%d", ipDestinationGroupsEndpoint, ipDestinationGroupID), &ipDestinationGroups)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Returning ip destination group from Get: %d", ipDestinationGroups.ID)
-	return &ipDestinationGroups, nil
-}
-
-func (service *Service) GetIPDestinationGroupsByName(ipDestinationGroupsName string) (*IPDestinationGroups, error) {
-	var ipDestinationGroups []IPDestinationGroups
-	err := service.Client.Read(ipDestinationGroupsEndpoint, &ipDestinationGroups)
-	if err != nil {
-		return nil, err
-	}
-	for _, ipDestinationGroup := range ipDestinationGroups {
-		if strings.EqualFold(ipDestinationGroup.Name, ipDestinationGroupsName) {
-			return &ipDestinationGroup, nil
-		}
-	}
-	return nil, fmt.Errorf("no dictionary found with name: %s", ipDestinationGroupsName)
-}
-*/
 func (service *Service) GetIPDestinationGroupsLite(ipDestinationGroupLiteID int) (*IPDestinationGroupsLite, error) {
 	var ipDestinationGroupsLite IPDestinationGroupsLite
 	err := service.Client.Read(fmt.Sprintf("%s/%d", ipDestinationGroupsLiteEndpoint, ipDestinationGroupLiteID), &ipDestinationGroupsLite)
@@ -77,5 +38,5 @@ func (service *Service) GetIPDestinationGroupsLiteByName(ipDestinationLiteGroups
 			return &ipDestinationLiteGroup, nil
 		}
 	}
-	return nil, fmt.Errorf("no dictionary found with name: %s", ipDestinationLiteGroupsName)
+	return nil, fmt.Errorf("no ip destination group found with name: %s", ipDestinationLiteGroupsName)
 }
