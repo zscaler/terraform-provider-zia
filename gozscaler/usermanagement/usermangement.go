@@ -35,7 +35,7 @@ type User struct {
 	Name          string      `json:"name,omitempty"`
 	Email         string      `json:"email,omitempty"`
 	Groups        []Group     `json:"groups"`
-	Department    Departments `json:"department"`
+	Departments   Departments `json:"department"`
 	Comments      string      `json:"comments,omitempty"`
 	TempAuthEmail string      `json:"tempAuthEmail,omitempty"`
 	Password      string      `json:"password,omitempty"`
@@ -44,37 +44,79 @@ type User struct {
 	Deleted       bool        `json:"deleted"`
 }
 
-func (service *Service) GetDepartment(departmentID string) (*Departments, error) {
-	var department Departments
-	err := service.Client.Read(departmentEndpoint+"/"+departmentID, &department)
+func (service *Service) GetDepartments(departmentID int) (*Departments, error) {
+	var departments Departments
+	err := service.Client.Read(fmt.Sprintf("%s/%d", departmentEndpoint, departmentID), &departments)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning Department from Get: %v", department.ID)
-	return &department, nil
+	log.Printf("Returning departments from Get: %d", departments.ID)
+	return &departments, nil
 }
 
-func (service *Service) GetGroups(groupID string) (*[]Group, error) {
-	var groups []Group
-	err := service.Client.Read(groupsEndpoint+"/"+groupID, &groups)
+func (service *Service) GetDepartmentsByName(departmentName string) (*Departments, error) {
+	var departments []Departments
+	err := service.Client.Read(departmentEndpoint, &departments)
+	if err != nil {
+		return nil, err
+	}
+	for _, department := range departments {
+		if strings.EqualFold(department.Name, departmentName) {
+			return &department, nil
+		}
+	}
+	return nil, fmt.Errorf("no department found with name: %s", departmentName)
+}
+
+func (service *Service) GetGroups(groupID int) (*Group, error) {
+	var groups Group
+	err := service.Client.Read(fmt.Sprintf("%s/%d", groupsEndpoint, groupID), &groups)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning Groups from Get: %v", groups)
+	log.Printf("Returning Groups from Get: %d", groups.ID)
 	return &groups, nil
 }
 
-func (service *Service) GetUsers(groupID string) (*[]User, *http.Response, error) {
-	var users []User
-	err := service.Client.Read(usersEndpoint+"/"+groupID, &users)
+func (service *Service) GetGroupByName(groupName string) (*Group, error) {
+	var groups []Group
+	err := service.Client.Read(groupsEndpoint, &groups)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
+	}
+	for _, group := range groups {
+		if strings.EqualFold(group.Name, groupName) {
+			return &group, nil
+		}
+	}
+	return nil, fmt.Errorf("no group found with name: %s", groupName)
+}
+
+func (service *Service) GetUser(userID int) (*User, error) {
+	var user User
+	err := service.Client.Read(fmt.Sprintf("%s/%d", usersEndpoint, userID), &user)
+	if err != nil {
+		return nil, err
 	}
 
-	log.Printf("Returning Groups from Get: %v", users)
-	return &users, nil, nil
+	log.Printf("Returning Groups from Get: %d", user.ID)
+	return &user, nil
+}
+
+func (service *Service) GetUserByName(userName string) (*User, error) {
+	var users []User
+	err := service.Client.Read(fmt.Sprintf("%s?name=%s", usersEndpoint, url.QueryEscape(userName)), &users)
+	if err != nil {
+		return nil, err
+	}
+	for _, user := range users {
+		if strings.EqualFold(user.Name, userName) {
+			return &user, nil
+		}
+	}
+	return nil, fmt.Errorf("no user found with name: %s", userName)
 }
 
 func (service *Service) CreateUser(user *User) (*User, *http.Response, error) {
@@ -109,29 +151,4 @@ func (service *Service) DeleteUser(userID int) (*http.Response, error) {
 	}
 
 	return nil, nil
-}
-
-func (service *Service) GetUser(userID int) (*User, error) {
-	var user User
-	err := service.Client.Read(fmt.Sprintf("%s/%d", usersEndpoint, userID), &user)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Returning Groups from Get: %d", user.ID)
-	return &user, nil
-}
-
-func (service *Service) GetUserByName(userName string) (*User, error) {
-	var users []User
-	err := service.Client.Read(fmt.Sprintf("%s?name=%s", usersEndpoint, url.QueryEscape(userName)), &users)
-	if err != nil {
-		return nil, err
-	}
-	for _, user := range users {
-		if strings.EqualFold(user.Name, userName) {
-			return &user, nil
-		}
-	}
-	return nil, fmt.Errorf("no user found with name: %s", userName)
 }

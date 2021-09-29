@@ -112,7 +112,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	idObj, idSet := d.GetOk("id")
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
-		log.Printf("[INFO] Getting data for admin role management user id: %d\n", id)
+		log.Printf("[INFO] Getting data for user id: %d\n", id)
 		res, err := zClient.usermanagement.GetUser(id)
 		if err != nil {
 			return err
@@ -121,7 +121,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for admin role management user name: %s\n", name)
+		log.Printf("[INFO] Getting data for user : %s\n", name)
 		res, err := zClient.usermanagement.GetUserByName(name)
 		if err != nil {
 			return err
@@ -143,7 +143,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
-		if err := d.Set("department", flattenDepartment(resp.Department)); err != nil {
+		if err := d.Set("department", flattenDepartment(resp.Departments)); err != nil {
 			return err
 		}
 	} else {

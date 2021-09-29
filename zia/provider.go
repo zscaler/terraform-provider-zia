@@ -37,10 +37,12 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"zia_admin_users":      dataSourceAdminUsers(),
-			"zia_admin_roles":      dataSourceAdminRoles(),
-			"zia_user_management":  dataSourceUserManagement(),
-			"zia_public_node_vips": dataSourcePublicNodeVIPs(),
+			"zia_admin_users":           dataSourceAdminUsers(),
+			"zia_admin_roles":           dataSourceAdminRoles(),
+			"zia_user_management":       dataSourceUserManagement(),
+			"zia_group_management":      dataSourceGroupManagement(),
+			"zia_department_management": dataSourceDepartmentManagement(),
+			"zia_public_node_vips":      dataSourcePublicNodeVIPs(),
 			//"zia_gre_virtual_ip_address_list":    dataSourceGreVirtualIPAddressesList(),
 			"zia_traffic_forwarding_static_ip":   dataSourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_gre_tunnels": dataSourceTrafficForwardingGreTunnels(),
