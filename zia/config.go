@@ -8,7 +8,12 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/fwfilteringrules"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/fwfilteringrules"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipsourcegroups"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindows"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
@@ -26,6 +31,11 @@ type Client struct {
 	adminauditlogs       *adminauditlogs.Service
 	adminuserrolemgmt    *adminuserrolemgmt.Service
 	fwfilteringrules     *fwfilteringrules.Service
+	ipdestinationgroups  *ipdestinationgroups.Service
+	ipsourcegroups       *ipsourcegroups.Service
+	networkapplications  *networkapplications.Service
+	networkservices      *networkservices.Service
+	timewindows          *timewindows.Service
 	dlpdictionaries      *dlpdictionaries.Service
 	usermanagement       *usermanagement.Service
 	gretunnels           *gretunnels.Service
@@ -53,6 +63,11 @@ func (c *Config) Client() (*Client, error) {
 		adminauditlogs:       adminauditlogs.New(cli),
 		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
 		fwfilteringrules:     fwfilteringrules.New(cli),
+		ipdestinationgroups:  ipdestinationgroups.New(cli),
+		ipsourcegroups:       ipsourcegroups.New(cli),
+		networkapplications:  networkapplications.New(cli),
+		networkservices:      networkservices.New(cli),
+		timewindows:          timewindows.New(cli),
 		dlpdictionaries:      dlpdictionaries.New(cli),
 		usermanagement:       usermanagement.New(cli),
 		virtualipaddresslist: virtualipaddresslist.New(cli),
