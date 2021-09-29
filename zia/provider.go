@@ -43,6 +43,8 @@ func Provider() *schema.Provider {
 			"zia_group_management":        dataSourceGroupManagement(),
 			"zia_department_management":   dataSourceDepartmentManagement(),
 			"zia_firewall_filtering_rule": dataSourceFirewallFilteringRule(),
+			"zia_ip_destination_groups":   dataSourceIPDestinationGroups(),
+			"zia_ip_source_groups":        dataSourceIPSourceGroups(),
 			"zia_public_node_vips":        dataSourcePublicNodeVIPs(),
 			//"zia_gre_virtual_ip_address_list":    dataSourceGreVirtualIPAddressesList(),
 			"zia_traffic_forwarding_static_ip":   dataSourceTrafficForwardingStaticIP(),
