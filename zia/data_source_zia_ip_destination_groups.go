@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
 )
 
 func dataSourceIPDestinationGroups() *schema.Resource {
@@ -20,27 +20,26 @@ func dataSourceIPDestinationGroups() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"idp_id": {
-				Type:     schema.TypeInt,
+			"extensions": {
+				Type:     schema.TypeMap,
 				Computed: true,
-			},
-			"comments": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
 }
 
-func dataSourceGroupManagementRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Group
+	var resp *ipdestinationgroups.IPDestinationGroupsLite
 	idObj, idSet := d.GetOk("id")
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := zClient.usermanagement.GetGroups(id)
+		res, err := zClient.ipdestinationgroups.GetIPDestinationGroupsLite(id)
 		if err != nil {
 			return err
 		}
@@ -49,7 +48,7 @@ func dataSourceGroupManagementRead(d *schema.ResourceData, m interface{}) error 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for user : %s\n", name)
-		res, err := zClient.usermanagement.GetGroupByName(name)
+		res, err := zClient.ipdestinationgroups.GetIPDestinationGroupsLiteByName(name)
 		if err != nil {
 			return err
 		}
@@ -59,8 +58,7 @@ func dataSourceGroupManagementRead(d *schema.ResourceData, m interface{}) error 
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
-		_ = d.Set("idp_id", resp.IdpID)
-		_ = d.Set("comments", resp.Comments)
+		_ = d.Set("extensions", resp.Extensions)
 
 	} else {
 		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)

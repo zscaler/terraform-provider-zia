@@ -7,10 +7,11 @@ import (
 )
 
 const (
-	ipDestinationGroupsEndpoint     = "/ipDestinationGroups"
+	//	ipDestinationGroupsEndpoint     = "/ipDestinationGroups"
 	ipDestinationGroupsLiteEndpoint = "/ipDestinationGroups/lite"
 )
 
+/*
 type IPDestinationGroups struct {
 	ID           int      `json:"id"`
 	Name         string   `json:"name,omitempty"`
@@ -20,6 +21,7 @@ type IPDestinationGroups struct {
 	IPCategories []string `json:"ipCategories"`
 	Countries    []string `json:"countries"`
 }
+*/
 
 type IPDestinationGroupsLite struct {
 	ID         int                    `json:"id"`
@@ -27,6 +29,7 @@ type IPDestinationGroupsLite struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
+/*
 func (service *Service) GetIPDestinationGroups(ipDestinationGroupID int) (*IPDestinationGroups, error) {
 	var ipDestinationGroups IPDestinationGroups
 	err := service.Client.Read(fmt.Sprintf("%s/%d", ipDestinationGroupsEndpoint, ipDestinationGroupID), &ipDestinationGroups)
@@ -51,9 +54,9 @@ func (service *Service) GetIPDestinationGroupsByName(ipDestinationGroupsName str
 	}
 	return nil, fmt.Errorf("no dictionary found with name: %s", ipDestinationGroupsName)
 }
-
-func (service *Service) GetIPDestinationGroupsLite(ipDestinationGroupLiteID int) (*IPDestinationGroups, error) {
-	var ipDestinationGroupsLite IPDestinationGroups
+*/
+func (service *Service) GetIPDestinationGroupsLite(ipDestinationGroupLiteID int) (*IPDestinationGroupsLite, error) {
+	var ipDestinationGroupsLite IPDestinationGroupsLite
 	err := service.Client.Read(fmt.Sprintf("%s/%d", ipDestinationGroupsLiteEndpoint, ipDestinationGroupLiteID), &ipDestinationGroupsLite)
 	if err != nil {
 		return nil, err
@@ -63,9 +66,9 @@ func (service *Service) GetIPDestinationGroupsLite(ipDestinationGroupLiteID int)
 	return &ipDestinationGroupsLite, nil
 }
 
-func (service *Service) GetIPDestinationLiteGroupsByName(ipDestinationLiteGroupsName string) (*IPDestinationGroups, error) {
-	var ipDestinationLiteGroups []IPDestinationGroups
-	err := service.Client.Read(ipDestinationGroupsEndpoint, &ipDestinationLiteGroups)
+func (service *Service) GetIPDestinationGroupsLiteByName(ipDestinationLiteGroupsName string) (*IPDestinationGroupsLite, error) {
+	var ipDestinationLiteGroups []IPDestinationGroupsLite
+	err := service.Client.Read(ipDestinationGroupsLiteEndpoint, &ipDestinationLiteGroups)
 	if err != nil {
 		return nil, err
 	}
