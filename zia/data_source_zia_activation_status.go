@@ -1,6 +1,8 @@
 package zia
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -10,7 +12,7 @@ func dataSourceActivationStatus() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"status": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -24,7 +26,12 @@ func dataSourceActivationStatusRead(d *schema.ResourceData, m interface{}) error
 		return nil
 	}
 
-	_ = d.Set("status", resp.Status)
+	if resp != nil {
+		_ = d.Set("status", resp.Status)
+
+	} else {
+		return fmt.Errorf("couldn't find the activation status")
+	}
 
 	return nil
 }
