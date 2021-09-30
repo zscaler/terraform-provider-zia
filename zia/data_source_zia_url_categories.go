@@ -204,9 +204,9 @@ func flattenScopes(scopes *urlcategories.URLCategoryInformation) []interface{} {
 	scope := make([]interface{}, len(scopes.Scopes))
 	for i, val := range scopes.Scopes {
 		scope[i] = map[string]interface{}{
-			"type":           val.Type,
-			"scopes":         flattenScopeGroupMemberEntities(val.ScopeGroupMemberEntities),
-			"scope_entities": flattenScopeEntities(val.ScopeEntities),
+			"type":                        val.Type,
+			"scope_group_member_entities": flattenScopeGroupMemberEntities(val.ScopeGroupMemberEntities),
+			"scope_entities":              flattenScopeEntities(val.ScopeEntities),
 		}
 	}
 
