@@ -2,6 +2,7 @@ package adminuserrolemgmt
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -78,7 +79,6 @@ func (service *Service) GetAdminUsers(adminUserId int) (*AdminUsers, error) {
 
 func (service *Service) GetAdminUsersByName(adminUsersLoginName string) (*AdminUsers, error) {
 	var adminUsers []AdminUsers
-	// We are assuming this location name will be in the firsy 1000 obejcts
 	err := service.Client.Read(adminUsersEndpoint, &adminUsers)
 	if err != nil {
 		return nil, err
@@ -88,11 +88,11 @@ func (service *Service) GetAdminUsersByName(adminUsersLoginName string) (*AdminU
 			return &adminUser, nil
 		}
 	}
-	return nil, fmt.Errorf("no location found with name: %s", adminUsersLoginName)
+	return nil, fmt.Errorf("no admin user found with name: %s", adminUsersLoginName)
 }
 
-func (service *Service) Create(server AdminUsers) (*AdminUsers, error) {
-	resp, err := service.Client.Create(adminUsersEndpoint, server)
+func (service *Service) Create(adminUser AdminUsers) (*AdminUsers, error) {
+	resp, err := service.Client.Create(adminUsersEndpoint, adminUser)
 	if err != nil {
 		return nil, err
 	}
@@ -103,9 +103,9 @@ func (service *Service) Create(server AdminUsers) (*AdminUsers, error) {
 	return &res, nil
 }
 
-func (service *Service) Update(userId string, appServer AdminUsers) (*AdminUsers, error) {
-	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
-	resp, err := service.Client.Update(path, appServer)
+func (service *Service) Update(adminUserID int, adminUser AdminUsers) (*AdminUsers, error) {
+	path := fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID)
+	resp, err := service.Client.Update(path, adminUser)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,11 @@ func (service *Service) Update(userId string, appServer AdminUsers) (*AdminUsers
 	return &res, err
 }
 
-func (service *Service) Delete(userId string) error {
-	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, userId)
-	return service.Client.Delete(path)
+func (service *Service) Delete(adminUserID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
