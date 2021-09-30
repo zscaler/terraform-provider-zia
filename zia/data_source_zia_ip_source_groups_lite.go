@@ -1,0 +1,60 @@
+package zia
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipsourcegroups"
+)
+
+func dataSourceIPSourceGroups() *schema.Resource {
+	return &schema.Resource{
+		Read: dataSourceIPSourceGroupsRead,
+		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+		},
+	}
+}
+
+func dataSourceIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
+	zClient := m.(*Client)
+
+	var resp *ipsourcegroups.IPSourceGroupsLite
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if idSet && idIsInt && id > 0 {
+		log.Printf("[INFO] Getting ip source group id: %d\n", id)
+		res, err := zClient.ipsourcegroups.GetIPSourceGroupsLite(id)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting ip source group : %s\n", name)
+		res, err := zClient.ipsourcegroups.GetIPSourceGroupsLiteByName(name)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	if resp != nil {
+		d.SetId(fmt.Sprintf("%d", resp.ID))
+		_ = d.Set("name", resp.Name)
+
+	} else {
+		return fmt.Errorf("couldn't find any ip source group with name '%s' or id '%d'", name, id)
+	}
+
+	return nil
+}
