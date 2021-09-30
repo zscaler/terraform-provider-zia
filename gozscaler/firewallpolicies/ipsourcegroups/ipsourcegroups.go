@@ -22,20 +22,20 @@ func (service *Service) GetIPSourceGroupsLite(ipSourceGroupsLiteID int) (*IPSour
 		return nil, err
 	}
 
-	log.Printf("Returning ip source group lite from Get: %d", ipSourceGroupsLiteID)
+	log.Printf("Returning ip source group lite from Get: %d", ipSourceGroupsLite.ID)
 	return &ipSourceGroupsLite, nil
 }
 
-func (service *Service) GetIPSourceGroupsLiteByName(IPSourceGroupsLitesName string) (*IPSourceGroupsLite, error) {
+func (service *Service) GetIPSourceGroupsLiteByName(ipSourceGroupsLiteName string) (*IPSourceGroupsLite, error) {
 	var ipSourceGroupsLite []IPSourceGroupsLite
 	err := service.Client.Read(ipSourceGroupsLiteEndpoint, &ipSourceGroupsLite)
 	if err != nil {
 		return nil, err
 	}
 	for _, ipSourceGroupLite := range ipSourceGroupsLite {
-		if strings.EqualFold(ipSourceGroupLite.Name, IPSourceGroupsLitesName) {
+		if strings.EqualFold(ipSourceGroupLite.Name, ipSourceGroupsLiteName) {
 			return &ipSourceGroupLite, nil
 		}
 	}
-	return nil, fmt.Errorf("no ip source group found with name: %s", IPSourceGroupsLitesName)
+	return nil, fmt.Errorf("no ip source group found with name: %s", ipSourceGroupsLiteName)
 }
