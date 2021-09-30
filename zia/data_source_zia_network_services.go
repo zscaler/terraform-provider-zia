@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 )
 
-func dataSourceNetworkServicesLite() *schema.Resource {
+func dataSourceNetworkServices() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNetworkServicesLiteRead,
+		Read: dataSourceNetworkServicesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -104,7 +104,7 @@ func dataSourceNetworkServicesLite() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkServicesLiteRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *networkservices.NetworkServices

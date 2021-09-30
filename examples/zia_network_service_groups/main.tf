@@ -9,20 +9,22 @@ terraform {
 
 provider "zia" {}
 
+
+data "zia_network_service_groups" "example"{
+    name = "Corporate Remote Access Services"
+}
+
+output "zia_network_service_groups"{
+    value = data.zia_network_service_groups.example
+}
+
+
 /*
-data "zia_network_service_groups_lite" "example"{
-    name = "Test"
-}
-
-output "zia_network_service_groups_lite"{
-    value = data.zia_network_service_groups_lite.example
-}
-*/
-
-data "zia_network_services_lite" "example"{
+data "zia_network_services" "example"{
     name = "DNS"
 }
 
-output "zia_network_services_lite"{
-    value = data.zia_network_services_lite.example
+output "zia_network_services"{
+    value = data.zia_network_services.example
 }
+*/

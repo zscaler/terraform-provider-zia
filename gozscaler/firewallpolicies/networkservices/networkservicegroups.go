@@ -7,17 +7,23 @@ import (
 )
 
 const (
-	networkServiceGroupsEndpoint = "/networkServiceGroups/lite"
+	networkServiceGroupsEndpoint = "/networkServiceGroups/"
 )
 
 type NetworkServiceGroups struct {
-	ID   int    `json:"id"`
-	Name string `json:"name,omitempty"`
-	//Services    []Services `json:"services"`
-	Description string `json:"description"`
+	ID          int        `json:"id"`
+	Name        string     `json:"name,omitempty"`
+	Services    []Services `json:"services,omitempty"`
+	Description string     `json:"description,omitempty"`
+}
+type Services struct {
+	ID            int    `json:"id"`
+	Name          string `json:"name,omitempty"`
+	Description   string `json:"description,omitempty"`
+	IsNameL10nTag bool   `json:"isNameL10nTag"`
 }
 
-func (service *Service) GetNetworkServiceGroupsLite(NetworkServiceGroupsID int) (*NetworkServiceGroups, error) {
+func (service *Service) GetNetworkServiceGroups(NetworkServiceGroupsID int) (*NetworkServiceGroups, error) {
 	var networkServiceGroups NetworkServiceGroups
 	err := service.Client.Read(fmt.Sprintf("%s/%d", networkServiceGroupsEndpoint, NetworkServiceGroupsID), &networkServiceGroups)
 	if err != nil {
@@ -28,7 +34,7 @@ func (service *Service) GetNetworkServiceGroupsLite(NetworkServiceGroupsID int) 
 	return &networkServiceGroups, nil
 }
 
-func (service *Service) GetNetworkServiceGroupsLiteByName(networkserviceGroupsName string) (*NetworkServiceGroups, error) {
+func (service *Service) GetNetworkServiceGroupsByName(networkserviceGroupsName string) (*NetworkServiceGroups, error) {
 	var networkServiceGroups []NetworkServiceGroups
 	err := service.Client.Read(networkServiceGroupsEndpoint, &networkServiceGroups)
 	if err != nil {

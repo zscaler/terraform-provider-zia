@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	networkApplicationGroupsLiteEndpoint = "/networkApplicationGroups/lite"
+	networkAppGroupsEndpoint = "/networkApplicationGroups"
 )
 
 type NetworkApplicationGroups struct {
@@ -19,7 +19,7 @@ type NetworkApplicationGroups struct {
 
 func (service *Service) GetNetworkApplicationGroups(groupID int) (*NetworkApplicationGroups, error) {
 	var networkApplicationGroups NetworkApplicationGroups
-	err := service.Client.Read(fmt.Sprintf("%s/%d", networkApplicationGroupsLiteEndpoint, groupID), &networkApplicationGroups)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", networkAppGroupsEndpoint, groupID), &networkApplicationGroups)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (service *Service) GetNetworkApplicationGroups(groupID int) (*NetworkApplic
 
 func (service *Service) GetNetworkApplicationGroupsByName(appGroupsName string) (*NetworkApplicationGroups, error) {
 	var networkApplicationGroups []NetworkApplicationGroups
-	err := service.Client.Read(networkApplicationGroupsLiteEndpoint, &networkApplicationGroups)
+	err := service.Client.Read(networkAppGroupsEndpoint, &networkApplicationGroups)
 	if err != nil {
 		return nil, err
 	}
