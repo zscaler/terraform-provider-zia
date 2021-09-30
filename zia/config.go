@@ -19,6 +19,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlcategories"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
 
@@ -37,6 +38,7 @@ type Client struct {
 	networkservices      *networkservices.Service
 	dlpdictionaries      *dlpdictionaries.Service
 	urlcategories        *urlcategories.Service
+	urlfilteringpolicies *urlfilteringpolicies.Service
 	usermanagement       *usermanagement.Service
 	gretunnels           *gretunnels.Service
 	staticips            *staticips.Service
@@ -69,6 +71,7 @@ func (c *Config) Client() (*Client, error) {
 		networkservices:      networkservices.New(cli),
 		dlpdictionaries:      dlpdictionaries.New(cli),
 		urlcategories:        urlcategories.New(cli),
+		urlfilteringpolicies: urlfilteringpolicies.New(cli),
 		usermanagement:       usermanagement.New(cli),
 		virtualipaddresslist: virtualipaddresslist.New(cli),
 		vpncredentials:       vpncredentials.New(cli),

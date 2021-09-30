@@ -25,10 +25,6 @@ func dataSourceURLCategories() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			// "urls": {
-			// 	Type:     schema.TypeString,
-			// 	Computed: true,
-			// },
 			"db_categorized_urls": {
 				Type:     schema.TypeList,
 				Computed: true,
