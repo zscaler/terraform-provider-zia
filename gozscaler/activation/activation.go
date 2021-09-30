@@ -11,7 +11,7 @@ const (
 )
 
 type Activation struct {
-	Status string `json:"status,omitempty"`
+	Status string `json:"status"`
 }
 
 func (service *Service) GetActivationStatus() (*Activation, error) {
