@@ -14,7 +14,6 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/timewindows"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
@@ -35,7 +34,6 @@ type Client struct {
 	ipsourcegroups       *ipsourcegroups.Service
 	networkapplications  *networkapplications.Service
 	networkservices      *networkservices.Service
-	timewindows          *timewindows.Service
 	dlpdictionaries      *dlpdictionaries.Service
 	usermanagement       *usermanagement.Service
 	gretunnels           *gretunnels.Service
@@ -67,7 +65,6 @@ func (c *Config) Client() (*Client, error) {
 		ipsourcegroups:       ipsourcegroups.New(cli),
 		networkapplications:  networkapplications.New(cli),
 		networkservices:      networkservices.New(cli),
-		timewindows:          timewindows.New(cli),
 		dlpdictionaries:      dlpdictionaries.New(cli),
 		usermanagement:       usermanagement.New(cli),
 		virtualipaddresslist: virtualipaddresslist.New(cli),
