@@ -20,7 +20,7 @@ output "zia_network_service_groups_lite"{
 */
 
 data "zia_network_services_lite" "example"{
-    name = "ICMP_ANY"
+    name = "DNS"
 }
 
 output "zia_network_services_lite"{

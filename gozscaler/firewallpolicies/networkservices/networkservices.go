@@ -20,7 +20,7 @@ type NetworkServices struct {
 	DestUDPPorts  []DestUDPPorts `json:"destUdpPorts"`
 	Type          string         `json:"type"`
 	Description   string         `json:"description"`
-	IsNameL10nTag string         `json:"isNameL10nTag"`
+	IsNameL10nTag bool           `json:"isNameL10nTag"`
 }
 type SrcTCPPorts struct {
 	Start int `json:"start,omitempty"`
