@@ -34,7 +34,9 @@ func Provider() *schema.Provider {
 			},
 		},
 
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"zia_activation_status": resourceActivationStatus(),
+		},
 
 		DataSourcesMap: map[string]*schema.Resource{
 			"zia_admin_users":                     dataSourceAdminUsers(),

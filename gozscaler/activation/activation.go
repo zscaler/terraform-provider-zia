@@ -2,7 +2,6 @@ package activation
 
 import (
 	"errors"
-	"net/http"
 )
 
 const (
@@ -24,16 +23,16 @@ func (service *Service) GetActivationStatus() (*Activation, error) {
 	return &activation, nil
 }
 
-func (service *Service) CreateActivation(activation *Activation) (*Activation, *http.Response, error) {
+func (service *Service) CreateActivation(activation Activation) (*Activation, error) {
 	resp, err := service.Client.Create(activationEndpoint, activation)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	createdActivation, ok := resp.(*Activation)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not an activation Pointer")
+		return nil, errors.New("object returned from api was not an activation pointer")
 	}
 
-	return createdActivation, nil, nil
+	return createdActivation, nil
 }
