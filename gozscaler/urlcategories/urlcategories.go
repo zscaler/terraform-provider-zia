@@ -1,8 +1,10 @@
 package urlcategories
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strings"
 )
@@ -11,7 +13,7 @@ const (
 	urlCategoriesEndpoint = "/urlCategories"
 )
 
-type URLCategoryInformation struct {
+type URLCategory struct {
 	ID                               string           `json:"id"`
 	ConfiguredName                   string           `json:"configuredName"`
 	Urls                             []string         `json:"urls"`
@@ -49,27 +51,61 @@ type URLKeywordCounts struct {
 	RetainParentKeywordCount int `json:"retainParentKeywordCount"`
 }
 
-func (service *Service) GetURLCategories(urlCategoryInfoID string) (*URLCategoryInformation, error) {
-	var urlCategoryInfo URLCategoryInformation
-	err := service.Client.Read(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, urlCategoryInfoID), &urlCategoryInfo)
+func (service *Service) GetURLCategories(categoryID string) (*URLCategory, error) {
+	var urlCategory URLCategory
+	err := service.Client.Read(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID), &urlCategory)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning custom url category from Get: %s", urlCategoryInfo.ID)
-	return &urlCategoryInfo, nil
+	log.Printf("Returning custom url category from Get: %s", urlCategory.ID)
+	return &urlCategory, nil
 }
 
-func (service *Service) GetCustomURLCategories(customName string) (*URLCategoryInformation, error) {
-	var urlCategories []URLCategoryInformation
-	err := service.Client.Read(fmt.Sprintf("%s?customOnly=%s", urlCategoriesEndpoint, url.QueryEscape(customName)), &urlCategories)
+func (service *Service) GetCustomURLCategories(customName string) (*URLCategory, error) {
+	var urlCategory []URLCategory
+	err := service.Client.Read(fmt.Sprintf("%s?customOnly=%s", urlCategoriesEndpoint, url.QueryEscape(customName)), &urlCategory)
 	if err != nil {
 		return nil, err
 	}
-	for _, custom := range urlCategories {
+	for _, custom := range urlCategory {
 		if strings.EqualFold(custom.ID, customName) {
 			return &custom, nil
 		}
 	}
 	return nil, fmt.Errorf("no custom url category found with name: %s", customName)
+}
+
+func (service *Service) CreateURLCategories(category *URLCategory) (*URLCategory, error) {
+	resp, err := service.Client.Create(urlCategoriesEndpoint, *category)
+	if err != nil {
+		return nil, err
+	}
+
+	createdUrlCategory, ok := resp.(*URLCategory)
+	if !ok {
+		return nil, errors.New("object returned from API was not a User Pointer")
+	}
+
+	log.Printf("Returning User from Create: %v", createdUrlCategory.ID)
+	return createdUrlCategory, nil
+}
+
+func (service *Service) UpdateURLCategories(categoryID string, category *URLCategory) (*URLCategory, error) {
+	resp, err := service.Client.Update(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID), *category)
+	if err != nil {
+		return nil, err
+	}
+	updatedUrlCategory, _ := resp.(*URLCategory)
+	log.Printf("Returning User from Update: %s", updatedUrlCategory.ID)
+	return updatedUrlCategory, nil
+}
+
+func (service *Service) DeleteURLCategories(categoryID string) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
