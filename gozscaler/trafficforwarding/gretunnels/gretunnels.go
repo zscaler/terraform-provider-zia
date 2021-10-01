@@ -20,7 +20,7 @@ type GreTunnels struct {
 	LastModificationTime int              `json:"lastModificationTime,omitempty"`
 	WithinCountry        bool             `json:"withinCountry"`
 	Comment              string           `json:"comment,omitempty"`
-	IpUnnumbered         bool             `json:"ipUnnumbered"`
+	IPUnnumbered         bool             `json:"ipUnnumbered"`
 	ManagedBy            ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
 	LastModifiedBy       LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
 	PrimaryDestVip       PrimaryDestVip   `json:"primaryDestVip,omitempty"`
@@ -72,7 +72,7 @@ func (service *Service) GetGreTunnels(greTunnelID int) (*GreTunnels, error) {
 		return nil, err
 	}
 
-	log.Printf("Returning VPN Credentials from Get: %d", greTunnels.ID)
+	log.Printf("returning gre tunnel from get: %d", greTunnels.ID)
 	return &greTunnels, nil
 }
 
@@ -85,10 +85,10 @@ func (service *Service) CreateGreTunnels(greTunnelID *GreTunnels) (*GreTunnels, 
 
 	createdGreTunnels, ok := resp.(*GreTunnels)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a GRE Tunnel Pointer")
+		return nil, nil, errors.New("object returned from api was not a gre tunnel pointer")
 	}
 
-	log.Printf("Returning GRE Tunnel from Create: %s", createdGreTunnels.ID)
+	log.Printf("returning gre tunnels from create: %d", createdGreTunnels.ID)
 	return createdGreTunnels, nil, nil
 }
 
@@ -99,12 +99,12 @@ func (service *Service) UpdateGreTunnels(greTunnelID string, greTunnels *GreTunn
 	}
 	updatedGreTunnels, _ := resp.(*GreTunnels)
 
-	log.Printf("Returning GRE Tunnels from Update: %s", updatedGreTunnels.ID)
+	log.Printf("returning gre tunnels from update: %d", updatedGreTunnels.ID)
 	return updatedGreTunnels, nil, nil
 }
 
-func (service *Service) DeleteGreTunnels(greTunnelID string) (*http.Response, error) {
-	err := service.Client.Delete(greTunnelsEndpoint + "/" + greTunnelID)
+func (service *Service) DeleteGreTunnels(greTunnelID int) (*http.Response, error) {
+	err := service.Client.Delete("%s/%d", greTunnelsEndpoint, greTunnelID)
 	if err != nil {
 		return nil, err
 	}
