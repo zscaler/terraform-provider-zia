@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	dlpDictionariesEndpoint     = "/dlpDictionaries"
-	dlpDictionariesLiteEndpoint = "/dlpDictionaries/lite"
+	dlpDictionariesEndpoint = "/dlpDictionaries"
 )
 
 type DlpDictionary struct {
@@ -37,9 +36,9 @@ type Patterns struct {
 	Pattern string `json:"pattern,omitempty"`
 }
 
-func (service *Service) GetDlpDictionaries(dlpDictionariesID int) (*DlpDictionary, error) {
+func (service *Service) GetDlpDictionaries(dlpDictionariesID string) (*DlpDictionary, error) {
 	var dlpDictionary DlpDictionary
-	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
 	if err != nil {
 		return nil, err
 	}
@@ -62,61 +61,34 @@ func (service *Service) GetDlpDictionaryByName(dictionaryName string) (*DlpDicti
 	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryName)
 }
 
-// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
-func (service *Service) GetDlpDictionaryLite(dlpDictionariesLiteID int) (*DlpDictionary, error) {
-	var dlpDictionariesLite DlpDictionary
-	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesLiteEndpoint, dlpDictionariesLiteID), &dlpDictionariesLite)
+func (service *Service) CreateDlpDictionary(dlpDictionary *DlpDictionary) (*DlpDictionary, error) {
+	resp, err := service.Client.Create(dlpDictionariesEndpoint, *dlpDictionary)
 	if err != nil {
 		return nil, err
-	}
-
-	log.Printf("Returning dictionary from Get: %d", dlpDictionariesLite.ID)
-	return &dlpDictionariesLite, nil
-}
-
-// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
-func (service *Service) GetDlpDictionaryLiteByName(dictionaryLiteName string) (*DlpDictionary, error) {
-	var dictionariesLite []DlpDictionary
-	err := service.Client.Read(dlpDictionariesLiteEndpoint, &dictionariesLite)
-	if err != nil {
-		return nil, err
-	}
-	for _, dictionaryLite := range dictionariesLite {
-		if strings.EqualFold(dictionaryLite.Name, dictionaryLiteName) {
-			return &dictionaryLite, nil
-		}
-	}
-	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryLiteName)
-}
-
-func (service *Service) CreateDlpDictionary(dlpDictionariesID *DlpDictionary) (*DlpDictionary, *http.Response, error) {
-	resp, err := service.Client.Create(dlpDictionariesEndpoint, *dlpDictionariesID)
-	if err != nil {
-		return nil, nil, err
 	}
 
 	createdDlpDictionary, ok := resp.(*DlpDictionary)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a Dlp Dictionary Pointer")
+		return nil, errors.New("object returned from api was not a dlp dictionary pointer")
 	}
 
-	log.Printf("Returning new custom DLP dictionary that uses Patterns and Phrases from Create: %s", createdDlpDictionary.ID)
-	return createdDlpDictionary, nil, nil
+	log.Printf("Returning new custom DLP dictionary that uses Patterns and Phrases from Create: %d", createdDlpDictionary.ID)
+	return createdDlpDictionary, nil
 }
 
-func (service *Service) UpdateDlpDictionary(dlpDictionariesID string, dlpDictionaries *DlpDictionary) (*DlpDictionary, *http.Response, error) {
-	resp, err := service.Client.Update(dlpDictionariesEndpoint+"/"+dlpDictionariesID, *dlpDictionaries)
+func (service *Service) UpdateDlpDictionary(dlpDictionariesID string, dlpDictionaries *DlpDictionary) (*DlpDictionary, error) {
+	resp, err := service.Client.Update(fmt.Sprintf("%s/%s", dlpDictionariesEndpoint, dlpDictionariesID), *dlpDictionaries)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	updatedDlpDictionary, _ := resp.(*DlpDictionary)
 
-	log.Printf("Returning updates custom DLP dictionary that uses Patterns and Phrases from Update: %s", updatedDlpDictionary.ID)
-	return updatedDlpDictionary, nil, nil
+	log.Printf("Returning updates custom DLP dictionary that uses Patterns and Phrases from Update: %d", updatedDlpDictionary.ID)
+	return updatedDlpDictionary, nil
 }
 
 func (service *Service) DeleteDlpDictionary(dlpDictionariesID string) (*http.Response, error) {
-	err := service.Client.Delete(dlpDictionariesEndpoint + "/" + dlpDictionariesID)
+	err := service.Client.Delete(fmt.Sprintf("%s/%s", dlpDictionariesEndpoint, dlpDictionariesID))
 	if err != nil {
 		return nil, err
 	}
