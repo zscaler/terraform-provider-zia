@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"log"
 
@@ -78,4 +77,3 @@ func expandActivation(d *schema.ResourceData) activation.Activation {
 		Status: d.Get("status").(string),
 	}
 }
-*/

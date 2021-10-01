@@ -67,9 +67,9 @@ type ExecMobileAppTokens struct {
 	DeviceName  string `json:"deviceName,omitempty"`
 }
 
-func (service *Service) GetAdminUsers(adminUserId int) (*AdminUsers, error) {
+func (service *Service) GetAdminUsers(adminUserId string) (*AdminUsers, error) {
 	v := new(AdminUsers)
-	relativeURL := fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserId)
+	relativeURL := fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserId)
 	err := service.Client.Read(relativeURL, v)
 	if err != nil {
 		return nil, err
@@ -91,7 +91,7 @@ func (service *Service) GetAdminUsersByName(adminUsersLoginName string) (*AdminU
 	return nil, fmt.Errorf("no admin user found with name: %s", adminUsersLoginName)
 }
 
-func (service *Service) Create(adminUser AdminUsers) (*AdminUsers, error) {
+func (service *Service) CreateAdminUser(adminUser AdminUsers) (*AdminUsers, error) {
 	resp, err := service.Client.Create(adminUsersEndpoint, adminUser)
 	if err != nil {
 		return nil, err
@@ -103,8 +103,8 @@ func (service *Service) Create(adminUser AdminUsers) (*AdminUsers, error) {
 	return &res, nil
 }
 
-func (service *Service) Update(adminUserID int, adminUser AdminUsers) (*AdminUsers, error) {
-	path := fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID)
+func (service *Service) UpdateAdminUser(adminUserID string, adminUser AdminUsers) (*AdminUsers, error) {
+	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserID)
 	resp, err := service.Client.Update(path, adminUser)
 	if err != nil {
 		return nil, err
@@ -113,8 +113,8 @@ func (service *Service) Update(adminUserID int, adminUser AdminUsers) (*AdminUse
 	return &res, err
 }
 
-func (service *Service) Delete(adminUserID int) (*http.Response, error) {
-	err := service.Client.Delete(fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID))
+func (service *Service) DeleteAdminUser(adminUserID string) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserID))
 	if err != nil {
 		return nil, err
 	}

@@ -65,9 +65,9 @@ type LastModifiedBy struct {
 
 // Gets all provisioned GRE tunnel information.
 
-func (service *Service) GetGreTunnels(greTunnelID int) (*GreTunnels, error) {
+func (service *Service) GetGreTunnels(greTunnelID string) (*GreTunnels, error) {
 	var greTunnels GreTunnels
-	err := service.Client.Read(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID), &greTunnels)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", greTunnelsEndpoint, greTunnelID), &greTunnels)
 	if err != nil {
 		return nil, err
 	}
@@ -103,13 +103,11 @@ func (service *Service) UpdateGreTunnels(greTunnelID string, greTunnels *GreTunn
 	return updatedGreTunnels, nil, nil
 }
 
-/*
-func (service *Service) DeleteGreTunnels(greTunnelID int) (*http.Response, error) {
-	err := service.Client.Delete("%s/%d", greTunnelsEndpoint, greTunnelID)
+func (service *Service) DeleteGreTunnels(greTunnelID string) (*http.Response, error) {
+	err := service.Client.Delete(greTunnelsEndpoint + "/" + greTunnelID)
 	if err != nil {
 		return nil, err
 	}
 
 	return nil, nil
 }
-*/

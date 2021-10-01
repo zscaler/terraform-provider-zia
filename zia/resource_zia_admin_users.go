@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -192,7 +191,7 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	req := expandAdminUsers(d)
 	log.Printf("[INFO] Creating zia admin user with request\n%+v\n", req)
 
-	resp, err := zClient.adminuserrolemgmt.Create(req)
+	resp, err := zClient.adminuserrolemgmt.CreateAdminUser(req)
 	if err != nil {
 		return err
 	}
@@ -243,7 +242,7 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Updating admin users ID: %v\n", id)
 	req := expandAdminUsers(d)
 
-	if _, err := zClient.adminuserrolemgmt.Update(id, &req); err != nil {
+	if _, err := zClient.adminuserrolemgmt.UpdateAdminUser(id, req); err != nil {
 		return err
 	}
 
@@ -254,17 +253,18 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	// Need to pass the ID (int) of the resource for deletion
-	log.Printf("[INFO] Deleting segment group ID: %v\n", id)
+	log.Printf("[INFO] Deleting admin user ID: %v\n", (d.Id()))
 
-	if _, err := zClient.adminuserrolemgmt.Delete(id); err != nil {
+	if _, err := zClient.adminuserrolemgmt.DeleteAdminUser(d.Id()); err != nil {
 		return err
 	}
+
 	d.SetId("")
-	log.Printf("[INFO] segment group deleted")
+	log.Printf("[INFO] admin user deleted")
 	return nil
 }
 
-// Review expand functions to ensure it is probably set up
+// Review expand functions to ensure it is set up correctly
 func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 	return adminuserrolemgmt.AdminUsers{
 		LoginName:                   d.Get("login_name").(string),
@@ -338,4 +338,3 @@ func expandScopeEntities(d *schema.ResourceData) []adminuserrolemgmt.ScopeEntiti
 
 	return scopeEntities
 }
-*/

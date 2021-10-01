@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -115,7 +114,7 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 	req := expandGRETunnel(d)
 	log.Printf("[INFO] Creating zia gre tunnel\n%+v\n", req)
 
-	resp, _, err := zClient.gretunnels.CreateGreTunnels(req)
+	resp, _, err := zClient.gretunnels.CreateGreTunnels(&req)
 	if err != nil {
 		return err
 	}
@@ -175,7 +174,7 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	log.Printf("[INFO] Updating gre tunnel ID: %v\n", id)
 	req := expandGRETunnel(d)
 
-	if _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
+	if _, _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
 		return err
 	}
 
@@ -185,7 +184,6 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	// Need to pass the ID (int) of the resource for deletion
 	log.Printf("[INFO] Deleting gre tunnel ID: %v\n", (d.Id()))
 
 	if _, err := zClient.gretunnels.DeleteGreTunnels(d.Id()); err != nil {
@@ -236,4 +234,3 @@ func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
 
 	return lastModifiedBy
 }
-*/
