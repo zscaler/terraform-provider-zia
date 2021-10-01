@@ -103,6 +103,7 @@ func (service *Service) UpdateGreTunnels(greTunnelID string, greTunnels *GreTunn
 	return updatedGreTunnels, nil, nil
 }
 
+/*
 func (service *Service) DeleteGreTunnels(greTunnelID int) (*http.Response, error) {
 	err := service.Client.Delete("%s/%d", greTunnelsEndpoint, greTunnelID)
 	if err != nil {
@@ -111,3 +112,4 @@ func (service *Service) DeleteGreTunnels(greTunnelID int) (*http.Response, error
 
 	return nil, nil
 }
+*/

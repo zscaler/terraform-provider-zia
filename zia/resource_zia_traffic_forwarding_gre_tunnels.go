@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -10,12 +11,12 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 )
 
-func resourceGRETunnel() *schema.Resource {
+func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceGRETunnelCreate,
-		Read:     resourceGRETunnelRead,
-		Update:   resourceGRETunnelUpdate,
-		Delete:   resourceGRETunnelDelete,
+		Create:   resourceTrafficForwardingGRETunnelCreate,
+		Read:     resourceTrafficForwardingGRETunnelRead,
+		Update:   resourceTrafficForwardingGRETunnelUpdate,
+		Delete:   resourceTrafficForwardingGRETunnelDelete,
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
@@ -108,7 +109,7 @@ func resourceGRETunnel() *schema.Resource {
 	}
 }
 
-func resourceGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
+func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	req := expandGRETunnel(d)
@@ -121,10 +122,10 @@ func resourceGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Created zia gre tunnel request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 
-	return resourceGRETunnelRead(d, m)
+	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
-func resourceGRETunnelRead(d *schema.ResourceData, m interface{}) error {
+func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	resp, err := zClient.gretunnels.GetGreTunnels(d.Id())
@@ -167,7 +168,7 @@ func resourceGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id := d.Id()
@@ -178,10 +179,10 @@ func resourceGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	return resourceGRETunnelRead(d, m)
+	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
-func resourceGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
+func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	// Need to pass the ID (int) of the resource for deletion
@@ -235,3 +236,4 @@ func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
 
 	return lastModifiedBy
 }
+*/

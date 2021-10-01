@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -337,3 +338,4 @@ func expandScopeEntities(d *schema.ResourceData) []adminuserrolemgmt.ScopeEntiti
 
 	return scopeEntities
 }
+*/

@@ -9,11 +9,22 @@ terraform {
 
 provider "zia" {}
 
+resource "zia_traffic_forwarding_static_ip" "example"{
+    ip_address = [ "100.100.100.1" ]
+    routable_ip = true
+    comment = "Created with Terraform"
+}
+
+output "zia_traffic_forwarding_static_ip"{
+    value = zia_traffic_forwarding_static_ip.example
+}
+
+/*
 data "zia_traffic_forwarding_static_ip" "example"{
-    //id = 61125
     ip_address = "96.53.93.170"
 }
 
 output "zia_traffic_forwarding_static_ip"{
     value = data.zia_traffic_forwarding_static_ip.example
 }
+*/

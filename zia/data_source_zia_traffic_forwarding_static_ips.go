@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -84,16 +85,17 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	zClient := m.(*Client)
 
 	var resp *staticips.StaticIP
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
-		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
-		res, err := zClient.staticips.GetStaticIP(id)
-		if err != nil {
-			return err
+	/*
+		idObj, idSet := d.GetOk("id")
+		id, idIsInt := idObj.(int)
+		if idSet && idIsInt && id > 0 {
+			log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
+			res, err := zClient.staticips.GetStaticIP(id)
+			if err != nil {
+				return err
+			}
+			resp = res
 		}
-		resp = res
-	}
 
 	ipaddress, _ := d.Get("ip_address").(string)
 	if resp == nil && ipaddress != "" {
@@ -124,7 +126,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any gre tunnel with id '%d'", id)
+		return fmt.Errorf("couldn't find any ip address with id '%s'", ipaddress)
 	}
 
 	return nil
@@ -147,3 +149,4 @@ func flattenStaticLastModifiedBy(managedBy staticips.LastModifiedBy) interface{}
 		},
 	}
 }
+*/

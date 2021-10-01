@@ -208,16 +208,18 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	zClient := m.(*Client)
 
 	var resp *locationmanagement.Locations
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
-		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.locationmanagement.GetLocations(id)
-		if err != nil {
-			return err
+	/*
+		idObj, idSet := d.GetOk("id")
+		id, idIsInt := idObj.(int)
+		if idSet && idIsInt && id > 0 {
+			log.Printf("[INFO] Getting data for location id: %d\n", id)
+			res, err := zClient.locationmanagement.GetLocations(id)
+			if err != nil {
+				return err
+			}
+			resp = res
 		}
-		resp = res
-	}
+	*/
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
@@ -263,7 +265,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any location with name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any location with name '%s'", name)
 	}
 
 	return nil

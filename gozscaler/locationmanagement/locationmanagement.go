@@ -1,14 +1,14 @@
 package locationmanagement
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 )
 
 const (
-	locationsEndpoint     = "/locations"
-	locationsLiteEndpoint = "/locations/lite"
+	locationsEndpoint = "/locations"
 )
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.
@@ -66,9 +66,9 @@ type VPNCredentials struct {
 }
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
-func (service *Service) GetLocations(locationID int) (*Locations, error) {
+func (service *Service) GetLocations(locationID string) (*Locations, error) {
 	var location Locations
-	err := service.Client.Read(fmt.Sprintf("%s/%d", locationsEndpoint, locationID), &location)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", locationsEndpoint, locationID), &location)
 	if err != nil {
 		return nil, err
 	}
@@ -92,15 +92,39 @@ func (service *Service) GetLocationByName(locationName string) (*Locations, erro
 	return nil, fmt.Errorf("no location found with name: %s", locationName)
 }
 
-// Gets a name and ID dictionary of locations.
-func (service *Service) GetLocationLite(locationLite string) (*Locations, error) {
-	var lite Locations
-	err := service.Client.Read(locationsLiteEndpoint, &locationLite)
+func (service *Service) CreateLocations(locations *Locations) (*Locations, error) {
+	resp, err := service.Client.Create(locationsEndpoint, *locations)
 	if err != nil {
 		return nil, err
 	}
 
-	return &lite, nil
+	createdLocations, ok := resp.(*Locations)
+	if !ok {
+		return nil, errors.New("object returned from api was not a location pointer")
+	}
+
+	log.Printf("returning locations from create: %d", createdLocations.ID)
+	return createdLocations, nil
+}
+
+func (service *Service) UpdateLocations(locationsID string, locations *Locations) (*Locations, error) {
+	resp, err := service.Client.Update(locationsEndpoint+"/"+locationsID, *locations)
+	if err != nil {
+		return nil, err
+	}
+	updatedLocations, _ := resp.(*Locations)
+
+	log.Printf("returning locations from Update: %d", updatedLocations.ID)
+	return updatedLocations, nil
+}
+
+func (service *Service) DeleteLocations(locationsID string) error {
+	err := service.Client.Delete(locationsEndpoint + "/" + locationsID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Gets a name and ID dictionary of locations.
