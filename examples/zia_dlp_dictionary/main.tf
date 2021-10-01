@@ -9,6 +9,27 @@ terraform {
 
 provider "zia" {}
 
+resource "zia_dlp_dictionaries" "example"{
+    name = "Your Dictionary Name"
+    description = "Your Description"
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "YourPhrase"
+    }
+    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "YourPattern"
+    }
+    name_l10n_tag = false
+    dictionary_type = "PATTERNS_AND_PHRASES"
+}
+
+output "zia_dlp_dictionaries_example"{
+    value = zia_dlp_dictionaries.example
+}
+
+/*
 data "zia_dlp_dictionaries" "example1"{
     name = "SALESFORCE_REPORT_LEAKAGE"
 }
@@ -40,3 +61,4 @@ data "zia_dlp_dictionaries" "example4"{
 output "zia_dlp_dictionaries_example4"{
     value = data.zia_dlp_dictionaries.example4
 }
+*/

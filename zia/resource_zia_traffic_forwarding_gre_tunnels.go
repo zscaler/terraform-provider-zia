@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -234,3 +235,4 @@ func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
 
 	return lastModifiedBy
 }
+*/

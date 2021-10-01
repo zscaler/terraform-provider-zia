@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -259,3 +260,4 @@ func flattenGreLastModifiedBy(managedBy gretunnels.LastModifiedBy) interface{} {
 		},
 	}
 }
+*/

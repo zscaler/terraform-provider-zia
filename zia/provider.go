@@ -35,14 +35,14 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			//"zia_admin_users":                        resourceAdminUsers(),
+			"zia_admin_users":      resourceAdminUsers(),
 			"zia_dlp_dictionaries": resourceDLPDictionaries(),
 			//"zia_traffic_forwarding_gre_tunnel":      resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":       resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials": resourceTrafficForwardingVPNCredentials(),
 			"zia_location_management":                resourceLocationManagement(),
 			"zia_url_categories":                     resourceURLCategories(),
-			//"zia_activation_status":                  resourceActivationStatus(),
+			"zia_activation_status":                  resourceActivationStatus(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
