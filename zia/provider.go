@@ -36,15 +36,17 @@ func Provider() *schema.Provider {
 
 		ResourcesMap: map[string]*schema.Resource{
 			//"zia_admin_users":                        resourceAdminUsers(),
+			"zia_dlp_dictionaries": resourceDLPDictionaries(),
 			//"zia_traffic_forwarding_gre_tunnel":      resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":       resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials": resourceTrafficForwardingVPNCredentials(),
 			"zia_location_management":                resourceLocationManagement(),
+			"zia_url_categories":                     resourceURLCategories(),
 			//"zia_activation_status":                  resourceActivationStatus(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			"zia_admin_users":                     dataSourceAdminUsers(),
+			//"zia_admin_users":                     dataSourceAdminUsers(),
 			"zia_admin_roles":                     dataSourceAdminRoles(),
 			"zia_user_management":                 dataSourceUserManagement(),
 			"zia_group_management":                dataSourceGroupManagement(),
@@ -60,12 +62,11 @@ func Provider() *schema.Provider {
 			"zia_public_node_vips":                dataSourcePublicNodeVIPs(),
 			//"zia_gre_virtual_ip_address_list":    dataSourceGreVirtualIPAddressesList(),
 			//"zia_traffic_forwarding_static_ip":   dataSourceTrafficForwardingStaticIP(),
-			"zia_traffic_forwarding_gre_tunnels": dataSourceTrafficForwardingGreTunnels(),
-			"zia_location_management":            dataSourceLocationManagement(),
+			//"zia_traffic_forwarding_gre_tunnels": dataSourceTrafficForwardingGreTunnels(),
+			"zia_location_management": dataSourceLocationManagement(),
 			//"zia_traffic_forwarding_vpn_credentials": dataSourceTrafficForwardingVPNCredentials(),
-			"zia_dlp_dictionaries":      dataSourceDLPDictionaries(),
-			"zia_dlp_dictionaries_lite": dataSourceDLPDictionariesLite(),
-			"zia_activation_status":     dataSourceActivationStatus(),
+			"zia_dlp_dictionaries":  dataSourceDLPDictionaries(),
+			"zia_activation_status": dataSourceActivationStatus(),
 		},
 
 		ConfigureFunc: ziaConfigure,
