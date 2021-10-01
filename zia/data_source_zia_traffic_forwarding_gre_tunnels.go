@@ -186,7 +186,7 @@ func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interfa
 		_ = d.Set("last_modification_time", resp.LastModificationTime)
 		_ = d.Set("within_country", resp.WithinCountry)
 		_ = d.Set("comment", resp.Comment)
-		_ = d.Set("ip_unnumbered", resp.IpUnnumbered)
+		_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
 		if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVip(resp.PrimaryDestVip)); err != nil {
 			return err
 		}

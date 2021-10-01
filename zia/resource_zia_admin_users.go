@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -195,7 +196,7 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Created zia admin user request. ID: %v\n", resp)
-	d.SetId(resp.ID)
+	d.SetId(strconv.Itoa(resp.ID))
 
 	return resourceAdminUsersRead(d, m)
 }
