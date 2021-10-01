@@ -5,21 +5,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 )
 
 const (
-	staticIPEndpoint         = "/staticIP"
-	staticIPValidateEndpoint = "/staticIP/validate"
+	staticIPEndpoint = "/staticIP"
 )
 
 // Gets all provisioned static IP addresses.
 type StaticIP struct {
 	ID                   int            `json:"id,omitempty"`
-	IpAddress            string         `json:"ipAddress,omitempty"`
+	IpAddress            []string       `json:"ipAddress"`
 	GeoOverride          bool           `json:"geoOverride"`
-	Latitude             float64        `json:"latitude,omitempty"`
-	Longitude            float64        `json:"longitude,omitempty"`
+	Latitude             int            `json:"latitude,omitempty"`
+	Longitude            int            `json:"longitude,omitempty"`
 	RoutableIP           bool           `json:"routableIP,omitempty"`
 	LastModificationTime int            `json:"lastModificationTime"`
 	Comment              string         `json:"comment,omitempty"`
@@ -39,9 +37,9 @@ type LastModifiedBy struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-func (service *Service) GetStaticIP(staticIpID int) (*StaticIP, error) {
+func (service *Service) GetStaticIP(staticIpID string) (*StaticIP, error) {
 	var staticIP StaticIP
-	err := service.Client.Read(fmt.Sprintf("%s/%d", staticIPEndpoint, staticIpID), &staticIP)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", staticIPEndpoint, staticIpID), &staticIP)
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +48,9 @@ func (service *Service) GetStaticIP(staticIpID int) (*StaticIP, error) {
 	return &staticIP, nil
 }
 
+/*
 func (service *Service) GetStaticByIP(staticIP string) (*StaticIP, error) {
 	var staticips []StaticIP
-	// We are assuming this location name will be in the firsy 1000 obejcts
 	err := service.Client.Read(staticIPEndpoint, &staticips)
 	if err != nil {
 		return nil, err
@@ -62,8 +60,9 @@ func (service *Service) GetStaticByIP(staticIP string) (*StaticIP, error) {
 			return &static, nil
 		}
 	}
-	return nil, fmt.Errorf("no location found with name: %s", staticIP)
+	return nil, fmt.Errorf("no static ip found with name: %s", staticIP)
 }
+*/
 
 func (service *Service) CreateStaticIP(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {
 	resp, err := service.Client.Create(staticIPEndpoint, *staticIpID)
@@ -73,27 +72,11 @@ func (service *Service) CreateStaticIP(staticIpID *StaticIP) (*StaticIP, *http.R
 
 	createdStaticIP, ok := resp.(*StaticIP)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a Static IP Pointer")
+		return nil, nil, errors.New("object returned from api was not a static ip pointer")
 	}
 
-	log.Printf("Returning Static IP from Create: %s", createdStaticIP.ID)
+	log.Printf("returning static ip from create: %d", createdStaticIP.ID)
 	return createdStaticIP, nil, nil
-}
-
-// Not sure if I want this in the code. All it does it return a "SUCCESS" message
-func (service *Service) CreateStaticIPValidate(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {
-	resp, err := service.Client.Create(staticIPValidateEndpoint, *staticIpID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	createdStaticIPValidate, ok := resp.(*StaticIP)
-	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a Static IP Pointer")
-	}
-
-	log.Printf("Returning Static IP validate from Create: %s", createdStaticIPValidate.ID)
-	return createdStaticIPValidate, nil, nil
 }
 
 func (service *Service) UpdateStaticIP(staticIpID string, staticIP *StaticIP) (*StaticIP, *http.Response, error) {
@@ -103,7 +86,7 @@ func (service *Service) UpdateStaticIP(staticIpID string, staticIP *StaticIP) (*
 	}
 	updatedStaticIP, _ := resp.(*StaticIP)
 
-	log.Printf("Returning Static IP from Update: %s", updatedStaticIP.ID)
+	log.Printf("returning static ip from update: %d", updatedStaticIP.ID)
 	return updatedStaticIP, nil, nil
 }
 

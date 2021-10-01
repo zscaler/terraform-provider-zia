@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -8,9 +9,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 )
 
-func dataSourceVPNCredentials() *schema.Resource {
+func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPNCredentialsRead,
+		Read: dataSourceTrafficForwardingVPNCredentialsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -69,7 +70,7 @@ func dataSourceVPNCredentials() *schema.Resource {
 	}
 }
 
-func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *vpncredentials.VPNCredentials
@@ -99,11 +100,11 @@ func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("fqdn", resp.FQDN)
 		_ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
-		if err := d.Set("location", flattenLocation(resp.Location)); err != nil {
+		if err := d.Set("location", flattenVPNCredentialsLocation(resp.Location)); err != nil {
 			return err
 		}
 
-		if err := d.Set("managed_by", flattenVPNCredentialManagedBy(resp.ManagedBy)); err != nil {
+		if err := d.Set("managed_by", flattenVPNCredentialsManagedBy(resp.ManagedBy)); err != nil {
 			return err
 		}
 
@@ -115,7 +116,7 @@ func dataSourceVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 }
 
 // Want to simplify this. This flattening function will be used in multiple places.
-func flattenLocation(location vpncredentials.Location) interface{} {
+func flattenVPNCredentialsLocation(location vpncredentials.Location) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":   location.ID,
@@ -125,7 +126,7 @@ func flattenLocation(location vpncredentials.Location) interface{} {
 }
 
 // Want to simplify this. This flattening function will be used in multiple places.
-func flattenVPNCredentialManagedBy(managedBy vpncredentials.ManagedBy) interface{} {
+func flattenVPNCredentialsManagedBy(managedBy vpncredentials.ManagedBy) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":   managedBy.ID,
@@ -133,3 +134,4 @@ func flattenVPNCredentialManagedBy(managedBy vpncredentials.ManagedBy) interface
 		},
 	}
 }
+*/

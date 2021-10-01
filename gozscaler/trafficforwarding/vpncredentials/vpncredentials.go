@@ -1,8 +1,10 @@
 package vpncredentials
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -28,9 +30,9 @@ type ManagedBy struct {
 	Name string `json:"name"`
 }
 
-func (service *Service) GetVPNCredentials(vpnCredentialID int) (*VPNCredentials, error) {
+func (service *Service) GetVPNCredentials(vpnCredentialID string) (*VPNCredentials, error) {
 	var vpnCredentials VPNCredentials
-	err := service.Client.Read(fmt.Sprintf("%s/%d", vpnCredentialsEndpoint, vpnCredentialID), &vpnCredentials)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", vpnCredentialsEndpoint, vpnCredentialID), &vpnCredentials)
 	if err != nil {
 		return nil, err
 	}
@@ -54,20 +56,19 @@ func (service *Service) GetVPNCredentialsByFQDN(vpnCredentialName string) (*VPNC
 	return nil, fmt.Errorf("no vpn credentials found with fqdn: %s", vpnCredentialName)
 }
 
-/*
-func (service *Service) CreateVPNCredentials(vpnCredentialID *VPNCredentials) (*VPNCredentials, *http.Response, error) {
-	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentialID)
+func (service *Service) CreateVPNCredentials(vpnCredentials *VPNCredentials) (*VPNCredentials, error) {
+	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentials)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	createdVpnCredentials, ok := resp.(*VPNCredentials)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a VPN Credential Pointer")
+		return nil, errors.New("object returned from api was not a vpn credential pointer")
 	}
 
-	log.Printf("Returning VPN Credential from Create: %s", createdVpnCredentials.ID)
-	return createdVpnCredentials, nil, nil
+	log.Printf("returning vpn credential from create: %d", createdVpnCredentials.ID)
+	return createdVpnCredentials, nil
 }
 
 func (service *Service) UpdateVPNCredentials(vpnCredentialID string, vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
@@ -77,7 +78,7 @@ func (service *Service) UpdateVPNCredentials(vpnCredentialID string, vpnCredenti
 	}
 	updatedVpnCredentials, _ := resp.(*VPNCredentials)
 
-	log.Printf("Returning VPN Credential from Update: %s", updatedVpnCredentials.ID)
+	log.Printf("returning vpn credential from Update: %d", updatedVpnCredentials.ID)
 	return updatedVpnCredentials, nil, nil
 }
 
@@ -89,4 +90,3 @@ func (service *Service) DeleteVPNCredentials(vpnCredentialID string) (*http.Resp
 
 	return nil, nil
 }
-*/
