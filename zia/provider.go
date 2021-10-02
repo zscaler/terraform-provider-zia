@@ -52,6 +52,7 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_rule":         dataSourceFirewallFilteringRule(),
 			"zia_ip_destination_groups":           dataSourceIPDestinationGroups(),
 			"zia_network_application_groups_lite": dataSourceNetworkApplicationGroupsLite(),
+			"zia_network_application":             dataSourceNetworkApplication(),
 			"zia_network_service_groups":          dataSourceNetworkServiceGroups(),
 			"zia_network_services":                dataSourceNetworkServices(),
 			"zia_url_categories":                  dataSourceURLCategories(),

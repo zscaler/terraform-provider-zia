@@ -86,9 +86,8 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 
 	var resp *staticips.StaticIP
 	/*
-		idObj, idSet := d.GetOk("id")
-		id, idIsInt := idObj.(int)
-		if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 			log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
 			res, err := zClient.staticips.GetStaticIP(id)
 			if err != nil {

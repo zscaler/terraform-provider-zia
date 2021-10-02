@@ -88,9 +88,8 @@ func dataSourceDLPDictionariesLiteRead(d *schema.ResourceData, m interface{}) er
 	zClient := m.(*Client)
 
 	var resp *dlpdictionaries.DlpDictionary
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
 		res, err := zClient.dlpdictionaries.GetDlpDictionaryLite(id)
 		if err != nil {

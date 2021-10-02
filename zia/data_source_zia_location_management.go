@@ -209,16 +209,15 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 
 	var resp *locationmanagement.Locations
 	/*
-		idObj, idSet := d.GetOk("id")
-		id, idIsInt := idObj.(int)
-		if idSet && idIsInt && id > 0 {
-			log.Printf("[INFO] Getting data for location id: %d\n", id)
-			res, err := zClient.locationmanagement.GetLocations(id)
-			if err != nil {
-				return err
+		id, ok := getIntFromResourceData(d, "id")
+		if ok {
+				log.Printf("[INFO] Getting data for location id: %d\n", id)
+				res, err := zClient.locationmanagement.GetLocations(id)
+				if err != nil {
+					return err
+				}
+				resp = res
 			}
-			resp = res
-		}
 	*/
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {

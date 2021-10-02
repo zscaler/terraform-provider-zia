@@ -28,9 +28,8 @@ func dataSourceIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *ipsourcegroups.IPSourceGroupsLite
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting ip source group id: %d\n", id)
 		res, err := zClient.ipsourcegroups.GetIPSourceGroupsLite(id)
 		if err != nil {
