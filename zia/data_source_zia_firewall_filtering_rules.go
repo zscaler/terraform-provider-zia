@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/fwfilteringrules"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 )
 
 func dataSourceFirewallFilteringRule() *schema.Resource {
@@ -401,12 +401,12 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *fwfilteringrules.FirewallFilteringRules
+	var resp *filteringrules.FirewallFilteringRules
 	idObj, idSet := d.GetOk("id")
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
 		log.Printf("[INFO] Getting data for rule id: %d\n", id)
-		res, err := zClient.fwfilteringrules.GetFirewallFilteringRules(id)
+		res, err := zClient.filteringrules.Get(id)
 		if err != nil {
 			return err
 		}
@@ -415,7 +415,7 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for rule : %s\n", name)
-		res, err := zClient.fwfilteringrules.GetFirewallFilteringRulesByName(name)
+		res, err := zClient.filteringrules.GetByName(name)
 		if err != nil {
 			return err
 		}
@@ -507,7 +507,7 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 	return nil
 }
 
-func flattenLocations(locations []fwfilteringrules.Locations) []interface{} {
+func flattenLocations(locations []filteringrules.Locations) []interface{} {
 	location := make([]interface{}, len(locations))
 	for i, val := range locations {
 		location[i] = map[string]interface{}{
@@ -520,7 +520,7 @@ func flattenLocations(locations []fwfilteringrules.Locations) []interface{} {
 	return location
 }
 
-func flattenLocationGroups(locationGroups []fwfilteringrules.LocationsGroups) []interface{} {
+func flattenLocationGroups(locationGroups []filteringrules.LocationsGroups) []interface{} {
 	locationGroup := make([]interface{}, len(locationGroups))
 	for i, val := range locationGroups {
 		locationGroup[i] = map[string]interface{}{
@@ -533,7 +533,7 @@ func flattenLocationGroups(locationGroups []fwfilteringrules.LocationsGroups) []
 	return locationGroup
 }
 
-func flattenDepartments(departments []fwfilteringrules.Departments) []interface{} {
+func flattenDepartments(departments []filteringrules.Departments) []interface{} {
 	department := make([]interface{}, len(departments))
 	for i, val := range departments {
 		department[i] = map[string]interface{}{
@@ -546,7 +546,7 @@ func flattenDepartments(departments []fwfilteringrules.Departments) []interface{
 	return department
 }
 
-func flattenGroups(groups []fwfilteringrules.Groups) []interface{} {
+func flattenGroups(groups []filteringrules.Groups) []interface{} {
 	group := make([]interface{}, len(groups))
 	for i, val := range groups {
 		group[i] = map[string]interface{}{
@@ -559,7 +559,7 @@ func flattenGroups(groups []fwfilteringrules.Groups) []interface{} {
 	return group
 }
 
-func flattenUsers(users []fwfilteringrules.Users) []interface{} {
+func flattenUsers(users []filteringrules.Users) []interface{} {
 	user := make([]interface{}, len(users))
 	for i, val := range users {
 		user[i] = map[string]interface{}{
@@ -572,7 +572,7 @@ func flattenUsers(users []fwfilteringrules.Users) []interface{} {
 	return user
 }
 
-func flattenTimeWindows(timeWindows []fwfilteringrules.TimeWindows) []interface{} {
+func flattenTimeWindows(timeWindows []filteringrules.TimeWindows) []interface{} {
 	timeWindow := make([]interface{}, len(timeWindows))
 	for i, val := range timeWindows {
 		timeWindow[i] = map[string]interface{}{
@@ -585,7 +585,7 @@ func flattenTimeWindows(timeWindows []fwfilteringrules.TimeWindows) []interface{
 	return timeWindow
 }
 
-func flattenLastModifiedBy(lastModifiedBy []fwfilteringrules.LastModifiedBy) []interface{} {
+func flattenLastModifiedBy(lastModifiedBy []filteringrules.LastModifiedBy) []interface{} {
 	lastModified := make([]interface{}, len(lastModifiedBy))
 	for i, val := range lastModifiedBy {
 		lastModified[i] = map[string]interface{}{
@@ -598,7 +598,7 @@ func flattenLastModifiedBy(lastModifiedBy []fwfilteringrules.LastModifiedBy) []i
 	return lastModified
 }
 
-func flattenSrcIPGroups(srcIPGroups []fwfilteringrules.SrcIpGroups) []interface{} {
+func flattenSrcIPGroups(srcIPGroups []filteringrules.SrcIpGroups) []interface{} {
 	srcIpGroup := make([]interface{}, len(srcIPGroups))
 	for i, val := range srcIPGroups {
 		srcIpGroup[i] = map[string]interface{}{
@@ -611,7 +611,7 @@ func flattenSrcIPGroups(srcIPGroups []fwfilteringrules.SrcIpGroups) []interface{
 	return srcIpGroup
 }
 
-func flattenDestIPGroups(destIPGroups []fwfilteringrules.DestIpGroups) []interface{} {
+func flattenDestIPGroups(destIPGroups []filteringrules.DestIpGroups) []interface{} {
 	destIpGroup := make([]interface{}, len(destIPGroups))
 	for i, val := range destIPGroups {
 		destIpGroup[i] = map[string]interface{}{
@@ -624,7 +624,7 @@ func flattenDestIPGroups(destIPGroups []fwfilteringrules.DestIpGroups) []interfa
 	return destIpGroup
 }
 
-func flattenNWServices(nwServices []fwfilteringrules.NwServices) []interface{} {
+func flattenNWServices(nwServices []filteringrules.NwServices) []interface{} {
 	nwService := make([]interface{}, len(nwServices))
 	for i, val := range nwServices {
 		nwService[i] = map[string]interface{}{
@@ -637,7 +637,7 @@ func flattenNWServices(nwServices []fwfilteringrules.NwServices) []interface{} {
 	return nwService
 }
 
-func flattenNWServiceGroups(nwServiceGroups []fwfilteringrules.NwServiceGroups) []interface{} {
+func flattenNWServiceGroups(nwServiceGroups []filteringrules.NwServiceGroups) []interface{} {
 	NwServiceGroup := make([]interface{}, len(nwServiceGroups))
 	for i, val := range nwServiceGroups {
 		NwServiceGroup[i] = map[string]interface{}{
@@ -650,7 +650,7 @@ func flattenNWServiceGroups(nwServiceGroups []fwfilteringrules.NwServiceGroups) 
 	return NwServiceGroup
 }
 
-func flattenNWApplicationGroups(nwApplicationGroups []fwfilteringrules.NwApplicationGroups) []interface{} {
+func flattenNWApplicationGroups(nwApplicationGroups []filteringrules.NwApplicationGroups) []interface{} {
 	nwApplicationGroup := make([]interface{}, len(nwApplicationGroups))
 	for i, val := range nwApplicationGroups {
 		nwApplicationGroup[i] = map[string]interface{}{
@@ -663,7 +663,7 @@ func flattenNWApplicationGroups(nwApplicationGroups []fwfilteringrules.NwApplica
 	return nwApplicationGroup
 }
 
-func flattenAppServices(appServices []fwfilteringrules.AppServices) []interface{} {
+func flattenAppServices(appServices []filteringrules.AppServices) []interface{} {
 	appService := make([]interface{}, len(appServices))
 	for i, val := range appServices {
 		appService[i] = map[string]interface{}{
@@ -676,7 +676,7 @@ func flattenAppServices(appServices []fwfilteringrules.AppServices) []interface{
 	return appService
 }
 
-func flattenAppServiceGroups(appServiceGroups []fwfilteringrules.AppServiceGroups) []interface{} {
+func flattenAppServiceGroups(appServiceGroups []filteringrules.AppServiceGroups) []interface{} {
 	appServiceGroup := make([]interface{}, len(appServiceGroups))
 	for i, val := range appServiceGroups {
 		appServiceGroup[i] = map[string]interface{}{
@@ -689,7 +689,7 @@ func flattenAppServiceGroups(appServiceGroups []fwfilteringrules.AppServiceGroup
 	return appServiceGroup
 }
 
-func flattenLabels(labels []fwfilteringrules.Labels) []interface{} {
+func flattenLabels(labels []filteringrules.Labels) []interface{} {
 	label := make([]interface{}, len(labels))
 	for i, val := range labels {
 		label[i] = map[string]interface{}{

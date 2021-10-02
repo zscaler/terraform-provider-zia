@@ -167,7 +167,7 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.urlcategories.GetURLCategories(d.Id())
+	resp, err := zClient.urlcategories.Get(d.Id())
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {

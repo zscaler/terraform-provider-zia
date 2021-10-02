@@ -151,7 +151,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	id, _ := d.Get("id").(string)
 	if resp == nil && id != "" {
 		log.Printf("[INFO] Getting url categories : %s\n", id)
-		res, err := zClient.urlcategories.GetURLCategories(id)
+		res, err := zClient.urlcategories.Get(id)
 		if err != nil {
 			return err
 		}

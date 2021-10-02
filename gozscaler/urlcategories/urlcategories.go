@@ -51,7 +51,7 @@ type URLKeywordCounts struct {
 	RetainParentKeywordCount int `json:"retainParentKeywordCount"`
 }
 
-func (service *Service) GetURLCategories(categoryID string) (*URLCategory, error) {
+func (service *Service) Get(categoryID string) (*URLCategory, error) {
 	var urlCategory URLCategory
 	err := service.Client.Read(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID), &urlCategory)
 	if err != nil {

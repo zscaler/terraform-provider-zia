@@ -1,8 +1,10 @@
-package fwfilteringrules
+package filteringrules
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -148,7 +150,7 @@ type Labels struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-func (service *Service) GetFirewallFilteringRules(ruleID int) (*FirewallFilteringRules, error) {
+func (service *Service) Get(ruleID int) (*FirewallFilteringRules, error) {
 	var rule FirewallFilteringRules
 	err := service.Client.Read(fmt.Sprintf("%s/%d", firewallRulesEndpoint, ruleID), &rule)
 	if err != nil {
@@ -159,7 +161,7 @@ func (service *Service) GetFirewallFilteringRules(ruleID int) (*FirewallFilterin
 	return &rule, nil
 }
 
-func (service *Service) GetFirewallFilteringRulesByName(ruleName string) (*FirewallFilteringRules, error) {
+func (service *Service) GetByName(ruleName string) (*FirewallFilteringRules, error) {
 	var rules []FirewallFilteringRules
 	err := service.Client.Read(firewallRulesEndpoint, &rules)
 	if err != nil {
@@ -171,4 +173,38 @@ func (service *Service) GetFirewallFilteringRulesByName(ruleName string) (*Firew
 		}
 	}
 	return nil, fmt.Errorf("no firewall rule found with name: %s", ruleName)
+}
+
+func (service *Service) Create(rule *FirewallFilteringRules) (*FirewallFilteringRules, error) {
+	resp, err := service.Client.Create(firewallRulesEndpoint, *rule)
+	if err != nil {
+		return nil, err
+	}
+
+	createdRules, ok := resp.(*FirewallFilteringRules)
+	if !ok {
+		return nil, errors.New("object returned from apiwas not a rule Pointer")
+	}
+
+	log.Printf("returning rule from create: %d", createdRules.ID)
+	return createdRules, nil
+}
+
+func (service *Service) Update(ruleID string, rule *FirewallFilteringRules) (*FirewallFilteringRules, error) {
+	resp, err := service.Client.Update(fmt.Sprintf("%s/%s", firewallRulesEndpoint, ruleID), *rule)
+	if err != nil {
+		return nil, err
+	}
+	updatedRules, _ := resp.(*FirewallFilteringRules)
+	log.Printf("returning user from update: %d", updatedRules.ID)
+	return updatedRules, nil
+}
+
+func (service *Service) Delete(ruleID string) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%s", firewallRulesEndpoint, ruleID))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
