@@ -10,7 +10,7 @@ terraform {
 provider "zia" {}
 
 data "zia_public_node_vips" "example"{
-    datacenter = "AKL1"
+    datacenter = "YVR1"
 }
 
 output "zia_public_node_vips"{
