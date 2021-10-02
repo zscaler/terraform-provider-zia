@@ -203,8 +203,12 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-
-	resp, err := zClient.adminuserrolemgmt.GetAdminUsers(d.Id())
+	idObj, idSet := d.GetOk("id")
+	id, idIsInt := idObj.(int)
+	if !(idSet && idIsInt && id > 0) {
+		return fmt.Errorf("no admin users id is set")
+	}
+	resp, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
 			log.Printf("[WARN] Removing admin user %s from state because it no longer exists in ZIA", d.Id())

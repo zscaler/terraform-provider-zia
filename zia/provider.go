@@ -58,7 +58,7 @@ func Provider() *schema.Provider {
 			"zia_url_filtering_policies":          dataSourceURLFilteringPolicies(),
 			"zia_ip_source_groups":                dataSourceIPSourceGroups(),
 			"zia_public_node_vips":                dataSourcePublicNodeVIPs(),
-			//"zia_gre_virtual_ip_address_list":    dataSourceGreVirtualIPAddressesList(),
+			"zia_gre_virtual_ip_address_list":     dataSourceGreVirtualIPAddressesList(),
 			//"zia_traffic_forwarding_static_ip":   dataSourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_gre_tunnels": dataSourceTrafficForwardingGreTunnels(),
 			"zia_location_management":            dataSourceLocationManagement(),
