@@ -1,13 +1,11 @@
 package networkapplications
 
-/*
 import (
 	"fmt"
-	"log"
 )
 
 const (
-	networkApplicationsEndpoint = "/networkApplication/"
+	networkApplicationsEndpoint = "/networkApplications"
 )
 
 type NetworkApplications struct {
@@ -17,14 +15,15 @@ type NetworkApplications struct {
 	Deprecated     bool   `json:"deprecated"`
 }
 
-func (service *Service) GetNetworkApplications() (*NetworkApplications, error) {
-	var networkApplication ([]NetworkApplications)
-	err := service.Client.Read(fmt.Sprintf("%s?locale=%s", networkApplicationsEndpoint), &networkApplication)
+func (service *Service) GetNetworkApplication(id, locale string) (*NetworkApplications, error) {
+	var networkApplications NetworkApplications
+	url := fmt.Sprintf("%s/%s", networkApplicationsEndpoint, id)
+	if locale != "" {
+		url = fmt.Sprintf("%s?locale=%s", url, locale)
+	}
+	err := service.Client.Read(url, &networkApplications)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Printf("Returning departments from Get: %s", networkApplication)
-	return &networkApplication
+	return &networkApplications, nil
 }
-*/
