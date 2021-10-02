@@ -43,7 +43,7 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 						},
 						"datacenter": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
 						},
 					},
 				},
