@@ -84,27 +84,15 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	zClient := m.(*Client)
 
 	var resp *dlpdictionaries.DlpDictionary
-<<<<<<< HEAD
-	/*
-		idObj, idSet := d.GetOk("id")
-		id, idIsInt := idObj.(int)
-		if idSet && idIsInt && id > 0 {
-			log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
-			res, err := zClient.dlpdictionaries.GetDlpDictionaries(id)
-			if err != nil {
-				return err
-			}
-			resp = res
-=======
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
 		res, err := zClient.dlpdictionaries.GetDlpDictionaries(id)
 		if err != nil {
 			return err
->>>>>>> master
 		}
-	*/
+		resp = res
+	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", name)
@@ -133,7 +121,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp dictionary with name '%s'", name)
+		return fmt.Errorf("couldn't find any dlp dictionary with name '%s' or id '%d'", name, id)
 	}
 
 	return nil
