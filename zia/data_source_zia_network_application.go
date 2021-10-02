@@ -39,9 +39,8 @@ func dataSourceNetworkApplication() *schema.Resource {
 func dataSourceNetworkApplicationRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	idObj, idSet := d.GetOk("id")
-	id, idIsStr := idObj.(string)
-	if !(idSet && idIsStr && id != "") {
+	id, ok := getStringFromResourceData(d, "id")
+	if !ok {
 		return fmt.Errorf("network application id is required '%s'", id)
 	}
 

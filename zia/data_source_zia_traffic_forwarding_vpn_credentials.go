@@ -74,9 +74,8 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	zClient := m.(*Client)
 
 	var resp *vpncredentials.VPNCredentials
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
 		res, err := zClient.vpncredentials.GetVPNCredentials(id)
 		if err != nil {

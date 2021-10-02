@@ -40,9 +40,8 @@ func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) e
 	zClient := m.(*Client)
 
 	var resp *usermanagement.Departments
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for department id: %d\n", id)
 		res, err := zClient.usermanagement.GetDepartments(id)
 		if err != nil {

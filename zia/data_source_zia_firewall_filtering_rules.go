@@ -402,9 +402,8 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 	zClient := m.(*Client)
 
 	var resp *fwfilteringrules.FirewallFilteringRules
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for rule id: %d\n", id)
 		res, err := zClient.fwfilteringrules.GetFirewallFilteringRules(id)
 		if err != nil {

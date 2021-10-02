@@ -28,9 +28,8 @@ func dataSourceGreInternalIPRangesRead(d *schema.ResourceData, m interface{}) er
 	zClient := m.(*Client)
 
 	var resp *greinternalipranges.GREInternalIPRanges
-	idObj, idSet := d.GetOk("")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
 		res, err := zClient.greinternalipranges.GetGREInternalIPRanges(id)
 		if err != nil {
