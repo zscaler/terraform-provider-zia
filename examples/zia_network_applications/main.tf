@@ -11,6 +11,7 @@ provider "zia" {}
 
 data "zia_network_application" "example"{
     id = "DICT"
+    locale="fr-FR"
 }
 
 output "zia_network_application"{
