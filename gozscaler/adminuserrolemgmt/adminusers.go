@@ -67,9 +67,9 @@ type ExecMobileAppTokens struct {
 	DeviceName  string `json:"deviceName,omitempty"`
 }
 
-func (service *Service) GetAdminUsers(adminUserId string) (*AdminUsers, error) {
+func (service *Service) GetAdminUsers(adminUserId int) (*AdminUsers, error) {
 	v := new(AdminUsers)
-	relativeURL := fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserId)
+	relativeURL := fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserId)
 	err := service.Client.Read(relativeURL, v)
 	if err != nil {
 		return nil, err
