@@ -35,9 +35,8 @@ func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	zClient := m.(*Client)
 
 	var resp *ipdestinationgroups.IPDestinationGroupsLite
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for ip destination groups id: %d\n", id)
 		res, err := zClient.ipdestinationgroups.GetIPDestinationGroupsLite(id)
 		if err != nil {

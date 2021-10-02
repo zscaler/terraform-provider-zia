@@ -9,15 +9,14 @@ terraform {
 
 provider "zia" {}
 
-/*
-data "zia_network_applications" "example"{
+data "zia_network_application" "example"{
     id = "DICT"
+    locale="fr-FR"
 }
 
-output "zia_network_applications"{
-    value = data.zia_network_applications.example
+output "zia_network_application"{
+    value = data.zia_network_application.example
 }
-*/
 
 
 data "zia_network_application_groups_lite" "example"{

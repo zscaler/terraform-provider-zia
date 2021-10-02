@@ -62,3 +62,14 @@ func validateIpv4CIDRBlock(cidr string) error {
 	return nil
 }
 */
+
+func getIntFromResourceData(d *schema.ResourceData, key string) (int, bool) {
+	obj, isSet := d.GetOk(key)
+	val, isInt := obj.(int)
+	return val, isSet && isInt && val > 0
+}
+func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool) {
+	obj, isSet := d.GetOk(key)
+	val, isStr := obj.(string)
+	return val, isSet && isStr && val != ""
+}

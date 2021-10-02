@@ -401,10 +401,16 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
+<<<<<<< HEAD
 	var resp *filteringrules.FirewallFilteringRules
 	idObj, idSet := d.GetOk("id")
 	id, idIsInt := idObj.(int)
 	if idSet && idIsInt && id > 0 {
+=======
+	var resp *fwfilteringrules.FirewallFilteringRules
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
+>>>>>>> master
 		log.Printf("[INFO] Getting data for rule id: %d\n", id)
 		res, err := zClient.filteringrules.Get(id)
 		if err != nil {

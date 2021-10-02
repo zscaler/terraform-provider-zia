@@ -25,7 +25,7 @@ type ZscalerVIPs struct {
 }
 
 type GREVirtualIPList struct {
-	ID                 string `json:"id,omitempty"`
+	ID                 int    `json:"id"`
 	VirtualIp          string `json:"virtualIp,omitempty"`
 	PrivateServiceEdge bool   `json:"privateServiceEdge,omitempty"`
 	DataCenter         string `json:"dataCenter,omitempty"`
@@ -45,4 +45,14 @@ func (service *Service) GetZscalerVIPs(datacenter string) (*ZscalerVIPs, error) 
 		}
 	}
 	return nil, fmt.Errorf("no datacenter found with name: %s", datacenter)
+}
+
+// Gets a paginated list of the virtual IP addresses (VIPs) available in the Zscaler cloud by sourceIP
+func (service *Service) GetZSGREVirtualIPList(sourceIP string) (*[]GREVirtualIPList, error) {
+	var zscalerVips []GREVirtualIPList
+	err := service.Client.Read(fmt.Sprintf("%s?sourceIp=%s", vipRecommendedListEndpoint, sourceIP), &zscalerVips)
+	if err != nil {
+		return nil, err
+	}
+	return &zscalerVips, nil
 }

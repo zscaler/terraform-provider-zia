@@ -56,7 +56,7 @@ func dataSourcePublicNodeVIPs() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"pac_domain_name": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
@@ -78,6 +78,7 @@ func dataSourcePublicNodeVirtualAddressRead(d *schema.ResourceData, m interface{
 	}
 
 	if resp != nil {
+		d.SetId(datacenter)
 		_ = d.Set("cloud_name", resp.CloudName)
 		_ = d.Set("region", resp.Region)
 		_ = d.Set("city", resp.City)

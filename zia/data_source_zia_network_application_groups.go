@@ -37,9 +37,8 @@ func dataSourceNetworkApplicationGroupsLiteRead(d *schema.ResourceData, m interf
 	zClient := m.(*Client)
 
 	var resp *networkapplications.NetworkApplicationGroups
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting network application group id: %d\n", id)
 		res, err := zClient.networkapplications.GetNetworkApplicationGroups(id)
 		if err != nil {

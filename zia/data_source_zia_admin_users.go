@@ -200,9 +200,8 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *adminuserrolemgmt.AdminUsers
-	idObj, idSet := d.GetOk("id")
-	id, idIsInt := idObj.(int)
-	if idSet && idIsInt && id > 0 {
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
 		res, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
 		if err != nil {

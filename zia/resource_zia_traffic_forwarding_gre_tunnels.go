@@ -127,8 +127,11 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 
 func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-
-	resp, err := zClient.gretunnels.GetGreTunnels(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set")
+	}
+	resp, err := zClient.gretunnels.GetGreTunnels(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
