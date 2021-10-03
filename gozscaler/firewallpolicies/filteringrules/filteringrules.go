@@ -28,7 +28,7 @@ type FirewallFilteringRules struct {
 	Action              string                `json:"action,omitempty"`
 	State               string                `json:"state,omitempty"`
 	Description         string                `json:"description,omitempty"`
-	LastModifiedTime    string                `json:"lastModifiedTime,omitempty"`
+	LastModifiedTime    int                   `json:"lastModifiedTime,omitempty"`
 	LastModifiedBy      []LastModifiedBy      `json:"lastModifiedBy"`
 	SrcIps              []string              `json:"srcIps,omitempty"`
 	SrcIpGroups         []SrcIpGroups         `json:"srcIpGroups,omitempty"`
@@ -183,7 +183,7 @@ func (service *Service) Create(rule *FirewallFilteringRules) (*FirewallFiltering
 
 	createdRules, ok := resp.(*FirewallFilteringRules)
 	if !ok {
-		return nil, errors.New("object returned from apiwas not a rule Pointer")
+		return nil, errors.New("object returned from api was not a rule Pointer")
 	}
 
 	log.Printf("returning rule from create: %d", createdRules.ID)
@@ -196,7 +196,7 @@ func (service *Service) Update(ruleID string, rule *FirewallFilteringRules) (*Fi
 		return nil, err
 	}
 	updatedRules, _ := resp.(*FirewallFilteringRules)
-	log.Printf("returning user from update: %d", updatedRules.ID)
+	log.Printf("returning firewall rule from update: %d", updatedRules.ID)
 	return updatedRules, nil
 }
 

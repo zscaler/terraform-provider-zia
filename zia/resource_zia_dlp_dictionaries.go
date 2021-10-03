@@ -107,7 +107,7 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 	req := expandDLPDictionaries(d)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
 
-	resp, err := zClient.dlpdictionaries.CreateDlpDictionary(&req)
+	resp, _, err := zClient.dlpdictionaries.CreateDlpDictionary(&req)
 	if err != nil {
 		return err
 	}
@@ -156,10 +156,10 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 	zClient := m.(*Client)
 
 	id := d.Id()
-	log.Printf("[INFO] Updating vpn credentials ID: %v\n", id)
+	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
 	req := expandDLPDictionaries(d)
 
-	if _, err := zClient.dlpdictionaries.UpdateDlpDictionary(id, &req); err != nil {
+	if _, _, err := zClient.dlpdictionaries.UpdateDlpDictionary(id, &req); err != nil {
 		return err
 	}
 
@@ -170,13 +170,13 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	zClient := m.(*Client)
 
 	// Need to pass the ID (int) of the resource for deletion
-	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting dlp dictionary ID: %v\n", (d.Id()))
 
 	if _, err := zClient.dlpdictionaries.DeleteDlpDictionary(d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")
-	log.Printf("[INFO] vpn credentials deleted")
+	log.Printf("[INFO] dlp dictionary deleted")
 	return nil
 }
 
