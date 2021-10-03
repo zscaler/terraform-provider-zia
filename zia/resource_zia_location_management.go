@@ -20,6 +20,10 @@ func resourceLocationManagement() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -76,11 +80,11 @@ func resourceLocationManagement() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"pre_shared_key": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
+						// "pre_shared_key": {
+						// 	Type:      schema.TypeString,
+						// 	Optional:  true,
+						// 	Sensitive: true,
+						// },
 						"comments": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -216,7 +220,11 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.locationmanagement.Get(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+	}
+	resp, err := zClient.locationmanagement.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {

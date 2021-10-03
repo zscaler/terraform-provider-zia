@@ -20,8 +20,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,

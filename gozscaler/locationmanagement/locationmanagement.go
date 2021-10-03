@@ -66,9 +66,9 @@ type VPNCredentials struct {
 }
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
-func (service *Service) Get(locationID string) (*Locations, error) {
+func (service *Service) Get(locationID int) (*Locations, error) {
 	var location Locations
-	err := service.Client.Read(fmt.Sprintf("%s/%s", locationsEndpoint, locationID), &location)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", locationsEndpoint, locationID), &location)
 	if err != nil {
 		return nil, err
 	}

@@ -30,9 +30,9 @@ type ManagedBy struct {
 	Name string `json:"name"`
 }
 
-func (service *Service) GetVPNCredentials(vpnCredentialID string) (*VPNCredentials, error) {
+func (service *Service) Get(vpnCredentialID int) (*VPNCredentials, error) {
 	var vpnCredentials VPNCredentials
-	err := service.Client.Read(fmt.Sprintf("%s/%s", vpnCredentialsEndpoint, vpnCredentialID), &vpnCredentials)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", vpnCredentialsEndpoint, vpnCredentialID), &vpnCredentials)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (service *Service) GetVPNCredentials(vpnCredentialID string) (*VPNCredentia
 	return &vpnCredentials, nil
 }
 
-func (service *Service) GetVPNCredentialsByFQDN(vpnCredentialName string) (*VPNCredentials, error) {
+func (service *Service) GetByFQDN(vpnCredentialName string) (*VPNCredentials, error) {
 	var vpnCredentials []VPNCredentials
 
 	err := service.Client.Read(vpnCredentialsEndpoint, &vpnCredentials)
@@ -56,7 +56,7 @@ func (service *Service) GetVPNCredentialsByFQDN(vpnCredentialName string) (*VPNC
 	return nil, fmt.Errorf("no vpn credentials found with fqdn: %s", vpnCredentialName)
 }
 
-func (service *Service) CreateVPNCredentials(vpnCredentials *VPNCredentials) (*VPNCredentials, error) {
+func (service *Service) Create(vpnCredentials *VPNCredentials) (*VPNCredentials, error) {
 	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentials)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (service *Service) CreateVPNCredentials(vpnCredentials *VPNCredentials) (*V
 	return createdVpnCredentials, nil
 }
 
-func (service *Service) UpdateVPNCredentials(vpnCredentialID string, vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
+func (service *Service) Update(vpnCredentialID string, vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
 	resp, err := service.Client.Update(vpnCredentialsEndpoint+"/"+vpnCredentialID, *vpnCredentials)
 	if err != nil {
 		return nil, nil, err
@@ -82,11 +82,11 @@ func (service *Service) UpdateVPNCredentials(vpnCredentialID string, vpnCredenti
 	return updatedVpnCredentials, nil, nil
 }
 
-func (service *Service) DeleteVPNCredentials(vpnCredentialID string) (*http.Response, error) {
+func (service *Service) Delete(vpnCredentialID string) error {
 	err := service.Client.Delete(vpnCredentialsEndpoint + "/" + vpnCredentialID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return nil, nil
+	return nil
 }

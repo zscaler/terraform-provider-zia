@@ -39,6 +39,7 @@ func Provider() *schema.Provider {
 			//"zia_dlp_dictionaries":        resourceDLPDictionaries(),
 			"zia_firewall_filtering_rule":            resourceFirewallFilteringRules(),
 			"zia_ip_destination_groups":              resourceIPDestinationGroups(),
+			"zia_ip_source_groups":                   resourceIPSourceGroups(),
 			"zia_traffic_forwarding_gre_tunnel":      resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":       resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials": resourceTrafficForwardingVPNCredentials(),

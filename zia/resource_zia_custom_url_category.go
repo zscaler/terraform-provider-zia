@@ -20,7 +20,7 @@ func resourceURLCategories() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,

@@ -19,10 +19,10 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
-			// "id": {
-			// 	Type:     schema.TypeString,
-			// 	Computed: true,
-			// },
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -50,7 +50,7 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	req := expandVPNCredentials(d)
 	log.Printf("[INFO] Creating zia vpn credentials\n%+v\n", req)
 
-	resp, err := zClient.vpncredentials.CreateVPNCredentials(&req)
+	resp, err := zClient.vpncredentials.Create(&req)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,11 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.vpncredentials.GetVPNCredentials(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set")
+	}
+	resp, err := zClient.vpncredentials.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
@@ -93,7 +97,7 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 	log.Printf("[INFO] Updating vpn credentials ID: %v\n", id)
 	req := expandVPNCredentials(d)
 
-	if _, _, err := zClient.vpncredentials.UpdateVPNCredentials(id, &req); err != nil {
+	if _, _, err := zClient.vpncredentials.Update(id, &req); err != nil {
 		return err
 	}
 
@@ -106,7 +110,7 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 	// Need to pass the ID (int) of the resource for deletion
 	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", (d.Id()))
 
-	if _, err := zClient.vpncredentials.DeleteVPNCredentials(d.Id()); err != nil {
+	if err := zClient.vpncredentials.Delete(d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")
