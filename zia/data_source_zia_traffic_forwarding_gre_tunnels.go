@@ -209,7 +209,10 @@ func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interfa
 	return nil
 }
 
-func flattenGrePrimaryDestVip(primaryDestVip gretunnels.PrimaryDestVip) interface{} {
+func flattenGrePrimaryDestVip(primaryDestVip *gretunnels.PrimaryDestVip) interface{} {
+	if primaryDestVip == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
 			"id":                   primaryDestVip.ID,
@@ -225,7 +228,10 @@ func flattenGrePrimaryDestVip(primaryDestVip gretunnels.PrimaryDestVip) interfac
 	}
 }
 
-func flattenGreSecondaryDestVip(secondaryDestVip gretunnels.SecondaryDestVip) interface{} {
+func flattenGreSecondaryDestVip(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
+	if secondaryDestVip == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
 			"id":                   secondaryDestVip.ID,
@@ -241,7 +247,10 @@ func flattenGreSecondaryDestVip(secondaryDestVip gretunnels.SecondaryDestVip) in
 	}
 }
 
-func flattenGreManagedBy(managedBy gretunnels.ManagedBy) interface{} {
+func flattenGreManagedBy(managedBy *gretunnels.ManagedBy) interface{} {
+	if managedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
 			"id":   managedBy.ID,
@@ -250,7 +259,10 @@ func flattenGreManagedBy(managedBy gretunnels.ManagedBy) interface{} {
 	}
 }
 
-func flattenGreLastModifiedBy(managedBy gretunnels.LastModifiedBy) interface{} {
+func flattenGreLastModifiedBy(managedBy *gretunnels.LastModifiedBy) interface{} {
+	if managedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
 			"id":   managedBy.ID,
