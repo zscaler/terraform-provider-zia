@@ -1,41 +1,80 @@
 package ipsourcegroups
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 )
 
 const (
-	ipSourceGroupsLiteEndpoint = "/ipSourceGroups/lite"
+	ipSourceGroupsEndpoint = "/ipSourceGroups"
 )
 
-type IPSourceGroupsLite struct {
-	ID   int    `json:"id"`
-	Name string `json:"name,omitempty"`
+type IPSourceGroups struct {
+	ID          int      `json:"id"`
+	Name        string   `json:"name,omitempty"`
+	IPAddresses []string `json:"ipAddresses,omitempty"`
+	Description string   `json:"description,omitempty"`
 }
 
-func (service *Service) GetIPSourceGroupsLite(ipSourceGroupsLiteID int) (*IPSourceGroupsLite, error) {
-	var ipSourceGroupsLite IPSourceGroupsLite
-	err := service.Client.Read(fmt.Sprintf("%s/%d", ipSourceGroupsLiteEndpoint, ipSourceGroupsLiteID), &ipSourceGroupsLite)
+func (service *Service) Get(ipGroupID int) (*IPSourceGroups, error) {
+	var ipSourceGroups IPSourceGroups
+	err := service.Client.Read(fmt.Sprintf("%s/%d", ipSourceGroupsEndpoint, ipGroupID), &ipSourceGroups)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning ip source group lite from Get: %d", ipSourceGroupsLite.ID)
-	return &ipSourceGroupsLite, nil
+	log.Printf("Returning ip source groupfrom Get: %d", ipSourceGroups.ID)
+	return &ipSourceGroups, nil
 }
 
-func (service *Service) GetIPSourceGroupsLiteByName(ipSourceGroupsLiteName string) (*IPSourceGroupsLite, error) {
-	var ipSourceGroupsLite []IPSourceGroupsLite
-	err := service.Client.Read(ipSourceGroupsLiteEndpoint, &ipSourceGroupsLite)
+func (service *Service) GetByName(ipSourceGroupsName string) (*IPSourceGroups, error) {
+	var ipSourceGroups []IPSourceGroups
+	err := service.Client.Read(ipSourceGroupsEndpoint, &ipSourceGroups)
 	if err != nil {
 		return nil, err
 	}
-	for _, ipSourceGroupLite := range ipSourceGroupsLite {
-		if strings.EqualFold(ipSourceGroupLite.Name, ipSourceGroupsLiteName) {
-			return &ipSourceGroupLite, nil
+	for _, ipSourceGroup := range ipSourceGroups {
+		if strings.EqualFold(ipSourceGroup.Name, ipSourceGroupsName) {
+			return &ipSourceGroup, nil
 		}
 	}
-	return nil, fmt.Errorf("no ip source group found with name: %s", ipSourceGroupsLiteName)
+	return nil, fmt.Errorf("no ip source group found with name: %s", ipSourceGroupsName)
+}
+
+// Adds a GRE tunnel configuration.
+func (service *Service) Create(ipGroupID *IPSourceGroups) (*IPSourceGroups, error) {
+	resp, err := service.Client.Create(ipSourceGroupsEndpoint, *ipGroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	createdIPSourceGroups, ok := resp.(*IPSourceGroups)
+	if !ok {
+		return nil, errors.New("object returned from api was not an ip source group pointer")
+	}
+
+	log.Printf("returning ip source group from create: %d", createdIPSourceGroups.ID)
+	return createdIPSourceGroups, nil
+}
+
+func (service *Service) Update(ipGroupID string, ipGroup *IPSourceGroups) (*IPSourceGroups, error) {
+	resp, err := service.Client.Update(ipSourceGroupsEndpoint+"/"+ipGroupID, *ipGroup)
+	if err != nil {
+		return nil, err
+	}
+	updatedIPSourceGroups, _ := resp.(*IPSourceGroups)
+
+	log.Printf("returning ip source group from update: %d", updatedIPSourceGroups.ID)
+	return updatedIPSourceGroups, nil
+}
+
+func (service *Service) Delete(ipGroupID string) error {
+	err := service.Client.Delete(ipSourceGroupsEndpoint + "/" + ipGroupID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -20,6 +20,15 @@ func dataSourceIPSourceGroups() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -27,11 +36,11 @@ func dataSourceIPSourceGroups() *schema.Resource {
 func dataSourceIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *ipsourcegroups.IPSourceGroupsLite
+	var resp *ipsourcegroups.IPSourceGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting ip source group id: %d\n", id)
-		res, err := zClient.ipsourcegroups.GetIPSourceGroupsLite(id)
+		res, err := zClient.ipsourcegroups.Get(id)
 		if err != nil {
 			return err
 		}
@@ -40,7 +49,7 @@ func dataSourceIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting ip source group : %s\n", name)
-		res, err := zClient.ipsourcegroups.GetIPSourceGroupsLiteByName(name)
+		res, err := zClient.ipsourcegroups.GetByName(name)
 		if err != nil {
 			return err
 		}
