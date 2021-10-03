@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	dlpDictionariesEndpoint     = "/dlpDictionaries"
-	dlpDictionariesLiteEndpoint = "/dlpDictionaries/lite"
+	dlpDictionariesEndpoint = "/dlpDictionaries"
 )
 
 type DlpDictionary struct {
@@ -37,9 +36,9 @@ type Patterns struct {
 	Pattern string `json:"pattern,omitempty"`
 }
 
-func (service *Service) Get(dlpDictionariesID string) (*DlpDictionary, error) {
+func (service *Service) Get(dlpDictionariesID int) (*DlpDictionary, error) {
 	var dlpDictionary DlpDictionary
-	err := service.Client.Read(fmt.Sprintf("%s/%s", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
 	if err != nil {
 		return nil, err
 	}

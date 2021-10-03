@@ -21,9 +21,9 @@ type IPDestinationGroups struct {
 	Countries    []string `json:"countries,omitempty"`
 }
 
-func (service *Service) Get(ipGroupID string) (*IPDestinationGroups, error) {
+func (service *Service) Get(ipGroupID int) (*IPDestinationGroups, error) {
 	var ipDestinationGroups IPDestinationGroups
-	err := service.Client.Read(fmt.Sprintf("%s/%s", ipDestinationGroupsEndpoint, ipGroupID), &ipDestinationGroups)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", ipDestinationGroupsEndpoint, ipGroupID), &ipDestinationGroups)
 	if err != nil {
 		return nil, err
 	}
