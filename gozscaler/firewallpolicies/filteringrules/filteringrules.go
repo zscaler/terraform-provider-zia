@@ -150,9 +150,9 @@ type Labels struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-func (service *Service) Get(ruleID int) (*FirewallFilteringRules, error) {
+func (service *Service) Get(ruleID string) (*FirewallFilteringRules, error) {
 	var rule FirewallFilteringRules
-	err := service.Client.Read(fmt.Sprintf("%s/%d", firewallRulesEndpoint, ruleID), &rule)
+	err := service.Client.Read(fmt.Sprintf("%s/%s", firewallRulesEndpoint, ruleID), &rule)
 	if err != nil {
 		return nil, err
 	}
