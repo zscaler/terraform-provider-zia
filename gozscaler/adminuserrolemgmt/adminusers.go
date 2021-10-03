@@ -11,26 +11,27 @@ const (
 )
 
 type AdminUsers struct {
-	ID                          int                   `json:"id"`
-	LoginName                   string                `json:"loginName,omitempty"`
-	UserName                    string                `json:"userName,omitempty"`
-	Email                       string                `json:"email,omitempty"`
-	Comments                    string                `json:"comments,omitempty"`
-	Disabled                    bool                  `json:"disabled"`
-	Password                    string                `json:"password,omitempty"`
-	PasswordLastModifiedTime    int                   `json:"pwdLastModifiedTime,omitempty"`
-	IsNonEditable               bool                  `json:"isNonEditable"`
-	IsPasswordLoginAllowed      bool                  `json:"isPasswordLoginAllowed"`
-	IsPasswordExpired           bool                  `json:"isPasswordExpired"`
-	IsAuditor                   bool                  `json:"isAuditor"`
-	IsSecurityReportCommEnabled bool                  `json:"isSecurityReportCommEnabled"`
-	IsServiceUpdateCommEnabled  bool                  `json:"isServiceUpdateCommEnabled"`
-	IsProductUpdateCommEnabled  bool                  `json:"isProductUpdateCommEnabled"`
-	IsExecMobileAppEnabled      bool                  `json:"isExecMobileAppEnabled"`
-	AdminScopeType              string                `json:"adminScopeType"`
-	AdminScope                  AdminScope            `json:"adminScope"`
-	Role                        Role                  `json:"role,omitempty"`
-	ExecMobileAppTokens         []ExecMobileAppTokens `json:"execMobileAppTokens"`
+	ID                                 int                                  `json:"id,omitempty"`
+	LoginName                          string                               `json:"loginName,omitempty"`
+	UserName                           string                               `json:"userName,omitempty"`
+	Email                              string                               `json:"email,omitempty"`
+	Comments                           string                               `json:"comments,omitempty"`
+	Disabled                           bool                                 `json:"disabled,omitempty"`
+	Password                           string                               `json:"password,omitempty"`
+	PasswordLastModifiedTime           int                                  `json:"pwdLastModifiedTime,omitempty"`
+	IsNonEditable                      bool                                 `json:"isNonEditable,omitempty"`
+	IsPasswordLoginAllowed             bool                                 `json:"isPasswordLoginAllowed,omitempty"`
+	IsPasswordExpired                  bool                                 `json:"isPasswordExpired,omitempty"`
+	IsAuditor                          bool                                 `json:"isAuditor,omitempty"`
+	IsSecurityReportCommEnabled        bool                                 `json:"isSecurityReportCommEnabled,omitempty"`
+	IsServiceUpdateCommEnabled         bool                                 `json:"isServiceUpdateCommEnabled,omitempty"`
+	IsProductUpdateCommEnabled         bool                                 `json:"isProductUpdateCommEnabled,omitempty"`
+	IsExecMobileAppEnabled             bool                                 `json:"isExecMobileAppEnabled,omitempty"`
+	AdminScopeType                     string                               `json:"adminScopeType,omitempty"`
+	AdminScopeScopeEntities            []AdminScopeScopeEntities            `json:"adminScopeScopeEntities,omitempty"`
+	AdminScopescopeGroupMemberEntities []AdminScopescopeGroupMemberEntities `json:"adminScopescopeGroupMemberEntities"`
+	Role                               Role                                 `json:"role,omitempty"`
+	ExecMobileAppTokens                []ExecMobileAppTokens                `json:"execMobileAppTokens,omitempty"`
 }
 type Role struct {
 	ID           int                    `json:"id,omitempty"`
@@ -38,18 +39,14 @@ type Role struct {
 	IsNameL10Tag bool                   `json:"isNameL10nTag,omitempty"`
 	Extensions   map[string]interface{} `json:"extensions,omitempty"`
 }
-type AdminScope struct {
-	ScopeGroupMemberEntities []ScopeGroupMemberEntities `json:"scopeGroupMemberEntities"`
-	Type                     string                     `json:"Type,omitempty"`
-	ScopeEntities            []ScopeEntities            `json:"ScopeEntities,"`
-}
-type ScopeEntities struct {
+
+type AdminScopeScopeEntities struct {
 	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-type ScopeGroupMemberEntities struct {
+type AdminScopescopeGroupMemberEntities struct {
 	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
@@ -96,16 +93,16 @@ func (service *Service) CreateAdminUser(adminUser AdminUsers) (*AdminUsers, erro
 	if err != nil {
 		return nil, err
 	}
-	res, ok := resp.(AdminUsers)
+	res, ok := resp.(*AdminUsers)
 	if !ok {
-		return nil, fmt.Errorf("could marshal response to a valid object")
+		return nil, fmt.Errorf("couldn't marshal response to a valid objectm: %#v", resp)
 	}
-	return &res, nil
+	return res, nil
 }
 
-func (service *Service) UpdateAdminUser(adminUserID string, adminUser AdminUsers) (*AdminUsers, error) {
-	path := fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserID)
-	resp, err := service.Client.Update(path, adminUser)
+func (service *Service) UpdateAdminUser(adminUserID int, adminUser AdminUsers) (*AdminUsers, error) {
+	path := fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID)
+	resp, err := service.Client.UpdateWithPut(path, adminUser)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +110,8 @@ func (service *Service) UpdateAdminUser(adminUserID string, adminUser AdminUsers
 	return &res, err
 }
 
-func (service *Service) DeleteAdminUser(adminUserID string) (*http.Response, error) {
-	err := service.Client.Delete(fmt.Sprintf("%s/%s", adminUsersEndpoint, adminUserID))
+func (service *Service) DeleteAdminUser(adminUserID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", adminUsersEndpoint, adminUserID))
 	if err != nil {
 		return nil, err
 	}

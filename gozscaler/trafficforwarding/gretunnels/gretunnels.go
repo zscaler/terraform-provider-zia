@@ -14,17 +14,17 @@ const (
 )
 
 type GreTunnels struct {
-	ID                   int              `json:"id,omitempty"`
-	SourceIP             string           `json:"sourceIp,omitempty"`
-	InternalIpRange      string           `json:"internalIpRange,omitempty"`
-	LastModificationTime int              `json:"lastModificationTime,omitempty"`
-	WithinCountry        bool             `json:"withinCountry"`
-	Comment              string           `json:"comment,omitempty"`
-	IPUnnumbered         bool             `json:"ipUnnumbered"`
-	ManagedBy            ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
-	LastModifiedBy       LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
-	PrimaryDestVip       PrimaryDestVip   `json:"primaryDestVip,omitempty"`
-	SecondaryDestVip     SecondaryDestVip `json:"secondaryDestVip,omitempty"`
+	ID                   int               `json:"id,omitempty"`
+	SourceIP             string            `json:"sourceIp,omitempty"`
+	InternalIpRange      string            `json:"internalIpRange,omitempty"`
+	LastModificationTime int               `json:"lastModificationTime,omitempty"`
+	WithinCountry        bool              `json:"withinCountry"`
+	Comment              string            `json:"comment,omitempty"`
+	IPUnnumbered         bool              `json:"ipUnnumbered"`
+	ManagedBy            *ManagedBy        `json:"managedBy,omitempty"`      // Should probably move this to a common package. Used by multiple resources
+	LastModifiedBy       *LastModifiedBy   `json:"lastModifiedBy,omitempty"` // Should probably move this to a common package. Used by multiple resources
+	PrimaryDestVip       *PrimaryDestVip   `json:"primaryDestVip,omitempty"`
+	SecondaryDestVip     *SecondaryDestVip `json:"secondaryDestVip,omitempty"`
 }
 
 type PrimaryDestVip struct {
@@ -92,8 +92,8 @@ func (service *Service) CreateGreTunnels(greTunnelID *GreTunnels) (*GreTunnels, 
 	return createdGreTunnels, nil, nil
 }
 
-func (service *Service) UpdateGreTunnels(greTunnelID string, greTunnels *GreTunnels) (*GreTunnels, *http.Response, error) {
-	resp, err := service.Client.Update(greTunnelsEndpoint+"/"+greTunnelID, *greTunnels)
+func (service *Service) UpdateGreTunnels(greTunnelID int, greTunnels *GreTunnels) (*GreTunnels, *http.Response, error) {
+	resp, err := service.Client.Update(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID), *greTunnels)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -103,8 +103,8 @@ func (service *Service) UpdateGreTunnels(greTunnelID string, greTunnels *GreTunn
 	return updatedGreTunnels, nil, nil
 }
 
-func (service *Service) DeleteGreTunnels(greTunnelID string) (*http.Response, error) {
-	err := service.Client.Delete(greTunnelsEndpoint + "/" + greTunnelID)
+func (service *Service) DeleteGreTunnels(greTunnelID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID))
 	if err != nil {
 		return nil, err
 	}

@@ -44,8 +44,8 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != 200 {
-		return nil, errors.New(string(body))
+	if resp.StatusCode > 299 {
+		return nil, fmt.Errorf("api returned an error status:%d, %s", resp.StatusCode, string(body))
 	}
 	return body, nil
 }
@@ -76,7 +76,7 @@ func (c *Client) Create(endpoint string, o interface{}) (interface{}, error) {
 	}
 	id := reflect.Indirect(reflect.ValueOf(responseObject)).FieldByName("ID")
 
-	log.Printf("Created Object with ID " + id.String())
+	log.Printf("Created Object with ID %v", id)
 	return responseObject, nil
 }
 
@@ -97,7 +97,17 @@ func (c *Client) Read(endpoint string, o interface{}) error {
 }
 
 // Update ...
+func (c *Client) UpdateWithPut(endpoint string, o interface{}) (interface{}, error) {
+	return c.updateGeneric(endpoint, o, "PUT", "application/json")
+}
+
+// Update ...
 func (c *Client) Update(endpoint string, o interface{}) (interface{}, error) {
+	return c.updateGeneric(endpoint, o, "PATCH", "application/merge-patch+json")
+}
+
+// Update ...
+func (c *Client) updateGeneric(endpoint string, o interface{}, method, contentType string) (interface{}, error) {
 	if o == nil {
 		return nil, errors.New("tried to update with a nil payload not a Struct")
 	}
@@ -110,7 +120,7 @@ func (c *Client) Update(endpoint string, o interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	resp, err := c.Request(endpoint, "PATCH", data, "application/merge-patch+json")
+	resp, err := c.Request(endpoint, method, data, contentType)
 	if err != nil {
 		return nil, err
 	}

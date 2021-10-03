@@ -19,13 +19,18 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
+			"tunnel_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The ID of the GRE tunnel.",
+			},
 			"source_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "The source IP address of the GRE tunnel.",
 			},
 			"primary_dest_vip": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Role of the admin. This is not required for an auditor.",
 				Elem: &schema.Resource{
@@ -44,7 +49,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				},
 			},
 			"secondary_dest_vip": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Role of the admin. This is not required for an auditor.",
 				Elem: &schema.Resource{
@@ -79,6 +84,10 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"extensions": {
@@ -120,13 +129,13 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 	}
 	log.Printf("[INFO] Created zia gre tunnel request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-
+	_ = d.Set("tunnel_id", resp.ID)
 	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
 func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
 		return fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set")
 	}
@@ -145,21 +154,18 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	log.Printf("[INFO] Getting gre tunnel:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
+	_ = d.Set("tunnel_id", resp.ID)
 	_ = d.Set("source_ip", resp.SourceIP)
 	_ = d.Set("internal_ip_range", resp.InternalIpRange)
 	_ = d.Set("last_modification_time", resp.LastModificationTime)
 	_ = d.Set("within_country", resp.WithinCountry)
 	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
-	if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVip(resp.PrimaryDestVip)); err != nil {
+	if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVipSimple(resp.PrimaryDestVip)); err != nil {
 		return err
 	}
 
-	if err := d.Set("secondary_dest_vip", flattenGreSecondaryDestVip(resp.SecondaryDestVip)); err != nil {
-		return err
-	}
-
-	if err := d.Set("managed_by", flattenGreManagedBy(resp.ManagedBy)); err != nil {
+	if err := d.Set("secondary_dest_vip", flattenGreSecondaryDestVipSimple(resp.SecondaryDestVip)); err != nil {
 		return err
 	}
 
@@ -170,10 +176,30 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	return nil
 }
 
+func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":         primaryDestVip.ID,
+			"virtual_ip": primaryDestVip.VirtualIP,
+		},
+	}
+}
+func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
+	return []map[string]interface{}{
+		{
+			"id":         secondaryDestVip.ID,
+			"virtual_ip": secondaryDestVip.VirtualIP,
+		},
+	}
+}
+
 func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id := d.Id()
+	id, ok := getIntFromResourceData(d, "tunnel_id")
+	if !ok {
+		log.Printf("[ERROR] gre tunnel ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Updating gre tunnel ID: %v\n", id)
 	req := expandGRETunnel(d)
 
@@ -186,10 +212,13 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 
 func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	id, ok := getIntFromResourceData(d, "tunnel_id")
+	if !ok {
+		log.Printf("[ERROR] gre tunnel ID not set: %v\n", id)
+	}
+	log.Printf("[INFO] Deleting gre tunnel ID: %v\n", id)
 
-	log.Printf("[INFO] Deleting gre tunnel ID: %v\n", (d.Id()))
-
-	if _, err := zClient.gretunnels.DeleteGreTunnels(d.Id()); err != nil {
+	if _, err := zClient.gretunnels.DeleteGreTunnels(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -198,42 +227,99 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 }
 
 func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
-	return gretunnels.GreTunnels{
+	id, _ := getIntFromResourceData(d, "tunnel_id")
+	result := gretunnels.GreTunnels{
+		ID:                   id,
 		SourceIP:             d.Get("source_ip").(string),
 		InternalIpRange:      d.Get("internal_ip_range").(string),
 		LastModificationTime: d.Get("last_modification_time").(int),
 		WithinCountry:        d.Get("within_country").(bool),
 		Comment:              d.Get("comment").(string),
 		IPUnnumbered:         d.Get("ip_unnumbered").(bool),
-		PrimaryDestVip:       expandPrimaryDestVip(d),
-		SecondaryDestVip:     expandSecondaryDestVip(d),
-		LastModifiedBy:       expandLastModifiedBy(d),
 	}
+	primaryDestVip := expandPrimaryDestVip(d)
+	if primaryDestVip != nil {
+		result.PrimaryDestVip = primaryDestVip
+	}
+	secondaryDestVip := expandSecondaryDestVip(d)
+	if secondaryDestVip != nil {
+		result.SecondaryDestVip = secondaryDestVip
+	}
+	lastModifiedBy := expandLastModifiedBy(d)
+	if lastModifiedBy != nil {
+		result.LastModifiedBy = lastModifiedBy
+	}
+	return result
 }
 
-func expandPrimaryDestVip(d *schema.ResourceData) gretunnels.PrimaryDestVip {
-	primaryDestVip := gretunnels.PrimaryDestVip{
-		ID:        d.Get("id").(int),
-		VirtualIP: d.Get("virtual_ip").(string),
+func expandPrimaryDestVip(d *schema.ResourceData) *gretunnels.PrimaryDestVip {
+	vipsObj, ok := d.GetOk("primary_dest_vip")
+	if !ok {
+		return nil
 	}
-
-	return primaryDestVip
+	vips, ok := vipsObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(vips.List()) > 0 {
+		vipObj := vips.List()[0]
+		vip, ok := vipObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return &gretunnels.PrimaryDestVip{
+			ID:        vip["id"].(int),
+			VirtualIP: vip["virtual_ip"].(string),
+		}
+	}
+	return nil
 }
 
-func expandSecondaryDestVip(d *schema.ResourceData) gretunnels.SecondaryDestVip {
-	secondaryDestVip := gretunnels.SecondaryDestVip{
-		ID:        d.Get("id").(int),
-		VirtualIP: d.Get("virtual_ip").(string),
+func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip {
+	vipsObj, ok := d.GetOk("secondary_dest_vip")
+	if !ok {
+		return nil
 	}
-
-	return secondaryDestVip
+	vips, ok := vipsObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(vips.List()) > 0 {
+		vipObj := vips.List()[0]
+		vip, ok := vipObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return &gretunnels.SecondaryDestVip{
+			ID:        vip["id"].(int),
+			VirtualIP: vip["virtual_ip"].(string),
+		}
+	}
+	return nil
 }
 
-func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
-	lastModifiedBy := gretunnels.LastModifiedBy{
-		ID:         d.Get("id").(int),
-		Extensions: d.Get("extensions").(map[string]interface{}),
+func expandLastModifiedBy(d *schema.ResourceData) *gretunnels.LastModifiedBy {
+	lastModifiedByObj, ok := d.GetOk("secondary_dest_vip")
+	if !ok {
+		return nil
 	}
-
-	return lastModifiedBy
+	lastModifiedSet, ok := lastModifiedByObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(lastModifiedSet.List()) > 0 {
+		lastModifiedObj := lastModifiedSet.List()[0]
+		lastModified, ok := lastModifiedObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		result := &gretunnels.LastModifiedBy{
+			ID: lastModified["id"].(int),
+		}
+		if lastModified["extensions"] != nil {
+			result.Extensions, _ = lastModified["extensions"].(map[string]interface{})
+		}
+		return result
+	}
+	return nil
 }
