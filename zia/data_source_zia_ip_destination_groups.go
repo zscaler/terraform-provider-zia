@@ -20,12 +20,28 @@ func dataSourceIPDestinationGroups() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"extensions": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+			"type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"addresses": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ip_categories": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"countries": {
+				Type:     schema.TypeList,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
 			},
 		},
 	}
@@ -34,11 +50,11 @@ func dataSourceIPDestinationGroups() *schema.Resource {
 func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *ipdestinationgroups.IPDestinationGroupsLite
+	var resp *ipdestinationgroups.IPDestinationGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for ip destination groups id: %d\n", id)
-		res, err := zClient.ipdestinationgroups.GetIPDestinationGroupsLite(id)
+		res, err := zClient.ipdestinationgroups.Get(id)
 		if err != nil {
 			return err
 		}
@@ -47,7 +63,7 @@ func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for ip destination groups : %s\n", name)
-		res, err := zClient.ipdestinationgroups.GetIPDestinationGroupsLiteByName(name)
+		res, err := zClient.ipdestinationgroups.GetByName(name)
 		if err != nil {
 			return err
 		}
@@ -57,7 +73,11 @@ func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
-		_ = d.Set("extensions", resp.Extensions)
+		_ = d.Set("type", resp.Type)
+		_ = d.Set("addresses", resp.Addresses)
+		_ = d.Set("description", resp.Description)
+		_ = d.Set("ip_categories", resp.IPCategories)
+		_ = d.Set("countries", resp.Countries)
 
 	} else {
 		return fmt.Errorf("couldn't find any ip destination groups with name '%s' or id '%d'", name, id)

@@ -66,9 +66,9 @@ type VPNCredentials struct {
 }
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
-func (service *Service) GetLocations(locationID string) (*Locations, error) {
+func (service *Service) Get(locationID int) (*Locations, error) {
 	var location Locations
-	err := service.Client.Read(fmt.Sprintf("%s/%s", locationsEndpoint, locationID), &location)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", locationsEndpoint, locationID), &location)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (service *Service) GetLocations(locationID string) (*Locations, error) {
 	return &location, nil
 }
 
-func (service *Service) GetLocationByName(locationName string) (*Locations, error) {
+func (service *Service) GetByName(locationName string) (*Locations, error) {
 	var locations []Locations
 	// We are assuming this location name will be in the firsy 1000 obejcts
 	err := service.Client.Read(fmt.Sprintf("%s?page=1&pageSize=1000", locationsEndpoint), &locations)
@@ -92,7 +92,7 @@ func (service *Service) GetLocationByName(locationName string) (*Locations, erro
 	return nil, fmt.Errorf("no location found with name: %s", locationName)
 }
 
-func (service *Service) CreateLocations(locations *Locations) (*Locations, error) {
+func (service *Service) Create(locations *Locations) (*Locations, error) {
 	resp, err := service.Client.Create(locationsEndpoint, *locations)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (service *Service) CreateLocations(locations *Locations) (*Locations, error
 	return createdLocations, nil
 }
 
-func (service *Service) UpdateLocations(locationsID string, locations *Locations) (*Locations, error) {
+func (service *Service) Update(locationsID string, locations *Locations) (*Locations, error) {
 	resp, err := service.Client.Update(locationsEndpoint+"/"+locationsID, *locations)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (service *Service) UpdateLocations(locationsID string, locations *Locations
 	return updatedLocations, nil
 }
 
-func (service *Service) DeleteLocations(locationsID string) error {
+func (service *Service) Delete(locationsID string) error {
 	err := service.Client.Delete(locationsEndpoint + "/" + locationsID)
 	if err != nil {
 		return err

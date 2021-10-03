@@ -147,11 +147,11 @@ func dataSourceURLCategories() *schema.Resource {
 func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *urlcategories.URLCategoryInformation
+	var resp *urlcategories.URLCategory
 	id, _ := d.Get("id").(string)
 	if resp == nil && id != "" {
 		log.Printf("[INFO] Getting url categories : %s\n", id)
-		res, err := zClient.urlcategories.GetURLCategories(id)
+		res, err := zClient.urlcategories.Get(id)
 		if err != nil {
 			return err
 		}
@@ -196,7 +196,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenScopes(scopes *urlcategories.URLCategoryInformation) []interface{} {
+func flattenScopes(scopes *urlcategories.URLCategory) []interface{} {
 	scope := make([]interface{}, len(scopes.Scopes))
 	for i, val := range scopes.Scopes {
 		scope[i] = map[string]interface{}{

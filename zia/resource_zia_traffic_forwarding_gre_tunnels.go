@@ -236,6 +236,9 @@ func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 		WithinCountry:        d.Get("within_country").(bool),
 		Comment:              d.Get("comment").(string),
 		IPUnnumbered:         d.Get("ip_unnumbered").(bool),
+		PrimaryDestVip:       expandPrimaryDestVip(d),
+		SecondaryDestVip:     expandSecondaryDestVip(d),
+		LastModifiedBy:       expandGRELastModifiedBy(d),
 	}
 	primaryDestVip := expandPrimaryDestVip(d)
 	if primaryDestVip != nil {
@@ -299,7 +302,7 @@ func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip
 }
 
 func expandLastModifiedBy(d *schema.ResourceData) *gretunnels.LastModifiedBy {
-	lastModifiedByObj, ok := d.GetOk("secondary_dest_vip")
+	lastModifiedByObj, ok := d.GetOk("last_modified_by")
 	if !ok {
 		return nil
 	}

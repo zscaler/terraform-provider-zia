@@ -7,7 +7,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/fwfilteringrules"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipsourcegroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
@@ -29,7 +29,7 @@ func init() {
 
 type Client struct {
 	adminuserrolemgmt    *adminuserrolemgmt.Service
-	fwfilteringrules     *fwfilteringrules.Service
+	filteringrules       *filteringrules.Service
 	ipdestinationgroups  *ipdestinationgroups.Service
 	ipsourcegroups       *ipsourcegroups.Service
 	networkapplications  *networkapplications.Service
@@ -61,7 +61,7 @@ func (c *Config) Client() (*Client, error) {
 
 	ziaClient := &Client{
 		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
-		fwfilteringrules:     fwfilteringrules.New(cli),
+		filteringrules:       filteringrules.New(cli),
 		ipdestinationgroups:  ipdestinationgroups.New(cli),
 		ipsourcegroups:       ipsourcegroups.New(cli),
 		networkapplications:  networkapplications.New(cli),

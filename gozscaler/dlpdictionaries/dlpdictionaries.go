@@ -9,8 +9,7 @@ import (
 )
 
 const (
-	dlpDictionariesEndpoint     = "/dlpDictionaries"
-	dlpDictionariesLiteEndpoint = "/dlpDictionaries/lite"
+	dlpDictionariesEndpoint = "/dlpDictionaries"
 )
 
 type DlpDictionary struct {
@@ -37,7 +36,7 @@ type Patterns struct {
 	Pattern string `json:"pattern,omitempty"`
 }
 
-func (service *Service) GetDlpDictionaries(dlpDictionariesID int) (*DlpDictionary, error) {
+func (service *Service) Get(dlpDictionariesID int) (*DlpDictionary, error) {
 	var dlpDictionary DlpDictionary
 	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID), &dlpDictionary)
 	if err != nil {
@@ -48,7 +47,7 @@ func (service *Service) GetDlpDictionaries(dlpDictionariesID int) (*DlpDictionar
 	return &dlpDictionary, nil
 }
 
-func (service *Service) GetDlpDictionaryByName(dictionaryName string) (*DlpDictionary, error) {
+func (service *Service) GetByName(dictionaryName string) (*DlpDictionary, error) {
 	var dictionaries []DlpDictionary
 	err := service.Client.Read(dlpDictionariesEndpoint, &dictionaries)
 	if err != nil {
@@ -62,34 +61,7 @@ func (service *Service) GetDlpDictionaryByName(dictionaryName string) (*DlpDicti
 	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryName)
 }
 
-// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
-func (service *Service) GetDlpDictionaryLite(dlpDictionariesLiteID int) (*DlpDictionary, error) {
-	var dlpDictionariesLite DlpDictionary
-	err := service.Client.Read(fmt.Sprintf("%s/%d", dlpDictionariesLiteEndpoint, dlpDictionariesLiteID), &dlpDictionariesLite)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Returning dictionary from Get: %d", dlpDictionariesLite.ID)
-	return &dlpDictionariesLite, nil
-}
-
-// Gets a name and ID dictionary of all custom and predefined DLP dictionaries.
-func (service *Service) GetDlpDictionaryLiteByName(dictionaryLiteName string) (*DlpDictionary, error) {
-	var dictionariesLite []DlpDictionary
-	err := service.Client.Read(dlpDictionariesLiteEndpoint, &dictionariesLite)
-	if err != nil {
-		return nil, err
-	}
-	for _, dictionaryLite := range dictionariesLite {
-		if strings.EqualFold(dictionaryLite.Name, dictionaryLiteName) {
-			return &dictionaryLite, nil
-		}
-	}
-	return nil, fmt.Errorf("no dictionary found with name: %s", dictionaryLiteName)
-}
-
-func (service *Service) CreateDlpDictionary(dlpDictionariesID *DlpDictionary) (*DlpDictionary, *http.Response, error) {
+func (service *Service) Create(dlpDictionariesID *DlpDictionary) (*DlpDictionary, *http.Response, error) {
 	resp, err := service.Client.Create(dlpDictionariesEndpoint, *dlpDictionariesID)
 	if err != nil {
 		return nil, nil, err
@@ -97,21 +69,21 @@ func (service *Service) CreateDlpDictionary(dlpDictionariesID *DlpDictionary) (*
 
 	createdDlpDictionary, ok := resp.(*DlpDictionary)
 	if !ok {
-		return nil, nil, errors.New("Object returned from API was not a Dlp Dictionary Pointer")
+		return nil, nil, errors.New("object returned from api was not a dlp dictionary pointer")
 	}
 
-	log.Printf("Returning new custom DLP dictionary that uses Patterns and Phrases from Create: %s", createdDlpDictionary.ID)
+	log.Printf("returning new custom dlp dictionary that uses patterns and phrases from create: %d", createdDlpDictionary.ID)
 	return createdDlpDictionary, nil, nil
 }
 
-func (service *Service) UpdateDlpDictionary(dlpDictionariesID string, dlpDictionaries *DlpDictionary) (*DlpDictionary, *http.Response, error) {
+func (service *Service) Update(dlpDictionariesID string, dlpDictionaries *DlpDictionary) (*DlpDictionary, *http.Response, error) {
 	resp, err := service.Client.Update(dlpDictionariesEndpoint+"/"+dlpDictionariesID, *dlpDictionaries)
 	if err != nil {
 		return nil, nil, err
 	}
 	updatedDlpDictionary, _ := resp.(*DlpDictionary)
 
-	log.Printf("Returning updates custom DLP dictionary that uses Patterns and Phrases from Update: %s", updatedDlpDictionary.ID)
+	log.Printf("returning updates custom dlp dictionary that uses patterns and phrases from ppdate: %d", updatedDlpDictionary.ID)
 	return updatedDlpDictionary, nil, nil
 }
 

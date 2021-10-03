@@ -10,7 +10,7 @@ terraform {
 provider "zia" {}
 
 resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address = [ "100.100.100.1" ]
+    ip_address =  "50.98.112.169"
     routable_ip = true
     comment = "Created with Terraform"
 }

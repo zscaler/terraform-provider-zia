@@ -14,7 +14,7 @@ const (
 // Gets all provisioned static IP addresses.
 type StaticIP struct {
 	ID                   int            `json:"id,omitempty"`
-	IpAddress            []string       `json:"ipAddress"`
+	IpAddress            string         `json:"ipAddress"`
 	GeoOverride          bool           `json:"geoOverride"`
 	Latitude             int            `json:"latitude,omitempty"`
 	Longitude            int            `json:"longitude,omitempty"`
@@ -37,9 +37,9 @@ type LastModifiedBy struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-func (service *Service) GetStaticIP(staticIpID string) (*StaticIP, error) {
+func (service *Service) Get(staticIpID int) (*StaticIP, error) {
 	var staticIP StaticIP
-	err := service.Client.Read(fmt.Sprintf("%s/%s", staticIPEndpoint, staticIpID), &staticIP)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", staticIPEndpoint, staticIpID), &staticIP)
 	if err != nil {
 		return nil, err
 	}
@@ -48,23 +48,7 @@ func (service *Service) GetStaticIP(staticIpID string) (*StaticIP, error) {
 	return &staticIP, nil
 }
 
-/*
-func (service *Service) GetStaticByIP(staticIP string) (*StaticIP, error) {
-	var staticips []StaticIP
-	err := service.Client.Read(staticIPEndpoint, &staticips)
-	if err != nil {
-		return nil, err
-	}
-	for _, static := range staticips {
-		if strings.EqualFold(static.IpAddress, staticIP) {
-			return &static, nil
-		}
-	}
-	return nil, fmt.Errorf("no static ip found with name: %s", staticIP)
-}
-*/
-
-func (service *Service) CreateStaticIP(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {
+func (service *Service) Create(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {
 	resp, err := service.Client.Create(staticIPEndpoint, *staticIpID)
 	if err != nil {
 		return nil, nil, err
@@ -79,22 +63,22 @@ func (service *Service) CreateStaticIP(staticIpID *StaticIP) (*StaticIP, *http.R
 	return createdStaticIP, nil, nil
 }
 
-func (service *Service) UpdateStaticIP(staticIpID string, staticIP *StaticIP) (*StaticIP, *http.Response, error) {
+func (service *Service) Update(staticIpID string, staticIP *StaticIP) (*StaticIP, error) {
 	resp, err := service.Client.Update(staticIPEndpoint+"/"+staticIpID, *staticIP)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	updatedStaticIP, _ := resp.(*StaticIP)
 
 	log.Printf("returning static ip from update: %d", updatedStaticIP.ID)
-	return updatedStaticIP, nil, nil
+	return updatedStaticIP, nil
 }
 
-func (service *Service) DeleteStaticIP(staticIpID string) (*http.Response, error) {
+func (service *Service) Delete(staticIpID string) error {
 	err := service.Client.Delete(staticIPEndpoint + "/" + staticIpID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return nil, nil
+	return nil
 }

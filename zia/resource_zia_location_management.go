@@ -20,10 +20,10 @@ func resourceLocationManagement() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
-			// "id": {
-			// 	Type:     schema.TypeInt,
-			// 	Optional: true,
-			// },
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -80,11 +80,11 @@ func resourceLocationManagement() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"pre_shared_key": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
+						// "pre_shared_key": {
+						// 	Type:      schema.TypeString,
+						// 	Optional:  true,
+						// 	Sensitive: true,
+						// },
 						"comments": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -207,7 +207,7 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
 
-	resp, err := zClient.locationmanagement.CreateLocations(&req)
+	resp, err := zClient.locationmanagement.Create(&req)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,11 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.locationmanagement.GetLocations(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+	}
+	resp, err := zClient.locationmanagement.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
@@ -274,7 +278,7 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	log.Printf("[INFO] Updating location management ID: %v\n", id)
 	req := expandLocationManagement(d)
 
-	if _, err := zClient.locationmanagement.UpdateLocations(id, &req); err != nil {
+	if _, err := zClient.locationmanagement.Update(id, &req); err != nil {
 		return err
 	}
 
@@ -287,7 +291,7 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	// Need to pass the ID (int) of the resource for deletion
 	log.Printf("[INFO] Deleting location management ID: %v\n", (d.Id()))
 
-	if err := zClient.locationmanagement.DeleteLocations(d.Id()); err != nil {
+	if err := zClient.locationmanagement.Delete(d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -324,5 +328,25 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		AUPTimeoutInDays:                    d.Get("aup_timeout_in_days").(int),
 		Profile:                             d.Get("profile").(string),
 		Description:                         d.Get("description").(string),
+		VPNCredentials:                      expandLocationManagementVPNCredentials(d),
 	}
+}
+
+func expandLocationManagementVPNCredentials(d *schema.ResourceData) []locationmanagement.VPNCredentials {
+	var vpnCredentials []locationmanagement.VPNCredentials
+	if vpnCredentialsInterface, ok := d.GetOk("vpn_credentials"); ok {
+		vpnCredential := vpnCredentialsInterface.([]interface{})
+		vpnCredentials = make([]locationmanagement.VPNCredentials, len(vpnCredential))
+		for i, vpn := range vpnCredential {
+			vpnItem := vpn.(map[string]interface{})
+			vpnCredentials[i] = locationmanagement.VPNCredentials{
+				Type:         vpnItem["type"].(string),
+				FQDN:         vpnItem["fqdn"].(string),
+				PreSharedKey: vpnItem["pre_shared_key"].(string),
+				Comments:     vpnItem["comments"].(string),
+			}
+		}
+	}
+
+	return vpnCredentials
 }
