@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -85,27 +84,27 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	zClient := m.(*Client)
 
 	var resp *staticips.StaticIP
-	/*
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-			log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
-			res, err := zClient.staticips.GetStaticIP(id)
-			if err != nil {
-				return err
-			}
-			resp = res
-		}
-
-	ipaddress, _ := d.Get("ip_address").(string)
-	if resp == nil && ipaddress != "" {
-		log.Printf("[INFO] Getting data for location name: %s\n", ipaddress)
-		res, err := zClient.staticips.GetStaticByIP(ipaddress)
+		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
+		res, err := zClient.staticips.Get(id)
 		if err != nil {
 			return err
 		}
 		resp = res
 	}
 
+	/*
+		ipaddress, _ := d.Get("ip_address").(string)
+		if resp == nil && ipaddress != "" {
+			log.Printf("[INFO] Getting data for location name: %s\n", ipaddress)
+			res, err := zClient.staticips.GetStaticByIP(ipaddress)
+			if err != nil {
+				return err
+			}
+			resp = res
+		}
+	*/
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("ip_address", resp.IpAddress)
@@ -125,27 +124,34 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any ip address with id '%s'", ipaddress)
+		return fmt.Errorf("couldn't find any ip address with id '%d'", id)
 	}
 
 	return nil
 }
 
-func flattenStaticManagedBy(managedBy staticips.ManagedBy) interface{} {
+func flattenStaticManagedBy(managedBy *staticips.ManagedBy) interface{} {
+	if managedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
-			"id":   managedBy.ID,
-			"name": managedBy.Name,
+			"id":         managedBy.ID,
+			"name":       managedBy.Name,
+			"extensions": managedBy.Extensions,
 		},
 	}
 }
 
-func flattenStaticLastModifiedBy(managedBy staticips.LastModifiedBy) interface{} {
+func flattenStaticLastModifiedBy(lastModifiedBy *staticips.LastModifiedBy) interface{} {
+	if lastModifiedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
-			"id":   managedBy.ID,
-			"name": managedBy.Name,
+			"id":         lastModifiedBy.ID,
+			"name":       lastModifiedBy.Name,
+			"extensions": lastModifiedBy.Extensions,
 		},
 	}
 }
-*/
