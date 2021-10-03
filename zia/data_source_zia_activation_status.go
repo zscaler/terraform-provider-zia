@@ -27,6 +27,7 @@ func dataSourceActivationStatusRead(d *schema.ResourceData, m interface{}) error
 	}
 
 	if resp != nil {
+		d.SetId("activation")
 		_ = d.Set("status", resp.Status)
 
 	} else {
