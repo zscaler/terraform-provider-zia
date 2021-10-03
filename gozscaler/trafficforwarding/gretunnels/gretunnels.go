@@ -93,7 +93,7 @@ func (service *Service) CreateGreTunnels(greTunnelID *GreTunnels) (*GreTunnels, 
 }
 
 func (service *Service) UpdateGreTunnels(greTunnelID int, greTunnels *GreTunnels) (*GreTunnels, *http.Response, error) {
-	resp, err := service.Client.Update(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID), *greTunnels)
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", greTunnelsEndpoint, greTunnelID), *greTunnels)
 	if err != nil {
 		return nil, nil, err
 	}

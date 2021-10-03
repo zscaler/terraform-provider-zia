@@ -22,7 +22,6 @@ func resourceAdminUsers() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"admin_id": {
 				Type:     schema.TypeInt,
-				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"login_name": {
