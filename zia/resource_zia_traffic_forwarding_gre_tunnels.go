@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -208,7 +207,7 @@ func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 		IPUnnumbered:         d.Get("ip_unnumbered").(bool),
 		PrimaryDestVip:       expandPrimaryDestVip(d),
 		SecondaryDestVip:     expandSecondaryDestVip(d),
-		LastModifiedBy:       expandLastModifiedBy(d),
+		LastModifiedBy:       expandGRELastModifiedBy(d),
 	}
 }
 
@@ -230,7 +229,7 @@ func expandSecondaryDestVip(d *schema.ResourceData) gretunnels.SecondaryDestVip 
 	return secondaryDestVip
 }
 
-func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
+func expandGRELastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
 	lastModifiedBy := gretunnels.LastModifiedBy{
 		ID:         d.Get("id").(int),
 		Extensions: d.Get("extensions").(map[string]interface{}),
@@ -238,4 +237,3 @@ func expandLastModifiedBy(d *schema.ResourceData) gretunnels.LastModifiedBy {
 
 	return lastModifiedBy
 }
-*/

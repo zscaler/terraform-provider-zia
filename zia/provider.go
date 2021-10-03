@@ -35,11 +35,11 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"zia_admin_users":             resourceAdminUsers(),
-			"zia_dlp_dictionaries":        resourceDLPDictionaries(),
-			"zia_firewall_filtering_rule": resourceFirewallFilteringRules(),
-			"zia_ip_destination_groups":   resourceIPDestinationGroups(),
-			//"zia_traffic_forwarding_gre_tunnel":      resourceTrafficForwardingGRETunnel(),
+			"zia_admin_users": resourceAdminUsers(),
+			//"zia_dlp_dictionaries":        resourceDLPDictionaries(),
+			"zia_firewall_filtering_rule":            resourceFirewallFilteringRules(),
+			"zia_ip_destination_groups":              resourceIPDestinationGroups(),
+			"zia_traffic_forwarding_gre_tunnel":      resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":       resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials": resourceTrafficForwardingVPNCredentials(),
 			"zia_location_management":                resourceLocationManagement(),

@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -19,10 +20,6 @@ func resourceDLPDictionaries() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
-			// "id": {
-			// 	Type:     schema.TypeString,
-			// 	Computed: true,
-			// },
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -123,7 +120,7 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
-			log.Printf("[WARN] Removing dlp dictionary %s from state because it no longer exists in ZIA", d.Id())
+			log.Printf("[WARN] Removing dlp dictionary %d from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -221,3 +218,4 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 
 	return dlpPatternsItems
 }
+*/

@@ -372,7 +372,11 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.filteringrules.Get(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no zia firewall filtering rule id is set")
+	}
+	resp, err := zClient.filteringrules.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {

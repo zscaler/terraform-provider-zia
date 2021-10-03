@@ -73,7 +73,11 @@ func resourceIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) er
 func resourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.ipdestinationgroups.Get(d.Id())
+	id, ok := getIntFromResourceData(d, "id")
+	if !ok {
+		return fmt.Errorf("no ip destination groups id is set")
+	}
+	resp, err := zClient.ipdestinationgroups.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {

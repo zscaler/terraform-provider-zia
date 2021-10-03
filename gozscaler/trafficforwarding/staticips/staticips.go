@@ -14,7 +14,7 @@ const (
 // Gets all provisioned static IP addresses.
 type StaticIP struct {
 	ID                   int            `json:"id,omitempty"`
-	IpAddress            []string       `json:"ipAddress"`
+	IpAddress            string         `json:"ipAddress"`
 	GeoOverride          bool           `json:"geoOverride"`
 	Latitude             int            `json:"latitude,omitempty"`
 	Longitude            int            `json:"longitude,omitempty"`
@@ -37,9 +37,9 @@ type LastModifiedBy struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-func (service *Service) GetStaticIP(staticIpID string) (*StaticIP, error) {
+func (service *Service) Get(staticIpID int) (*StaticIP, error) {
 	var staticIP StaticIP
-	err := service.Client.Read(fmt.Sprintf("%s/%s", staticIPEndpoint, staticIpID), &staticIP)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", staticIPEndpoint, staticIpID), &staticIP)
 	if err != nil {
 		return nil, err
 	}
