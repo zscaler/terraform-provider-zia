@@ -107,7 +107,7 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 	req := expandDLPDictionaries(d)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
 
-	resp, _, err := zClient.dlpdictionaries.CreateDlpDictionary(&req)
+	resp, _, err := zClient.dlpdictionaries.Create(&req)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.dlpdictionaries.GetDlpDictionaries(d.Id())
+	resp, err := zClient.dlpdictionaries.Get(d.Id())
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
@@ -159,7 +159,7 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
 	req := expandDLPDictionaries(d)
 
-	if _, _, err := zClient.dlpdictionaries.UpdateDlpDictionary(id, &req); err != nil {
+	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
 	}
 
