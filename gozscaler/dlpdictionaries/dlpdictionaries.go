@@ -76,8 +76,8 @@ func (service *Service) Create(dlpDictionariesID *DlpDictionary) (*DlpDictionary
 	return createdDlpDictionary, nil, nil
 }
 
-func (service *Service) Update(dlpDictionariesID string, dlpDictionaries *DlpDictionary) (*DlpDictionary, *http.Response, error) {
-	resp, err := service.Client.Update(dlpDictionariesEndpoint+"/"+dlpDictionariesID, *dlpDictionaries)
+func (service *Service) Update(dlpDictionariesID int, dlpDictionaries *DlpDictionary) (*DlpDictionary, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID), *dlpDictionaries)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -87,8 +87,8 @@ func (service *Service) Update(dlpDictionariesID string, dlpDictionaries *DlpDic
 	return updatedDlpDictionary, nil, nil
 }
 
-func (service *Service) DeleteDlpDictionary(dlpDictionariesID string) (*http.Response, error) {
-	err := service.Client.Delete(dlpDictionariesEndpoint + "/" + dlpDictionariesID)
+func (service *Service) DeleteDlpDictionary(dlpDictionariesID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", dlpDictionariesEndpoint, dlpDictionariesID))
 	if err != nil {
 		return nil, err
 	}

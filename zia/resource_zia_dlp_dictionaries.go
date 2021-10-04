@@ -1,9 +1,9 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,6 +20,10 @@ func resourceDLPDictionaries() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
+			"dictionary_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -109,6 +113,8 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 	log.Printf("[INFO] Created zia dlp dictionaries request. ID: %v\n", resp)
+	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("dictionary_id", resp.ID)
 
 	return resourceDLPDictionariesRead(d, m)
 }
@@ -116,11 +122,15 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.dlpdictionaries.Get(d.Id())
+	id, ok := getIntFromResourceData(d, "dictionary_id")
+	if !ok {
+		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+	}
+	resp, err := zClient.dlpdictionaries.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
-			log.Printf("[WARN] Removing dlp dictionary %d from state because it no longer exists in ZIA", d.Id())
+			log.Printf("[WARN] Removing dlp dictionary %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -131,6 +141,7 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Getting dlp dictionary :\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
+	_ = d.Set("dictionary_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
@@ -152,7 +163,11 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id := d.Id()
+	id, ok := getIntFromResourceData(d, "dictionary_id")
+	if !ok {
+		log.Printf("[ERROR] dlp dictionaryID not set: %v\n", id)
+	}
+
 	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
 	req := expandDLPDictionaries(d)
 
@@ -166,10 +181,13 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	// Need to pass the ID (int) of the resource for deletion
+	id, ok := getIntFromResourceData(d, "dictionary_id")
+	if !ok {
+		log.Printf("[ERROR] dlp dictionary ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Deleting dlp dictionary ID: %v\n", (d.Id()))
 
-	if _, err := zClient.dlpdictionaries.DeleteDlpDictionary(d.Id()); err != nil {
+	if _, err := zClient.dlpdictionaries.DeleteDlpDictionary(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -178,11 +196,25 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary {
-	dlpDictionaries := dlpdictionaries.DlpDictionary{
-		Phrases:  expandDLPDictionariesPhrases(d),
-		Patterns: expandDLPDictionariesPatterns(d),
+	id, _ := getIntFromResourceData(d, "dictionary_id")
+	result := dlpdictionaries.DlpDictionary{
+		ID:                    id,
+		Name:                  d.Get("name").(string),
+		Description:           d.Get("description").(string),
+		ConfidenceThreshold:   d.Get("confidence_threshold").(string),
+		CustomPhraseMatchType: d.Get("custom_phrase_match_type").(string),
+		DictionaryType:        d.Get("dictionary_type").(string),
 	}
-	return dlpDictionaries
+	phrases := expandDLPDictionariesPhrases(d)
+	if phrases != nil {
+		result.Phrases = phrases
+	}
+
+	patterns := expandDLPDictionariesPatterns(d)
+	if phrases != nil {
+		result.Patterns = patterns
+	}
+	return result
 }
 
 func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phrases {
@@ -218,4 +250,3 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 
 	return dlpPatternsItems
 }
-*/

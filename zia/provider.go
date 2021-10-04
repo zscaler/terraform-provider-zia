@@ -35,8 +35,8 @@ func Provider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"zia_admin_users": resourceAdminUsers(),
-			//"zia_dlp_dictionaries":        resourceDLPDictionaries(),
+			"zia_admin_users":                        resourceAdminUsers(),
+			"zia_dlp_dictionaries":                   resourceDLPDictionaries(),
 			"zia_firewall_filtering_rule":            resourceFirewallFilteringRules(),
 			"zia_ip_destination_groups":              resourceIPDestinationGroups(),
 			"zia_ip_source_groups":                   resourceIPSourceGroups(),
