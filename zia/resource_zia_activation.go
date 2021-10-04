@@ -43,7 +43,7 @@ func resourceActivationCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Configuration activation successfull. %v\n", resp.Status)
-
+	d.SetId("activation")
 	return resourceActivationRead(d, m)
 }
 
