@@ -9,6 +9,8 @@ terraform {
 
 provider "zia" {}
 
+
+/*
 data "zia_admin_roles" "example1"{
     name = "Super Admin"
 }
@@ -24,3 +26,4 @@ data "zia_admin_roles" "example2"{
 output "zia_admin_roles_example2"{
     value = data.zia_admin_roles.example2
 }
+*/

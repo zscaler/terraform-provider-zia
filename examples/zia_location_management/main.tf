@@ -13,12 +13,13 @@ provider "zia" {}
 resource "zia_location_management" "toronto"{
     name = "SGIO-IPSEC-Toronto"
     description = "Created with Terraform"
-    ip_addresses = [
-        zia_traffic_forwarding_static_ip.example.id
-    ]
+    ip_addresses = [ "50.98.112.169" ]
+    profile = "CORPORATE"
     vpn_credentials {
-        fqdn = zia_traffic_forwarding_vpn_credentials.example.fqdn
+       id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
+       //type = zia_traffic_forwarding_vpn_credentials.example.type
     }
+
 }
 
 resource "zia_traffic_forwarding_static_ip" "example"{
@@ -37,7 +38,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
 
 output "zia_location_management"{
     value = zia_location_management.toronto
-    sensitive = true
+    // sensitive = true
 }
 
 /*
@@ -48,4 +49,12 @@ data "zia_location_management" "vancouver"{
 output "zia_location_management"{
     value = data.zia_location_management.vancouver
 }
+
+
+
+
+
+
 */
+
+

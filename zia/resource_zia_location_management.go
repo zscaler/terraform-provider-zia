@@ -64,7 +64,7 @@ func resourceLocationManagement() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"type": {
 							Type:     schema.TypeString,
@@ -81,9 +81,9 @@ func resourceLocationManagement() *schema.Resource {
 							Optional: true,
 						},
 						"pre_shared_key": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
+							Type:     schema.TypeString,
+							Optional: true,
+							// Sensitive: true,
 						},
 						"comments": {
 							Type:     schema.TypeString,

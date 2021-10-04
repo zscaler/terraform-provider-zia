@@ -49,7 +49,7 @@ func Provider() *schema.Provider {
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
-			//"zia_admin_users":                     dataSourceAdminUsers(),
+			"zia_admin_users":                         dataSourceAdminUsers(),
 			"zia_admin_roles":                         dataSourceAdminRoles(),
 			"zia_user_management":                     dataSourceUserManagement(),
 			"zia_group_management":                    dataSourceGroupManagement(),

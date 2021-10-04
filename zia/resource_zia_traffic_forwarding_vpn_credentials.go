@@ -32,9 +32,9 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Optional: true,
 			},
 			"pre_shared_key": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Sensitive: true,
 			},
 			"comments": {
 				Type:     schema.TypeString,
@@ -83,7 +83,7 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	log.Printf("[INFO] Getting vpn credentials:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("vpn_credental_id", resp.ID)
+	// _ = d.Set("vpn_credental_id", resp.ID)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("fqdn", resp.FQDN)
 	_ = d.Set("pre_shared_key", resp.PreSharedKey)
