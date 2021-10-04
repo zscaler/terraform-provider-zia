@@ -16,13 +16,13 @@ resource "zia_traffic_forwarding_gre_tunnel" "example" {
     // id = data.zia_gre_virtual_ip_address_list.yvr1_0.list[0].id
     //virtual_ip = data.zia_gre_virtual_ip_address_list.yvr1_0.list[0].virtual_ip
     //virtual_ip = "165.225.210.32"
-    id = 64199
+    id = 74599
   }
   secondary_dest_vip {
     //id = data.zia_gre_virtual_ip_address_list.yvr1_1.list[0].id
     //virtual_ip = data.zia_gre_virtual_ip_address_list.yvr1_1.list[0].virtual_ip
   // virtual_ip = "165.225.210.33"
-  id = 64197
+  id = 47198
   }
   ip_unnumbered = true
   within_country = true

@@ -17,7 +17,7 @@ resource "zia_location_management" "toronto"{
     profile = "CORPORATE"
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
-       //type = zia_traffic_forwarding_vpn_credentials.example.type
+       type = zia_traffic_forwarding_vpn_credentials.example.type
     }
 
 }
