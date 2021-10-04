@@ -41,7 +41,20 @@ output "zia_location_management"{
     // sensitive = true
 }
 
+resource "zia_activation_status" "example"{
+    status = "ACTIVE"
+}
+
+
+
 /*
+data "zia_activation_status" "example"{
+}
+
+output "zia_activation_status"{
+    value = data.zia_activation_status.example
+}
+
 data "zia_location_management" "vancouver"{
     name = "SGIO-IPSEC-Vancouver"
 }
