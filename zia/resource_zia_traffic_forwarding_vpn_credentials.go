@@ -40,6 +40,52 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"managed_by": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"location": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -135,5 +181,63 @@ func expandVPNCredentials(d *schema.ResourceData) vpncredentials.VPNCredentials 
 		PreSharedKey: d.Get("pre_shared_key").(string),
 		Comments:     d.Get("comments").(string),
 	}
+
+	location := expandLocation(d)
+	if location != nil {
+		result.Location = location
+	}
+	managedBy := expandManagedBy(d)
+	if managedBy != nil {
+		result.ManagedBy = managedBy
+	}
+
 	return result
+}
+
+func expandLocation(d *schema.ResourceData) *vpncredentials.Location {
+	locationObj, ok := d.GetOk("location")
+	if !ok {
+		return nil
+	}
+	locations, ok := locationObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(locations.List()) > 0 {
+		locationObj := locations.List()[0]
+		location, ok := locationObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return &vpncredentials.Location{
+			ID:         location["id"].(int),
+			Name:       location["name"].(string),
+			Extensions: location["extensions"].(map[string]interface{}),
+		}
+	}
+	return nil
+}
+
+func expandManagedBy(d *schema.ResourceData) *vpncredentials.ManagedBy {
+	managedByObj, ok := d.GetOk("managed_by")
+	if !ok {
+		return nil
+	}
+	managedBy, ok := managedByObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(managedBy.List()) > 0 {
+		managedByObj := managedBy.List()[0]
+		managedBy, ok := managedByObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return &vpncredentials.ManagedBy{
+			ID:         managedBy["id"].(int),
+			Name:       managedBy["name"].(string),
+			Extensions: managedBy["extensions"].(map[string]interface{}),
+		}
+	}
+	return nil
 }
