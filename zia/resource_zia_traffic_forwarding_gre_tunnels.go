@@ -27,12 +27,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"source_ip": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The source IP address of the GRE tunnel.",
+				Description: "The source IP address of the GRE tunnel. This is typically a static IP address in the organization or SD-WAN.",
 			},
 			"primary_dest_vip": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Role of the admin. This is not required for an auditor.",
+				Description: "The primary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -51,7 +51,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"secondary_dest_vip": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Description: "Role of the admin. This is not required for an auditor.",
+				Description: "The secondary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {

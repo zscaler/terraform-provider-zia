@@ -14,7 +14,7 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"source_ip": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"routable_ip": {
 				Type:     schema.TypeBool,
@@ -26,20 +26,20 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 			},
 			"list": {
 				Type:     schema.TypeList,
-				Computed: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
-							Computed: true,
+							Optional: true,
 						},
 						"virtual_ip": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
 						},
 						"private_service_edge": {
 							Type:     schema.TypeBool,
-							Computed: true,
+							Optional: true,
 						},
 						"datacenter": {
 							Type:     schema.TypeString,

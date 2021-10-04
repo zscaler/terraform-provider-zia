@@ -17,12 +17,19 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
 }
 
 /*
-data "zia_vpn_credentials" "example"{
-    fqdn = "vpn@securitygeek.io"
-}
-
-output "zia_vpn_credentials"{
-    value = data.zia_vpn_credentials.example
+output "zia_traffic_forwarding_vpn_credentials"{
+    value = zia_traffic_forwarding_vpn_credentials.example
+    // sensitive = true
 }
 */
+
+
+data "zia_traffic_forwarding_vpn_credentials" "example"{
+    fqdn = "sjc-1-37@securitygeek.io"
+}
+
+output "zia_vpn_credentials_sjc-1-37"{
+    value = data.zia_traffic_forwarding_vpn_credentials.example
+    sensitive = true
+}
 

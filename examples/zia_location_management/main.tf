@@ -12,13 +12,32 @@ provider "zia" {}
 
 resource "zia_location_management" "toronto"{
     name = "SGIO-IPSEC-Toronto"
+    description = "Created with Terraform"
+    ip_addresses = [
+        zia_traffic_forwarding_static_ip.example.id
+    ]
     vpn_credentials {
-id
+        fqdn = zia_traffic_forwarding_vpn_credentials.example.fqdn
     }
+}
+
+resource "zia_traffic_forwarding_static_ip" "example"{
+    ip_address =  "50.98.112.169"
+    routable_ip = true
+    comment = "Created with Terraform"
+    geo_override = false
+}
+
+resource "zia_traffic_forwarding_vpn_credentials" "example"{
+    type = "UFQDN"
+    fqdn = "sjc-1-37@securitygeek.io"
+    comments = "created automatically"
+    pre_shared_key = "newPassword123!"
 }
 
 output "zia_location_management"{
     value = zia_location_management.toronto
+    sensitive = true
 }
 
 /*

@@ -19,8 +19,8 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
+			"vpn_credental_id": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"type": {
@@ -50,12 +50,13 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	req := expandVPNCredentials(d)
 	log.Printf("[INFO] Creating zia vpn credentials\n%+v\n", req)
 
-	resp, err := zClient.vpncredentials.Create(&req)
+	resp, _, err := zClient.vpncredentials.Create(&req)
 	if err != nil {
 		return err
 	}
 	log.Printf("[INFO] Created zia vpn credentials request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("vpn_credental_id", resp.ID)
 
 	return resourceTrafficForwardingVPNCredentialsRead(d, m)
 }
@@ -63,7 +64,7 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "vpn_credental_id")
 	if !ok {
 		return fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set")
 	}
@@ -82,6 +83,7 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	log.Printf("[INFO] Getting vpn credentials:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
+	_ = d.Set("vpn_credental_id", resp.ID)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("fqdn", resp.FQDN)
 	_ = d.Set("pre_shared_key", resp.PreSharedKey)
@@ -93,7 +95,10 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id := d.Id()
+	id, ok := getIntFromResourceData(d, "vpn_credental_id")
+	if !ok {
+		log.Printf("[ERROR] vpn credentials ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Updating vpn credentials ID: %v\n", id)
 	req := expandVPNCredentials(d)
 
@@ -107,10 +112,13 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	// Need to pass the ID (int) of the resource for deletion
+	id, ok := getIntFromResourceData(d, "vpn_credental_id")
+	if !ok {
+		log.Printf("[ERROR] vpn credentials ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", (d.Id()))
 
-	if err := zClient.vpncredentials.Delete(d.Id()); err != nil {
+	if err := zClient.vpncredentials.Delete(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -119,10 +127,13 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 }
 
 func expandVPNCredentials(d *schema.ResourceData) vpncredentials.VPNCredentials {
-	return vpncredentials.VPNCredentials{
+	id, _ := getIntFromResourceData(d, "vpn_credental_id")
+	result := vpncredentials.VPNCredentials{
+		ID:           id,
 		Type:         d.Get("type").(string),
 		FQDN:         d.Get("fqdn").(string),
 		PreSharedKey: d.Get("pre_shared_key").(string),
 		Comments:     d.Get("comments").(string),
 	}
+	return result
 }

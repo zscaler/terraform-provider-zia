@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 )
 
-func dataSourcePublicNodeVIPs() *schema.Resource {
+func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePublicNodeVirtualAddressRead,
+		Read: dataSourceTrafficForwardingPublicNodeVIPsRead,
 		Schema: map[string]*schema.Schema{
 			"cloud_name": {
 				Type:     schema.TypeString,
@@ -63,7 +63,7 @@ func dataSourcePublicNodeVIPs() *schema.Resource {
 	}
 }
 
-func dataSourcePublicNodeVirtualAddressRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *virtualipaddresslist.ZscalerVIPs

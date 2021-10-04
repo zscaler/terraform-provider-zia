@@ -86,7 +86,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	var resp *staticips.StaticIP
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
+		log.Printf("[INFO] Getting data for static ip id: %d\n", id)
 		res, err := zClient.staticips.Get(id)
 		if err != nil {
 			return err
@@ -94,17 +94,6 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 		resp = res
 	}
 
-	/*
-		ipaddress, _ := d.Get("ip_address").(string)
-		if resp == nil && ipaddress != "" {
-			log.Printf("[INFO] Getting data for location name: %s\n", ipaddress)
-			res, err := zClient.staticips.GetStaticByIP(ipaddress)
-			if err != nil {
-				return err
-			}
-			resp = res
-		}
-	*/
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("ip_address", resp.IpAddress)
@@ -124,7 +113,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any ip address with id '%d'", id)
+		return fmt.Errorf("couldn't find any static ip address with id '%d'", id)
 	}
 
 	return nil

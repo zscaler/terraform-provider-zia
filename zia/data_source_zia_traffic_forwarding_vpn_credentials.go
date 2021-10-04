@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -77,7 +76,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
-		res, err := zClient.vpncredentials.GetVPNCredentials(id)
+		res, err := zClient.vpncredentials.Get(id)
 		if err != nil {
 			return err
 		}
@@ -86,7 +85,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	fqdn, _ := d.Get("fqdn").(string)
 	if resp == nil && fqdn != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", fqdn)
-		res, err := zClient.vpncredentials.GetVPNCredentialsByFQDN(fqdn)
+		res, err := zClient.vpncredentials.GetByFQDN(fqdn)
 		if err != nil {
 			return err
 		}
@@ -115,22 +114,29 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 }
 
 // Want to simplify this. This flattening function will be used in multiple places.
-func flattenVPNCredentialsLocation(location vpncredentials.Location) interface{} {
+func flattenVPNCredentialsLocation(location *vpncredentials.Location) interface{} {
+	if location == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
-			"id":   location.ID,
-			"name": location.Name,
+			"id":         location.ID,
+			"name":       location.Name,
+			"extensions": location.Extensions,
 		},
 	}
 }
 
 // Want to simplify this. This flattening function will be used in multiple places.
-func flattenVPNCredentialsManagedBy(managedBy vpncredentials.ManagedBy) interface{} {
+func flattenVPNCredentialsManagedBy(managedBy *vpncredentials.ManagedBy) interface{} {
+	if managedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
-			"id":   managedBy.ID,
-			"name": managedBy.Name,
+			"id":         managedBy.ID,
+			"name":       managedBy.Name,
+			"extensions": managedBy.Extensions,
 		},
 	}
 }
-*/

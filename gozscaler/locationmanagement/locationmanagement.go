@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -107,24 +108,24 @@ func (service *Service) Create(locations *Locations) (*Locations, error) {
 	return createdLocations, nil
 }
 
-func (service *Service) Update(locationsID string, locations *Locations) (*Locations, error) {
-	resp, err := service.Client.Update(locationsEndpoint+"/"+locationsID, *locations)
+func (service *Service) Update(locationID int, locations *Locations) (*Locations, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", locationsEndpoint, locationID), *locations)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	updatedLocations, _ := resp.(*Locations)
 
 	log.Printf("returning locations from Update: %d", updatedLocations.ID)
-	return updatedLocations, nil
+	return updatedLocations, nil, nil
 }
 
-func (service *Service) Delete(locationsID string) error {
-	err := service.Client.Delete(locationsEndpoint + "/" + locationsID)
+func (service *Service) Delete(locationID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", locationsEndpoint, locationID))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 // Gets a name and ID dictionary of locations.

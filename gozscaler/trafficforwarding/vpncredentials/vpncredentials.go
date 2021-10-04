@@ -13,21 +13,23 @@ const (
 )
 
 type VPNCredentials struct {
-	ID           int       `json:"id"`
-	Type         string    `json:"type,omitempty"`
-	FQDN         string    `json:"fqdn"`
-	PreSharedKey string    `json:"preSharedKey,omitempty"`
-	Comments     string    `json:"comments,omitempty"`
-	Location     Location  `json:"location"`
-	ManagedBy    ManagedBy `json:"managedBy"`
+	ID           int        `json:"id"`
+	Type         string     `json:"type,omitempty"`
+	FQDN         string     `json:"fqdn"`
+	PreSharedKey string     `json:"preSharedKey,omitempty"`
+	Comments     string     `json:"comments,omitempty"`
+	Location     *Location  `json:"location"`
+	ManagedBy    *ManagedBy `json:"managedBy"`
 }
 type Location struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID         int                    `json:"id"`
+	Name       string                 `json:"name"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 type ManagedBy struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID         int                    `json:"id"`
+	Name       string                 `json:"name"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 func (service *Service) Get(vpnCredentialID int) (*VPNCredentials, error) {
@@ -56,23 +58,23 @@ func (service *Service) GetByFQDN(vpnCredentialName string) (*VPNCredentials, er
 	return nil, fmt.Errorf("no vpn credentials found with fqdn: %s", vpnCredentialName)
 }
 
-func (service *Service) Create(vpnCredentials *VPNCredentials) (*VPNCredentials, error) {
+func (service *Service) Create(vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
 	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentials)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	createdVpnCredentials, ok := resp.(*VPNCredentials)
 	if !ok {
-		return nil, errors.New("object returned from api was not a vpn credential pointer")
+		return nil, nil, errors.New("object returned from api was not a vpn credential pointer")
 	}
 
 	log.Printf("returning vpn credential from create: %d", createdVpnCredentials.ID)
-	return createdVpnCredentials, nil
+	return createdVpnCredentials, nil, nil
 }
 
-func (service *Service) Update(vpnCredentialID string, vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
-	resp, err := service.Client.Update(vpnCredentialsEndpoint+"/"+vpnCredentialID, *vpnCredentials)
+func (service *Service) Update(vpnCredentialID int, vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", vpnCredentialsEndpoint, vpnCredentialID), *vpnCredentials)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -82,8 +84,8 @@ func (service *Service) Update(vpnCredentialID string, vpnCredentials *VPNCreden
 	return updatedVpnCredentials, nil, nil
 }
 
-func (service *Service) Delete(vpnCredentialID string) error {
-	err := service.Client.Delete(vpnCredentialsEndpoint + "/" + vpnCredentialID)
+func (service *Service) Delete(vpnCredentialID int) error {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", vpnCredentialsEndpoint, vpnCredentialID))
 	if err != nil {
 		return err
 	}
