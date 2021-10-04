@@ -14,56 +14,56 @@ const (
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.
 type Locations struct {
-	ID                                  int              `json:"id"`
+	ID                                  int              `json:"id,omitempty"`
 	Name                                string           `json:"name,omitempty"`
 	ParentID                            int              `json:"parentId,omitempty"`
 	UpBandwidth                         int              `json:"upBandwidth,omitempty"`
 	DnBandwidth                         int              `json:"dnBandwidth,omitempty"`
-	Country                             string           `json:"country"`
-	TZ                                  string           `json:"tz"`
-	IPAddresses                         []string         `json:"ipAddresses"`
-	Ports                               string           `json:"ports"`
-	VPNCredentials                      []VPNCredentials `json:"vpnCredentials"`
-	AuthRequired                        bool             `json:"authRequired"`
-	SSLScanEnabled                      bool             `json:"sslScanEnabled"`
-	ZappSSLScanEnabled                  bool             `json:"zappSSLScanEnabled"`
-	XFFForwardEnabled                   bool             `json:"xffForwardEnabled"`
-	SurrogateIP                         bool             `json:"surrogateIP"`
-	IdleTimeInMinutes                   int              `json:"idleTimeInMinutes"`
-	DisplayTimeUnit                     string           `json:"displayTimeUnit"`
-	SurrogateIPEnforcedForKnownBrowsers bool             `json:"surrogateIPEnforcedForKnownBrowsers"`
-	SurrogateRefreshTimeInMinutes       int              `json:"surrogateRefreshTimeInMinutes"`
-	SurrogateRefreshTimeUnit            string           `json:"surrogateRefreshTimeUnit"`
-	OFWEnabled                          bool             `json:"ofwEnabled"`
-	IPSControl                          bool             `json:"ipsControl"`
-	AUPEnabled                          bool             `json:"aupEnabled"`
-	CautionEnabled                      bool             `json:"cautionEnabled"`
-	AUPBlockInternetUntilAccepted       bool             `json:"aupBlockInternetUntilAccepted"`
-	AUPForceSSLInspection               bool             `json:"aupForceSslInspection"`
-	AUPTimeoutInDays                    int              `json:"aupTimeoutInDays"`
-	Profile                             string           `json:"profile"`
-	Description                         string           `json:"description"`
+	Country                             string           `json:"country,omitempty"`
+	TZ                                  string           `json:"tz,omitempty"`
+	IPAddresses                         []string         `json:"ipAddresses,omitempty"`
+	Ports                               string           `json:"ports,omitempty"`
+	VPNCredentials                      []VPNCredentials `json:"vpnCredentials,omitempty"`
+	AuthRequired                        bool             `json:"authRequired,omitempty"`
+	SSLScanEnabled                      bool             `json:"sslScanEnabled,omitempty"`
+	ZappSSLScanEnabled                  bool             `json:"zappSSLScanEnabled,omitempty"`
+	XFFForwardEnabled                   bool             `json:"xffForwardEnabled,omitempty"`
+	SurrogateIP                         bool             `json:"surrogateIP,omitempty"`
+	IdleTimeInMinutes                   int              `json:"idleTimeInMinutes,omitempty"`
+	DisplayTimeUnit                     string           `json:"displayTimeUnit,omitempty"`
+	SurrogateIPEnforcedForKnownBrowsers bool             `json:"surrogateIPEnforcedForKnownBrowsers,omitempty"`
+	SurrogateRefreshTimeInMinutes       int              `json:"surrogateRefreshTimeInMinutes,omitempty"`
+	SurrogateRefreshTimeUnit            string           `json:"surrogateRefreshTimeUnit,omitempty"`
+	OFWEnabled                          bool             `json:"ofwEnabled,omitempty"`
+	IPSControl                          bool             `json:"ipsControl,omitempty"`
+	AUPEnabled                          bool             `json:"aupEnabled,omitempty"`
+	CautionEnabled                      bool             `json:"cautionEnabled,omitempty"`
+	AUPBlockInternetUntilAccepted       bool             `json:"aupBlockInternetUntilAccepted,omitempty"`
+	AUPForceSSLInspection               bool             `json:"aupForceSslInspection,omitempty"`
+	AUPTimeoutInDays                    int              `json:"aupTimeoutInDays,omitempty"`
+	Profile                             string           `json:"profile,omitempty"`
+	Description                         string           `json:"description,omitempty"`
 }
 
 type Location struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions"`
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 type ManagedBy struct {
-	ID         int                    `json:"id"`
+	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 type VPNCredentials struct {
-	ID           int         `json:"id"`
+	ID           int         `json:"id,omitempty"`
 	Type         string      `json:"type,omitempty"`
-	FQDN         string      `json:"fqdn"`
+	FQDN         string      `json:"fqdn,omitempty"`
 	PreSharedKey string      `json:"preSharedKey,omitempty"`
 	Comments     string      `json:"comments,omitempty"`
-	Location     []Location  `json:"location"`
-	ManagedBy    []ManagedBy `json:"managedBy"`
+	Location     []Location  `json:"location,omitempty"`
+	ManagedBy    []ManagedBy `json:"managedBy,omitempty"`
 }
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
