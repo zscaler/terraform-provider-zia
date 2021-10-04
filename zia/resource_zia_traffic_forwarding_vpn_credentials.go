@@ -40,52 +40,54 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"managed_by": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+			/*
+				"managed_by": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"extensions": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
-			"location": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+				"location": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"extensions": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
 							},
 						},
 					},
 				},
-			},
+			*/
 		},
 	}
 }
@@ -129,7 +131,7 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	log.Printf("[INFO] Getting vpn credentials:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	// _ = d.Set("vpn_credental_id", resp.ID)
+	_ = d.Set("vpn_credental_id", resp.ID)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("fqdn", resp.FQDN)
 	_ = d.Set("pre_shared_key", resp.PreSharedKey)
@@ -182,18 +184,20 @@ func expandVPNCredentials(d *schema.ResourceData) vpncredentials.VPNCredentials 
 		Comments:     d.Get("comments").(string),
 	}
 
-	location := expandLocation(d)
-	if location != nil {
-		result.Location = location
-	}
-	managedBy := expandManagedBy(d)
-	if managedBy != nil {
-		result.ManagedBy = managedBy
-	}
-
+	/*
+		location := expandLocation(d)
+		if location != nil {
+			result.Location = location
+		}
+		managedBy := expandManagedBy(d)
+		if managedBy != nil {
+			result.ManagedBy = managedBy
+		}
+	*/
 	return result
 }
 
+/*
 func expandLocation(d *schema.ResourceData) *vpncredentials.Location {
 	locationObj, ok := d.GetOk("location")
 	if !ok {
@@ -241,3 +245,4 @@ func expandManagedBy(d *schema.ResourceData) *vpncredentials.ManagedBy {
 	}
 	return nil
 }
+*/

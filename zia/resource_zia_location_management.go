@@ -358,7 +358,7 @@ func expandLocationManagementVPNCredentials(d *schema.ResourceData) []locationma
 		for i, vpn := range vpnCredential {
 			vpnItem := vpn.(map[string]interface{})
 			vpnCredentials[i] = locationmanagement.VPNCredentials{
-				ID:           vpnItem["id"].(int),
+				// ID:           vpnItem["id"].(int),
 				Type:         vpnItem["type"].(string),
 				FQDN:         vpnItem["fqdn"].(string),
 				PreSharedKey: vpnItem["pre_shared_key"].(string),
