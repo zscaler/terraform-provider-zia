@@ -14,5 +14,5 @@ data "zia_gre_virtual_ip_address_list" "example"{
 }
 
 output "zia_gre_virtual_ip_address_list_example"{
-    value = data.zia_gre_virtual_ip_address_list.example.list[0].datacenter
+    value = data.zia_gre_virtual_ip_address_list.example
 }

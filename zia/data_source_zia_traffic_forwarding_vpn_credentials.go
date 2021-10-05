@@ -33,6 +33,29 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"location": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"managed_by": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -46,21 +69,12 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-					},
-				},
-			},
-			"location": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
+						"extensions": {
+							Type:     schema.TypeMap,
 							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 					},
 				},

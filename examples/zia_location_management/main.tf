@@ -9,24 +9,15 @@ terraform {
 
 provider "zia" {}
 
-
 resource "zia_location_management" "toronto"{
     name = "SGIO-IPSEC-Toronto"
     description = "Created with Terraform"
-    ip_addresses = [ "50.98.112.169" ]
-    profile = "CORPORATE"
+    //ip_addresses = [ zia_traffic_forwarding_static_ip.example.static_ip_id ]
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
        type = zia_traffic_forwarding_vpn_credentials.example.type
     }
 
-}
-
-resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address =  "50.98.112.169"
-    routable_ip = true
-    comment = "Created with Terraform"
-    geo_override = false
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
@@ -37,14 +28,22 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
 }
 
 output "zia_location_management"{
-    value = zia_location_management.toronto
+    value = zia_traffic_forwarding_vpn_credentials.example
     // sensitive = true
 }
 
-resource "zia_activation_status" "example"{
-    status = "ACTIVE"
+/*
+resource "zia_traffic_forwarding_static_ip" "example"{
+    ip_address =  "50.98.112.169"
+    routable_ip = true
+    comment = "Created with Terraform"
+    geo_override = false
 }
 
+
+
+
+*/
 
 
 /*
