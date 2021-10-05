@@ -269,11 +269,26 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("profile", resp.Profile)
 	_ = d.Set("description", resp.Description)
 
-	if err := d.Set("vpn_credentials", flattenLocationVPNCredentials(resp.VPNCredentials)); err != nil {
+	if err := d.Set("vpn_credentials", flattenLocationVPNCredentialsSimple(resp.VPNCredentials)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenLocationVPNCredentialsSimple(vpnCredential []locationmanagement.VPNCredentials) []interface{} {
+	vpnCredentials := make([]interface{}, len(vpnCredential))
+	for i, vpnCredential := range vpnCredential {
+		vpnCredentials[i] = map[string]interface{}{
+			"id":             vpnCredential.ID,
+			"type":           vpnCredential.Type,
+			"fqdn":           vpnCredential.FQDN,
+			"pre_shared_key": vpnCredential.PreSharedKey,
+			"comments":       vpnCredential.Comments,
+		}
+	}
+
+	return vpnCredentials
 }
 
 func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) error {
@@ -358,7 +373,7 @@ func expandLocationManagementVPNCredentials(d *schema.ResourceData) []locationma
 		for i, vpn := range vpnCredential {
 			vpnItem := vpn.(map[string]interface{})
 			vpnCredentials[i] = locationmanagement.VPNCredentials{
-				// ID:           vpnItem["id"].(int),
+				ID:           vpnItem["id"].(int),
 				Type:         vpnItem["type"].(string),
 				FQDN:         vpnItem["fqdn"].(string),
 				PreSharedKey: vpnItem["pre_shared_key"].(string),
