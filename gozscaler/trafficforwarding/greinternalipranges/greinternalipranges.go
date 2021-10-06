@@ -3,7 +3,7 @@ package greinternalipranges
 import "log"
 
 const (
-	greTunnelIPRangeEndpoint = "/api/v1/greTunnels/availableInternalIpRanges"
+	greTunnelIPRangeEndpoint = "/greTunnels/availableInternalIpRanges"
 )
 
 type GREInternalIPRanges struct {
