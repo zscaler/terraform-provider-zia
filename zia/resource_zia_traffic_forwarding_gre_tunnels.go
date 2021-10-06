@@ -26,7 +26,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			},
 			"source_ip": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "The source IP address of the GRE tunnel. This is typically a static IP address in the organization or SD-WAN.",
 			},
 			"primary_dest_vip": {
@@ -37,12 +37,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Optional:    true,
+							Required:    true,
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Description: "GRE cluster virtual IP address (VIP)",
 						},
 					},
@@ -56,12 +56,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Optional:    true,
+							Required:    true,
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
 							Type:        schema.TypeString,
-							Optional:    true,
+							Computed:    true,
 							Description: "GRE cluster virtual IP address (VIP)",
 						},
 					},
