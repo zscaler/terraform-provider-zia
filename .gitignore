@@ -47,4 +47,4 @@ vendor/modules.txt
 examples/script.sh
 examples/quick-refactor.sh
 examples/terraform-set-logging.sh
-zia_all_together
+examples/zia_all_together
