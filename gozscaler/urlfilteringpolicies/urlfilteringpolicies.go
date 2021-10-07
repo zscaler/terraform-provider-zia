@@ -1,8 +1,10 @@
 package urlfilteringpolicies
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -37,7 +39,7 @@ type URLFilteringRule struct {
 	ValidityEndTime        int              `json:"validityEndTime"`
 	ValidityTimeZoneID     string           `json:"validityTimeZoneId"`
 	LastModifiedTime       int              `json:"lastModifiedTime"`
-	LastModifiedBy         LastModifiedBy   `json:"lastModifiedBy"`
+	LastModifiedBy         *LastModifiedBy  `json:"lastModifiedBy"`
 	EnforceTimeValidity    bool             `json:"enforceTimeValidity"`
 	Action                 string           `json:"action"`
 	Ciparule               bool             `json:"ciparule"`
@@ -94,9 +96,9 @@ type LastModifiedBy struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
-func (service *Service) GetURLFilteringRules(urlFilteringPoliciesID int) (*URLFilteringRule, error) {
+func (service *Service) Get(ruleID int) (*URLFilteringRule, error) {
 	var urlFilteringPolicies URLFilteringRule
-	err := service.Client.Read(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, urlFilteringPoliciesID), &urlFilteringPolicies)
+	err := service.Client.Read(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, ruleID), &urlFilteringPolicies)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +107,7 @@ func (service *Service) GetURLFilteringRules(urlFilteringPoliciesID int) (*URLFi
 	return &urlFilteringPolicies, nil
 }
 
-func (service *Service) GetURLFilteringRulesByName(urlFilteringPolicyName string) (*URLFilteringRule, error) {
+func (service *Service) GetByName(urlFilteringPolicyName string) (*URLFilteringRule, error) {
 	var urlFilteringPolicies []URLFilteringRule
 	err := service.Client.Read(urlFilteringPoliciesEndpoint, &urlFilteringPolicies)
 	if err != nil {
@@ -117,4 +119,39 @@ func (service *Service) GetURLFilteringRulesByName(urlFilteringPolicyName string
 		}
 	}
 	return nil, fmt.Errorf("no url filtering rule found with name: %s", urlFilteringPolicyName)
+}
+
+func (service *Service) Create(ruleID *URLFilteringRule) (*URLFilteringRule, *http.Response, error) {
+	resp, err := service.Client.Create(urlFilteringPoliciesEndpoint, *ruleID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	createdURLFilteringRule, ok := resp.(*URLFilteringRule)
+	if !ok {
+		return nil, nil, errors.New("object returned from api was not a url filtering rule pointer")
+	}
+
+	log.Printf("returning url filtering rule from create: %d", createdURLFilteringRule.ID)
+	return createdURLFilteringRule, nil, nil
+}
+
+func (service *Service) Update(greTunnelID int, greTunnels *URLFilteringRule) (*URLFilteringRule, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, greTunnelID), *greTunnels)
+	if err != nil {
+		return nil, nil, err
+	}
+	updatedURLFilteringRule, _ := resp.(*URLFilteringRule)
+
+	log.Printf("returning url filtering rule from update: %d", updatedURLFilteringRule.ID)
+	return updatedURLFilteringRule, nil, nil
+}
+
+func (service *Service) Delete(greTunnelID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, greTunnelID))
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }

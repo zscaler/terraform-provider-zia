@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"log"
 
@@ -320,3 +321,4 @@ func expandURLKeywordCounts(d *schema.ResourceData) urlcategories.URLKeywordCoun
 	}
 	return keyword
 }
+*/

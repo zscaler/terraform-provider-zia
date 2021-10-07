@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 )
 
-func dataSourceURLFilteringPolicies() *schema.Resource {
+func dataSourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceURLFilteringPoliciesRead,
+		Read: dataSourceURLFilteringRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -325,14 +325,14 @@ func dataSourceURLFilteringPolicies() *schema.Resource {
 	}
 }
 
-func dataSourceURLFilteringPoliciesRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *urlfilteringpolicies.URLFilteringRule
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data url filtering policy id: %d\n", id)
-		res, err := zClient.urlfilteringpolicies.GetURLFilteringRules(id)
+		res, err := zClient.urlfilteringpolicies.Get(id)
 		if err != nil {
 			return err
 		}
@@ -342,7 +342,7 @@ func dataSourceURLFilteringPoliciesRead(d *schema.ResourceData, m interface{}) e
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting url filtering policy : %s\n", name)
-		res, err := zClient.urlfilteringpolicies.GetURLFilteringRulesByName(name)
+		res, err := zClient.urlfilteringpolicies.GetByName(name)
 		if err != nil {
 			return err
 		}
@@ -535,7 +535,7 @@ func flattenURLFilteringLabels(labels []urlfilteringpolicies.Labels) []interface
 	return label
 }
 
-func flattenURLFilteringLastModifiedBy(lastModifiedBy urlfilteringpolicies.LastModifiedBy) interface{} {
+func flattenURLFilteringLastModifiedBy(lastModifiedBy *urlfilteringpolicies.LastModifiedBy) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":         lastModifiedBy.ID,
