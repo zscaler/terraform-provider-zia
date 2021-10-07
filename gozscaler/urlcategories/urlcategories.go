@@ -84,10 +84,10 @@ func (service *Service) CreateURLCategories(category *URLCategory) (*URLCategory
 
 	createdUrlCategory, ok := resp.(*URLCategory)
 	if !ok {
-		return nil, errors.New("object returned from API was not a User Pointer")
+		return nil, errors.New("object returned from API was not a url category Pointer")
 	}
 
-	log.Printf("Returning User from Create: %v", createdUrlCategory.ID)
+	log.Printf("Returning url category from Create: %v", createdUrlCategory.ID)
 	return createdUrlCategory, nil
 }
 
@@ -97,7 +97,7 @@ func (service *Service) UpdateURLCategories(categoryID string, category *URLCate
 		return nil, err
 	}
 	updatedUrlCategory, _ := resp.(*URLCategory)
-	log.Printf("Returning User from Update: %s", updatedUrlCategory.ID)
+	log.Printf("Returning url category from Update: %s", updatedUrlCategory.ID)
 	return updatedUrlCategory, nil
 }
 

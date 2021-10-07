@@ -18,9 +18,13 @@ func resourceURLCategories() *schema.Resource {
 		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
-			"id": {
+			"url_category_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"id": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,
@@ -39,9 +43,10 @@ func resourceURLCategories() *schema.Resource {
 			"custom_category": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"scopes": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -75,7 +80,7 @@ func resourceURLCategories() *schema.Resource {
 							}, false),
 						},
 						"scope_entities": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -99,6 +104,7 @@ func resourceURLCategories() *schema.Resource {
 			"editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -160,7 +166,8 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp)
-
+	d.SetId(resp.ID)
+	_ = d.Set("url_category_id", resp.ID)
 	return resourceURLCategoriesRead(d, m)
 }
 
@@ -206,7 +213,10 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id := d.Id()
+	id, ok := getStringFromResourceData(d, "url_category_id")
+	if !ok {
+		log.Printf("[ERROR] vpn credentials ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)
 
@@ -220,7 +230,10 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	// Need to pass the ID (int) of the resource for deletion
+	id, ok := getIntFromResourceData(d, "url_category_id")
+	if !ok {
+		log.Printf("[ERROR] url category id ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Deleting custom url category ID: %v\n", (d.Id()))
 
 	if _, err := zClient.urlcategories.DeleteURLCategories(d.Id()); err != nil {
@@ -232,7 +245,9 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
-	urlCategory := urlcategories.URLCategory{
+	id, _ := getStringFromResourceData(d, "url_category_id")
+	result := urlcategories.URLCategory{
+		ID:                               id,
 		ConfiguredName:                   d.Get("login_name").(string),
 		Urls:                             d.Get("urls").([]string),
 		DBCategorizedUrls:                d.Get("db_categorized_urls").([]string),
@@ -240,27 +255,32 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 		Editable:                         d.Get("editable").(bool),
 		Description:                      d.Get("description").(string),
 		Type:                             d.Get("type").(string),
+		Val:                              d.Get("val").(int),
 		CustomUrlsCount:                  d.Get("custom_urls_count").(int),
 		UrlsRetainingParentCategoryCount: d.Get("urls_retaining_parent_category_count").(int),
-		Scopes:                           expandURLCategoryScopes(d.Get("scopes").([]interface{})),
 		URLKeywordCounts:                 expandURLKeywordCounts(d),
 	}
-	return urlCategory
+	urlCategoryScopes := expandURLCategoryScopes(d)
+	if urlCategoryScopes != nil {
+		result.Scopes = urlCategoryScopes
+	}
+	return result
 }
 
-func expandURLCategoryScopes(scopesUrlCategory []interface{}) []urlcategories.Scopes {
-	scopes := make([]urlcategories.Scopes, len(scopesUrlCategory))
-
-	for i, scope := range scopesUrlCategory {
-		scopeItem := scope.(map[string]interface{})
-		scopes[i] = urlcategories.Scopes{
-			Type:                     scopeItem["type"].(string),
-			ScopeGroupMemberEntities: expandCustomURLScopeGroupMemberEntities(scopeItem["scope_group_member_entities"].([]interface{})),
-			ScopeEntities:            expandCustomURLScopeEntities(scopeItem["scope_entities"].([]interface{})),
+func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
+	var urlCategoryScope []urlcategories.Scopes
+	if urlCategoriesInterface, ok := d.GetOk("url_category_id"); ok {
+		urlCategory := urlCategoriesInterface.([]interface{})
+		urlCategoryScope = make([]urlcategories.Scopes, len(urlCategory))
+		for i, url := range urlCategory {
+			categoryItem := url.(map[string]interface{})
+			urlCategoryScope[i] = urlcategories.Scopes{
+				Type: categoryItem["type"].(string),
+			}
 		}
 	}
 
-	return scopes
+	return urlCategoryScope
 }
 
 func expandCustomURLScopeGroupMemberEntities(scopeGroupMember []interface{}) []urlcategories.ScopeGroupMemberEntities {
