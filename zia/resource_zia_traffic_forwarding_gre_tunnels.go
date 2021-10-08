@@ -127,8 +127,9 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				},
 			},
 			"within_country": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Restrict the data center virtual IP addresses (VIPs) only to those within the same country as the source IP address",
 			},
 			"country_code": {
 				Type:        schema.TypeString,
@@ -136,8 +137,9 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "When within_country is enabled, you must set this to the country code.",
 			},
 			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Additional information about this GRE tunnel",
 			},
 			"ip_unnumbered": {
 				Type:     schema.TypeBool,
