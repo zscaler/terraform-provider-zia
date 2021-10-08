@@ -2,7 +2,6 @@ package zia
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
@@ -24,9 +23,14 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"required_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1,
+			},
 			"list": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -54,26 +58,25 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 
 func dataSourceGreVirtualIPAddressesListRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-	sourceIP, ok := d.GetOk("source_ip")
+	count, ok := getIntFromResourceData(d, "required_count")
+	if !ok {
+		count = 1
+	}
+	sourceIP, ok := getStringFromResourceData(d, "source_ip")
 	if !ok {
 		return fmt.Errorf("please provide a source_ip for the vips list")
 	}
-	sIP, ok := sourceIP.(string)
-	if !ok {
-		return fmt.Errorf("please provide a source_ip for the vips list")
-	}
-	resp, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList(sIP)
+	resp, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList(sourceIP, count)
 	if err != nil {
 		return err
 	}
-	d.SetId(sIP)
+	d.SetId(sourceIP)
 	_ = d.Set("list", flattenVIPList(*resp))
 
 	return nil
 }
 
 func flattenVIPList(list []virtualipaddresslist.GREVirtualIPList) []interface{} {
-	log.Printf("[ERROR] Got: %v\n", list)
 	result := make([]interface{}, len(list))
 	for i, vip := range list {
 		result[i] = map[string]interface{}{
