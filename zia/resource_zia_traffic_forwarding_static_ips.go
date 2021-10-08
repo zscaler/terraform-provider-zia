@@ -35,10 +35,12 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"latitude": {
 				Type:     schema.TypeFloat,
 				Optional: true,
+				Computed: true,
 			},
 			"longitude": {
 				Type:     schema.TypeFloat,
 				Optional: true,
+				Computed: true,
 			},
 			"routable_ip": {
 				Type:     schema.TypeBool,
@@ -47,6 +49,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"managed_by": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -70,6 +73,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"last_modified_by": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {

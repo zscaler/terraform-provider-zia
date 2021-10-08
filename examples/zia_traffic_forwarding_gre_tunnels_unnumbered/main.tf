@@ -16,7 +16,7 @@ resource "zia_traffic_forwarding_gre_tunnel" "example" {
     id = data.zia_gre_virtual_ip_address_list.yvr1_0.list[0].id
   }
   secondary_dest_vip {
-    id = data.zia_gre_virtual_ip_address_list.yvr1_1.list[1].id
+    id = data.zia_gre_virtual_ip_address_list.yvr1_0.list[1].id
   }
   ip_unnumbered = true
 }
@@ -37,17 +37,28 @@ resource "zia_traffic_forwarding_static_ip" "example"{
 
 
 data "zia_gre_virtual_ip_address_list" "yvr1_0"{
-    source_ip = "50.98.112.169"
+    source_ip = zia_traffic_forwarding_static_ip.example.ip_address
+    required_count = 2
 }
 
-data "zia_gre_virtual_ip_address_list" "yvr1_1"{
-    source_ip = "50.98.112.169"
-}
-
+/*
 resource "zia_activation_status" "example1"{
     status = "ACTIVE"
 }
 
 output "zia_activation_status_example1"{
     value = zia_activation_status.example1
+}
+*/
+
+
+data "zia_gre_internal_ip_range_list" "example"{
+}
+
+output "zia_gre_internal_ip_range_example"{
+    value = data.zia_gre_internal_ip_range_list.example
+}
+
+output "zia_gre_internal_ip_range_example_first"{
+    value = data.zia_gre_internal_ip_range_list.example.list[0].start_ip_address
 }
