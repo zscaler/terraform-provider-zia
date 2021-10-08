@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 )
 
 func resourceTrafficForwardingGRETunnel() *schema.Resource {
@@ -32,6 +33,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"primary_dest_vip": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "The primary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -51,6 +53,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"secondary_dest_vip": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "The secondary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -70,6 +73,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"internal_ip_range": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The start of the internal IP address in /29 CIDR range",
 			},
 
@@ -104,6 +108,11 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"country_code": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "When within_country is enabled, you must set this to the country code.",
+			},
 			"comment": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -122,7 +131,10 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 
 	req := expandGRETunnel(d)
 	log.Printf("[INFO] Creating zia gre tunnel\n%+v\n", req)
-
+	err := asssignVipsIfNotSet(d, zClient, &req)
+	if err != nil {
+		return err
+	}
 	resp, _, err := zClient.gretunnels.CreateGreTunnels(&req)
 	if err != nil {
 		return err
@@ -133,6 +145,34 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
+func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnels.GreTunnels) error {
+	if (req.PrimaryDestVip == nil || (req.PrimaryDestVip.VirtualIP == "" && req.PrimaryDestVip.ID == 0)) ||
+		(req.SecondaryDestVip == nil || (req.SecondaryDestVip.VirtualIP == "" && req.SecondaryDestVip.ID == 0)) {
+		// one of the vips not set, pick 2 from the recommandedVips
+		countryCode, ok := getStringFromResourceData(d, "country_code")
+		var pair []virtualipaddresslist.GREVirtualIPList
+		if ok {
+			vips, err := zClient.virtualipaddresslist.GetPairZSGREVirtualIPsWithinCountry(req.SourceIP, countryCode)
+			if err != nil {
+				log.Printf("[ERROR] Got: %v\n", err)
+				vips, err = zClient.virtualipaddresslist.GetZSGREVirtualIPList(req.SourceIP, 2)
+				if err != nil {
+					return err
+				}
+			}
+			pair = *vips
+		} else {
+			vips, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList(req.SourceIP, 2)
+			if err != nil {
+				return err
+			}
+			pair = *vips
+		}
+		req.PrimaryDestVip = &gretunnels.PrimaryDestVip{ID: pair[0].ID, VirtualIP: pair[0].VirtualIp}
+		req.SecondaryDestVip = &gretunnels.SecondaryDestVip{ID: pair[1].ID, VirtualIP: pair[1].VirtualIp}
+	}
+	return nil
+}
 func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	id, ok := getIntFromResourceData(d, "tunnel_id")
@@ -203,6 +243,10 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	log.Printf("[INFO] Updating gre tunnel ID: %v\n", id)
 	req := expandGRETunnel(d)
 
+	err := asssignVipsIfNotSet(d, zClient, &req)
+	if err != nil {
+		return err
+	}
 	if _, _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
 		return err
 	}
