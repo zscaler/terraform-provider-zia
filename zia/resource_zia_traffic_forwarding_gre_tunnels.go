@@ -42,8 +42,19 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 						},
 						"virtual_ip": {
 							Type:        schema.TypeString,
+							Optional:    true,
 							Computed:    true,
 							Description: "GRE cluster virtual IP address (VIP)",
+						},
+						"private_service_edge": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
+						},
+						"datacenter": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Data center information",
 						},
 					},
 				},
@@ -61,14 +72,26 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 						},
 						"virtual_ip": {
 							Type:        schema.TypeString,
+							Optional:    true,
 							Computed:    true,
 							Description: "GRE cluster virtual IP address (VIP)",
+						},
+						"private_service_edge": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
+						},
+						"datacenter": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Data center information",
 						},
 					},
 				},
 			},
 			"internal_ip_range": {
 				Type:        schema.TypeString,
+				Computed:    true,
 				Optional:    true,
 				Description: "The start of the internal IP address in /29 CIDR range",
 			},
@@ -179,16 +202,20 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
-			"id":         primaryDestVip.ID,
-			"virtual_ip": primaryDestVip.VirtualIP,
+			"id":                   primaryDestVip.ID,
+			"virtual_ip":           primaryDestVip.VirtualIP,
+			"private_service_edge": primaryDestVip.PrivateServiceEdge,
+			"datacenter":           primaryDestVip.Datacenter,
 		},
 	}
 }
 func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
-			"id":         secondaryDestVip.ID,
-			"virtual_ip": secondaryDestVip.VirtualIP,
+			"id":                   secondaryDestVip.ID,
+			"virtual_ip":           secondaryDestVip.VirtualIP,
+			"private_service_edge": secondaryDestVip.PrivateServiceEdge,
+			"datacenter":           secondaryDestVip.Datacenter,
 		},
 	}
 }
@@ -268,8 +295,10 @@ func expandPrimaryDestVip(d *schema.ResourceData) *gretunnels.PrimaryDestVip {
 			return nil
 		}
 		return &gretunnels.PrimaryDestVip{
-			ID:        vip["id"].(int),
-			VirtualIP: vip["virtual_ip"].(string),
+			ID:                 vip["id"].(int),
+			VirtualIP:          vip["virtual_ip"].(string),
+			PrivateServiceEdge: vip["private_service_edge"].(bool),
+			Datacenter:         vip["datacenter"].(string),
 		}
 	}
 	return nil
@@ -291,8 +320,10 @@ func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip
 			return nil
 		}
 		return &gretunnels.SecondaryDestVip{
-			ID:        vip["id"].(int),
-			VirtualIP: vip["virtual_ip"].(string),
+			ID:                 vip["id"].(int),
+			VirtualIP:          vip["virtual_ip"].(string),
+			PrivateServiceEdge: vip["private_service_edge"].(bool),
+			Datacenter:         vip["datacenter"].(string),
 		}
 	}
 	return nil

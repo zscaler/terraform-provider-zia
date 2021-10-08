@@ -10,8 +10,7 @@ terraform {
 provider "zia" {}
 
 data "zia_gre_virtual_ip_address_list" "example"{
-    //source_ip = "50.98.112.169"
-    datacenter = "YVR1"
+    source_ip = "50.98.112.169"
 }
 
 output "zia_gre_virtual_ip_address_list"{

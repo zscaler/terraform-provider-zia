@@ -71,111 +71,120 @@ func resourceAdminUsers() *schema.Resource {
 				Optional:    true,
 				Description: "Additional information about the admin or auditor.",
 			},
-			"admin_scope_group_member_entities": {
-				Type:     schema.TypeList,
+			"admin_scope": {
+				Type:     schema.TypeSet,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
+						"admin_scope_group_member_entities": {
+							Type:     schema.TypeSet,
 							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
 							},
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"ORGANIZATION",
+								"DEPARTMENT",
+								"LOCATION",
+								"LOCATION_GROUP",
+							}, false),
+						},
+						"admin_scope_entities": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"is_non_editable": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"disabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"is_auditor": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"password": {
+							Type:        schema.TypeString,
+							Description: "The admin's password. If admin single sign-on (SSO) is disabled, then this field is mandatory for POST requests. This information is not provided in a GET response.",
+							Optional:    true,
+							// Sensitive:   true,
+						},
+						"is_password_login_allowed": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"is_security_report_comm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"is_service_update_comm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"is_product_update_comm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"is_password_expired": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"is_exec_mobile_app_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
-			},
-			"admin_scope_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"ORGANIZATION",
-					"DEPARTMENT",
-					"LOCATION",
-					"LOCATION_GROUP",
-				}, false),
-			},
-			"admin_scope_entities": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"is_non_editable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"disabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"is_auditor": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"password": {
-				Type:        schema.TypeString,
-				Description: "The admin's password. If admin single sign-on (SSO) is disabled, then this field is mandatory for POST requests. This information is not provided in a GET response.",
-				Optional:    true,
-				Sensitive:   true,
-			},
-			"is_password_login_allowed": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_security_report_comm_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_service_update_comm_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_product_update_comm_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_password_expired": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"is_exec_mobile_app_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 		},
 	}
@@ -230,7 +239,15 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 	_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 	_ = d.Set("is_password_expired", resp.IsPasswordExpired)
-	_ = d.Set("admin_scope_type", resp.AdminScopeType)
+	_ = d.Set("admin_scope", resp.AdminScope)
+
+	if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
+		return err
+	}
+
+	if err := d.Set("role", flattenAdminScope(resp.AdminScope)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -252,7 +269,7 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		return fmt.Errorf("cannot delete the resource admin users, no id found")
 	}
-	// Need to pass the ID (int) of the resource for deletion
+
 	log.Printf("[INFO] Deleting admin user ID: %v\n", id)
 
 	if _, err := zClient.adminuserrolemgmt.DeleteAdminUser(id); err != nil {
@@ -264,60 +281,103 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-// Review expand functions to ensure it is set up correctly
 func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 	result := adminuserrolemgmt.AdminUsers{
-		LoginName:                          d.Get("login_name").(string),
-		UserName:                           d.Get("user_name").(string),
-		Email:                              d.Get("email").(string),
-		Comments:                           d.Get("comments").(string),
-		IsNonEditable:                      d.Get("is_non_editable").(bool),
-		Disabled:                           d.Get("disabled").(bool),
-		IsAuditor:                          d.Get("is_auditor").(bool),
-		Password:                           d.Get("password").(string),
-		IsPasswordLoginAllowed:             d.Get("is_password_login_allowed").(bool),
-		IsSecurityReportCommEnabled:        d.Get("is_security_report_comm_enabled").(bool),
-		IsServiceUpdateCommEnabled:         d.Get("is_service_update_comm_enabled").(bool),
-		IsProductUpdateCommEnabled:         d.Get("is_product_update_comm_enabled").(bool),
-		IsPasswordExpired:                  d.Get("is_password_expired").(bool),
-		IsExecMobileAppEnabled:             d.Get("is_exec_mobile_app_enabled").(bool),
-		Role:                               expandAdminUserRoles(d),
-		AdminScopeType:                     d.Get("admin_scope_type").(string),
-		AdminScopeScopeEntities:            expandScopeEntities(d),
-		AdminScopescopeGroupMemberEntities: expandScopeGroupMemberEntities(d),
+		ID:                          d.Get("admin_id").(int),
+		LoginName:                   d.Get("login_name").(string),
+		UserName:                    d.Get("user_name").(string),
+		Email:                       d.Get("email").(string),
+		Comments:                    d.Get("comments").(string),
+		IsNonEditable:               d.Get("is_non_editable").(bool),
+		Disabled:                    d.Get("disabled").(bool),
+		IsAuditor:                   d.Get("is_auditor").(bool),
+		Password:                    d.Get("password").(string),
+		IsPasswordLoginAllowed:      d.Get("is_password_login_allowed").(bool),
+		IsSecurityReportCommEnabled: d.Get("is_security_report_comm_enabled").(bool),
+		IsServiceUpdateCommEnabled:  d.Get("is_service_update_comm_enabled").(bool),
+		IsProductUpdateCommEnabled:  d.Get("is_product_update_comm_enabled").(bool),
+		IsPasswordExpired:           d.Get("is_password_expired").(bool),
+		IsExecMobileAppEnabled:      d.Get("is_exec_mobile_app_enabled").(bool),
 	}
-	id, ok := getIntFromResourceData(d, "admin_id")
-	if ok {
-		result.ID = id
+	role := expandAdminUserRoles(d)
+	if role != nil {
+		result.Role = role
+	}
+	scope := expandAdminScope(d)
+	if scope != nil {
+		result.AdminScope = scope
 	}
 	return result
 }
 
-func expandAdminUserRoles(d *schema.ResourceData) adminuserrolemgmt.Role {
-	empty := adminuserrolemgmt.Role{}
+func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
 	rolesObj, ok := d.GetOk("role")
 	if !ok {
-		return empty
+		return nil
 	}
 	roles, ok := rolesObj.(*schema.Set)
 	if !ok {
-		return empty
+		return nil
 	}
 	if len(roles.List()) > 0 {
-		roleObj := roles.List()[0]
-		role, ok := roleObj.(map[string]interface{})
+		rolesObj := roles.List()[0]
+		role, ok := rolesObj.(map[string]interface{})
 		if !ok {
-			return empty
+			return nil
 		}
-		return adminuserrolemgmt.Role{
+		return &adminuserrolemgmt.Role{
 			ID:         role["id"].(int),
 			Name:       role["name"].(string),
 			Extensions: role["extensions"].(map[string]interface{}),
 		}
 	}
-	return empty
+	return nil
 }
 
+func expandAdminScope(d *schema.ResourceData) *adminuserrolemgmt.AdminScope {
+	if adminScope, ok := d.GetOk("admin_scope"); ok {
+		scopeItem := adminScope.(*schema.Set).List()[0]
+		adminScope := scopeItem.(map[string]interface{})
+
+		return &adminuserrolemgmt.AdminScope{
+			AdminScopeGroupMemberEntities: expandScopeGroupMemberEntities(adminScope["admin_scope_group_member_entities"].(*schema.Set)),
+			AdminScopeEntities:            expandScopeEntities(adminScope["admin_scope_entities"].(*schema.Set)),
+			Type:                          adminScope["type"].(string),
+		}
+	}
+
+	return nil
+}
+
+func expandScopeGroupMemberEntities(scopeGroupMember *schema.Set) []adminuserrolemgmt.AdminScopeGroupMemberEntities {
+	scopeGroups := make([]adminuserrolemgmt.AdminScopeGroupMemberEntities, scopeGroupMember.Len())
+	for i, scope := range scopeGroupMember.List() {
+		scopeGroupItem := scope.(map[string]interface{})
+		scopeGroups[i] = adminuserrolemgmt.AdminScopeGroupMemberEntities{
+			ID:         scopeGroupItem["id"].(int),
+			Name:       scopeGroupItem["name"].(string),
+			Extensions: scopeGroupItem["extensions"].(map[string]interface{}),
+		}
+	}
+
+	return scopeGroups
+}
+
+func expandScopeEntities(scopeEntity *schema.Set) []adminuserrolemgmt.AdminScopeEntities {
+	scopeEntities := make([]adminuserrolemgmt.AdminScopeEntities, scopeEntity.Len())
+	for i, scope := range scopeEntity.List() {
+		scopeentityItem := scope.(map[string]interface{})
+		scopeEntities[i] = adminuserrolemgmt.AdminScopeEntities{
+			ID:         scopeentityItem["id"].(int),
+			Name:       scopeentityItem["name"].(string),
+			Extensions: scopeentityItem["extensions"].(map[string]interface{}),
+		}
+	}
+
+	return scopeEntities
+}
+
+/*
 func expandScopeGroupMemberEntities(d *schema.ResourceData) []adminuserrolemgmt.AdminScopescopeGroupMemberEntities {
 	var scopeGroupMemberEntities []adminuserrolemgmt.AdminScopescopeGroupMemberEntities
 	if scopeGroupInterface, ok := d.GetOk("admin_scope_group_member_entities"); ok {
@@ -353,3 +413,4 @@ func expandScopeEntities(d *schema.ResourceData) []adminuserrolemgmt.AdminScopeS
 
 	return scopeEntities
 }
+*/

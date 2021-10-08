@@ -490,7 +490,7 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 	}
 
 	d.SetId("")
-	log.Printf("[INFO] custom url filtering rule deleted")
+	log.Printf("[INFO] url filtering rule deleted")
 	return nil
 }
 
