@@ -96,7 +96,6 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Optional:    true,
-				Computed:    true,
 				Description: "The start of the internal IP address in /29 CIDR range",
 			},
 
