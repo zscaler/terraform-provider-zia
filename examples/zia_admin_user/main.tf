@@ -14,10 +14,13 @@ resource "zia_admin_users" "example1" {
   login_name = "zia-api2@securitygeek.io"
   user_name  = "John Smith Test"
   email      = "zia-api2@securitygeek.io"
+  password   = "AeQ9E5w8B$"
   role {
     id = data.zia_admin_roles.example1.id
   }
-  password   = "AeQ9E5w8B$"
+  admin_scope {
+    type = "ORGANIZATION"
+  }
 
   }
 

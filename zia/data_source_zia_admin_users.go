@@ -227,13 +227,10 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("is_password_expired", resp.IsPasswordExpired)
 		_ = d.Set("admin_scope", resp.AdminScope)
 		_ = d.Set("is_exec_mobile_app_enabled", resp.IsExecMobileAppEnabled)
+		_ = d.Set("admin_scope", flattenAdminScope(resp.AdminScope))
 
 		if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
 			return fmt.Errorf("failed to read admin user role %s", err)
-		}
-
-		if err := d.Set("role", flattenAdminScope(resp.AdminScope)); err != nil {
-			return fmt.Errorf("failed to read admin scope %s", err)
 		}
 
 		if err := d.Set("exec_mobile_app_tokens", flattenExecMobileAppTokens(resp)); err != nil {
@@ -257,6 +254,16 @@ func flattenAdminUserRole(role *adminuserrolemgmt.Role) interface{} {
 	}
 }
 
+func flattenAdminScope(adminScope *adminuserrolemgmt.AdminScope) []interface{} {
+	m := map[string]interface{}{
+		"scope_group_member_entities": flattenAdminScopeGroupMemberEntities(adminScope.AdminScopeGroupMemberEntities),
+		"admin_scope_entities":        flattenAdminScopeEntities(adminScope.AdminScopeEntities),
+	}
+
+	return []interface{}{m}
+}
+
+/*
 func flattenAdminScope(adminScope *adminuserrolemgmt.AdminScope) interface{} {
 	return []map[string]interface{}{
 		{
@@ -266,7 +273,7 @@ func flattenAdminScope(adminScope *adminuserrolemgmt.AdminScope) interface{} {
 		},
 	}
 }
-
+*/
 func flattenAdminScopeGroupMemberEntities(adminScopeGroupMemberEntities []adminuserrolemgmt.AdminScopeGroupMemberEntities) []interface{} {
 	adminScopeGroups := make([]interface{}, len(adminScopeGroupMemberEntities))
 	for i, adminScopeItem := range adminScopeGroupMemberEntities {
