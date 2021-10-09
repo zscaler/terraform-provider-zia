@@ -14,7 +14,7 @@ func dataSourceLocationManagement() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,

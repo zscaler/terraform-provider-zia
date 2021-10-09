@@ -12,6 +12,8 @@ provider "zia" {}
 resource "zia_location_management" "toronto"{
     name = "SGIO-IPSEC-Toronto"
     description = "Created with Terraform"
+    ssl_scan_enabled = true
+    zapp_ssl_scan_enabled = true
     ip_addresses = [ zia_traffic_forwarding_static_ip.example.ip_address ]
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
