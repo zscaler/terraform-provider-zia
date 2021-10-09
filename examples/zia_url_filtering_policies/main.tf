@@ -10,15 +10,30 @@ terraform {
 provider "zia" {}
 
 
-resource "zia_url_filtering_rules" "example"{
-    name = "Example"
-    order = 2
-    protocols = ["ANY_RULE"]
+resource "zia_url_filtering_rules" "block_innapropriate_contents"{
+    name = "Block Inappropriate Contents"
+    description = "Block all inappropriate content for all users."
+    order = 1
     state = "ENABLED"
+    locations {
+        id = 
+    }
+    url_categories = [ "ADULT_SEX_EDUCATION",
+                       "ADULT_THEMES",
+                       "COMPUTER_HACKING",
+                       "LINGERIE_BIKINI",
+                       "NUDITY",
+                       "OTHER_ADULT_MATERIAL",
+                       "OTHER_DRUGS",
+                        "OTHER_ILLEGAL_OR_QUESTIONABLE",
+                       "QUESTIONABLE",
+                       "PORNOGRAPHY",
+                       "SEXUALITY"
+                    ]
+    protocols = ["ANY_RULE"]
     request_methods = ["OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT", "OTHER"]
-    description = "Example"
-    action = "ALLOW"
-    url_categories = ["FINANCE", "OTHER_BUSINESS_AND_ECONOMY", "CORPORATE_MARKETING"]
+    action = "BLOCK"
+
 }
 /*
 data "zia_url_filtering_policies" "example"{

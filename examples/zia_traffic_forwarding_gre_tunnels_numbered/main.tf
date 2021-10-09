@@ -56,7 +56,7 @@ resource "zia_traffic_forwarding_gre_tunnel" "example2" {
   comment   = "GRE Tunnel Created with Terraform"
   depends_on = [ zia_traffic_forwarding_static_ip.example_2 ]
   // within_country = false
-  country_code = "CA"
+  country_code = "NZ"
   primary_dest_vip {
     // id = data.zia_gre_virtual_ip_address_list.qla_1.list[14].id
   }
