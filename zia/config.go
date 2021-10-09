@@ -13,6 +13,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
@@ -45,6 +46,7 @@ type Client struct {
 	virtualipaddresslist *virtualipaddresslist.Service
 	vpncredentials       *vpncredentials.Service
 	locationmanagement   *locationmanagement.Service
+	locationgroups       *locationgroups.Service
 	activation           *activation.Service
 }
 
@@ -78,6 +80,7 @@ func (c *Config) Client() (*Client, error) {
 		greinternalipranges:  greinternalipranges.New(cli),
 		staticips:            staticips.New(cli),
 		locationmanagement:   locationmanagement.New(cli),
+		locationgroups:       locationgroups.New(cli),
 		activation:           activation.New(cli),
 	}
 

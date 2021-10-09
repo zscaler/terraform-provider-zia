@@ -70,6 +70,7 @@ func Provider() *schema.Provider {
 			"zia_traffic_forwarding_static_ip":        dataSourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_gre_tunnel":       dataSourceTrafficForwardingGreTunnels(),
 			"zia_location_management":                 dataSourceLocationManagement(),
+			"zia_location_groups":                     dataSourceLocationGroup(),
 			"zia_traffic_forwarding_vpn_credentials":  dataSourceTrafficForwardingVPNCredentials(),
 			"zia_dlp_dictionaries":                    dataSourceDLPDictionaries(),
 			"zia_activation_status":                   dataSourceActivationStatus(),
