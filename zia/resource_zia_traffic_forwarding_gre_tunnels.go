@@ -39,7 +39,8 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
@@ -70,7 +71,8 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Required:    true,
+							Optional:    true,
+							Computed:    true,
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
