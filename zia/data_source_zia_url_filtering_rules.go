@@ -20,6 +20,10 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"protocols": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -536,6 +540,9 @@ func flattenURLFilteringLabels(labels []urlfilteringpolicies.Labels) []interface
 }
 
 func flattenURLFilteringLastModifiedBy(lastModifiedBy *urlfilteringpolicies.LastModifiedBy) interface{} {
+	if lastModifiedBy == nil {
+		return nil
+	}
 	return []map[string]interface{}{
 		{
 			"id":         lastModifiedBy.ID,

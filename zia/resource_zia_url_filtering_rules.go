@@ -24,6 +24,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rule_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -365,12 +369,13 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
 
-	resp, _, err := zClient.urlfilteringpolicies.Create(&req)
+	resp, err := zClient.urlfilteringpolicies.Create(&req)
 	if err != nil {
 		return err
 	}
 	log.Printf("[INFO] Created zia url filtering rule request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("rule_id", resp.ID)
 
 	return resourceURLFilteringRulesRead(d, m)
 }
@@ -378,7 +383,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no url filtering rule id is set")
 	}
@@ -396,6 +401,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 	d.SetId(fmt.Sprintf("%d", resp.ID))
+	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("protocols", resp.Protocols)
@@ -462,7 +468,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] url filtering rule ID not set: %v\n", id)
 	}
@@ -479,11 +485,11 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] url filtering rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", id)
+	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", (d.Id()))
 
 	if _, err := zClient.urlfilteringpolicies.Delete(id); err != nil {
 		return err
@@ -495,7 +501,7 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 }
 
 func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFilteringRule {
-	id, _ := getIntFromResourceData(d, "id")
+	id, _ := getIntFromResourceData(d, "rule_id")
 	result := urlfilteringpolicies.URLFilteringRule{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
@@ -517,6 +523,16 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
+		Locations:              expandURLFilteringLocations(d),
+		Groups:                 expandURLFilteringGroups(d),
+		Departments:            expandURLFilteringDepartments(d),
+		Users:                  expandURLFilteringUsers(d),
+		TimeWindows:            expandURLFilteringTimeWindows(d),
+		OverrideUsers:          expandURLFilteringOverrideUsers(d),
+		OverrideGroups:         expandURLFilteringOverrideGroups(d),
+		LocationGroups:         expandURLFilteringLocationGroups(d),
+		Labels:                 expandURLFilteringLabels(d),
+		LastModifiedBy:         expandURLFilteringLastModifiedBy(d),
 	}
 	locations := expandURLFilteringLocations(d)
 	if locations != nil {
