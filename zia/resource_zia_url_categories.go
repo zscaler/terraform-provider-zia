@@ -1,7 +1,7 @@
 package zia
 
-/*
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,13 +25,23 @@ func resourceURLCategories() *schema.Resource {
 			},
 			"id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"urls": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"keywords": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"keywords_retaining_parent_category": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -45,6 +55,10 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"super_category": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"scopes": {
 				Type:     schema.TypeSet,
@@ -175,7 +189,11 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	resp, err := zClient.urlcategories.Get(d.Id())
+	id, ok := getStringFromResourceData(d, "url_category_id")
+	if !ok {
+		return fmt.Errorf("no url category rule id is set")
+	}
+	resp, err := zClient.urlcategories.Get(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {
@@ -189,11 +207,15 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 
-	d.SetId(resp.ID)
+	d.SetId(fmt.Sprintf(resp.ID))
+	_ = d.Set("url_category_id", resp.ID)
 	_ = d.Set("configured_name", resp.ConfiguredName)
+	_ = d.Set("keywords", resp.Keywords)
+	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
 	_ = d.Set("urls", resp.Urls)
 	_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
 	_ = d.Set("custom_category", resp.CustomCategory)
+	_ = d.Set("super_category", resp.SuperCategory)
 	_ = d.Set("editable", resp.Editable)
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("type", resp.Type)
@@ -204,9 +226,9 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
-		return err
-	}
+	// if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -249,17 +271,20 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 	id, _ := getStringFromResourceData(d, "url_category_id")
 	result := urlcategories.URLCategory{
 		ID:                               id,
-		ConfiguredName:                   d.Get("login_name").(string),
-		Urls:                             d.Get("urls").([]string),
-		DBCategorizedUrls:                d.Get("db_categorized_urls").([]string),
+		ConfiguredName:                   d.Get("configured_name").(string),
+		Keywords:                         ListToStringSlice(d.Get("keywords").([]interface{})),
+		KeywordsRetainingParentCategory:  ListToStringSlice(d.Get("keywords_retaining_parent_category").([]interface{})),
+		Urls:                             ListToStringSlice(d.Get("urls").([]interface{})),
+		DBCategorizedUrls:                ListToStringSlice(d.Get("db_categorized_urls").([]interface{})),
 		CustomCategory:                   d.Get("custom_category").(bool),
+		SuperCategory:                    d.Get("super_category").(string),
 		Editable:                         d.Get("editable").(bool),
 		Description:                      d.Get("description").(string),
 		Type:                             d.Get("type").(string),
-		Val:                              d.Get("val").(int),
 		CustomUrlsCount:                  d.Get("custom_urls_count").(int),
 		UrlsRetainingParentCategoryCount: d.Get("urls_retaining_parent_category_count").(int),
-		URLKeywordCounts:                 expandURLKeywordCounts(d),
+		// Scopes:                           expandURLCategoryScopes(d),
+		//URLKeywordCounts: expandURLKeywordCounts(d),
 	}
 	urlCategoryScopes := expandURLCategoryScopes(d)
 	if urlCategoryScopes != nil {
@@ -269,56 +294,65 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 }
 
 func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
-	var urlCategoryScope []urlcategories.Scopes
-	if urlCategoriesInterface, ok := d.GetOk("url_category_id"); ok {
-		urlCategory := urlCategoriesInterface.([]interface{})
-		urlCategoryScope = make([]urlcategories.Scopes, len(urlCategory))
-		for i, url := range urlCategory {
-			categoryItem := url.(map[string]interface{})
-			urlCategoryScope[i] = urlcategories.Scopes{
-				Type: categoryItem["type"].(string),
+	var scopes []urlcategories.Scopes
+	if scopeInterface, ok := d.GetOk("scopes"); ok {
+		scope := scopeInterface.([]interface{})
+		scopes = make([]urlcategories.Scopes, len(scope))
+		for i, val := range scope {
+			scopeItem := val.(map[string]interface{})
+			scopes[i] = urlcategories.Scopes{
+				ScopeGroupMemberEntities: expandCustomURLScopeGroupMemberEntities(d),
+				Type:                     scopeItem["type"].(string),
+				ScopeEntities:            expandCustomURLScopeEntities(d),
 			}
 		}
 	}
 
-	return urlCategoryScope
+	return scopes
 }
 
-func expandCustomURLScopeGroupMemberEntities(scopeGroupMember []interface{}) []urlcategories.ScopeGroupMemberEntities {
-	scopeGroups := make([]urlcategories.ScopeGroupMemberEntities, len(scopeGroupMember))
-
-	for i, scope := range scopeGroupMember {
-		scopeGroup := scope.(map[string]interface{})
-		scopeGroups[i] = urlcategories.ScopeGroupMemberEntities{
-			ID:         scopeGroup["id"].(int),
-			Extensions: scopeGroup["extensions"].(map[string]interface{}),
+func expandCustomURLScopeGroupMemberEntities(d *schema.ResourceData) []urlcategories.ScopeGroupMemberEntities {
+	var scopeGroupMemberEntities []urlcategories.ScopeGroupMemberEntities
+	if scopeGroupInterface, ok := d.GetOk("scope_group_member_entities"); ok {
+		scopeGroup := scopeGroupInterface.([]interface{})
+		scopeGroupMemberEntities = make([]urlcategories.ScopeGroupMemberEntities, len(scopeGroup))
+		for i, val := range scopeGroup {
+			scopeGroupItem := val.(map[string]interface{})
+			scopeGroupMemberEntities[i] = urlcategories.ScopeGroupMemberEntities{
+				ID:         scopeGroupItem["id"].(int),
+				Extensions: scopeGroupItem["extensions"].(map[string]interface{}),
+			}
 		}
 	}
 
-	return scopeGroups
+	return scopeGroupMemberEntities
 }
 
-func expandCustomURLScopeEntities(scopeEntity []interface{}) []urlcategories.ScopeEntities {
-	scopeEntities := make([]urlcategories.ScopeEntities, len(scopeEntity))
-
-	for i, scope := range scopeEntity {
-		scopeEntity := scope.(map[string]interface{})
-		scopeEntities[i] = urlcategories.ScopeEntities{
-			ID:         scopeEntity["id"].(int),
-			Extensions: scopeEntity["extensions"].(map[string]interface{}),
+func expandCustomURLScopeEntities(d *schema.ResourceData) []urlcategories.ScopeEntities {
+	var scopeEntities []urlcategories.ScopeEntities
+	if scopeEntitiesInterface, ok := d.GetOk("Scope_entities"); ok {
+		scopeEntity := scopeEntitiesInterface.([]interface{})
+		scopeEntities = make([]urlcategories.ScopeEntities, len(scopeEntity))
+		for i, val := range scopeEntity {
+			scopeEntityItem := val.(map[string]interface{})
+			scopeEntities[i] = urlcategories.ScopeEntities{
+				ID:         scopeEntityItem["id"].(int),
+				Extensions: scopeEntityItem["extensions"].(map[string]interface{}),
+			}
 		}
 	}
 
 	return scopeEntities
 }
 
-func expandURLKeywordCounts(d *schema.ResourceData) urlcategories.URLKeywordCounts {
+/*
+func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCounts {
 	keyword := urlcategories.URLKeywordCounts{
 		TotalURLCount:            d.Get("total_url_count").(int),
 		RetainParentURLCount:     d.Get("retain_parent_url_count").(int),
 		TotalKeywordCount:        d.Get("total_keyword_count").(int),
 		RetainParentKeywordCount: d.Get("retain_parent_keyword_count").(int),
 	}
-	return keyword
+	return &keyword
 }
 */

@@ -44,9 +44,9 @@ func Provider() *schema.Provider {
 			"zia_traffic_forwarding_static_ip":       resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials": resourceTrafficForwardingVPNCredentials(),
 			"zia_location_management":                resourceLocationManagement(),
+			"zia_url_categories":                     resourceURLCategories(),
 			"zia_url_filtering_rules":                resourceURLFilteringRules(),
 			"zia_activation_status":                  resourceActivationStatus(),
-			//"zia_url_categories":                     resourceURLCategories(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{

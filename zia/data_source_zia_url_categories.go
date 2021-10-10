@@ -34,6 +34,10 @@ func dataSourceURLCategories() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"super_category": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"scopes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -171,6 +175,8 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	if resp != nil {
 		d.SetId(fmt.Sprintf(resp.ID))
 		_ = d.Set("configured_name", resp.ConfiguredName)
+		_ = d.Set("keywords", resp.Keywords)
+		_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
 		_ = d.Set("urls", resp.Urls)
 		_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
 		_ = d.Set("custom_category", resp.CustomCategory)
@@ -235,6 +241,18 @@ func flattenScopeEntities(scopesEntities []urlcategories.ScopeEntities) []interf
 	return Entity
 }
 
+func flattenUrlKeywordCounts(urlKeywords *urlcategories.URLKeywordCounts) []interface{} {
+	m := map[string]interface{}{
+		"total_url_count":             urlKeywords.TotalURLCount,
+		"retain_parent_url_count":     urlKeywords.RetainParentURLCount,
+		"total_keyword_count":         urlKeywords.TotalKeywordCount,
+		"retain_parent_keyword_count": urlKeywords.RetainParentKeywordCount,
+	}
+
+	return []interface{}{m}
+}
+
+/*
 func flattenUrlKeywordCounts(urlKeywords urlcategories.URLKeywordCounts) interface{} {
 	return []map[string]interface{}{
 		{
@@ -245,3 +263,4 @@ func flattenUrlKeywordCounts(urlKeywords urlcategories.URLKeywordCounts) interfa
 		},
 	}
 }
+*/

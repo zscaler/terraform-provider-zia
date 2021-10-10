@@ -14,23 +14,26 @@ const (
 )
 
 type URLCategory struct {
-	ID                               string           `json:"id"`
-	ConfiguredName                   string           `json:"configuredName"`
-	Urls                             []string         `json:"urls"`
-	DBCategorizedUrls                []string         `json:"dbCategorizedUrls"`
-	CustomCategory                   bool             `json:"customCategory"`
-	Scopes                           []Scopes         `json:"scopes"`
-	Editable                         bool             `json:"editable"`
-	Description                      string           `json:"description"`
-	Type                             string           `json:"type"`
-	URLKeywordCounts                 URLKeywordCounts `json:"urlKeywordCounts"`
-	Val                              int              `json:"val"`
-	CustomUrlsCount                  int              `json:"customUrlsCount"`
-	UrlsRetainingParentCategoryCount int              `json:"urlsRetainingParentCategoryCount"`
+	ID                               string            `json:"id,omitempty"`
+	ConfiguredName                   string            `json:"configuredName,omitempty"`
+	Keywords                         []string          `json:"keywords"`
+	KeywordsRetainingParentCategory  []string          `json:"keywordsRetainingParentCategory"`
+	Urls                             []string          `json:"urls"`
+	DBCategorizedUrls                []string          `json:"dbCategorizedUrls"`
+	CustomCategory                   bool              `json:"customCategory"`
+	Scopes                           []Scopes          `json:"scopes"`
+	Editable                         bool              `json:"editable"`
+	Description                      string            `json:"description,omitempty"`
+	Type                             string            `json:"type,omitempty"`
+	URLKeywordCounts                 *URLKeywordCounts `json:"urlKeywordCounts,omitempty"`
+	Val                              int               `json:"val,omitempty"`
+	CustomUrlsCount                  int               `json:"customUrlsCount,omitempty"`
+	SuperCategory                    string            `json:"superCategory,omitempty"`
+	UrlsRetainingParentCategoryCount int               `json:"urlsRetainingParentCategoryCount"`
 }
 type Scopes struct {
 	ScopeGroupMemberEntities []ScopeGroupMemberEntities `json:"scopeGroupMemberEntities"`
-	Type                     string                     `json:"Type"`
+	Type                     string                     `json:"Type,omitempty"`
 	ScopeEntities            []ScopeEntities            `json:"ScopeEntities"`
 }
 type ScopeGroupMemberEntities struct {
@@ -45,10 +48,10 @@ type ScopeEntities struct {
 }
 
 type URLKeywordCounts struct {
-	TotalURLCount            int `json:"totalUrlCount"`
-	RetainParentURLCount     int `json:"retainParentUrlCount"`
-	TotalKeywordCount        int `json:"totalKeywordCount"`
-	RetainParentKeywordCount int `json:"retainParentKeywordCount"`
+	TotalURLCount            int `json:"totalUrlCount,omitempty"`
+	RetainParentURLCount     int `json:"retainParentUrlCount,omitempty"`
+	TotalKeywordCount        int `json:"totalKeywordCount,omitempty"`
+	RetainParentKeywordCount int `json:"retainParentKeywordCount,omitempty"`
 }
 
 func (service *Service) Get(categoryID string) (*URLCategory, error) {
