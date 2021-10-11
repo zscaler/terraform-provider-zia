@@ -448,15 +448,15 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 
-		if err := d.Set("departments", flattenDepartments(resp.Departments)); err != nil {
+		if err := d.Set("departments", flattenFirewallFilteringDepartments(resp.Departments)); err != nil {
 			return err
 		}
 
-		if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenFirewallFilteringGroups(resp.Groups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("users", flattenUsers(resp.Users)); err != nil {
+		if err := d.Set("users", flattenFirewallFilteringUsers(resp.Users)); err != nil {
 			return err
 		}
 
@@ -532,7 +532,7 @@ func flattenLocationGroups(locationGroups []filteringrules.LocationsGroups) []in
 	return locationGroup
 }
 
-func flattenDepartments(departments []filteringrules.Departments) []interface{} {
+func flattenFirewallFilteringDepartments(departments []filteringrules.Departments) []interface{} {
 	department := make([]interface{}, len(departments))
 	for i, val := range departments {
 		department[i] = map[string]interface{}{
@@ -545,7 +545,7 @@ func flattenDepartments(departments []filteringrules.Departments) []interface{} 
 	return department
 }
 
-func flattenGroups(groups []filteringrules.Groups) []interface{} {
+func flattenFirewallFilteringGroups(groups []filteringrules.Groups) []interface{} {
 	group := make([]interface{}, len(groups))
 	for i, val := range groups {
 		group[i] = map[string]interface{}{
@@ -558,7 +558,7 @@ func flattenGroups(groups []filteringrules.Groups) []interface{} {
 	return group
 }
 
-func flattenUsers(users []filteringrules.Users) []interface{} {
+func flattenFirewallFilteringUsers(users []filteringrules.Users) []interface{} {
 	user := make([]interface{}, len(users))
 	for i, val := range users {
 		user[i] = map[string]interface{}{

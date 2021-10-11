@@ -190,8 +190,8 @@ func (service *Service) Create(rule *FirewallFilteringRules) (*FirewallFiltering
 	return createdRules, nil
 }
 
-func (service *Service) Update(ruleID string, rule *FirewallFilteringRules) (*FirewallFilteringRules, error) {
-	resp, err := service.Client.Update(fmt.Sprintf("%s/%s", firewallRulesEndpoint, ruleID), *rule)
+func (service *Service) Update(ruleID int, rules *FirewallFilteringRules) (*FirewallFilteringRules, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", firewallRulesEndpoint, ruleID), *rules)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +200,8 @@ func (service *Service) Update(ruleID string, rule *FirewallFilteringRules) (*Fi
 	return updatedRules, nil
 }
 
-func (service *Service) Delete(ruleID string) (*http.Response, error) {
-	err := service.Client.Delete(fmt.Sprintf("%s/%s", firewallRulesEndpoint, ruleID))
+func (service *Service) Delete(ruleID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", firewallRulesEndpoint, ruleID))
 	if err != nil {
 		return nil, err
 	}

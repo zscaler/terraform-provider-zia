@@ -15,6 +15,19 @@ const (
 	usersEndpoint      = "/users"
 )
 
+type User struct {
+	ID            int          `json:"id"`
+	Name          string       `json:"name,omitempty"`
+	Email         string       `json:"email,omitempty"`
+	Groups        []Groups     `json:"groups"`
+	Departments   *Departments `json:"department"`
+	Comments      string       `json:"comments,omitempty"`
+	TempAuthEmail string       `json:"tempAuthEmail,omitempty"`
+	Password      string       `json:"password,omitempty"`
+	AdminUser     bool         `json:"adminUser"`
+	Type          string       `json:"type,omitempty"`
+	Deleted       bool         `json:"deleted"`
+}
 type Departments struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name,omitempty"`
@@ -23,25 +36,11 @@ type Departments struct {
 	Deleted  bool   `json:"deleted"`
 }
 
-type Group struct {
+type Groups struct {
 	ID       int    `json:"id"`
 	Name     string `json:"name,omitempty"`
 	IdpID    int    `json:"idpId"`
 	Comments string `json:"comments,omitempty"`
-}
-
-type User struct {
-	ID            int         `json:"id"`
-	Name          string      `json:"name,omitempty"`
-	Email         string      `json:"email,omitempty"`
-	Groups        []Group     `json:"groups"`
-	Departments   Departments `json:"department"`
-	Comments      string      `json:"comments,omitempty"`
-	TempAuthEmail string      `json:"tempAuthEmail,omitempty"`
-	Password      string      `json:"password,omitempty"`
-	AdminUser     bool        `json:"adminUser"`
-	Type          string      `json:"type,omitempty"`
-	Deleted       bool        `json:"deleted"`
 }
 
 func (service *Service) GetDepartments(departmentID int) (*Departments, error) {
@@ -69,8 +68,8 @@ func (service *Service) GetDepartmentsByName(departmentName string) (*Department
 	return nil, fmt.Errorf("no department found with name: %s", departmentName)
 }
 
-func (service *Service) GetGroups(groupID int) (*Group, error) {
-	var groups Group
+func (service *Service) GetGroups(groupID int) (*Groups, error) {
+	var groups Groups
 	err := service.Client.Read(fmt.Sprintf("%s/%d", groupsEndpoint, groupID), &groups)
 	if err != nil {
 		return nil, err
@@ -80,8 +79,8 @@ func (service *Service) GetGroups(groupID int) (*Group, error) {
 	return &groups, nil
 }
 
-func (service *Service) GetGroupByName(groupName string) (*Group, error) {
-	var groups []Group
+func (service *Service) GetGroupByName(groupName string) (*Groups, error) {
+	var groups []Groups
 	err := service.Client.Read(groupsEndpoint, &groups)
 	if err != nil {
 		return nil, err
@@ -94,14 +93,14 @@ func (service *Service) GetGroupByName(groupName string) (*Group, error) {
 	return nil, fmt.Errorf("no group found with name: %s", groupName)
 }
 
-func (service *Service) GetUser(userID int) (*User, error) {
+func (service *Service) Get(userID int) (*User, error) {
 	var user User
 	err := service.Client.Read(fmt.Sprintf("%s/%d", usersEndpoint, userID), &user)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning Groups from Get: %d", user.ID)
+	log.Printf("returning user from Get: %d", user.ID)
 	return &user, nil
 }
 
@@ -119,32 +118,32 @@ func (service *Service) GetUserByName(userName string) (*User, error) {
 	return nil, fmt.Errorf("no user found with name: %s", userName)
 }
 
-func (service *Service) CreateUser(user *User) (*User, *http.Response, error) {
-	resp, err := service.Client.Create(usersEndpoint, *user)
+func (service *Service) Create(userID *User) (*User, error) {
+	resp, err := service.Client.Create(usersEndpoint, *userID)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	createdUsers, ok := resp.(*User)
 	if !ok {
-		return nil, nil, errors.New("object returned from API was not a User Pointer")
+		return nil, errors.New("object returned from api was not a user pointer")
 	}
 
-	log.Printf("Returning User from Create: %v", createdUsers.ID)
-	return createdUsers, nil, nil
+	log.Printf("returning user from create: %v", createdUsers.ID)
+	return createdUsers, nil
 }
 
-func (service *Service) UpdateUser(userID int, user *User) (*User, error) {
-	resp, err := service.Client.Update(fmt.Sprintf("%s/%d", usersEndpoint, userID), *user)
+func (service *Service) Update(userID int, users *User) (*User, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", usersEndpoint, userID), *users)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	updatedUser, _ := resp.(*User)
-	log.Printf("Returning User from Update: %d", updatedUser.ID)
-	return updatedUser, nil
+	log.Printf("returning user from update: %d", updatedUser.ID)
+	return updatedUser, nil, nil
 }
 
-func (service *Service) DeleteUser(userID int) (*http.Response, error) {
+func (service *Service) Delete(userID int) (*http.Response, error) {
 	err := service.Client.Delete(fmt.Sprintf("%s/%d", usersEndpoint, userID))
 	if err != nil {
 		return nil, err

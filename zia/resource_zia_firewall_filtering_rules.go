@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 )
@@ -23,17 +24,24 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"rule_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the Firewall Filtering policy rule",
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
 			"rank": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Admin rank of the Firewall Filtering policy rule",
 			},
 			"access_control": {
 				Type:     schema.TypeString,
@@ -50,6 +58,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"extensions": {
@@ -158,16 +170,30 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ALLOW",
+					"BLOCK_DROP",
+					"BLOCK_RESET",
+					"BLOCK_ICMP",
+					"EVAL_NWAPP",
+				}, false),
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ENABLED",
+					"DISABLED",
+				}, false),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Additional information about the rule",
 			},
 			"last_modified_time": {
 				Type:     schema.TypeInt,
@@ -193,14 +219,29 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"src_ips": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "User-defined source IP addresses for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address.",
 			},
 			"src_ip_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"dest_addresses": {
 				Type:     schema.TypeList,
@@ -213,14 +254,29 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dest_countries": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
+				Elem:        &schema.Schema{Type: schema.TypeString},
 			},
 			"dest_ip_groups": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"nw_services": {
 				Type:     schema.TypeList,
@@ -285,8 +341,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"app_services": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Application services on which this rule is applied",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -304,8 +361,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"app_service_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Application service groups on which this rule is applied",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -323,8 +381,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"labels": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Labels that are applicable to the rule.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -342,12 +401,16 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				},
 			},
 			"default_rule": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "If set to true, the default rule is applied",
 			},
 			"predefined": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "If set to true, a predefined rule is applied",
 			},
 		},
 	}
@@ -365,6 +428,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Created zia firewall filtering rule request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("rule_id", resp.ID)
 
 	return resourceFirewallFilteringRulesRead(d, m)
 }
@@ -372,7 +436,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no zia firewall filtering rule id is set")
 	}
@@ -391,6 +455,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
+	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
@@ -416,15 +481,15 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	if err := d.Set("departments", flattenDepartments(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenFirewallFilteringDepartments(resp.Departments)); err != nil {
 		return err
 	}
 
-	if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenFirewallFilteringGroups(resp.Groups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("users", flattenUsers(resp.Users)); err != nil {
+	if err := d.Set("users", flattenFirewallFilteringUsers(resp.Users)); err != nil {
 		return err
 	}
 
@@ -474,7 +539,10 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id := d.Id()
+	id, ok := getIntFromResourceData(d, "rule_id")
+	if !ok {
+		log.Printf("[ERROR] firewall filteringrule ID not set: %v\n", id)
+	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
 
@@ -488,10 +556,13 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	// Need to pass the ID (int) of the resource for deletion
+	id, ok := getIntFromResourceData(d, "rule_id")
+	if !ok {
+		log.Printf("[ERROR] firewall filtering rule not set: %v\n", id)
+	}
 	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
 
-	if _, err := zClient.filteringrules.Delete(d.Id()); err != nil {
+	if _, err := zClient.filteringrules.Delete(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -500,7 +571,9 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 }
 
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
-	return filteringrules.FirewallFilteringRules{
+	id, _ := getIntFromResourceData(d, "rule_id")
+	result := filteringrules.FirewallFilteringRules{
+		ID:                  id,
 		Name:                d.Get("name").(string),
 		Order:               d.Get("order").(int),
 		Rank:                d.Get("rank").(int),
@@ -508,18 +581,18 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		State:               d.Get("state").(string),
 		Description:         d.Get("description").(string),
 		LastModifiedTime:    d.Get("last_modified_time").(int),
-		SrcIps:              d.Get("src_ips").([]string),
-		DestAddresses:       d.Get("src_ips").([]string),
-		DestIpCategories:    d.Get("dest_ip_categories").([]string),
-		DestCountries:       d.Get("dest_countries").([]string),
-		NwApplications:      d.Get("nw_applications").([]string),
+		SrcIps:              ListToStringSlice(d.Get("src_ips").([]interface{})),
+		DestAddresses:       ListToStringSlice(d.Get("dest_addresses").([]interface{})),
+		DestIpCategories:    ListToStringSlice(d.Get("dest_ip_categories").([]interface{})),
+		DestCountries:       ListToStringSlice(d.Get("dest_countries").([]interface{})),
+		NwApplications:      ListToStringSlice(d.Get("nw_applications").([]interface{})),
 		DefaultRule:         d.Get("default_rule").(bool),
 		Predefined:          d.Get("predefined").(bool),
 		Locations:           expandLocations(d),
 		LocationsGroups:     expandLocationsGroups(d),
-		Departments:         expandDepartments(d),
-		Groups:              expandGroups(d),
-		Users:               expandUsers(d),
+		Departments:         expandFirewallFilteringDepartments(d),
+		Groups:              expandFirewallFilteringGroups(d),
+		Users:               expandFirewallFilteringUsers(d),
 		TimeWindows:         expandTimeWindows(d),
 		LastModifiedBy:      expandLastModifiedBy(d),
 		SrcIpGroups:         expandSrcIpGroups(d),
@@ -531,6 +604,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		AppServiceGroups:    expandAppServiceGroups(d),
 		Labels:              expandLabels(d),
 	}
+	return result
 }
 
 func expandLocations(d *schema.ResourceData) []filteringrules.Locations {
@@ -542,6 +616,7 @@ func expandLocations(d *schema.ResourceData) []filteringrules.Locations {
 			locationItem := location.(map[string]interface{})
 			locations[i] = filteringrules.Locations{
 				ID:         locationItem["id"].(int),
+				Name:       locationItem["name"].(string),
 				Extensions: locationItem["extensions"].(map[string]interface{}),
 			}
 		}
@@ -567,7 +642,7 @@ func expandLocationsGroups(d *schema.ResourceData) []filteringrules.LocationsGro
 	return locationGroups
 }
 
-func expandDepartments(d *schema.ResourceData) []filteringrules.Departments {
+func expandFirewallFilteringDepartments(d *schema.ResourceData) []filteringrules.Departments {
 	var departments []filteringrules.Departments
 	if departmentsInterface, ok := d.GetOk("departments"); ok {
 		department := departmentsInterface.([]interface{})
@@ -584,7 +659,7 @@ func expandDepartments(d *schema.ResourceData) []filteringrules.Departments {
 	return departments
 }
 
-func expandGroups(d *schema.ResourceData) []filteringrules.Groups {
+func expandFirewallFilteringGroups(d *schema.ResourceData) []filteringrules.Groups {
 	var groups []filteringrules.Groups
 	if groupsInterface, ok := d.GetOk("groups"); ok {
 		group := groupsInterface.([]interface{})
@@ -601,7 +676,7 @@ func expandGroups(d *schema.ResourceData) []filteringrules.Groups {
 	return groups
 }
 
-func expandUsers(d *schema.ResourceData) []filteringrules.Users {
+func expandFirewallFilteringUsers(d *schema.ResourceData) []filteringrules.Users {
 	var users []filteringrules.Users
 	if groupsInterface, ok := d.GetOk("groups"); ok {
 		user := groupsInterface.([]interface{})

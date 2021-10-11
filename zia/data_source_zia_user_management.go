@@ -112,7 +112,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := zClient.usermanagement.GetUser(id)
+		res, err := zClient.usermanagement.Get(id)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
-		if err := d.Set("department", flattenDepartment(resp.Departments)); err != nil {
+		if err := d.Set("department", flattenDepartment(*resp.Departments)); err != nil {
 			return err
 		}
 	} else {
@@ -152,7 +152,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenGroup(groups []usermanagement.Group) []interface{} {
+func flattenGroup(groups []usermanagement.Groups) []interface{} {
 	group := make([]interface{}, len(groups))
 	for i, val := range groups {
 		group[i] = map[string]interface{}{

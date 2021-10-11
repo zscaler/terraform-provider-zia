@@ -46,6 +46,7 @@ func Provider() *schema.Provider {
 			"zia_location_management":                resourceLocationManagement(),
 			"zia_url_categories":                     resourceURLCategories(),
 			"zia_url_filtering_rules":                resourceURLFilteringRules(),
+			"zia_user_management":                    resourceUserManagement(),
 			"zia_activation_status":                  resourceActivationStatus(),
 		},
 
