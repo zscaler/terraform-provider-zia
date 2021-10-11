@@ -35,7 +35,7 @@ func dataSourceGroupManagement() *schema.Resource {
 func dataSourceGroupManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Group
+	var resp *usermanagement.Groups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
