@@ -105,6 +105,9 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 func resourceTrafficForwardingStaticIPCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
+	if err := checkGeoOverride(d); err != nil {
+		return err
+	}
 	req := expandTrafficForwardingStaticIP(d)
 	log.Printf("[INFO] Creating zia static ip\n%+v\n", req)
 
@@ -129,7 +132,7 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	resp, err := zClient.staticips.Get(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if errResp, ok := err.(*client.ErrorResponse); ok && errResp.IsObjectNotFound() {
 			log.Printf("[WARN] Removing static ip %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
@@ -165,6 +168,9 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 	if !ok {
 		log.Printf("[ERROR] static ip ID not set: %v\n", id)
 	}
+	if err := checkGeoOverride(d); err != nil {
+		return err
+	}
 
 	log.Printf("[INFO] Updating static ip ID: %v\n", id)
 	req := expandTrafficForwardingStaticIP(d)
@@ -174,6 +180,22 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 	}
 
 	return resourceTrafficForwardingStaticIPRead(d, m)
+}
+
+func checkGeoOverride(d *schema.ResourceData) error {
+	geoOverride, ok := d.GetOk("geo_override")
+	if !ok || !(geoOverride.(bool)) {
+		return nil
+	}
+	_, ok = d.GetOk("latitude")
+	if !ok {
+		return fmt.Errorf("when geo_override is set to true you must specify the latitude & longitude")
+	}
+	_, ok = d.GetOk("longitude")
+	if !ok {
+		return fmt.Errorf("when geo_override is set to true you must specify the longitude & longitude")
+	}
+	return nil
 }
 
 func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface{}) error {
