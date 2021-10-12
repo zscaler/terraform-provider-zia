@@ -13,13 +13,7 @@ resource "zia_traffic_forwarding_gre_tunnel" "example" {
   source_ip = zia_traffic_forwarding_static_ip.example.ip_address
   comment   = "GRE Tunnel Created with Terraform"
   within_country = true
-  country_code = "CA"
-  primary_dest_vip {
-    id = data.zia_gre_virtual_ip_address_list.yvr1_0.list[0].id
-  }
-  secondary_dest_vip {
-    id = data.zia_gre_virtual_ip_address_list.yvr1_0.list[1].id
-  }
+  country_code = "US"
   ip_unnumbered = true
 }
 
@@ -31,7 +25,9 @@ resource "zia_traffic_forwarding_static_ip" "example"{
     ip_address =  "50.98.112.170"
     routable_ip = true
     comment = "Created with Terraform"
-    geo_override = false
+    geo_override = true
+    latitude = 49.0
+    longitude = -123.0
 }
 
 
