@@ -203,6 +203,12 @@ func resourceLocationManagement() *schema.Resource {
 	}
 }
 
+/*
+{
+	"code": "INVALID_INPUT_ARGUMENT",
+	"message": "Surrogate IP requires setting of an idle timeout, name: NZ - Auckland - Branch01"
+   }
+*/
 func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 

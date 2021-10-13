@@ -154,7 +154,7 @@ func resourceAdminUsers() *schema.Resource {
 				Type:        schema.TypeString,
 				Description: "The admin's password. If admin single sign-on (SSO) is disabled, then this field is mandatory for POST requests. This information is not provided in a GET response.",
 				Optional:    true,
-				// Sensitive:   true,
+				Sensitive:   true,
 			},
 			"is_password_login_allowed": {
 				Type:     schema.TypeBool,
