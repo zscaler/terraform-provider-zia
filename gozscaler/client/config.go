@@ -290,3 +290,11 @@ func checkRetry(ctx context.Context, resp *http.Response, err error) (bool, erro
 func getDefaultLogger() *log.Logger {
 	return log.New(os.Stdout, loggerPrefix, log.LstdFlags|log.Lshortfile)
 }
+
+func (c *Client) Logout() error {
+	_, err := c.Request(ziaAPIAuthURL, "DELETE", nil, "application/json")
+	if err != nil {
+		return err
+	}
+	return nil
+}
