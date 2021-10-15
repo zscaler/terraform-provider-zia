@@ -13,87 +13,42 @@ const (
 )
 
 type URLFilteringRule struct {
-	ID                     int              `json:"id"`
-	Name                   string           `json:"name"`
-	Order                  int              `json:"order"`
-	Protocols              []string         `json:"protocols"`
-	Locations              []Locations      `json:"locations"`
-	Groups                 []Groups         `json:"groups"`
-	Departments            []Departments    `json:"departments"`
-	Users                  []Users          `json:"users"`
-	URLCategories          []string         `json:"urlCategories"`
-	State                  string           `json:"state"`
-	TimeWindows            []TimeWindows    `json:"timeWindows"`
-	Rank                   int              `json:"rank"`
-	RequestMethods         []string         `json:"requestMethods"`
-	EndUserNotificationURL string           `json:"endUserNotificationUrl"`
-	OverrideUsers          []OverrideUsers  `json:"overrideUsers"`
-	OverrideGroups         []OverrideGroups `json:"overrideGroups"`
-	BlockOverride          bool             `json:"blockOverride"`
-	TimeQuota              int              `json:"timeQuota"`
-	SizeQuota              int              `json:"sizeQuota"`
-	Description            string           `json:"description"`
-	LocationGroups         []LocationGroups `json:"locationGroups"`
-	Labels                 []Labels         `json:"labels"`
-	ValidityStartTime      int              `json:"validityStartTime"`
-	ValidityEndTime        int              `json:"validityEndTime"`
-	ValidityTimeZoneID     string           `json:"validityTimeZoneId"`
-	LastModifiedTime       int              `json:"lastModifiedTime"`
-	LastModifiedBy         *LastModifiedBy  `json:"lastModifiedBy"`
-	EnforceTimeValidity    bool             `json:"enforceTimeValidity"`
-	Action                 string           `json:"action"`
-	Ciparule               bool             `json:"ciparule"`
+	ID                     int                `json:"id,omitempty"`
+	Name                   string             `json:"name"`
+	Order                  int                `json:"order,omitempty"`
+	Protocols              []string           `json:"protocols,omitempty"`
+	Locations              []IDNameExtensions `json:"locations,omitempty"`
+	Groups                 []IDNameExtensions `json:"groups,omitempty"`
+	Departments            []IDNameExtensions `json:"departments,omitempty"`
+	Users                  []IDNameExtensions `json:"users,omitempty"`
+	URLCategories          []string           `json:"urlCategories"`
+	State                  string             `json:"state"`
+	TimeWindows            []IDNameExtensions `json:"timeWindows"`
+	Rank                   int                `json:"rank,omitempty"`
+	RequestMethods         []string           `json:"requestMethods"`
+	EndUserNotificationURL string             `json:"endUserNotificationUrl"`
+	OverrideUsers          []IDNameExtensions `json:"overrideUsers,omitempty"`
+	OverrideGroups         []IDNameExtensions `json:"overrideGroups,omitempty"`
+	BlockOverride          bool               `json:"blockOverride,omitempty"`
+	TimeQuota              int                `json:"timeQuota,omitempty"`
+	SizeQuota              int                `json:"sizeQuota,omitempty"`
+	Description            string             `json:"description"`
+	LocationGroups         []IDNameExtensions `json:"locationGroups,omitempty"`
+	Labels                 []IDNameExtensions `json:"labels,omitempty"`
+	ValidityStartTime      int                `json:"validityStartTime"`
+	ValidityEndTime        int                `json:"validityEndTime"`
+	ValidityTimeZoneID     string             `json:"validityTimeZoneId"`
+	LastModifiedTime       int                `json:"lastModifiedTime"`
+	LastModifiedBy         *IDNameExtensions  `json:"lastModifiedBy,omitempty"`
+	EnforceTimeValidity    bool               `json:"enforceTimeValidity,omitempty"`
+	Action                 string             `json:"action"`
+	Ciparule               bool               `json:"ciparule,omitempty"`
 }
 
-type Locations struct {
+type IDNameExtensions struct {
 	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type Groups struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type Departments struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type Users struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type TimeWindows struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type OverrideUsers struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type OverrideGroups struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type LocationGroups struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type Labels struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type LastModifiedBy struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
+	Name       string                 `json:"name,omitempty"`
+	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
 func (service *Service) Get(ruleID int) (*URLFilteringRule, error) {

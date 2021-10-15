@@ -375,39 +375,39 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("ciparule", resp.Ciparule)
 
-		if err := d.Set("locations", flattenURLFilteringLocation(resp.Locations)); err != nil {
+		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
 		}
 
-		if err := d.Set("groups", flattenURLFilteringGroups(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("departments", flattenURLFilteringDepartments(resp.Departments)); err != nil {
+		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
 			return err
 		}
 
-		if err := d.Set("users", flattenURLFilteringUsers(resp.Users)); err != nil {
+		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
 			return err
 		}
 
-		if err := d.Set("time_windows", flattenURLFilteringTimeWindows(resp.TimeWindows)); err != nil {
+		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
 			return err
 		}
 
-		if err := d.Set("override_users", flattenURLFilteringOverrideUsers(resp.OverrideUsers)); err != nil {
+		if err := d.Set("override_users", flattenIDNameExtensions(resp.OverrideUsers)); err != nil {
 			return err
 		}
 
-		if err := d.Set("override_groups", flattenURLFilteringOverrideGroups(resp.OverrideGroups)); err != nil {
+		if err := d.Set("override_groups", flattenIDNameExtensions(resp.OverrideGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("location_groups", flattenURLFilteringLocationGroups(resp.LocationGroups)); err != nil {
+		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("labels", flattenURLFilteringLabels(resp.Labels)); err != nil {
+		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
 			return err
 		}
 
@@ -422,124 +422,19 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func flattenURLFilteringLocation(locations []urlfilteringpolicies.Locations) []interface{} {
-	location := make([]interface{}, len(locations))
-	for i, val := range locations {
-		location[i] = map[string]interface{}{
+func flattenIDNameExtensions(list []urlfilteringpolicies.IDNameExtensions) []interface{} {
+	flattenedList := make([]interface{}, len(list))
+	for i, val := range list {
+		flattenedList[i] = map[string]interface{}{
 			"id":         val.ID,
 			"name":       val.Name,
 			"extensions": val.Extensions,
 		}
 	}
-
-	return location
+	return flattenedList
 }
 
-func flattenURLFilteringGroups(groups []urlfilteringpolicies.Groups) []interface{} {
-	group := make([]interface{}, len(groups))
-	for i, val := range groups {
-		group[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return group
-}
-
-func flattenURLFilteringDepartments(departments []urlfilteringpolicies.Departments) []interface{} {
-	department := make([]interface{}, len(departments))
-	for i, val := range departments {
-		department[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return department
-}
-
-func flattenURLFilteringUsers(users []urlfilteringpolicies.Users) []interface{} {
-	user := make([]interface{}, len(users))
-	for i, val := range users {
-		user[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return user
-}
-
-func flattenURLFilteringTimeWindows(timeWindows []urlfilteringpolicies.TimeWindows) []interface{} {
-	timeWindow := make([]interface{}, len(timeWindows))
-	for i, val := range timeWindows {
-		timeWindow[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return timeWindow
-}
-
-func flattenURLFilteringOverrideUsers(overrideUsers []urlfilteringpolicies.OverrideUsers) []interface{} {
-	override := make([]interface{}, len(overrideUsers))
-	for i, val := range overrideUsers {
-		override[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return override
-}
-
-func flattenURLFilteringOverrideGroups(overrideGroups []urlfilteringpolicies.OverrideGroups) []interface{} {
-	override := make([]interface{}, len(overrideGroups))
-	for i, val := range overrideGroups {
-		override[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return override
-}
-
-func flattenURLFilteringLocationGroups(overrideLocationGroups []urlfilteringpolicies.LocationGroups) []interface{} {
-	override := make([]interface{}, len(overrideLocationGroups))
-	for i, val := range overrideLocationGroups {
-		override[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return override
-}
-
-func flattenURLFilteringLabels(labels []urlfilteringpolicies.Labels) []interface{} {
-	label := make([]interface{}, len(labels))
-	for i, val := range labels {
-		label[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return label
-}
-
-func flattenURLFilteringLastModifiedBy(lastModifiedBy *urlfilteringpolicies.LastModifiedBy) interface{} {
+func flattenURLFilteringLastModifiedBy(lastModifiedBy *urlfilteringpolicies.IDNameExtensions) interface{} {
 	if lastModifiedBy == nil {
 		return nil
 	}
