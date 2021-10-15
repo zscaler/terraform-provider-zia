@@ -11,6 +11,26 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 )
 
+func listIDsSchemaType(desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		Description: desc,
+		MaxItems:    1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeInt,
+					},
+				},
+			},
+		},
+	}
+}
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
 		Create:   resourceURLFilteringRulesCreate,
@@ -37,108 +57,12 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional: true,
 			},
 			"protocols": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"locations": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Name-ID pairs of locations for which rule must be applied",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"groups": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Name-ID pairs of groups for which rule must be applied",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"departments": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Name-ID pairs of departments for which rule must be applied",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"users": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Name-ID pairs of users for which rule must be applied",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"url_categories": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -150,33 +74,10 @@ func resourceURLFilteringRules() *schema.Resource {
 					"DISABLED",
 				}, false),
 			},
-			"time_windows": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "Name-ID pairs of time interval during which rule must be enforced.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"rank": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Default:     7,
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"request_methods": {
@@ -188,52 +89,6 @@ func resourceURLFilteringRules() *schema.Resource {
 			"end_user_notification_url": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"override_users": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"override_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"block_override": {
 				Type:     schema.TypeBool,
@@ -251,52 +106,6 @@ func resourceURLFilteringRules() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"location_groups": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"labels": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"validity_start_time": {
 				Type:     schema.TypeInt,
@@ -317,6 +126,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"last_modified_by": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -359,6 +169,15 @@ func resourceURLFilteringRules() *schema.Resource {
 				Default:     false,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
+			"locations":       listIDsSchemaType("Name-ID pairs of locations for which rule must be applied"),
+			"groups":          listIDsSchemaType("Name-ID pairs of groups for which rule must be applied"),
+			"departments":     listIDsSchemaType("Name-ID pairs of departments for which rule must be applied"),
+			"users":           listIDsSchemaType("Name-ID pairs of users for which rule must be applied"),
+			"time_windows":    listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
+			"override_users":  listIDsSchemaType("list of override users"),
+			"override_groups": listIDsSchemaType("list of override groups"),
+			"location_groups": listIDsSchemaType("list of locations groups"),
+			"labels":          listIDsSchemaType("list of labels"),
 		},
 	}
 }
@@ -390,7 +209,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	resp, err := zClient.urlfilteringpolicies.Get(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if obj, ok := err.(*client.ErrorResponse); ok && obj.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
@@ -422,39 +241,39 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 
-	if err := d.Set("locations", flattenURLFilteringLocation(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
 	}
 
-	if err := d.Set("groups", flattenURLFilteringGroups(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("departments", flattenURLFilteringDepartments(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
 		return err
 	}
 
-	if err := d.Set("users", flattenURLFilteringUsers(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
 		return err
 	}
 
-	if err := d.Set("time_windows", flattenURLFilteringTimeWindows(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
 		return err
 	}
 
-	if err := d.Set("override_users", flattenURLFilteringOverrideUsers(resp.OverrideUsers)); err != nil {
+	if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
 		return err
 	}
 
-	if err := d.Set("override_groups", flattenURLFilteringOverrideGroups(resp.OverrideGroups)); err != nil {
+	if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("location_groups", flattenURLFilteringLocationGroups(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("labels", flattenURLFilteringLabels(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
 		return err
 	}
 
@@ -463,6 +282,18 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	return nil
+}
+
+func flattenIDs(list []urlfilteringpolicies.IDNameExtensions) []interface{} {
+	result := make([]interface{}, 1)
+	mapIds := make(map[string]interface{})
+	ids := make([]int, len(list))
+	for i, item := range list {
+		ids[i] = item.ID
+	}
+	mapIds["id"] = ids
+	result[0] = mapIds
+	return result
 }
 
 func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
@@ -506,8 +337,8 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		ID:                     id,
 		Name:                   d.Get("name").(string),
 		Order:                  d.Get("order").(int),
-		Protocols:              ListToStringSlice(d.Get("protocols").([]interface{})),
-		URLCategories:          ListToStringSlice(d.Get("url_categories").([]interface{})),
+		Protocols:              SetToStringList(d, "protocols"),
+		URLCategories:          SetToStringList(d, "url_categories"),
 		State:                  d.Get("state").(string),
 		Rank:                   d.Get("rank").(int),
 		RequestMethods:         ListToStringSlice(d.Get("request_methods").([]interface{})),
@@ -523,50 +354,40 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
-		Locations:              expandURLFilteringLocations(d),
-		Groups:                 expandURLFilteringGroups(d),
-		Departments:            expandURLFilteringDepartments(d),
-		Users:                  expandURLFilteringUsers(d),
-		TimeWindows:            expandURLFilteringTimeWindows(d),
-		OverrideUsers:          expandURLFilteringOverrideUsers(d),
-		OverrideGroups:         expandURLFilteringOverrideGroups(d),
-		LocationGroups:         expandURLFilteringLocationGroups(d),
-		Labels:                 expandURLFilteringLabels(d),
-		LastModifiedBy:         expandURLFilteringLastModifiedBy(d),
 	}
-	locations := expandURLFilteringLocations(d)
+	locations := expandIDNameExtensions(d, "locations")
 	if locations != nil {
 		result.Locations = locations
 	}
-	groups := expandURLFilteringGroups(d)
+	groups := expandIDNameExtensions(d, "groups")
 	if groups != nil {
 		result.Groups = groups
 	}
-	departments := expandURLFilteringDepartments(d)
+	departments := expandIDNameExtensions(d, "departments")
 	if departments != nil {
 		result.Departments = departments
 	}
-	users := expandURLFilteringUsers(d)
+	users := expandIDNameExtensions(d, "users")
 	if users != nil {
 		result.Users = users
 	}
-	timeWindows := expandURLFilteringTimeWindows(d)
+	timeWindows := expandIDNameExtensions(d, "time_windows")
 	if timeWindows != nil {
 		result.TimeWindows = timeWindows
 	}
-	overrideUsers := expandURLFilteringOverrideUsers(d)
+	overrideUsers := expandIDNameExtensions(d, "override_users")
 	if overrideUsers != nil {
 		result.OverrideUsers = overrideUsers
 	}
-	overrideGroups := expandURLFilteringOverrideGroups(d)
+	overrideGroups := expandIDNameExtensions(d, "override_groups")
 	if overrideGroups != nil {
 		result.OverrideGroups = overrideGroups
 	}
-	locationGroups := expandURLFilteringLocationGroups(d)
+	locationGroups := expandIDNameExtensions(d, "location_groups")
 	if locationGroups != nil {
 		result.LocationGroups = locationGroups
 	}
-	labels := expandURLFilteringLabels(d)
+	labels := expandIDNameExtensions(d, "labels")
 	if labels != nil {
 		result.Labels = labels
 	}
@@ -577,169 +398,27 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
-func expandURLFilteringLocations(d *schema.ResourceData) []urlfilteringpolicies.Locations {
-	var locations []urlfilteringpolicies.Locations
-	if locationsInterface, ok := d.GetOk("locations"); ok {
-		location := locationsInterface.([]interface{})
-		locations = make([]urlfilteringpolicies.Locations, len(location))
-		for i, val := range location {
-			locationItem := val.(map[string]interface{})
-			locations[i] = urlfilteringpolicies.Locations{
-				ID:         locationItem["id"].(int),
-				Name:       locationItem["name"].(string),
-				Extensions: locationItem["extensions"].(map[string]interface{}),
+func expandIDNameExtensions(d *schema.ResourceData, key string) []urlfilteringpolicies.IDNameExtensions {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []urlfilteringpolicies.IDNameExtensions
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, urlfilteringpolicies.IDNameExtensions{
+						ID: id.(int),
+					})
+				}
 			}
 		}
+		return result
 	}
-
-	return locations
+	return []urlfilteringpolicies.IDNameExtensions{}
 }
 
-func expandURLFilteringGroups(d *schema.ResourceData) []urlfilteringpolicies.Groups {
-	var groups []urlfilteringpolicies.Groups
-	if groupsInterface, ok := d.GetOk("groups"); ok {
-		group := groupsInterface.([]interface{})
-		groups = make([]urlfilteringpolicies.Groups, len(group))
-		for i, val := range group {
-			groupItem := val.(map[string]interface{})
-			groups[i] = urlfilteringpolicies.Groups{
-				ID:         groupItem["id"].(int),
-				Name:       groupItem["name"].(string),
-				Extensions: groupItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return groups
-}
-
-func expandURLFilteringDepartments(d *schema.ResourceData) []urlfilteringpolicies.Departments {
-	var departments []urlfilteringpolicies.Departments
-	if departmentsInterface, ok := d.GetOk("departments"); ok {
-		department := departmentsInterface.([]interface{})
-		departments = make([]urlfilteringpolicies.Departments, len(department))
-		for i, val := range department {
-			departmentItem := val.(map[string]interface{})
-			departments[i] = urlfilteringpolicies.Departments{
-				ID:         departmentItem["id"].(int),
-				Name:       departmentItem["name"].(string),
-				Extensions: departmentItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return departments
-}
-
-func expandURLFilteringUsers(d *schema.ResourceData) []urlfilteringpolicies.Users {
-	var users []urlfilteringpolicies.Users
-	if usersInterface, ok := d.GetOk("users"); ok {
-		user := usersInterface.([]interface{})
-		users = make([]urlfilteringpolicies.Users, len(user))
-		for i, val := range user {
-			userItem := val.(map[string]interface{})
-			users[i] = urlfilteringpolicies.Users{
-				ID:         userItem["id"].(int),
-				Name:       userItem["name"].(string),
-				Extensions: userItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return users
-}
-
-func expandURLFilteringTimeWindows(d *schema.ResourceData) []urlfilteringpolicies.TimeWindows {
-	var timewindows []urlfilteringpolicies.TimeWindows
-	if timewindowsInterface, ok := d.GetOk("time_windows"); ok {
-		timewindow := timewindowsInterface.([]interface{})
-		timewindows = make([]urlfilteringpolicies.TimeWindows, len(timewindow))
-		for i, val := range timewindow {
-			timewindowsItem := val.(map[string]interface{})
-			timewindows[i] = urlfilteringpolicies.TimeWindows{
-				ID:         timewindowsItem["id"].(int),
-				Name:       timewindowsItem["name"].(string),
-				Extensions: timewindowsItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return timewindows
-}
-
-func expandURLFilteringOverrideUsers(d *schema.ResourceData) []urlfilteringpolicies.OverrideUsers {
-	var overrideUsers []urlfilteringpolicies.OverrideUsers
-	if overrideUsersInterface, ok := d.GetOk("override_users"); ok {
-		overrideUser := overrideUsersInterface.([]interface{})
-		overrideUsers = make([]urlfilteringpolicies.OverrideUsers, len(overrideUser))
-		for i, val := range overrideUser {
-			overrideUserItem := val.(map[string]interface{})
-			overrideUsers[i] = urlfilteringpolicies.OverrideUsers{
-				ID:         overrideUserItem["id"].(int),
-				Name:       overrideUserItem["name"].(string),
-				Extensions: overrideUserItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return overrideUsers
-}
-
-func expandURLFilteringOverrideGroups(d *schema.ResourceData) []urlfilteringpolicies.OverrideGroups {
-	var overrideGroups []urlfilteringpolicies.OverrideGroups
-	if overrideGroupsInterface, ok := d.GetOk("override_groups"); ok {
-		overrideGroup := overrideGroupsInterface.([]interface{})
-		overrideGroups = make([]urlfilteringpolicies.OverrideGroups, len(overrideGroup))
-		for i, val := range overrideGroup {
-			overrideGroupItem := val.(map[string]interface{})
-			overrideGroups[i] = urlfilteringpolicies.OverrideGroups{
-				ID:         overrideGroupItem["id"].(int),
-				Name:       overrideGroupItem["name"].(string),
-				Extensions: overrideGroupItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return overrideGroups
-}
-
-func expandURLFilteringLocationGroups(d *schema.ResourceData) []urlfilteringpolicies.LocationGroups {
-	var locationGroups []urlfilteringpolicies.LocationGroups
-	if locationGroupsInterface, ok := d.GetOk("location_groups"); ok {
-		locationGroup := locationGroupsInterface.([]interface{})
-		locationGroups = make([]urlfilteringpolicies.LocationGroups, len(locationGroup))
-		for i, val := range locationGroup {
-			locationGroupItem := val.(map[string]interface{})
-			locationGroups[i] = urlfilteringpolicies.LocationGroups{
-				ID:         locationGroupItem["id"].(int),
-				Name:       locationGroupItem["name"].(string),
-				Extensions: locationGroupItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return locationGroups
-}
-
-func expandURLFilteringLabels(d *schema.ResourceData) []urlfilteringpolicies.Labels {
-	var labels []urlfilteringpolicies.Labels
-	if labelsInterface, ok := d.GetOk("labels"); ok {
-		label := labelsInterface.([]interface{})
-		labels = make([]urlfilteringpolicies.Labels, len(label))
-		for i, val := range label {
-			labelItem := val.(map[string]interface{})
-			labels[i] = urlfilteringpolicies.Labels{
-				ID:         labelItem["id"].(int),
-				Name:       labelItem["name"].(string),
-				Extensions: labelItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return labels
-}
-
-func expandURLFilteringLastModifiedBy(d *schema.ResourceData) *urlfilteringpolicies.LastModifiedBy {
+func expandURLFilteringLastModifiedBy(d *schema.ResourceData) *urlfilteringpolicies.IDNameExtensions {
 	lastModifiedByObj, ok := d.GetOk("last_modified_by")
 	if !ok {
 		return nil
@@ -754,7 +433,7 @@ func expandURLFilteringLastModifiedBy(d *schema.ResourceData) *urlfilteringpolic
 		if !ok {
 			return nil
 		}
-		return &urlfilteringpolicies.LastModifiedBy{
+		return &urlfilteringpolicies.IDNameExtensions{
 			ID:         lastMofied["id"].(int),
 			Name:       lastMofied["name"].(string),
 			Extensions: lastMofied["extensions"].(map[string]interface{}),
