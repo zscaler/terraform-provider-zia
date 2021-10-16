@@ -15,10 +15,12 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"order": {
 				Type:     schema.TypeInt,
@@ -440,27 +442,27 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("default_rule", resp.DefaultRule)
 		_ = d.Set("predefined", resp.Predefined)
 
-		if err := d.Set("locations", flattenLocations(resp.Locations)); err != nil {
+		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
 		}
 
-		if err := d.Set("location_groups", flattenLocationGroups(resp.LocationsGroups)); err != nil {
+		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationsGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("departments", flattenFirewallFilteringDepartments(resp.Departments)); err != nil {
+		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
 			return err
 		}
 
-		if err := d.Set("groups", flattenFirewallFilteringGroups(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("users", flattenFirewallFilteringUsers(resp.Users)); err != nil {
+		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
 			return err
 		}
 
-		if err := d.Set("time_windows", flattenTimeWindows(resp.TimeWindows)); err != nil {
+		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
 			return err
 		}
 
@@ -468,35 +470,35 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 
-		if err := d.Set("src_ip_groups", flattenSrcIPGroups(resp.SrcIpGroups)); err != nil {
+		if err := d.Set("src_ip_groups", flattenIDNameExtensions(resp.SrcIpGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("dest_ip_groups", flattenDestIPGroups(resp.DestIpGroups)); err != nil {
+		if err := d.Set("dest_ip_groups", flattenIDNameExtensions(resp.DestIpGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("nw_services", flattenNWServices(resp.NwServices)); err != nil {
+		if err := d.Set("nw_services", flattenIDNameExtensions(resp.NwServices)); err != nil {
 			return err
 		}
 
-		if err := d.Set("nw_service_groups", flattenNWServiceGroups(resp.NwServiceGroups)); err != nil {
+		if err := d.Set("nw_service_groups", flattenIDNameExtensions(resp.NwServiceGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("nw_application_groups", flattenNWApplicationGroups(resp.NwApplicationGroups)); err != nil {
+		if err := d.Set("nw_application_groups", flattenIDNameExtensions(resp.NwApplicationGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("app_services", flattenAppServices(resp.AppServices)); err != nil {
+		if err := d.Set("app_services", flattenIDNameExtensions(resp.AppServices)); err != nil {
 			return err
 		}
 
-		if err := d.Set("app_services", flattenAppServiceGroups(resp.AppServiceGroups)); err != nil {
+		if err := d.Set("app_services", flattenIDNameExtensions(resp.AppServiceGroups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("labels", flattenLabels(resp.Labels)); err != nil {
+		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
 			return err
 		}
 	} else {
@@ -504,199 +506,4 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	return nil
-}
-
-func flattenLocations(locations []filteringrules.Locations) []interface{} {
-	location := make([]interface{}, len(locations))
-	for i, val := range locations {
-		location[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return location
-}
-
-func flattenLocationGroups(locationGroups []filteringrules.LocationsGroups) []interface{} {
-	locationGroup := make([]interface{}, len(locationGroups))
-	for i, val := range locationGroups {
-		locationGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return locationGroup
-}
-
-func flattenFirewallFilteringDepartments(departments []filteringrules.Departments) []interface{} {
-	department := make([]interface{}, len(departments))
-	for i, val := range departments {
-		department[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return department
-}
-
-func flattenFirewallFilteringGroups(groups []filteringrules.Groups) []interface{} {
-	group := make([]interface{}, len(groups))
-	for i, val := range groups {
-		group[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return group
-}
-
-func flattenFirewallFilteringUsers(users []filteringrules.Users) []interface{} {
-	user := make([]interface{}, len(users))
-	for i, val := range users {
-		user[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return user
-}
-
-func flattenTimeWindows(timeWindows []filteringrules.TimeWindows) []interface{} {
-	timeWindow := make([]interface{}, len(timeWindows))
-	for i, val := range timeWindows {
-		timeWindow[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return timeWindow
-}
-
-func flattenLastModifiedBy(lastModifiedBy []filteringrules.LastModifiedBy) []interface{} {
-	lastModified := make([]interface{}, len(lastModifiedBy))
-	for i, val := range lastModifiedBy {
-		lastModified[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return lastModified
-}
-
-func flattenSrcIPGroups(srcIPGroups []filteringrules.SrcIpGroups) []interface{} {
-	srcIpGroup := make([]interface{}, len(srcIPGroups))
-	for i, val := range srcIPGroups {
-		srcIpGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return srcIpGroup
-}
-
-func flattenDestIPGroups(destIPGroups []filteringrules.DestIpGroups) []interface{} {
-	destIpGroup := make([]interface{}, len(destIPGroups))
-	for i, val := range destIPGroups {
-		destIpGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return destIpGroup
-}
-
-func flattenNWServices(nwServices []filteringrules.NwServices) []interface{} {
-	nwService := make([]interface{}, len(nwServices))
-	for i, val := range nwServices {
-		nwService[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return nwService
-}
-
-func flattenNWServiceGroups(nwServiceGroups []filteringrules.NwServiceGroups) []interface{} {
-	NwServiceGroup := make([]interface{}, len(nwServiceGroups))
-	for i, val := range nwServiceGroups {
-		NwServiceGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return NwServiceGroup
-}
-
-func flattenNWApplicationGroups(nwApplicationGroups []filteringrules.NwApplicationGroups) []interface{} {
-	nwApplicationGroup := make([]interface{}, len(nwApplicationGroups))
-	for i, val := range nwApplicationGroups {
-		nwApplicationGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return nwApplicationGroup
-}
-
-func flattenAppServices(appServices []filteringrules.AppServices) []interface{} {
-	appService := make([]interface{}, len(appServices))
-	for i, val := range appServices {
-		appService[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return appService
-}
-
-func flattenAppServiceGroups(appServiceGroups []filteringrules.AppServiceGroups) []interface{} {
-	appServiceGroup := make([]interface{}, len(appServiceGroups))
-	for i, val := range appServiceGroups {
-		appServiceGroup[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return appServiceGroup
-}
-
-func flattenLabels(labels []filteringrules.Labels) []interface{} {
-	label := make([]interface{}, len(labels))
-	for i, val := range labels {
-		label[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return label
 }
