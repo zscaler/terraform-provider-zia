@@ -151,6 +151,50 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"user_agent_types": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"OPERA",
+					"FIREFOX",
+					"MSIE",
+					"MSEDGE",
+					"CHROME",
+					"SAFARI",
+					"OTHER",
+				}, false),
+			},
+			//  "code": "INVALID_INPUT_ARGUMENT",
+			// "message": "Isolation profile is missing for isolate action. Profile id and name are required."
+			"cbi_profile": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"profile_seq": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cbi_profile_id": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"action": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -160,6 +204,7 @@ func resourceURLFilteringRules() *schema.Resource {
 					"BLOCK",
 					"CAUTION",
 					"ALLOW",
+					"ISOLATE",
 					"ICAP_RESPONSE",
 				}, false),
 			},
@@ -226,6 +271,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("url_categories", resp.URLCategories)
 	_ = d.Set("state", resp.State)
+	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("request_methods", resp.RequestMethods)
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
@@ -340,6 +386,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Protocols:              SetToStringList(d, "protocols"),
 		URLCategories:          SetToStringList(d, "url_categories"),
 		State:                  d.Get("state").(string),
+		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
 		Rank:                   d.Get("rank").(int),
 		RequestMethods:         ListToStringSlice(d.Get("request_methods").([]interface{})),
 		EndUserNotificationURL: d.Get("end_user_notification_url").(string),

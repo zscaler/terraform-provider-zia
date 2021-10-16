@@ -23,6 +23,7 @@ type URLFilteringRule struct {
 	Users                  []IDNameExtensions `json:"users,omitempty"`
 	URLCategories          []string           `json:"urlCategories"`
 	State                  string             `json:"state"`
+	UserAgentTypes         []string           `json:"userAgentTypes,omitempty"`
 	TimeWindows            []IDNameExtensions `json:"timeWindows"`
 	Rank                   int                `json:"rank,omitempty"`
 	RequestMethods         []string           `json:"requestMethods"`

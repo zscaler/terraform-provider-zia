@@ -330,7 +330,7 @@ func expandCustomURLScopeGroupMemberEntities(d *schema.ResourceData) []urlcatego
 
 func expandCustomURLScopeEntities(d *schema.ResourceData) []urlcategories.ScopeEntities {
 	var scopeEntities []urlcategories.ScopeEntities
-	if scopeEntitiesInterface, ok := d.GetOk("Scope_entities"); ok {
+	if scopeEntitiesInterface, ok := d.GetOk("scope_entities"); ok {
 		scopeEntity := scopeEntitiesInterface.([]interface{})
 		scopeEntities = make([]urlcategories.ScopeEntities, len(scopeEntity))
 		for i, val := range scopeEntity {
@@ -344,15 +344,3 @@ func expandCustomURLScopeEntities(d *schema.ResourceData) []urlcategories.ScopeE
 
 	return scopeEntities
 }
-
-/*
-func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCounts {
-	keyword := urlcategories.URLKeywordCounts{
-		TotalURLCount:            d.Get("total_url_count").(int),
-		RetainParentURLCount:     d.Get("retain_parent_url_count").(int),
-		TotalKeywordCount:        d.Get("total_keyword_count").(int),
-		RetainParentKeywordCount: d.Get("retain_parent_keyword_count").(int),
-	}
-	return &keyword
-}
-*/
