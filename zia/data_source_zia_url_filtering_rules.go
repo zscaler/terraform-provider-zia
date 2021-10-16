@@ -15,14 +15,17 @@ func dataSourceURLFilteringRules() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"order": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"protocols": {
 				Type:     schema.TypeList,
@@ -411,7 +414,7 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 			return err
 		}
 
-		if err := d.Set("last_modified_by", flattenURLFilteringLastModifiedBy(resp.LastModifiedBy)); err != nil {
+		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 			return err
 		}
 
@@ -420,29 +423,4 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	return nil
-}
-
-func flattenIDNameExtensions(list []urlfilteringpolicies.IDNameExtensions) []interface{} {
-	flattenedList := make([]interface{}, len(list))
-	for i, val := range list {
-		flattenedList[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-	return flattenedList
-}
-
-func flattenURLFilteringLastModifiedBy(lastModifiedBy *urlfilteringpolicies.IDNameExtensions) interface{} {
-	if lastModifiedBy == nil {
-		return nil
-	}
-	return []map[string]interface{}{
-		{
-			"id":         lastModifiedBy.ID,
-			"name":       lastModifiedBy.Name,
-			"extensions": lastModifiedBy.Extensions,
-		},
-	}
 }

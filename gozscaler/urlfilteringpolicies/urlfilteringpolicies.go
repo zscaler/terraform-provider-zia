@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -13,43 +15,37 @@ const (
 )
 
 type URLFilteringRule struct {
-	ID                     int                `json:"id,omitempty"`
-	Name                   string             `json:"name"`
-	Order                  int                `json:"order,omitempty"`
-	Protocols              []string           `json:"protocols,omitempty"`
-	Locations              []IDNameExtensions `json:"locations,omitempty"`
-	Groups                 []IDNameExtensions `json:"groups,omitempty"`
-	Departments            []IDNameExtensions `json:"departments,omitempty"`
-	Users                  []IDNameExtensions `json:"users,omitempty"`
-	URLCategories          []string           `json:"urlCategories"`
-	State                  string             `json:"state"`
-	UserAgentTypes         []string           `json:"userAgentTypes,omitempty"`
-	TimeWindows            []IDNameExtensions `json:"timeWindows"`
-	Rank                   int                `json:"rank,omitempty"`
-	RequestMethods         []string           `json:"requestMethods"`
-	EndUserNotificationURL string             `json:"endUserNotificationUrl"`
-	OverrideUsers          []IDNameExtensions `json:"overrideUsers,omitempty"`
-	OverrideGroups         []IDNameExtensions `json:"overrideGroups,omitempty"`
-	BlockOverride          bool               `json:"blockOverride,omitempty"`
-	TimeQuota              int                `json:"timeQuota,omitempty"`
-	SizeQuota              int                `json:"sizeQuota,omitempty"`
-	Description            string             `json:"description"`
-	LocationGroups         []IDNameExtensions `json:"locationGroups,omitempty"`
-	Labels                 []IDNameExtensions `json:"labels,omitempty"`
-	ValidityStartTime      int                `json:"validityStartTime"`
-	ValidityEndTime        int                `json:"validityEndTime"`
-	ValidityTimeZoneID     string             `json:"validityTimeZoneId"`
-	LastModifiedTime       int                `json:"lastModifiedTime"`
-	LastModifiedBy         *IDNameExtensions  `json:"lastModifiedBy,omitempty"`
-	EnforceTimeValidity    bool               `json:"enforceTimeValidity,omitempty"`
-	Action                 string             `json:"action"`
-	Ciparule               bool               `json:"ciparule,omitempty"`
-}
-
-type IDNameExtensions struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
+	ID                     int                       `json:"id,omitempty"`
+	Name                   string                    `json:"name"`
+	Order                  int                       `json:"order,omitempty"`
+	Protocols              []string                  `json:"protocols,omitempty"`
+	URLCategories          []string                  `json:"urlCategories"`
+	State                  string                    `json:"state"`
+	UserAgentTypes         []string                  `json:"userAgentTypes,omitempty"`
+	Rank                   int                       `json:"rank,omitempty"`
+	RequestMethods         []string                  `json:"requestMethods"`
+	EndUserNotificationURL string                    `json:"endUserNotificationUrl"`
+	BlockOverride          bool                      `json:"blockOverride,omitempty"`
+	TimeQuota              int                       `json:"timeQuota,omitempty"`
+	SizeQuota              int                       `json:"sizeQuota,omitempty"`
+	Description            string                    `json:"description"`
+	ValidityStartTime      int                       `json:"validityStartTime"`
+	ValidityEndTime        int                       `json:"validityEndTime"`
+	ValidityTimeZoneID     string                    `json:"validityTimeZoneId"`
+	LastModifiedTime       int                       `json:"lastModifiedTime"`
+	EnforceTimeValidity    bool                      `json:"enforceTimeValidity,omitempty"`
+	Action                 string                    `json:"action"`
+	Ciparule               bool                      `json:"ciparule,omitempty"`
+	LastModifiedBy         *common.IDNameExtensions  `json:"lastModifiedBy,omitempty"`
+	OverrideUsers          []common.IDNameExtensions `json:"overrideUsers,omitempty"`
+	OverrideGroups         []common.IDNameExtensions `json:"overrideGroups,omitempty"`
+	LocationGroups         []common.IDNameExtensions `json:"locationGroups,omitempty"`
+	Labels                 []common.IDNameExtensions `json:"labels,omitempty"`
+	Locations              []common.IDNameExtensions `json:"locations,omitempty"`
+	Groups                 []common.IDNameExtensions `json:"groups,omitempty"`
+	Departments            []common.IDNameExtensions `json:"departments,omitempty"`
+	Users                  []common.IDNameExtensions `json:"users,omitempty"`
+	TimeWindows            []common.IDNameExtensions `json:"timeWindows"`
 }
 
 func (service *Service) Get(ruleID int) (*URLFilteringRule, error) {

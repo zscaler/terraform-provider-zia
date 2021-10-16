@@ -11,26 +11,6 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 )
 
-func listIDsSchemaType(desc string) *schema.Schema {
-	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Computed:    true,
-		Description: desc,
-		MaxItems:    1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"id": {
-					Type:     schema.TypeList,
-					Required: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeInt,
-					},
-				},
-			},
-		},
-	}
-}
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
 		Create:   resourceURLFilteringRulesCreate,
@@ -81,7 +61,7 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"request_methods": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
@@ -126,6 +106,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"last_modified_by": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -292,23 +273,11 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if err := d.Set("last_modified_by", flattenURLFilteringLastModifiedBy(resp.LastModifiedBy)); err != nil {
+	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func flattenIDs(list []urlfilteringpolicies.IDNameExtensions) []interface{} {
-	result := make([]interface{}, 1)
-	mapIds := make(map[string]interface{})
-	ids := make([]int, len(list))
-	for i, item := range list {
-		ids[i] = item.ID
-	}
-	mapIds["id"] = ids
-	result[0] = mapIds
-	return result
 }
 
 func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
@@ -357,7 +326,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		State:                  d.Get("state").(string),
 		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
 		Rank:                   d.Get("rank").(int),
-		RequestMethods:         ListToStringSlice(d.Get("request_methods").([]interface{})),
+		RequestMethods:         SetToStringList(d, "request_methods"),
 		EndUserNotificationURL: d.Get("end_user_notification_url").(string),
 		BlockOverride:          d.Get("block_override").(bool),
 		TimeQuota:              d.Get("time_quota").(int),
@@ -371,89 +340,45 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
 	}
-	locations := expandIDNameExtensions(d, "locations")
+	locations := expandIDNameExtensionsSet(d, "locations")
 	if locations != nil {
 		result.Locations = locations
 	}
-	groups := expandIDNameExtensions(d, "groups")
+	groups := expandIDNameExtensionsSet(d, "groups")
 	if groups != nil {
 		result.Groups = groups
 	}
-	departments := expandIDNameExtensions(d, "departments")
+	departments := expandIDNameExtensionsSet(d, "departments")
 	if departments != nil {
 		result.Departments = departments
 	}
-	users := expandIDNameExtensions(d, "users")
+	users := expandIDNameExtensionsSet(d, "users")
 	if users != nil {
 		result.Users = users
 	}
-	timeWindows := expandIDNameExtensions(d, "time_windows")
+	timeWindows := expandIDNameExtensionsSet(d, "time_windows")
 	if timeWindows != nil {
 		result.TimeWindows = timeWindows
 	}
-	overrideUsers := expandIDNameExtensions(d, "override_users")
+	overrideUsers := expandIDNameExtensionsSet(d, "override_users")
 	if overrideUsers != nil {
 		result.OverrideUsers = overrideUsers
 	}
-	overrideGroups := expandIDNameExtensions(d, "override_groups")
+	overrideGroups := expandIDNameExtensionsSet(d, "override_groups")
 	if overrideGroups != nil {
 		result.OverrideGroups = overrideGroups
 	}
-	locationGroups := expandIDNameExtensions(d, "location_groups")
+	locationGroups := expandIDNameExtensionsSet(d, "location_groups")
 	if locationGroups != nil {
 		result.LocationGroups = locationGroups
 	}
-	labels := expandIDNameExtensions(d, "labels")
+	labels := expandIDNameExtensionsSet(d, "labels")
 	if labels != nil {
 		result.Labels = labels
 	}
-	lastModifiedBy := expandURLFilteringLastModifiedBy(d)
+	lastModifiedBy := expandIDNameExtensions(d, "last_modified_by")
 	if lastModifiedBy != nil {
 		result.LastModifiedBy = lastModifiedBy
 	}
 	return result
-}
-
-func expandIDNameExtensions(d *schema.ResourceData, key string) []urlfilteringpolicies.IDNameExtensions {
-	setInterface, ok := d.GetOk(key)
-	if ok {
-		set := setInterface.(*schema.Set)
-		var result []urlfilteringpolicies.IDNameExtensions
-		for _, item := range set.List() {
-			itemMap, _ := item.(map[string]interface{})
-			if itemMap != nil {
-				for _, id := range itemMap["id"].([]interface{}) {
-					result = append(result, urlfilteringpolicies.IDNameExtensions{
-						ID: id.(int),
-					})
-				}
-			}
-		}
-		return result
-	}
-	return []urlfilteringpolicies.IDNameExtensions{}
-}
-
-func expandURLFilteringLastModifiedBy(d *schema.ResourceData) *urlfilteringpolicies.IDNameExtensions {
-	lastModifiedByObj, ok := d.GetOk("last_modified_by")
-	if !ok {
-		return nil
-	}
-	lastMofiedBy, ok := lastModifiedByObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(lastMofiedBy.List()) > 0 {
-		lastModifiedByObj := lastMofiedBy.List()[0]
-		lastMofied, ok := lastModifiedByObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		return &urlfilteringpolicies.IDNameExtensions{
-			ID:         lastMofied["id"].(int),
-			Name:       lastMofied["name"].(string),
-			Extensions: lastMofied["extensions"].(map[string]interface{}),
-		}
-	}
-	return nil
 }

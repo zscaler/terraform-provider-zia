@@ -19,6 +19,12 @@ type Location struct {
 	Extensions map[string]interface{} `json:"extensions"`
 }
 
+type IDNameExtensions struct {
+	ID         int                    `json:"id,omitempty"`
+	Name       string                 `json:"name,omitempty"`
+	Extensions map[string]interface{} `json:"extensions"`
+}
+
 func flattenManagedBy(managedBy ManagedBy) interface{} {
 	return []map[string]interface{}{
 		{
