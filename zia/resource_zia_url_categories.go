@@ -243,7 +243,7 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)
 
-	if _, err := zClient.urlcategories.UpdateURLCategories(id, &req); err != nil {
+	if _, _, err := zClient.urlcategories.UpdateURLCategories(id, &req); err != nil {
 		return err
 	}
 

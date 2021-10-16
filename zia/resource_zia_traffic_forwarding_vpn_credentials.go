@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 )
@@ -26,6 +27,12 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"CN",
+					"IP",
+					"UFQDN",
+					"XAUTH",
+				}, false),
 			},
 			"fqdn": {
 				Type:     schema.TypeString,

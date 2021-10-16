@@ -94,14 +94,14 @@ func (service *Service) CreateURLCategories(category *URLCategory) (*URLCategory
 	return createdUrlCategory, nil
 }
 
-func (service *Service) UpdateURLCategories(categoryID string, category *URLCategory) (*URLCategory, error) {
-	resp, err := service.Client.Update(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID), *category)
+func (service *Service) UpdateURLCategories(categoryID string, category *URLCategory) (*URLCategory, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%s", urlCategoriesEndpoint, categoryID), *category)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	updatedUrlCategory, _ := resp.(*URLCategory)
 	log.Printf("Returning url category from Update: %s", updatedUrlCategory.ID)
-	return updatedUrlCategory, nil
+	return updatedUrlCategory, nil, nil
 }
 
 func (service *Service) DeleteURLCategories(categoryID string) (*http.Response, error) {
