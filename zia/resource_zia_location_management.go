@@ -79,6 +79,7 @@ func resourceLocationManagement() *schema.Resource {
 						"fqdn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"pre_shared_key": {
 							Type:     schema.TypeString,
@@ -88,6 +89,7 @@ func resourceLocationManagement() *schema.Resource {
 						"comments": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -126,6 +128,7 @@ func resourceLocationManagement() *schema.Resource {
 			"display_time_unit": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Default:  "MINUTE",
 				ValidateFunc: validation.StringInSlice([]string{
 					"MINUTE",
 					"HOUR",
@@ -215,7 +218,9 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
-
+	if err := checkSurrogateIPIdletTimeout(req); err != nil {
+		return err
+	}
 	resp, err := zClient.locationmanagement.Create(&req)
 	if err != nil {
 		return err
@@ -225,6 +230,16 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	_ = d.Set("location_id", resp.ID)
 
 	return resourceLocationManagementRead(d, m)
+}
+
+func checkSurrogateIPIdletTimeout(loc locationmanagement.Locations) error {
+	if loc.SurrogateIP && loc.IdleTimeInMinutes == 0 {
+		return fmt.Errorf("surrogate IP requires setting of an idle timeout")
+	}
+	if loc.SurrogateIP && !loc.AuthRequired {
+		return fmt.Errorf("authentication required must be enabled, when enabling surrogate IP")
+	}
+	return nil
 }
 
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
@@ -309,7 +324,9 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	}
 	log.Printf("[INFO] Updating location management ID: %v\n", id)
 	req := expandLocationManagement(d)
-
+	if err := checkSurrogateIPIdletTimeout(req); err != nil {
+		return err
+	}
 	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {
 		return err
 	}

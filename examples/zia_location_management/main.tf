@@ -12,19 +12,19 @@ provider "zia" {}
 resource "zia_location_management" "toronto"{
     name = "SGIO-IPSEC-Toronto"
     description = "Created with Terraform"
-    ssl_scan_enabled = true
-    zapp_ssl_scan_enabled = true
     ip_addresses = [ zia_traffic_forwarding_static_ip.example.ip_address ]
+    surrogate_ip = true
+    idle_time_in_minutes = 10
+    auth_required = true
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
        type = zia_traffic_forwarding_vpn_credentials.example.type
     }
-
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type = "UFQDN"
-    fqdn = "sjc-1-37@securitygeek.io"
+    fqdn = "sjc-1-373@securitygeek.io"
     comments = "created automatically"
     pre_shared_key = "newPassword123!"
 }
