@@ -1,4 +1,4 @@
-package networkservices
+package networkservicegroup
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ func (service *Service) GetNetworkServiceGroups(NetworkServiceGroupsID int) (*Ne
 		return nil, err
 	}
 
-	log.Printf("Returning network application group from Get: %d", networkServiceGroups.ID)
+	log.Printf("Returning network service groups from Get: %d", networkServiceGroups.ID)
 	return &networkServiceGroups, nil
 }
 
