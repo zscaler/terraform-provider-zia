@@ -156,14 +156,11 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 
 func expandIPDestinationGroups(d *schema.ResourceData) ipdestinationgroups.IPDestinationGroups {
 	return ipdestinationgroups.IPDestinationGroups{
-		Name:        d.Get("name").(string),
-		Type:        d.Get("type").(string),
-		Description: d.Get("description").(string),
-		//Addresses:    d.Get("addresses").([]string),
+		Name:         d.Get("name").(string),
+		Type:         d.Get("type").(string),
+		Description:  d.Get("description").(string),
 		Addresses:    ListToStringSlice(d.Get("addresses").([]interface{})),
 		IPCategories: ListToStringSlice(d.Get("ip_categories").([]interface{})),
-		//IPCategories: d.Get("ip_categories").([]string),
-		Countries: ListToStringSlice(d.Get("countries").([]interface{})),
-		//Countries:    d.Get("countries").([]string),
+		Countries:    ListToStringSlice(d.Get("countries").([]interface{})),
 	}
 }
