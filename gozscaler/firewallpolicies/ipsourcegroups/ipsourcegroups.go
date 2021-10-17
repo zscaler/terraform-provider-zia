@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -43,7 +44,6 @@ func (service *Service) GetByName(ipSourceGroupsName string) (*IPSourceGroups, e
 	return nil, fmt.Errorf("no ip source group found with name: %s", ipSourceGroupsName)
 }
 
-// Adds a GRE tunnel configuration.
 func (service *Service) Create(ipGroupID *IPSourceGroups) (*IPSourceGroups, error) {
 	resp, err := service.Client.Create(ipSourceGroupsEndpoint, *ipGroupID)
 	if err != nil {
@@ -59,8 +59,8 @@ func (service *Service) Create(ipGroupID *IPSourceGroups) (*IPSourceGroups, erro
 	return createdIPSourceGroups, nil
 }
 
-func (service *Service) Update(ipGroupID string, ipGroup *IPSourceGroups) (*IPSourceGroups, error) {
-	resp, err := service.Client.Update(ipSourceGroupsEndpoint+"/"+ipGroupID, *ipGroup)
+func (service *Service) Update(ipGroupID int, ipGroup *IPSourceGroups) (*IPSourceGroups, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", ipSourceGroupsEndpoint, ipGroupID), *ipGroup)
 	if err != nil {
 		return nil, err
 	}
@@ -70,11 +70,11 @@ func (service *Service) Update(ipGroupID string, ipGroup *IPSourceGroups) (*IPSo
 	return updatedIPSourceGroups, nil
 }
 
-func (service *Service) Delete(ipGroupID string) error {
-	err := service.Client.Delete(ipSourceGroupsEndpoint + "/" + ipGroupID)
+func (service *Service) Delete(ipGroupID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", ipSourceGroupsEndpoint, ipGroupID))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
