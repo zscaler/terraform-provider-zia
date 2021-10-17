@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 )
 
@@ -46,7 +47,6 @@ func (service *Service) GetByName(ipDestinationGroupsName string) (*IPDestinatio
 	return nil, fmt.Errorf("no ip destination group found with name: %s", ipDestinationGroupsName)
 }
 
-// Adds a GRE tunnel configuration.
 func (service *Service) Create(ipGroupID *IPDestinationGroups) (*IPDestinationGroups, error) {
 	resp, err := service.Client.Create(ipDestinationGroupsEndpoint, *ipGroupID)
 	if err != nil {
@@ -62,22 +62,22 @@ func (service *Service) Create(ipGroupID *IPDestinationGroups) (*IPDestinationGr
 	return createdIPDestinationGroups, nil
 }
 
-func (service *Service) Update(ipGroupID string, ipGroup *IPDestinationGroups) (*IPDestinationGroups, error) {
-	resp, err := service.Client.Update(ipDestinationGroupsEndpoint+"/"+ipGroupID, *ipGroup)
+func (service *Service) Update(ipGroupID int, ipGroup *IPDestinationGroups) (*IPDestinationGroups, *http.Response, error) {
+	resp, err := service.Client.UpdateWithPut(fmt.Sprintf("%s/%d", ipDestinationGroupsEndpoint, ipGroupID), *ipGroup)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	updatedIPDestinationGroups, _ := resp.(*IPDestinationGroups)
 
 	log.Printf("returning ip destination group from update: %d", updatedIPDestinationGroups.ID)
-	return updatedIPDestinationGroups, nil
+	return updatedIPDestinationGroups, nil, nil
 }
 
-func (service *Service) Delete(ipGroupID string) error {
-	err := service.Client.Delete(ipDestinationGroupsEndpoint + "/" + ipGroupID)
+func (service *Service) Delete(ipGroupID int) (*http.Response, error) {
+	err := service.Client.Delete(fmt.Sprintf("%s/%d", ipDestinationGroupsEndpoint, ipGroupID))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
