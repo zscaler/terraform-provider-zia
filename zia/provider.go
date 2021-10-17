@@ -38,7 +38,7 @@ func Provider() *schema.Provider {
 			"zia_admin_users":                               resourceAdminUsers(),
 			"zia_dlp_dictionaries":                          resourceDLPDictionaries(),
 			"zia_firewall_filtering_rule":                   resourceFirewallFilteringRules(),
-			"zia_firewall_filtering_ip_destination_groups":  resourceFWIPDestinationGroups(),
+			"zia_firewall_filtering_destination_groups":     resourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_ip_source_groups":       resourceFWIPSourceGroups(),
 			"zia_firewall_filtering_network_service":        resourceFWNetworkServices(),
 			"zia_firewall_filtering_network_service_groups": resourceFWNetworkServiceGroups(),
