@@ -42,7 +42,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"rank": {
 				Type:        schema.TypeInt,
 				Optional:    true,
-				Default:     7,
+				Computed:    true,
 				Description: "Admin rank of the Firewall Filtering policy rule",
 			},
 			"access_control": {

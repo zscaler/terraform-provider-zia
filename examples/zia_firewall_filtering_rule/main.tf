@@ -19,20 +19,14 @@ resource "zia_firewall_filtering_rule" "example" {
   access_control      = "READ_WRITE"
   enable_full_logging = false
   order               = 1
-  rank                = 1
   dest_countries      = ["COUNTRY_CA", "COUNTRY_US", "COUNTRY_BR"]
   locations {
     id = [
-      data.zia_location_management.vancouver.id,
-      data.zia_location_management.toronto.id
+      data.zia_location_management.sjc1.id
     ]
   }
 }
 
-data "zia_location_management" "vancouver" {
-  name = "SGIO-IPSEC-Vancouver"
-}
-
-data "zia_location_management" "toronto" {
-  name = "SGIO-IPSEC-Toronto"
+data "zia_location_management" "sjc1" {
+  name = "sjc-1"
 }
