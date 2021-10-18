@@ -8,33 +8,6 @@ terraform {
 }
 
 provider "zia" {}
-
-/*
-resource "zia_firewall_filtering_rule" "example" {
-  name                = "Example"
-  description         = "Example"
-  state               = "ENABLED"
-  action              = "ALLOW"
-  predefined          = false
-  default_rule        = false
-  access_control      = "READ_WRITE"
-  enable_full_logging = false
-  order               = 1
-  rank = 1
-
-  dest_countries      = ["COUNTRY_CA", "COUNTRY_US", "COUNTRY_BR"]
-  locations {
-    id = [
-      data.zia_location_management.sjc1.id
-    ]
-  }
-}
-
-data "zia_location_management" "sjc1" {
-  name = "sjc-1"
-}
-*/
-
 resource "zia_firewall_filtering_rule" "zscaler_proxy_traffic" {
     name = "Zscaler Proxy Traffic"
     description = "Zscaler Proxy Traffic"
