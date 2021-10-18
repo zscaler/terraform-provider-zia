@@ -14,8 +14,11 @@ resource "zia_location_management" "toronto"{
     description = "Created with Terraform"
     ip_addresses = [ zia_traffic_forwarding_static_ip.example.ip_address ]
     surrogate_ip = true
-    idle_time_in_minutes = 10
+    idle_time_in_minutes = 480
     auth_required = true
+    surrogate_ip_enforced_for_known_browsers = true
+    surrogate_refresh_time_in_minutes = 240
+    surrogate_refresh_time_unit = "MINUTE"
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.example.vpn_credental_id
        type = zia_traffic_forwarding_vpn_credentials.example.type

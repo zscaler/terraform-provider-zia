@@ -94,11 +94,6 @@ func resourceLocationManagement() *schema.Resource {
 					},
 				},
 			},
-			"auth_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"ssl_scan_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
@@ -117,13 +112,20 @@ func resourceLocationManagement() *schema.Resource {
 				Default:  false,
 			},
 			"surrogate_ip": {
+				Type:         schema.TypeBool,
+				Optional:     true,
+				RequiredWith: []string{"auth_required", "idle_time_in_minutes"},
+				Default:      false,
+			},
+			"auth_required": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
 			"idle_time_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"surrogate_ip"},
 			},
 			"display_time_unit": {
 				Type:     schema.TypeString,
@@ -136,17 +138,20 @@ func resourceLocationManagement() *schema.Resource {
 				}, false),
 			},
 			"surrogate_ip_enforced_for_known_browsers": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				RequiredWith: []string{"surrogate_ip", "surrogate_refresh_time_in_minutes", "surrogate_refresh_time_unit"},
+				Default:      false,
 			},
 			"surrogate_refresh_time_in_minutes": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"surrogate_ip_enforced_for_known_browsers", "surrogate_refresh_time_unit"},
 			},
 			"surrogate_refresh_time_unit": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"surrogate_ip_enforced_for_known_browsers", "surrogate_refresh_time_in_minutes"},
 				ValidateFunc: validation.StringInSlice([]string{
 					"MINUTE",
 					"HOUR",
@@ -207,20 +212,12 @@ func resourceLocationManagement() *schema.Resource {
 	}
 }
 
-/*
-{
-	"code": "INVALID_INPUT_ARGUMENT",
-	"message": "Surrogate IP requires setting of an idle timeout, name: NZ - Auckland - Branch01"
-   }
-*/
 func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
-	if err := checkSurrogateIPIdletTimeout(req); err != nil {
-		return err
-	}
+
 	resp, err := zClient.locationmanagement.Create(&req)
 	if err != nil {
 		return err
@@ -230,16 +227,6 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	_ = d.Set("location_id", resp.ID)
 
 	return resourceLocationManagementRead(d, m)
-}
-
-func checkSurrogateIPIdletTimeout(loc locationmanagement.Locations) error {
-	if loc.SurrogateIP && loc.IdleTimeInMinutes == 0 {
-		return fmt.Errorf("surrogate IP requires setting of an idle timeout")
-	}
-	if loc.SurrogateIP && !loc.AuthRequired {
-		return fmt.Errorf("authentication required must be enabled, when enabling surrogate IP")
-	}
-	return nil
 }
 
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
@@ -324,9 +311,7 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	}
 	log.Printf("[INFO] Updating location management ID: %v\n", id)
 	req := expandLocationManagement(d)
-	if err := checkSurrogateIPIdletTimeout(req); err != nil {
-		return err
-	}
+
 	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {
 		return err
 	}
