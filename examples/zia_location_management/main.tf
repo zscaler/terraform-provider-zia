@@ -32,25 +32,9 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
     pre_shared_key = "newPassword123!"
 }
 
-output "zia_location_management"{
-    value = zia_location_management.toronto
-    // sensitive = true
-}
-
-
 resource "zia_traffic_forwarding_static_ip" "example"{
     ip_address =  "50.98.112.169"
     routable_ip = true
     comment = "Created with Terraform"
     geo_override = false
 }
-
-/*
-resource "zia_activation_status" "example"{
-    status = "ACTIVE"
-}
-
-output "zia_activation_status_example"{
-    value = zia_activation_status.example
-}
-*/
