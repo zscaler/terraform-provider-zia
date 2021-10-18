@@ -320,6 +320,15 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"user_agent_types": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"cbi_profile_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"action": {
 				Type:     schema.TypeString,
 				Computed: true,

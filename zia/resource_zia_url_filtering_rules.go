@@ -133,17 +133,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional: true,
 			},
 			"user_agent_types": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeSet,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"OPERA",
-					"FIREFOX",
-					"MSIE",
-					"MSEDGE",
-					"CHROME",
-					"SAFARI",
-					"OTHER",
-				}, false),
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"action": {
 				Type:     schema.TypeString,

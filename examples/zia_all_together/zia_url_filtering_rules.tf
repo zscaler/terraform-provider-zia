@@ -29,7 +29,7 @@ resource "zia_url_filtering_rules" "sao_paulo_guest_wifi" {
     description = "Sao Paulo Guest WiFi"
     state = "ENABLED"
     action = "BLOCK"
-    order = 2
+    order = 1
     url_categories = [
                         "ADULT_SEX_EDUCATION",
                         "ADULT_THEMES",
@@ -67,19 +67,18 @@ resource "zia_url_filtering_rules" "caution_for_gambling" {
     description = "Caution Marketing users going to gambling sites, but allow them after the caution. This is to support marketing ad campaigns on Gambling websites."
     state = "ENABLED"
     action = "CAUTION"
-    order = 3
+    order = 1
     url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
-    request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    request_methods = [ "CONNECT", "GET", "HEAD" ]
 }
-
 
 resource "zia_url_filtering_rules" "allow_all_other_traffic" {
     name = "Allow All Other Traffic"
     description = "Allow All Other Traffic"
     state = "ENABLED"
     action = "ALLOW"
-    order = 4
+    order = 1
     url_categories = ["ANY"]
     protocols = ["HTTPS_RULE", "HTTP_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
