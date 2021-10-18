@@ -112,10 +112,9 @@ func resourceLocationManagement() *schema.Resource {
 				Default:  false,
 			},
 			"surrogate_ip": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"auth_required", "idle_time_in_minutes"},
-				Default:      false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"auth_required": {
 				Type:     schema.TypeBool,
@@ -123,9 +122,8 @@ func resourceLocationManagement() *schema.Resource {
 				Default:  false,
 			},
 			"idle_time_in_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"surrogate_ip"},
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"display_time_unit": {
 				Type:     schema.TypeString,
@@ -138,20 +136,17 @@ func resourceLocationManagement() *schema.Resource {
 				}, false),
 			},
 			"surrogate_ip_enforced_for_known_browsers": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				RequiredWith: []string{"surrogate_ip", "surrogate_refresh_time_in_minutes", "surrogate_refresh_time_unit"},
-				Default:      false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"surrogate_refresh_time_in_minutes": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"surrogate_ip_enforced_for_known_browsers", "surrogate_refresh_time_unit"},
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"surrogate_refresh_time_unit": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"surrogate_ip_enforced_for_known_browsers", "surrogate_refresh_time_in_minutes"},
+				Type:     schema.TypeString,
+				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"MINUTE",
 					"HOUR",
@@ -217,7 +212,9 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
-
+	if err := checkSurrogateIPDependencies(req); err != nil {
+		return err
+	}
 	resp, err := zClient.locationmanagement.Create(&req)
 	if err != nil {
 		return err
@@ -229,12 +226,28 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	return resourceLocationManagementRead(d, m)
 }
 
+func checkSurrogateIPDependencies(loc locationmanagement.Locations) error {
+	if loc.SurrogateIP && loc.IdleTimeInMinutes == 0 {
+		return fmt.Errorf("surrogate IP requires setting of an idle timeout")
+	}
+	if loc.SurrogateIP && !loc.AuthRequired {
+		return fmt.Errorf("authentication required must be enabled, when enabling surrogate IP")
+	}
+	if loc.SurrogateIPEnforcedForKnownBrowsers && !loc.SurrogateIP {
+		return fmt.Errorf("surrogate IP must be enabled, when enforcing surrogate IP for known browsers")
+	}
+	if loc.SurrogateIPEnforcedForKnownBrowsers && loc.SurrogateRefreshTimeInMinutes == 0 && loc.SurrogateRefreshTimeUnit == "" {
+		return fmt.Errorf("enforcing surrogate IP for known browsers requires setting of refresh timeout")
+	}
+	return nil
+}
+
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
-		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+		return fmt.Errorf("no location management id is set")
 	}
 	resp, err := zClient.locationmanagement.Get(id)
 
@@ -311,6 +324,9 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	}
 	log.Printf("[INFO] Updating location management ID: %v\n", id)
 	req := expandLocationManagement(d)
+	if err := checkSurrogateIPDependencies(req); err != nil {
+		return err
+	}
 
 	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {
 		return err
