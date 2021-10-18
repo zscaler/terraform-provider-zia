@@ -45,7 +45,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				}, false),
 			},
 			"addresses": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Destination IP addresses within the group",
@@ -56,13 +56,13 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description: "Additional information about the destination IP group",
 			},
 			"ip_categories": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Destination IP address URL categories. You can identify destinations based on the URL category of the domain.",
 			},
 			"countries": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
 				Description: "Destination IP address counties. You can identify destinations based on the location of a server.",
@@ -142,7 +142,7 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 
 	id, ok := getIntFromResourceData(d, "ip_destination_id")
 	if !ok {
-		log.Printf("[ERROR] network service id ID not set: %v\n", id)
+		log.Printf("[ERROR] ip destination groups ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting zia ip destination groups ID: %v\n", (d.Id()))
 
@@ -159,8 +159,8 @@ func expandIPDestinationGroups(d *schema.ResourceData) ipdestinationgroups.IPDes
 		Name:         d.Get("name").(string),
 		Type:         d.Get("type").(string),
 		Description:  d.Get("description").(string),
-		Addresses:    ListToStringSlice(d.Get("addresses").([]interface{})),
-		IPCategories: ListToStringSlice(d.Get("ip_categories").([]interface{})),
-		Countries:    ListToStringSlice(d.Get("countries").([]interface{})),
+		Addresses:    SetToStringList(d, "addresses"),
+		IPCategories: SetToStringList(d, "ip_categories"),
+		Countries:    SetToStringList(d, "countries"),
 	}
 }

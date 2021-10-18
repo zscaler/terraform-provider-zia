@@ -1,10 +1,12 @@
-resource "zia_url_filtering_rules" "zscaler_proxy_traffic" {
+resource "zia_firewall_filtering_rule" "zscaler_proxy_traffic" {
     name = "Zscaler Proxy Traffic"
     description = "Zscaler Proxy Traffic"
     action = "ALLOW"
     state = "ENABLED"
+    order = 1
+    rank = 1
+    enable_full_logging = true
     nw_services {
-        id = [ zia_firewall_filtering_network_service.example.id ]
+        id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
     }
-
 }

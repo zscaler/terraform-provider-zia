@@ -32,7 +32,7 @@ func resourceFWIPSourceGroups() *schema.Resource {
 				Optional: true,
 			},
 			"ip_addresses": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
@@ -128,6 +128,6 @@ func expandFWIPSourceGroups(d *schema.ResourceData) ipsourcegroups.IPSourceGroup
 	return ipsourcegroups.IPSourceGroups{
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
-		IPAddresses: ListToStringSlice(d.Get("ip_addresses").([]interface{})),
+		IPAddresses: SetToStringList(d, "ip_addresses"),
 	}
 }

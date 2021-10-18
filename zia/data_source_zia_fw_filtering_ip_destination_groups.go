@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
 )
 
-func dataSourceIPDestinationGroups() *schema.Resource {
+func dataSourceFWIPDestinationGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPDestinationGroupsRead,
+		Read: dataSourceFWIPDestinationGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -47,7 +47,7 @@ func dataSourceIPDestinationGroups() *schema.Resource {
 	}
 }
 
-func dataSourceIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *ipdestinationgroups.IPDestinationGroups

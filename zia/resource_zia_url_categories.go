@@ -238,7 +238,7 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 
 	id, ok := getStringFromResourceData(d, "url_category_id")
 	if !ok {
-		log.Printf("[ERROR] vpn credentials ID not set: %v\n", id)
+		log.Printf("[ERROR] custom url category ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)

@@ -9,6 +9,7 @@ terraform {
 
 provider "zia" {}
 
+/*
 resource "zia_firewall_filtering_network_service" "example"{
     name = "example"
     description = "example"
@@ -34,4 +35,12 @@ resource "zia_firewall_filtering_network_service" "example"{
     }
     type = "CUSTOM"
 }
+*/
 
+data "zia_firewall_filtering_network_service" "example" {
+    name = "ZSCALER_PROXY_NW_SERVICES"
+}
+
+output "zia_firewall_filtering_network_service" {
+    value = data.zia_firewall_filtering_network_service.example
+}

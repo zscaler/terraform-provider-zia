@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceNetworkApplication() *schema.Resource {
+func dataSourceFWNetworkApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNetworkApplicationRead,
+		Read: dataSourceFWNetworkApplicationRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -36,7 +36,7 @@ func dataSourceNetworkApplication() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkApplicationRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFWNetworkApplicationRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id, ok := getStringFromResourceData(d, "id")
