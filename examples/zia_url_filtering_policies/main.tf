@@ -25,7 +25,7 @@ resource "zia_traffic_forwarding_static_ip" "example"{
 resource "zia_url_filtering_rules" "block_innapropriate_contents"{
     name = "Block Inappropriate Contents"
     description = "Block all inappropriate content for all users."
-    order = 1
+    order = 2
     state = "ENABLED"
     locations {
         id = [zia_location_management.toronto.id]

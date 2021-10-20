@@ -4,12 +4,22 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 )
+
+type listrules struct {
+	orders map[int]int
+	sync.Mutex
+}
+
+var rules = listrules{
+	orders: make(map[int]int),
+}
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -35,6 +45,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"order": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"protocols": {
 				Type:     schema.TypeSet,
@@ -182,10 +193,18 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
-
+	orderObj, orderIsSet := d.GetOk("order")
+	if orderIsSet {
+		// always set it to 1, and let the re-ordering happen after ( because having an invalid order will cause a bad request)
+		req.Order = 1
+	}
 	resp, err := zClient.urlfilteringpolicies.Create(&req)
 	if err != nil {
 		return err
+	}
+	if orderIsSet {
+		req.Order = orderObj.(int)
+		go reorder(req.Order, resp.ID, zClient)
 	}
 	log.Printf("[INFO] Created zia url filtering rule request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -217,7 +236,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
-	_ = d.Set("order", resp.Order)
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("url_categories", resp.URLCategories)
 	_ = d.Set("state", resp.State)
@@ -289,7 +307,13 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
 	req := expandURLFilteringRules(d)
-
+	if d.HasChange("order") {
+		_, orderIsSet := d.GetOk("order")
+		if orderIsSet {
+			go reorder(req.Order, req.ID, zClient)
+		}
+		req.Order = 1
+	}
 	if _, _, err := zClient.urlfilteringpolicies.Update(id, &req); err != nil {
 		return err
 	}
@@ -381,4 +405,28 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		result.LastModifiedBy = lastModifiedBy
 	}
 	return result
+}
+
+func reorder(order, id int, zClient *Client) {
+	defer reorderAll(zClient)
+	rules.Lock()
+	rules.orders[id] = order
+	rules.Unlock()
+}
+
+// we keep calling reordering endpoint to reorder all rules after new rule was added
+// because the reorder endpoint shifts all order up to replac the new order.
+func reorderAll(zClient *Client) {
+	rules.Lock()
+	defer rules.Unlock()
+	count := zClient.urlfilteringpolicies.RulesCount()
+	for k, v := range rules.orders {
+		// the only valid order you can set is 0,count
+		if v <= count {
+			_, err := zClient.urlfilteringpolicies.Reorder(k, v)
+			if err != nil {
+				log.Printf("[ERROR] couldn't reorder the url filtering policy, the order may not have taken place: %v\n", err)
+			}
+		}
+	}
 }
