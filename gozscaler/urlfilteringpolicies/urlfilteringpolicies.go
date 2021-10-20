@@ -16,25 +16,25 @@ const (
 
 type URLFilteringRule struct {
 	ID                     int                       `json:"id,omitempty"`
-	Name                   string                    `json:"name"`
+	Name                   string                    `json:"name,omitempty"`
 	Order                  int                       `json:"order,omitempty"`
 	Protocols              []string                  `json:"protocols,omitempty"`
-	URLCategories          []string                  `json:"urlCategories"`
-	State                  string                    `json:"state"`
+	URLCategories          []string                  `json:"urlCategories,omitempty"`
+	State                  string                    `json:"state,omitempty"`
 	UserAgentTypes         []string                  `json:"userAgentTypes,omitempty"`
 	Rank                   int                       `json:"rank,omitempty"`
-	RequestMethods         []string                  `json:"requestMethods"`
-	EndUserNotificationURL string                    `json:"endUserNotificationUrl"`
+	RequestMethods         []string                  `json:"requestMethods,omitempty"`
+	EndUserNotificationURL string                    `json:"endUserNotificationUrl,omitempty"`
 	BlockOverride          bool                      `json:"blockOverride,omitempty"`
 	TimeQuota              int                       `json:"timeQuota,omitempty"`
 	SizeQuota              int                       `json:"sizeQuota,omitempty"`
-	Description            string                    `json:"description"`
-	ValidityStartTime      int                       `json:"validityStartTime"`
-	ValidityEndTime        int                       `json:"validityEndTime"`
-	ValidityTimeZoneID     string                    `json:"validityTimeZoneId"`
-	LastModifiedTime       int                       `json:"lastModifiedTime"`
+	Description            string                    `json:"description,omitempty"`
+	ValidityStartTime      int                       `json:"validityStartTime,omitempty"`
+	ValidityEndTime        int                       `json:"validityEndTime,omitempty"`
+	ValidityTimeZoneID     string                    `json:"validityTimeZoneId,omitempty"`
+	LastModifiedTime       int                       `json:"lastModifiedTime,omitempty"`
 	EnforceTimeValidity    bool                      `json:"enforceTimeValidity,omitempty"`
-	Action                 string                    `json:"action"`
+	Action                 string                    `json:"action,omitempty"`
 	Ciparule               bool                      `json:"ciparule,omitempty"`
 	LastModifiedBy         *common.IDNameExtensions  `json:"lastModifiedBy,omitempty"`
 	OverrideUsers          []common.IDNameExtensions `json:"overrideUsers,omitempty"`
@@ -45,7 +45,7 @@ type URLFilteringRule struct {
 	Groups                 []common.IDNameExtensions `json:"groups,omitempty"`
 	Departments            []common.IDNameExtensions `json:"departments,omitempty"`
 	Users                  []common.IDNameExtensions `json:"users,omitempty"`
-	TimeWindows            []common.IDNameExtensions `json:"timeWindows"`
+	TimeWindows            []common.IDNameExtensions `json:"timeWindows,omitempty"`
 }
 
 func (service *Service) Get(ruleID int) (*URLFilteringRule, error) {
@@ -106,4 +106,31 @@ func (service *Service) Delete(ruleID int) (*http.Response, error) {
 	}
 
 	return nil, nil
+}
+
+// GetAll returns the all rules
+func (service *Service) GetAll() ([]URLFilteringRule, error) {
+	var urlFilteringPolicies []URLFilteringRule
+	err := service.Client.Read(urlFilteringPoliciesEndpoint, &urlFilteringPolicies)
+	if err != nil {
+		return nil, err
+	}
+	return urlFilteringPolicies, nil
+}
+
+// RulesCount returns the number of rules
+func (service *Service) RulesCount() int {
+	rules, _ := service.GetAll()
+	return len(rules)
+}
+
+// Reorder chanegs the order of the rule
+func (service *Service) Reorder(ruleID, order int) (int, error) {
+	resp, err := service.Get(ruleID)
+	if err != nil {
+		return 0, err
+	}
+	resp.Order = order
+	_, _, err = service.Update(ruleID, resp)
+	return order, err
 }
