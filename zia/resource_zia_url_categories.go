@@ -32,22 +32,22 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 			},
 			"urls": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"keywords": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"keywords_retaining_parent_category": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"db_categorized_urls": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -65,25 +65,7 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope_group_member_entities": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
+						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -94,32 +76,14 @@ func resourceURLCategories() *schema.Resource {
 								"LOCATION_GROUP",
 							}, false),
 						},
-						"scope_entities": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
+						"scope_entities": listIDsSchemaType("list of scope IDs"),
 					},
 				},
 			},
 			"editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -137,23 +101,29 @@ func resourceURLCategories() *schema.Resource {
 			"url_keyword_counts": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"total_url_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"retain_parent_url_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"total_keyword_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"retain_parent_keyword_count": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -161,10 +131,12 @@ func resourceURLCategories() *schema.Resource {
 			"custom_urls_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"urls_retaining_parent_category_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -222,15 +194,28 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
 	_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
 
-	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
+	if err := d.Set("scopes", flattenScopesLite(resp)); err != nil {
 		return err
 	}
 
-	// if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
-	// 	return err
-	// }
+	if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
+	scope := make([]interface{}, len(scopes.Scopes))
+	for i, val := range scopes.Scopes {
+		scope[i] = map[string]interface{}{
+			"type":                        val.Type,
+			"scope_group_member_entities": flattenIDs(val.ScopeGroupMemberEntities),
+			"scope_entities":              flattenIDs(val.ScopeEntities),
+		}
+	}
+
+	return scope
 }
 
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
@@ -272,10 +257,10 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 	result := urlcategories.URLCategory{
 		ID:                               id,
 		ConfiguredName:                   d.Get("configured_name").(string),
-		Keywords:                         ListToStringSlice(d.Get("keywords").([]interface{})),
-		KeywordsRetainingParentCategory:  ListToStringSlice(d.Get("keywords_retaining_parent_category").([]interface{})),
-		Urls:                             ListToStringSlice(d.Get("urls").([]interface{})),
-		DBCategorizedUrls:                ListToStringSlice(d.Get("db_categorized_urls").([]interface{})),
+		Keywords:                         SetToStringList(d, "keywords"),
+		KeywordsRetainingParentCategory:  SetToStringList(d, "keywords_retaining_parent_category"),
+		Urls:                             SetToStringList(d, "urls"),
+		DBCategorizedUrls:                SetToStringList(d, "db_categorized_urls"),
 		CustomCategory:                   d.Get("custom_category").(bool),
 		SuperCategory:                    d.Get("super_category").(string),
 		Editable:                         d.Get("editable").(bool),
@@ -283,64 +268,43 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 		Type:                             d.Get("type").(string),
 		CustomUrlsCount:                  d.Get("custom_urls_count").(int),
 		UrlsRetainingParentCategoryCount: d.Get("urls_retaining_parent_category_count").(int),
-		// Scopes:                           expandURLCategoryScopes(d),
-		//URLKeywordCounts: expandURLKeywordCounts(d),
-	}
-	urlCategoryScopes := expandURLCategoryScopes(d)
-	if urlCategoryScopes != nil {
-		result.Scopes = urlCategoryScopes
+		Scopes:                           expandURLCategoryScopes(d),
+		URLKeywordCounts:                 expandURLKeywordCounts(d),
 	}
 	return result
 }
 
+func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCounts {
+	keywordCounts := urlcategories.URLKeywordCounts{}
+	if keywordCountsInterface, ok := d.GetOk("url_keyword_counts"); ok {
+		keywordCountsList := keywordCountsInterface.([]interface{})
+		for _, keywordCountsMap := range keywordCountsList {
+			keywordCountsItem := keywordCountsMap.(map[string]interface{})
+			keywordCounts.TotalURLCount, _ = keywordCountsItem["total_url_count"].(int)
+			keywordCounts.RetainParentURLCount, _ = keywordCountsItem["retain_parent_url_count"].(int)
+			keywordCounts.TotalKeywordCount, _ = keywordCountsItem["total_keyword_count"].(int)
+			keywordCounts.RetainParentKeywordCount, _ = keywordCountsItem["retain_parent_keyword_count"].(int)
+			break
+		}
+	}
+	return &keywordCounts
+}
 func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 	var scopes []urlcategories.Scopes
 	if scopeInterface, ok := d.GetOk("scopes"); ok {
-		scope := scopeInterface.([]interface{})
-		scopes = make([]urlcategories.Scopes, len(scope))
-		for i, val := range scope {
+		scopesSet, ok := scopeInterface.(*schema.Set)
+		if !ok {
+			return scopes
+		}
+		scopes = make([]urlcategories.Scopes, len(scopesSet.List()))
+		for i, val := range scopesSet.List() {
 			scopeItem := val.(map[string]interface{})
 			scopes[i] = urlcategories.Scopes{
-				ScopeGroupMemberEntities: expandCustomURLScopeGroupMemberEntities(d),
+				ScopeGroupMemberEntities: expandIDNameExtensionsMap(scopeItem, "scope_group_member_entities"),
 				Type:                     scopeItem["type"].(string),
-				ScopeEntities:            expandCustomURLScopeEntities(d),
+				ScopeEntities:            expandIDNameExtensionsMap(scopeItem, "scope_entities"),
 			}
 		}
 	}
-
 	return scopes
-}
-
-func expandCustomURLScopeGroupMemberEntities(d *schema.ResourceData) []urlcategories.ScopeGroupMemberEntities {
-	var scopeGroupMemberEntities []urlcategories.ScopeGroupMemberEntities
-	if scopeGroupInterface, ok := d.GetOk("scope_group_member_entities"); ok {
-		scopeGroup := scopeGroupInterface.([]interface{})
-		scopeGroupMemberEntities = make([]urlcategories.ScopeGroupMemberEntities, len(scopeGroup))
-		for i, val := range scopeGroup {
-			scopeGroupItem := val.(map[string]interface{})
-			scopeGroupMemberEntities[i] = urlcategories.ScopeGroupMemberEntities{
-				ID:         scopeGroupItem["id"].(int),
-				Extensions: scopeGroupItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return scopeGroupMemberEntities
-}
-
-func expandCustomURLScopeEntities(d *schema.ResourceData) []urlcategories.ScopeEntities {
-	var scopeEntities []urlcategories.ScopeEntities
-	if scopeEntitiesInterface, ok := d.GetOk("scope_entities"); ok {
-		scopeEntity := scopeEntitiesInterface.([]interface{})
-		scopeEntities = make([]urlcategories.ScopeEntities, len(scopeEntity))
-		for i, val := range scopeEntity {
-			scopeEntityItem := val.(map[string]interface{})
-			scopeEntities[i] = urlcategories.ScopeEntities{
-				ID:         scopeEntityItem["id"].(int),
-				Extensions: scopeEntityItem["extensions"].(map[string]interface{}),
-			}
-		}
-	}
-
-	return scopeEntities
 }
