@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -21,7 +23,7 @@ type URLCategory struct {
 	Urls                             []string          `json:"urls"`
 	DBCategorizedUrls                []string          `json:"dbCategorizedUrls"`
 	CustomCategory                   bool              `json:"customCategory"`
-	Scopes                           []Scopes          `json:"scopes"`
+	Scopes                           []Scopes          `json:"scopes,omitempty"`
 	Editable                         bool              `json:"editable"`
 	Description                      string            `json:"description,omitempty"`
 	Type                             string            `json:"type,omitempty"`
@@ -32,19 +34,9 @@ type URLCategory struct {
 	UrlsRetainingParentCategoryCount int               `json:"urlsRetainingParentCategoryCount"`
 }
 type Scopes struct {
-	ScopeGroupMemberEntities []ScopeGroupMemberEntities `json:"scopeGroupMemberEntities"`
-	Type                     string                     `json:"Type,omitempty"`
-	ScopeEntities            []ScopeEntities            `json:"ScopeEntities"`
-}
-type ScopeGroupMemberEntities struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
-}
-type ScopeEntities struct {
-	ID         int                    `json:"id"`
-	Name       string                 `json:"name"`
-	Extensions map[string]interface{} `json:"extensions"`
+	ScopeGroupMemberEntities []common.IDNameExtensions `json:"scopeGroupMemberEntities,omitempty"`
+	Type                     string                    `json:"Type,omitempty"`
+	ScopeEntities            []common.IDNameExtensions `json:"ScopeEntities,omitempty"`
 }
 
 type URLKeywordCounts struct {

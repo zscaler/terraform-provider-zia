@@ -207,41 +207,18 @@ func flattenScopes(scopes *urlcategories.URLCategory) []interface{} {
 	for i, val := range scopes.Scopes {
 		scope[i] = map[string]interface{}{
 			"type":                        val.Type,
-			"scope_group_member_entities": flattenScopeGroupMemberEntities(val.ScopeGroupMemberEntities),
-			"scope_entities":              flattenScopeEntities(val.ScopeEntities),
+			"scope_group_member_entities": flattenIDNameExtensions(val.ScopeGroupMemberEntities),
+			"scope_entities":              flattenIDNameExtensions(val.ScopeEntities),
 		}
 	}
 
 	return scope
 }
 
-func flattenScopeGroupMemberEntities(scopeGroupMember []urlcategories.ScopeGroupMemberEntities) []interface{} {
-	scopeGroups := make([]interface{}, len(scopeGroupMember))
-	for i, val := range scopeGroupMember {
-		scopeGroups[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return scopeGroups
-}
-
-func flattenScopeEntities(scopesEntities []urlcategories.ScopeEntities) []interface{} {
-	Entity := make([]interface{}, len(scopesEntities))
-	for i, val := range scopesEntities {
-		Entity[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return Entity
-}
-
 func flattenUrlKeywordCounts(urlKeywords *urlcategories.URLKeywordCounts) []interface{} {
+	if urlKeywords == nil {
+		return nil
+	}
 	m := map[string]interface{}{
 		"total_url_count":             urlKeywords.TotalURLCount,
 		"retain_parent_url_count":     urlKeywords.RetainParentURLCount,
@@ -251,16 +228,3 @@ func flattenUrlKeywordCounts(urlKeywords *urlcategories.URLKeywordCounts) []inte
 
 	return []interface{}{m}
 }
-
-/*
-func flattenUrlKeywordCounts(urlKeywords urlcategories.URLKeywordCounts) interface{} {
-	return []map[string]interface{}{
-		{
-			"total_url_count":             urlKeywords.TotalURLCount,
-			"retain_parent_url_count":     urlKeywords.RetainParentURLCount,
-			"total_keyword_count":         urlKeywords.TotalKeywordCount,
-			"retain_parent_keyword_count": urlKeywords.RetainParentKeywordCount,
-		},
-	}
-}
-*/

@@ -26,6 +26,26 @@ func listIDsSchemaType(desc string) *schema.Schema {
 	}
 }
 
+func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.IDNameExtensions {
+	setInterface, ok := m[key]
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.IDNameExtensions
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, common.IDNameExtensions{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.IDNameExtensions{}
+}
+
 func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNameExtensions {
 	setInterface, ok := d.GetOk(key)
 	if ok {
