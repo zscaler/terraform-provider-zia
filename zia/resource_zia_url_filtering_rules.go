@@ -104,7 +104,7 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional: true,
 			},
 			"last_modified_by": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
