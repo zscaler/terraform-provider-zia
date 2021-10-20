@@ -1,4 +1,3 @@
-
 resource "zia_traffic_forwarding_static_ip" "au_sydney_branch_gre01"{
     ip_address =  "61.68.118.237"
     routable_ip = true

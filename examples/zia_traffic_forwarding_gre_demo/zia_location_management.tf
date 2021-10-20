@@ -15,6 +15,7 @@ resource "zia_location_management" "au_sydney_branch_gre01"{
     depends_on = [ zia_traffic_forwarding_static_ip.au_sydney_branch_gre01, zia_traffic_forwarding_gre_tunnel.au_sydney_branch_gre01 ]
 }
 
+
 // New Zealand - Auckland - Location
 resource "zia_location_management" "nz_auckland_branch_gre01"{
     name = "NZ - Auckland - Branch01"

@@ -8,18 +8,6 @@ terraform {
 }
 provider "zia" {}
 
-/*
-resource "zia_url_categories" "example"{
-   configured_name = "Blogs1"
-   description = "Blogs1"
-   custom_category = true
-   super_category = "NEWS_AND_MEDIA"
-   keywords = ["blog"]
-   urls = [  
-      "livejournal.com"
-   ]
-}
-*/
 resource "zia_url_categories" "example" {
   super_category      = "USER_DEFINED"
   configured_name     = "MCAS Unsanctioned Apps2"
@@ -83,4 +71,3 @@ data "zia_url_categories" "example"{
 output "zia_url_categories"{
     value = data.zia_url_categories.example
 }
-
