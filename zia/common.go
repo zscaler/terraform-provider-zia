@@ -115,14 +115,13 @@ func flattenIDNameExtensions(list []common.IDNameExtensions) []interface{} {
 }
 
 func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{} {
-	lastModified := make([]interface{}, 1)
-	for lastModifiedBy != nil {
-		lastModified[0] = map[string]interface{}{
+	lastModified := make([]interface{}, 0)
+	if lastModifiedBy != nil {
+		lastModified = append(lastModified, map[string]interface{}{
 			"id":         lastModifiedBy.ID,
 			"name":       lastModifiedBy.Name,
 			"extensions": lastModifiedBy.Extensions,
-		}
+		})
 	}
-
 	return lastModified
 }
