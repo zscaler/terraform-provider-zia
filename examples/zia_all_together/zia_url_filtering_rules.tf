@@ -10,7 +10,7 @@ resource "zia_url_filtering_rules" "isolate_allow_paste" {
     protocols = ["HTTPS_RULE", "HTTP_RULE"]
     request_methods = [ "CONNECT", "GET", "HEAD", "TRACE"]
 }
-*/
+
 
 
 resource "zia_url_filtering_rules" "mcas_block" {
@@ -23,6 +23,7 @@ resource "zia_url_filtering_rules" "mcas_block" {
     protocols = ["HTTPS_RULE", "HTTP_RULE", "HTTP_PROXY", "FTP_RULE", "FOHTTP_RULE", "SSL_RULE", "TUNNEL_RULE", "TUNNELSSL_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
+*/
 
 resource "zia_url_filtering_rules" "sao_paulo_guest_wifi" {
     name = "Sao Paulo Guest WiFi"
