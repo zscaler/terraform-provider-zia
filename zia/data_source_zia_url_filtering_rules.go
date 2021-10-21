@@ -294,7 +294,7 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Computed: true,
 			},
 			"last_modified_by": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
