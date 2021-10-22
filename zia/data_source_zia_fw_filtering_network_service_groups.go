@@ -99,10 +99,6 @@ func flattenServices(service []networkservices.Services) []interface{} {
 			"name":             val.Name,
 			"description":      val.Description,
 			"is_name_l10n_tag": val.IsNameL10nTag,
-			"src_tcp_ports":    flattenSrcTCPPorts(val.SrcTCPPorts),
-			"dest_tcp_ports":   flattenDestTCPPorts(val.DestTCPPorts),
-			"src_udp_ports":    flattenSrcUDPPorts(val.SrcUDPPorts),
-			"dest_udp_ports":   flattenDestUDPPorts(val.DestUDPPorts),
 		}
 	}
 

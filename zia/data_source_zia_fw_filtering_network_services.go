@@ -24,70 +24,10 @@ func dataSourceFWNetworkServices() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"src_tcp_ports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"end": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"dest_tcp_ports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"end": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"src_udp_ports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"end": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"dest_udp_ports": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"end": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"src_tcp_ports":  dataNetworkPortsSchema("src tcp ports"),
+			"dest_tcp_ports": dataNetworkPortsSchema("dest tcp ports"),
+			"src_udp_ports":  dataNetworkPortsSchema("src udp ports"),
+			"dest_udp_ports": dataNetworkPortsSchema("dest udp ports"),
 			"type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -135,19 +75,19 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("is_name_l10n_tag", resp.IsNameL10nTag)
 
-		if err := d.Set("src_tcp_ports", flattenSrcTCPPorts(resp.SrcTCPPorts)); err != nil {
+		if err := d.Set("src_tcp_ports", flattenNetwordPorts(resp.SrcTCPPorts)); err != nil {
 			return err
 		}
 
-		if err := d.Set("dest_tcp_ports", flattenDestTCPPorts(resp.DestTCPPorts)); err != nil {
+		if err := d.Set("dest_tcp_ports", flattenNetwordPorts(resp.DestTCPPorts)); err != nil {
 			return err
 		}
 
-		if err := d.Set("src_udp_ports", flattenSrcUDPPorts(resp.SrcUDPPorts)); err != nil {
+		if err := d.Set("src_udp_ports", flattenNetwordPorts(resp.SrcUDPPorts)); err != nil {
 			return err
 		}
 
-		if err := d.Set("dest_udp_ports", flattenDestUDPPorts(resp.DestUDPPorts)); err != nil {
+		if err := d.Set("dest_udp_ports", flattenNetwordPorts(resp.DestUDPPorts)); err != nil {
 			return err
 		}
 
@@ -156,52 +96,4 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 	}
 
 	return nil
-}
-
-func flattenSrcTCPPorts(service []networkservices.SrcTCPPorts) []interface{} {
-	services := make([]interface{}, len(service))
-	for i, val := range service {
-		services[i] = map[string]interface{}{
-			"start": val.Start,
-			"end":   val.End,
-		}
-	}
-
-	return services
-}
-
-func flattenDestTCPPorts(service []networkservices.DestTCPPorts) []interface{} {
-	services := make([]interface{}, len(service))
-	for i, val := range service {
-		services[i] = map[string]interface{}{
-			"start": val.Start,
-			"end":   val.End,
-		}
-	}
-
-	return services
-}
-
-func flattenSrcUDPPorts(service []networkservices.SrcUDPPorts) []interface{} {
-	services := make([]interface{}, len(service))
-	for i, val := range service {
-		services[i] = map[string]interface{}{
-			"start": val.Start,
-			"end":   val.End,
-		}
-	}
-
-	return services
-}
-
-func flattenDestUDPPorts(service []networkservices.DestUDPPorts) []interface{} {
-	services := make([]interface{}, len(service))
-	for i, val := range service {
-		services[i] = map[string]interface{}{
-			"start": val.Start,
-			"end":   val.End,
-		}
-	}
-
-	return services
 }
