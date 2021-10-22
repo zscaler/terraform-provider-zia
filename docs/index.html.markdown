@@ -35,7 +35,6 @@ resource "zia_location_management" "gre_canada_toronto_branch01"{
     description = "GRE Canada - Toronto - Branch01"
     country = "CANADA"
     tz = "CANADA_AMERICA_TORONTO"
-    auth_required = true
     ip_addresses = [ zia_traffic_forwarding_static_ip.gre_ca_toronto_branch01.ip_address ]
     depends_on = [ zia_traffic_forwarding_static_ip.gre_ca_toronto_branch01 ]
 }
