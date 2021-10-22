@@ -36,12 +36,6 @@ resource "zia_location_management" "gre_canada_toronto_branch01"{
     country = "CANADA"
     tz = "CANADA_AMERICA_TORONTO"
     auth_required = true
-    idle_time_in_minutes = 720
-    display_time_unit = "HOUR"
-    surrogate_ip = true
-    xff_forward_enabled = true
-    ofw_enabled = true
-    ips_control = true
     ip_addresses = [ zia_traffic_forwarding_static_ip.gre_ca_toronto_branch01.ip_address ]
     depends_on = [ zia_traffic_forwarding_static_ip.gre_ca_toronto_branch01 ]
 }
