@@ -1,8 +1,11 @@
 package zia
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 )
 
 func listIDsSchemaType(desc string) *schema.Schema {
@@ -124,4 +127,75 @@ func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{
 		})
 	}
 	return lastModified
+}
+
+func resourceNetworkPortsSchema(desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"start": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+				"end": {
+					Type:     schema.TypeInt,
+					Optional: true,
+				},
+			},
+		},
+	}
+}
+
+func dataNetworkPortsSchema(desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeList,
+		Computed:    true,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"start": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"end": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenNetwordPorts(ports []networkservices.NetworkPorts) []interface{} {
+	portsObj := make([]interface{}, len(ports))
+	for i, val := range ports {
+		portsObj[i] = map[string]interface{}{
+			"start": val.Start,
+			"end":   val.End,
+		}
+	}
+	return portsObj
+}
+
+func expandNetwrokPorts(d *schema.ResourceData, key string) []networkservices.NetworkPorts {
+	var ports []networkservices.NetworkPorts
+	if portsInterface, ok := d.GetOk(key); ok {
+		portSet, ok := portsInterface.(*schema.Set)
+		if !ok {
+			log.Printf("[ERROR] conversion failed, destUdpPortsInterface")
+			return ports
+		}
+		ports = make([]networkservices.NetworkPorts, len(portSet.List()))
+		for i, val := range portSet.List() {
+			portItem := val.(map[string]interface{})
+			ports[i] = networkservices.NetworkPorts{
+				Start: portItem["start"].(int),
+				End:   portItem["end"].(int),
+			}
+		}
+	}
+	return ports
 }
