@@ -61,10 +61,10 @@ resource "zia_traffic_forwarding_gre_tunnel" "gre_ca_toronto_branch01" {
 
 ```hcl
 # Create Static IP Address
-resource "zia_traffic_forwarding_static_ip" "nz_auckland_branch_gre01"{
-    ip_address =  "101.110.112.100"
+resource "zia_traffic_forwarding_static_ip" "gre_ca_toronto_branch01"{
+    ip_address =  "xx.xxx.xxx.xxx"
     routable_ip = true
-    comment = "Auckland - Branch01"
+    comment = "GRE Canada - Toronto - Branch01"
     geo_override = false
 }
 ```
