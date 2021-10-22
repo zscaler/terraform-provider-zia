@@ -36,78 +36,10 @@ func resourceFWNetworkServices() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"src_tcp_ports": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-						"end": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-					},
-				},
-			},
-			"dest_tcp_ports": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-						"end": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-					},
-				},
-			},
-			"src_udp_ports": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-						"end": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-					},
-				},
-			},
-			"dest_udp_ports": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"start": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-						"end": {
-							Type:     schema.TypeSet,
-							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Optional: true,
-						},
-					},
-				},
-			},
+			"src_tcp_ports":  resourceNetworkPortsSchema("src tcp ports"),
+			"dest_tcp_ports": resourceNetworkPortsSchema("dest tcp ports"),
+			"src_udp_ports":  resourceNetworkPortsSchema("src udp ports"),
+			"dest_udp_ports": resourceNetworkPortsSchema("dest udp ports"),
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -175,18 +107,18 @@ func resourceNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("is_name_l10n_tag", resp.IsNameL10nTag)
 
-	if err := d.Set("src_tcp_ports", flattenSrcTCPPorts(resp.SrcTCPPorts)); err != nil {
+	if err := d.Set("src_tcp_ports", flattenNetwordPorts(resp.SrcTCPPorts)); err != nil {
 		return err
 	}
-	if err := d.Set("dest_tcp_ports", flattenDestTCPPorts(resp.DestTCPPorts)); err != nil {
-		return err
-	}
-
-	if err := d.Set("src_udp_ports", flattenSrcUDPPorts(resp.SrcUDPPorts)); err != nil {
+	if err := d.Set("dest_tcp_ports", flattenNetwordPorts(resp.DestTCPPorts)); err != nil {
 		return err
 	}
 
-	if err := d.Set("dest_udp_ports", flattenDestUDPPorts(resp.DestUDPPorts)); err != nil {
+	if err := d.Set("src_udp_ports", flattenNetwordPorts(resp.SrcUDPPorts)); err != nil {
+		return err
+	}
+
+	if err := d.Set("dest_udp_ports", flattenNetwordPorts(resp.DestUDPPorts)); err != nil {
 		return err
 	}
 
@@ -237,93 +169,25 @@ func expandNetworkServices(d *schema.ResourceData) networkservices.NetworkServic
 		Type:          d.Get("type").(string),
 		IsNameL10nTag: d.Get("is_name_l10n_tag").(bool),
 	}
-	srcTcpPorts := expandSrcTcpPorts(d)
+	srcTcpPorts := expandNetwrokPorts(d, "src_tcp_ports")
 	if srcTcpPorts != nil {
 		result.SrcTCPPorts = srcTcpPorts
 	}
 
-	destTcpPorts := expandDestTCPPorts(d)
+	destTcpPorts := expandNetwrokPorts(d, "dest_tcp_ports")
 	if destTcpPorts != nil {
 		result.DestTCPPorts = destTcpPorts
 	}
 
-	SrcUdpPorts := expandSrcUdpPorts(d)
+	SrcUdpPorts := expandNetwrokPorts(d, "src_udp_ports")
 	if SrcUdpPorts != nil {
 		result.SrcUDPPorts = SrcUdpPorts
 	}
 
-	DestUdpPorts := expandDestUDPPorts(d)
+	DestUdpPorts := expandNetwrokPorts(d, "dest_udp_ports")
 	if DestUdpPorts != nil {
 		result.DestUDPPorts = DestUdpPorts
 	}
 
 	return result
-}
-
-func expandSrcTcpPorts(d *schema.ResourceData) []networkservices.SrcTCPPorts {
-	var srcTcpPorts []networkservices.SrcTCPPorts
-	if srcTcpPortsInterface, ok := d.GetOk("src_tcp_ports"); ok {
-		srcTcpPort := srcTcpPortsInterface.([]interface{})
-		srcTcpPorts = make([]networkservices.SrcTCPPorts, len(srcTcpPort))
-		for i, val := range srcTcpPort {
-			srcTcpPortItem := val.(map[string]interface{})
-			srcTcpPorts[i] = networkservices.SrcTCPPorts{
-				Start: srcTcpPortItem["start"].(int),
-				End:   srcTcpPortItem["end"].(int),
-			}
-		}
-	}
-
-	return srcTcpPorts
-}
-
-func expandDestTCPPorts(d *schema.ResourceData) []networkservices.DestTCPPorts {
-	var destTcpPorts []networkservices.DestTCPPorts
-	if destTcpPortsInterface, ok := d.GetOk("dest_tcp_ports"); ok {
-		destTcpPort := destTcpPortsInterface.([]interface{})
-		destTcpPorts = make([]networkservices.DestTCPPorts, len(destTcpPort))
-		for i, val := range destTcpPort {
-			destTcpPortItem := val.(map[string]interface{})
-			destTcpPorts[i] = networkservices.DestTCPPorts{
-				Start: destTcpPortItem["start"].(int),
-				End:   destTcpPortItem["end"].(int),
-			}
-		}
-	}
-
-	return destTcpPorts
-}
-
-func expandSrcUdpPorts(d *schema.ResourceData) []networkservices.SrcUDPPorts {
-	var srcUdpPorts []networkservices.SrcUDPPorts
-	if srcTcpPortsInterface, ok := d.GetOk("src_udp_ports"); ok {
-		srcUdpPort := srcTcpPortsInterface.([]interface{})
-		srcUdpPorts = make([]networkservices.SrcUDPPorts, len(srcUdpPort))
-		for i, val := range srcUdpPort {
-			srcUdpPortItem := val.(map[string]interface{})
-			srcUdpPorts[i] = networkservices.SrcUDPPorts{
-				Start: srcUdpPortItem["start"].(int),
-				End:   srcUdpPortItem["end"].(int),
-			}
-		}
-	}
-
-	return srcUdpPorts
-}
-
-func expandDestUDPPorts(d *schema.ResourceData) []networkservices.DestUDPPorts {
-	var destUdpPorts []networkservices.DestUDPPorts
-	if destUdpPortsInterface, ok := d.GetOk("dest_tcp_ports"); ok {
-		destUdpPort := destUdpPortsInterface.([]interface{})
-		destUdpPorts = make([]networkservices.DestUDPPorts, len(destUdpPort))
-		for i, val := range destUdpPort {
-			destUdpPortItem := val.(map[string]interface{})
-			destUdpPorts[i] = networkservices.DestUDPPorts{
-				Start: destUdpPortItem["start"].(int),
-				End:   destUdpPortItem["end"].(int),
-			}
-		}
-	}
-
-	return destUdpPorts
 }
