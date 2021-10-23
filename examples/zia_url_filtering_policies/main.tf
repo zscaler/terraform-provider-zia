@@ -9,9 +9,29 @@ terraform {
 
 provider "zia" {}
 
+<<<<<<< HEAD
 resource "zia_url_filtering_rules" "sao_paulo_guest_wifi" {
     name = "Sao Paulo Guest WiFi"
     description = "Sao Paulo Guest WiFi"
+=======
+resource "zia_location_management" "toronto"{
+    name = "SGIO-IPSEC-Toronto"
+    description = "Created with Terraform"
+    ip_addresses = [ zia_traffic_forwarding_static_ip.example.ip_address ]
+}
+
+resource "zia_traffic_forwarding_static_ip" "example"{
+    ip_address =  "50.98.112.169"
+    routable_ip = true
+    comment = "Created with Terraform"
+    geo_override = false
+}
+
+resource "zia_url_filtering_rules" "block_innapropriate_contents"{
+    name = "Block Inappropriate Contents"
+    description = "Block all inappropriate content for all users."
+    order = 2
+>>>>>>> master
     state = "ENABLED"
     action = "BLOCK"
     order = 1

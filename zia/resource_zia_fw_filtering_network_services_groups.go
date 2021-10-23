@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 )
@@ -33,103 +32,19 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				Required: true,
 			},
 			"services": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Description: "list of services IDs",
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"tag": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"src_tcp_ports": {
 							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"start": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"end": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
+							Required: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeInt,
 							},
-						},
-						"dest_tcp_ports": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"start": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"end": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"src_udp_ports": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"start": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"end": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"dest_udp_ports": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"start": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"end": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"STANDARD",
-								"PREDEFINED",
-								"CUSTOM",
-							}, false),
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"is_name_l10n_tag": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
 						},
 					},
 				},
@@ -184,11 +99,23 @@ func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
 
-	if err := d.Set("services", flattenServices(resp.Services)); err != nil {
+	if err := d.Set("services", flattenServicesSimple(resp.Services)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenServicesSimple(list []networkservices.Services) []interface{} {
+	result := make([]interface{}, 1)
+	mapIds := make(map[string]interface{})
+	ids := make([]int, len(list))
+	for i, item := range list {
+		ids[i] = item.ID
+	}
+	mapIds["id"] = ids
+	result[0] = mapIds
+	return result
 }
 
 func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{}) error {
@@ -231,8 +158,28 @@ func expandNetworkServiceGroups(d *schema.ResourceData) networkservices.NetworkS
 		ID:          id,
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
-		// Need to expand Services as part of Network Service Groups
+		Services:    expandServicesSet(d),
 	}
 
 	return result
+}
+
+func expandServicesSet(d *schema.ResourceData) []networkservices.Services {
+	setInterface, ok := d.GetOk("services")
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []networkservices.Services
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, networkservices.Services{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []networkservices.Services{}
 }

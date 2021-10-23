@@ -16,29 +16,15 @@ type NetworkServices struct {
 	ID            int            `json:"id"`
 	Name          string         `json:"name,omitempty"`
 	Tag           string         `json:"tag,omitempty"`
-	SrcTCPPorts   []SrcTCPPorts  `json:"srcTcpPorts,omitempty"`
-	DestTCPPorts  []DestTCPPorts `json:"destTcpPorts,omitempty"`
-	SrcUDPPorts   []SrcUDPPorts  `json:"srcUdpPorts,omitempty"`
-	DestUDPPorts  []DestUDPPorts `json:"destUdpPorts,omitempty"`
+	SrcTCPPorts   []NetworkPorts `json:"srcTcpPorts,omitempty"`
+	DestTCPPorts  []NetworkPorts `json:"destTcpPorts,omitempty"`
+	SrcUDPPorts   []NetworkPorts `json:"srcUdpPorts,omitempty"`
+	DestUDPPorts  []NetworkPorts `json:"destUdpPorts,omitempty"`
 	Type          string         `json:"type,omitempty"`
 	Description   string         `json:"description,omitempty"`
 	IsNameL10nTag bool           `json:"isNameL10nTag,omitempty"`
 }
-type SrcTCPPorts struct {
-	Start int `json:"start,omitempty"`
-	End   int `json:"end,omitempty"`
-}
-
-type DestTCPPorts struct {
-	Start int `json:"start,omitempty"`
-	End   int `json:"end,omitempty"`
-}
-type SrcUDPPorts struct {
-	Start int `json:"start,omitempty"`
-	End   int `json:"end,omitempty"`
-}
-
-type DestUDPPorts struct {
+type NetworkPorts struct {
 	Start int `json:"start,omitempty"`
 	End   int `json:"end,omitempty"`
 }
