@@ -298,6 +298,7 @@ func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 		IsProductUpdateCommEnabled:  d.Get("is_product_update_comm_enabled").(bool),
 		IsPasswordExpired:           d.Get("is_password_expired").(bool),
 		IsExecMobileAppEnabled:      d.Get("is_exec_mobile_app_enabled").(bool),
+		AdminScope:                  expandAdminScope(d),
 	}
 	role := expandAdminUserRoles(d)
 	if role != nil {
