@@ -12,24 +12,24 @@ const (
 
 type TimeWindows struct {
 	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	StartTime int    `json:"startTime"`
-	EndTime   string `json:"description"`
-	DayOfWeek string `json:"dayOfWeek"`
+	Name      string `json:"name,omitempty"`
+	StartTime int    `json:"startTime,omitempty"`
+	EndTime   string `json:"description,omitempty"`
+	DayOfWeek string `json:"dayOfWeek,omitempty"`
 }
 
-func (service *Service) GetNetworkServiceGroups(timeWindowID int) (*TimeWindows, error) {
+func (service *Service) Get(timeWindowID int) (*TimeWindows, error) {
 	var timeWindows TimeWindows
 	err := service.Client.Read(fmt.Sprintf("%s/%d", timeWindowsEndpoint, timeWindowID), &timeWindows)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning network application group from Get: %d", timeWindows.ID)
+	log.Printf("Returning time windows from Get: %d", timeWindows.ID)
 	return &timeWindows, nil
 }
 
-func (service *Service) GetNetworkServiceGroupsByName(timeWindowName string) (*TimeWindows, error) {
+func (service *Service) GetByName(timeWindowName string) (*TimeWindows, error) {
 	var timeWindows []TimeWindows
 	err := service.Client.Read(timeWindowsEndpoint, &timeWindows)
 	if err != nil {
@@ -40,5 +40,5 @@ func (service *Service) GetNetworkServiceGroupsByName(timeWindowName string) (*T
 			return &timeWindow, nil
 		}
 	}
-	return nil, fmt.Errorf("no network service groups found with name: %s", timeWindowName)
+	return nil, fmt.Errorf("no time windows found with name: %s", timeWindowName)
 }

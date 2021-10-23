@@ -30,13 +30,14 @@ func init() {
 }
 
 type Client struct {
-	adminuserrolemgmt    *adminuserrolemgmt.Service
-	filteringrules       *filteringrules.Service
-	ipdestinationgroups  *ipdestinationgroups.Service
-	ipsourcegroups       *ipsourcegroups.Service
-	networkapplications  *networkapplications.Service
-	networkservices      *networkservices.Service
-	dlpdictionaries      *dlpdictionaries.Service
+	adminuserrolemgmt   *adminuserrolemgmt.Service
+	filteringrules      *filteringrules.Service
+	ipdestinationgroups *ipdestinationgroups.Service
+	ipsourcegroups      *ipsourcegroups.Service
+	networkapplications *networkapplications.Service
+	networkservices     *networkservices.Service
+	dlpdictionaries     *dlpdictionaries.Service
+	//timewindows          *timewindows.Service
 	urlcategories        *urlcategories.Service
 	urlfilteringpolicies *urlfilteringpolicies.Service
 	usermanagement       *usermanagement.Service
@@ -64,13 +65,14 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	ziaClient := &Client{
-		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
-		filteringrules:       filteringrules.New(cli),
-		ipdestinationgroups:  ipdestinationgroups.New(cli),
-		ipsourcegroups:       ipsourcegroups.New(cli),
-		networkapplications:  networkapplications.New(cli),
-		networkservices:      networkservices.New(cli),
-		dlpdictionaries:      dlpdictionaries.New(cli),
+		adminuserrolemgmt:   adminuserrolemgmt.New(cli),
+		filteringrules:      filteringrules.New(cli),
+		ipdestinationgroups: ipdestinationgroups.New(cli),
+		ipsourcegroups:      ipsourcegroups.New(cli),
+		networkapplications: networkapplications.New(cli),
+		networkservices:     networkservices.New(cli),
+		dlpdictionaries:     dlpdictionaries.New(cli),
+		//timewindows:          timewindows.New(cli),
 		urlcategories:        urlcategories.New(cli),
 		urlfilteringpolicies: urlfilteringpolicies.New(cli),
 		usermanagement:       usermanagement.New(cli),

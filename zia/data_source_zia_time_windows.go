@@ -9,9 +9,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/timewindows"
 )
 
-func dataSourceTimeWindows() *schema.Resource {
+func dataSourceFWTimeWindows() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTimeWindowsRead,
+		Read: dataSourceFWTimeWindowsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -37,14 +37,14 @@ func dataSourceTimeWindows() *schema.Resource {
 	}
 }
 
-func dataSourceTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *timewindows.TimeWindow
+	var resp *timewindows.TimeWindows
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting time window id: %d\n", id)
-		res, err := zClient.timewindows.GetTimeWindows(id)
+		res, err := zClient.timewindows.Get(id)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func dataSourceTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting time window : %s\n", name)
-		res, err := zClient.timewindows.GetTimeWindowsByName(name)
+		res, err := zClient.timewindows.GetByName(name)
 		if err != nil {
 			return err
 		}
