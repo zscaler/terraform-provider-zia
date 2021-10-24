@@ -5,12 +5,18 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindows"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
 )
 
+<<<<<<< HEAD:zia/data_source_zia_time_windows.go
 func dataSourceFWTimeWindows() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceFWTimeWindowsRead,
+=======
+func dataSourceFWTimeWindow() *schema.Resource {
+	return &schema.Resource{
+		Read: dataSourceFWTimeWindowRead,
+>>>>>>> fix-import-path-tiemwindows:zia/data_source_zia_fw_filtering_time_window.go
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -36,6 +42,7 @@ func dataSourceFWTimeWindows() *schema.Resource {
 	}
 }
 
+<<<<<<< HEAD:zia/data_source_zia_time_windows.go
 func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -44,6 +51,16 @@ func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	if ok {
 		log.Printf("[INFO] Getting time window id: %d\n", id)
 		res, err := zClient.timewindows.Get(id)
+=======
+func dataSourceFWTimeWindowRead(d *schema.ResourceData, m interface{}) error {
+	zClient := m.(*Client)
+
+	var resp *timewindow.TimeWindow
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
+		log.Printf("[INFO] Getting time window id: %d\n", id)
+		res, err := zClient.timewindow.GetTimeWindow(id)
+>>>>>>> fix-import-path-tiemwindows:zia/data_source_zia_fw_filtering_time_window.go
 		if err != nil {
 			return err
 		}
@@ -52,7 +69,11 @@ func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting time window : %s\n", name)
+<<<<<<< HEAD:zia/data_source_zia_time_windows.go
 		res, err := zClient.timewindows.GetByName(name)
+=======
+		res, err := zClient.timewindow.GetTimeWindowByName(name)
+>>>>>>> fix-import-path-tiemwindows:zia/data_source_zia_fw_filtering_time_window.go
 		if err != nil {
 			return err
 		}

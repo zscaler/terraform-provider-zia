@@ -12,6 +12,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipsourcegroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
@@ -30,6 +31,7 @@ func init() {
 }
 
 type Client struct {
+<<<<<<< HEAD
 	adminuserrolemgmt   *adminuserrolemgmt.Service
 	filteringrules      *filteringrules.Service
 	ipdestinationgroups *ipdestinationgroups.Service
@@ -38,6 +40,16 @@ type Client struct {
 	networkservices     *networkservices.Service
 	dlpdictionaries     *dlpdictionaries.Service
 	//timewindows          *timewindows.Service
+=======
+	adminuserrolemgmt    *adminuserrolemgmt.Service
+	filteringrules       *filteringrules.Service
+	ipdestinationgroups  *ipdestinationgroups.Service
+	ipsourcegroups       *ipsourcegroups.Service
+	networkapplications  *networkapplications.Service
+	networkservices      *networkservices.Service
+	dlpdictionaries      *dlpdictionaries.Service
+	timewindow           *timewindow.Service
+>>>>>>> fix-import-path-tiemwindows
 	urlcategories        *urlcategories.Service
 	urlfilteringpolicies *urlfilteringpolicies.Service
 	usermanagement       *usermanagement.Service
@@ -65,6 +77,7 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	ziaClient := &Client{
+<<<<<<< HEAD
 		adminuserrolemgmt:   adminuserrolemgmt.New(cli),
 		filteringrules:      filteringrules.New(cli),
 		ipdestinationgroups: ipdestinationgroups.New(cli),
@@ -73,6 +86,16 @@ func (c *Config) Client() (*Client, error) {
 		networkservices:     networkservices.New(cli),
 		dlpdictionaries:     dlpdictionaries.New(cli),
 		//timewindows:          timewindows.New(cli),
+=======
+		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
+		filteringrules:       filteringrules.New(cli),
+		ipdestinationgroups:  ipdestinationgroups.New(cli),
+		ipsourcegroups:       ipsourcegroups.New(cli),
+		networkapplications:  networkapplications.New(cli),
+		networkservices:      networkservices.New(cli),
+		dlpdictionaries:      dlpdictionaries.New(cli),
+		timewindow:           timewindow.New(cli),
+>>>>>>> fix-import-path-tiemwindows
 		urlcategories:        urlcategories.New(cli),
 		urlfilteringpolicies: urlfilteringpolicies.New(cli),
 		usermanagement:       usermanagement.New(cli),

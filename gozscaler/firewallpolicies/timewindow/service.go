@@ -1,4 +1,4 @@
-package timewindows
+package timewindow
 
 import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
