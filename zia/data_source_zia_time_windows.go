@@ -1,12 +1,11 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/timewindows"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindows"
 )
 
 func dataSourceTimeWindows() *schema.Resource {
@@ -73,4 +72,3 @@ func dataSourceTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 
 	return nil
 }
-*/
