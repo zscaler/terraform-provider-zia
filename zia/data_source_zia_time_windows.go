@@ -8,9 +8,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindows"
 )
 
-func dataSourceTimeWindows() *schema.Resource {
+func dataSourceFWTimeWindows() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTimeWindowsRead,
+		Read: dataSourceFWTimeWindowsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -36,7 +36,7 @@ func dataSourceTimeWindows() *schema.Resource {
 	}
 }
 
-func dataSourceTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *timewindows.TimeWindow
