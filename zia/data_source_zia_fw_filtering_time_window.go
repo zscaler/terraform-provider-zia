@@ -5,12 +5,12 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindows"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
 )
 
-func dataSourceFWTimeWindows() *schema.Resource {
+func dataSourceFWTimeWindow() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWTimeWindowsRead,
+		Read: dataSourceFWTimeWindowRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -36,14 +36,14 @@ func dataSourceFWTimeWindows() *schema.Resource {
 	}
 }
 
-func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceFWTimeWindowRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *timewindows.TimeWindow
+	var resp *timewindow.TimeWindow
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting time window id: %d\n", id)
-		res, err := zClient.timewindows.GetTimeWindows(id)
+		res, err := zClient.timewindow.GetTimeWindow(id)
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,7 @@ func dataSourceFWTimeWindowsRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting time window : %s\n", name)
-		res, err := zClient.timewindows.GetTimeWindowsByName(name)
+		res, err := zClient.timewindow.GetTimeWindowByName(name)
 		if err != nil {
 			return err
 		}
