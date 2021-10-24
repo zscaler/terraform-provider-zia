@@ -66,21 +66,6 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_network_application_groups": dataSourceFWNetworkApplicationGroups(),
 			"zia_firewall_filtering_ip_source_groups":           dataSourceFWIPSourceGroups(),
 			"zia_firewall_filtering_destination_groups":         dataSourceFWIPDestinationGroups(),
-<<<<<<< HEAD
-			//"zia_firewall_filtering_time_windows":               dataSourceFWTimeWindows(),
-			"zia_url_categories":                      dataSourceURLCategories(),
-			"zia_url_filtering_rules":                 dataSourceURLFilteringRules(),
-			"zia_traffic_forwarding_public_node_vips": dataSourceTrafficForwardingPublicNodeVIPs(),
-			"zia_traffic_forwarding_vpn_credentials":  dataSourceTrafficForwardingVPNCredentials(),
-			"zia_gre_virtual_ip_address_list":         dataSourceGreVirtualIPAddressesList(),
-			"zia_traffic_forwarding_static_ip":        dataSourceTrafficForwardingStaticIP(),
-			"zia_traffic_forwarding_gre_tunnel":       dataSourceTrafficForwardingGreTunnels(),
-			"zia_gre_internal_ip_range_list":          dataSourceTrafficForwardingGreInternalIPRangeList(),
-			"zia_location_management":                 dataSourceLocationManagement(),
-			"zia_location_groups":                     dataSourceLocationGroup(),
-			"zia_dlp_dictionaries":                    dataSourceDLPDictionaries(),
-			"zia_activation_status":                   dataSourceActivationStatus(),
-=======
 			"zia_firewall_filtering_time_window":                dataSourceFWTimeWindow(),
 			"zia_url_categories":                                dataSourceURLCategories(),
 			"zia_url_filtering_rules":                           dataSourceURLFilteringRules(),
@@ -93,7 +78,6 @@ func Provider() *schema.Provider {
 			"zia_location_management":                           dataSourceLocationManagement(),
 			"zia_location_groups":                               dataSourceLocationGroup(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
->>>>>>> fix-import-path-tiemwindows
 		},
 
 		ConfigureFunc: ziaConfigure,

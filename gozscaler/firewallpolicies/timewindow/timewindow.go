@@ -11,11 +11,11 @@ const (
 )
 
 type TimeWindow struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	StartTime int    `json:"startTime"`
-	EndTime   string `json:"description"`
-	DayOfWeek string `json:"dayOfWeek"`
+	ID        int      `json:"id"`
+	Name      string   `json:"name,omitempty"`
+	StartTime int      `json:"startTime,omitempty"`
+	EndTime   string   `json:"description,omitempty"`
+	DayOfWeek []string `json:"dayOfWeek,omitempty"`
 }
 
 func (service *Service) GetTimeWindow(timeWindowID int) (*TimeWindow, error) {
