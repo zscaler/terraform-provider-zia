@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.8.0
 )
+<<<<<<< HEAD
 
 require (
 	github.com/agext/levenshtein v1.2.2 // indirect
@@ -43,3 +44,5 @@ require (
 	google.golang.org/grpc v1.32.0 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 )
+=======
+>>>>>>> fix-import-path-tiemwindows
