@@ -8,7 +8,7 @@ description: |-
 ---
 # zia_firewall_filtering_time_window (Data Source)
 
-The **zia_firewall_filtering_time_window** data source provides details about a specific time window option available in the Zscaler Internet Access. This data source can then be associated with a ZIA firewall filtering rule.
+The **zia_firewall_filtering_time_window** data source provides details about a specific time window option available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering rule.
 
 ## Example Usage
 
