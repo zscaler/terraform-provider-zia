@@ -20,7 +20,7 @@ data "zia_firewall_filtering_destination_groups" "example" {
 }
 
 output "zia_firewall_filtering_destination_groups_example" {
-    value = zia_firewall_filtering_destination_groups.example
+    value = data.zia_firewall_filtering_destination_groups.example
 }
 ```
 
