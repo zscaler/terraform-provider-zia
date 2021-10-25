@@ -13,8 +13,8 @@ const (
 type TimeWindow struct {
 	ID        int      `json:"id"`
 	Name      string   `json:"name,omitempty"`
-	StartTime int      `json:"startTime,omitempty"`
-	EndTime   string   `json:"description,omitempty"`
+	StartTime int32    `json:"startTime,omitempty"`
+	EndTime   int32    `json:"endTime,omitempty"`
 	DayOfWeek []string `json:"dayOfWeek,omitempty"`
 }
 

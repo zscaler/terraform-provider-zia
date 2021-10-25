@@ -22,16 +22,16 @@ func dataSourceFWTimeWindow() *schema.Resource {
 			},
 			"start_time": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"end_time": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"day_of_week": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Computed: true,
 			},
 		},
 	}
