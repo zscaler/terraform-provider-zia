@@ -9,7 +9,7 @@ description: |-
 
 # zia_firewall_filtering_network_application_groups (Data Source)
 
-The **zia_firewall_filtering_network_application_groups** data source provides details about a specific network application group available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering rule.
+The **zia_firewall_filtering_network_application_groups** data source provides details about a specific network application group available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network application rule.
 
 ## Example Usage
 
