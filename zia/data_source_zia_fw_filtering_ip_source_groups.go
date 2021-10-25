@@ -59,6 +59,8 @@ func dataSourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
+		_ = d.Set("description", resp.Description)
+		_ = d.Set("ip_addresses", resp.IPAddresses)
 
 	} else {
 		return fmt.Errorf("couldn't find any ip source group with name '%s' or id '%d'", name, id)
