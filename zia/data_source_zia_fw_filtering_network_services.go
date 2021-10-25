@@ -36,6 +36,10 @@ func dataSourceFWNetworkServices() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			// "protocol": {
+			// 	Type:     schema.TypeString,
+			// 	Optional: true,
+			// },
 			"is_name_l10n_tag": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -50,7 +54,7 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 	var resp *networkservices.NetworkServices
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting network service group id: %d\n", id)
+		log.Printf("[INFO] Getting network services id: %d\n", id)
 		res, err := zClient.networkservices.Get(id)
 		if err != nil {
 			return err
@@ -59,7 +63,7 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting network service group : %s\n", name)
+		log.Printf("[INFO] Getting network services : %s\n", name)
 		res, err := zClient.networkservices.GetByName(name)
 		if err != nil {
 			return err
@@ -67,6 +71,17 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 		resp = res
 	}
 
+	/*
+		protocol, _ := d.Get("protocol").(string)
+		if resp == nil && protocol != "" {
+			log.Printf("[INFO] Getting network services : %s\n", protocol)
+			res, err := zClient.networkservices.GetByProtocol(d.Get("protocol").(string))
+			if err != nil {
+				return err
+			}
+			resp = res
+		}
+	*/
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
