@@ -14,7 +14,6 @@ func listIDsSchemaType(desc string) *schema.Schema {
 		Optional:    true,
 		Computed:    true,
 		Description: desc,
-		MaxItems:    1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"id": {
