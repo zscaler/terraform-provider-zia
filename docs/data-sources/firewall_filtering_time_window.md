@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall FilteringTime Window"
+subcategory: "Firewall Filtering Time Window"
 layout: "zia"
 page_title: "ZIA: firewall_filtering_time_window"
 description: |-
