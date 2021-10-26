@@ -31,7 +31,9 @@ The following arguments are supported:
 * `name` - (Required) The name of the time window to be exported.
 * `id` - (Optional) The ID of the time window resource.
 
-### Read-Only
+## Attribute Reference
+
+The following attributes are supported:
 
 * `addresses` - (List of String)
 * `countries` - (List of String)
