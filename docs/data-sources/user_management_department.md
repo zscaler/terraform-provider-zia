@@ -29,9 +29,6 @@ The following arguments are supported:
 
 * `name` - (Required) Name. The name of the App Connector Group to be exported.
 * `id` - (Optional) The ID of this resource.
-
-### Read-Only
-
-* `comments` - (String)
+* `idp_id` - (Optional) Unique identfier for the identity provider (IdP)
+* `comments` - (Optional) Additional information about the group
 * `deleted` - (Boolean)
-* `idp_id` - (Number)
