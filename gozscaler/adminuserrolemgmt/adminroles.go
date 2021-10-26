@@ -26,7 +26,7 @@ type AdminRoles struct {
 	RoleType        string   `json:"roleType,omitempty"`
 }
 
-func (service *Service) GetAdminRoles(adminRoleId int) (*AdminRoles, error) {
+func (service *Service) Get(adminRoleId int) (*AdminRoles, error) {
 	v := new(AdminRoles)
 	relativeURL := fmt.Sprintf("%s/%d", adminRolesEndpoint, adminRoleId)
 	err := service.Client.Read(relativeURL, v)
@@ -36,7 +36,7 @@ func (service *Service) GetAdminRoles(adminRoleId int) (*AdminRoles, error) {
 	return v, nil
 }
 
-func (service *Service) GetAdminRolesByName(adminRoleName string) (*AdminRoles, error) {
+func (service *Service) GetByName(adminRoleName string) (*AdminRoles, error) {
 	var adminRoles []AdminRoles
 	err := service.Client.Read(adminRolesEndpoint, &adminRoles)
 	if err != nil {

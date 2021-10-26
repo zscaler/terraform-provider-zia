@@ -13,61 +13,75 @@ func dataSourceAdminRoles() *schema.Resource {
 		Read: dataSourceAdminRolesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Admin role Id.",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Name of the admin role.",
 			},
 			"rank": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Admin rank of this admin role. This is applicable only when admin rank is enabled in the advanced settings. Default value is 7 (the lowest rank). The assigned admin rank determines the roles or admin users this user can manage, and which rule orders this admin can access.",
 			},
 			"policy_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Policy access permission.",
 			},
 			"dashboard_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Dashboard access permission.",
 			},
 			"report_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Report access permission.",
 			},
 			"analysis_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Insights logs access permission.",
 			},
 			"username_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Username access permission. When set to NONE, the username will be obfuscated.",
 			},
 			"admin_acct_access": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Admin and role management access permission.",
 			},
 			"is_auditor": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether this is an auditor role.",
 			},
 			"permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of functional areas to which this role has access. This attribute is subject to change.",
 			},
 			"is_non_editable": {
-				Type:     schema.TypeBool,
-				Computed: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether or not this admin user is editable/deletable.",
 			},
 			"logs_limit": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Log range limit.",
 			},
 			"role_type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The admin role type. ()This attribute is subject to change.)",
 			},
 		},
 	}
@@ -80,7 +94,7 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for admin role id: %d\n", id)
-		res, err := zClient.adminuserrolemgmt.GetAdminRoles(id)
+		res, err := zClient.adminuserrolemgmt.Get(id)
 		if err != nil {
 			return err
 		}
@@ -89,7 +103,7 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
-		res, err := zClient.adminuserrolemgmt.GetAdminRolesByName(name)
+		res, err := zClient.adminuserrolemgmt.GetByName(name)
 		if err != nil {
 			return err
 		}
