@@ -88,11 +88,6 @@ func dataSourceUserManagement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
 			"admin_user": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -134,7 +129,6 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("email", resp.Email)
 		_ = d.Set("comments", resp.Comments)
 		_ = d.Set("temp_auth_email", resp.TempAuthEmail)
-		_ = d.Set("password", resp.Password)
 		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
 
