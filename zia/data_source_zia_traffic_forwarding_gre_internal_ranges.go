@@ -12,7 +12,7 @@ func dataSourceTrafficForwardingGreInternalIPRangeList() *schema.Resource {
 			"required_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Default:  10,
 			},
 			"list": {
 				Type:     schema.TypeList,
