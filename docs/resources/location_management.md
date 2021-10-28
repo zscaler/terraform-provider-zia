@@ -17,49 +17,49 @@ description: |-
 
 ### Optional
 
-- **aup_block_internet_until_accepted** (Boolean)
-- **aup_enabled** (Boolean)
-- **aup_force_ssl_inspection** (Boolean)
-- **aup_timeout_in_days** (Number)
-- **auth_required** (Boolean)
-- **caution_enabled** (Boolean)
-- **country** (String)
-- **description** (String)
-- **display_time_unit** (String)
-- **dn_bandwidth** (Number)
-- **id** (String) The ID of this resource.
-- **idle_time_in_minutes** (Number)
-- **ip_addresses** (List of String)
-- **ips_control** (Boolean)
-- **name** (String)
-- **ofw_enabled** (Boolean)
-- **parent_id** (Number)
-- **ports** (String)
-- **profile** (String)
-- **ssl_scan_enabled** (Boolean, Deprecated)
-- **surrogate_ip** (Boolean)
-- **surrogate_ip_enforced_for_known_browsers** (Boolean)
-- **surrogate_refresh_time_in_minutes** (Number)
-- **surrogate_refresh_time_unit** (String)
-- **tz** (String)
-- **up_bandwidth** (Number)
-- **vpn_credentials** (Block List) (see [below for nested schema](#nestedblock--vpn_credentials))
-- **xff_forward_enabled** (Boolean)
-- **zapp_ssl_scan_enabled** (Boolean, Deprecated)
+* `aup_block_internet_until_accepted` -(Boolean)
+* `aup_enabled` -(Boolean)
+* `aup_force_ssl_inspection` -(Boolean)
+* `aup_timeout_in_days` -(Number)
+* `auth_required` -(Boolean)
+* `caution_enabled` -(Boolean)
+* `country` -(String)
+* `description` -(String)
+* `display_time_unit` -(String)
+* `dn_bandwidth` -(Number)
+* `id` -(String) The ID of this resource.
+* `idle_time_in_minutes` -(Number)
+* `ip_addresses` -(List of String)
+* `ips_control` -(Boolean)
+* `name` -(String)
+* `ofw_enabled` -(Boolean)
+* `parent_id` -(Number)
+* `ports` -(String)
+* `profile` -(String)
+* `ssl_scan_enabled` -(Boolean, Deprecated)
+* `surrogate_ip` -(Boolean)
+* `surrogate_ip_enforced_for_known_browsers` -(Boolean)
+* `surrogate_refresh_time_in_minutes` -(Number)
+* `surrogate_refresh_time_unit` -(String)
+* `tz` -(String)
+* `up_bandwidth` -(Number)
+* `vpn_credentials` -(Block List) (see [below for nested schema](#nestedblock--vpn_credentials))
+* `xff_forward_enabled` -(Boolean)
+* `zapp_ssl_scan_enabled` -(Boolean, Deprecated)
 
 ### Read-Only
 
-- **location_id** (Number)
+* `location_id` -(Number)
 
 <a id="nestedblock--vpn_credentials"></a>
 ### Nested Schema for `vpn_credentials`
 
 Optional:
 
-- **comments** (String)
-- **fqdn** (String)
-- **id** (Number) The ID of this resource.
-- **pre_shared_key** (String)
-- **type** (String)
+* `comments` -(String)
+* `fqdn` -(String)
+* `id` -(Number) The ID of this resource.
+* `pre_shared_key` -(String)
+* `type` -(String)
 
 
