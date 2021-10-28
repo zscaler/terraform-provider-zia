@@ -16,6 +16,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnelinfo"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
@@ -43,6 +44,7 @@ type Client struct {
 	urlfilteringpolicies *urlfilteringpolicies.Service
 	usermanagement       *usermanagement.Service
 	gretunnels           *gretunnels.Service
+	gretunnelinfo        *gretunnelinfo.Service
 	greinternalipranges  *greinternalipranges.Service
 	staticips            *staticips.Service
 	virtualipaddresslist *virtualipaddresslist.Service
@@ -80,6 +82,7 @@ func (c *Config) Client() (*Client, error) {
 		virtualipaddresslist: virtualipaddresslist.New(cli),
 		vpncredentials:       vpncredentials.New(cli),
 		gretunnels:           gretunnels.New(cli),
+		gretunnelinfo:        gretunnelinfo.New(cli),
 		greinternalipranges:  greinternalipranges.New(cli),
 		staticips:            staticips.New(cli),
 		locationmanagement:   locationmanagement.New(cli),
