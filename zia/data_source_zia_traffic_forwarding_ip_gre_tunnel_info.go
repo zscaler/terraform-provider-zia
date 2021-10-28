@@ -18,7 +18,7 @@ func dataSourceTrafficForwardingIPGreTunnelInfo() *schema.Resource {
 			},
 			"gre_enabled": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Optional: true,
 			},
 			"gre_tunnel_ip": {
 				Type:     schema.TypeString,
