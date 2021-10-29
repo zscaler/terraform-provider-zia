@@ -18,7 +18,7 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 			},
 			"source_ip": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 			"primary_dest_vip": {
 				Type:     schema.TypeSet,
