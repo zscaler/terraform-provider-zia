@@ -71,7 +71,7 @@ func Provider() *schema.Provider {
 			"zia_url_filtering_rules":                           dataSourceURLFilteringRules(),
 			"zia_traffic_forwarding_public_node_vips":           dataSourceTrafficForwardingPublicNodeVIPs(),
 			"zia_traffic_forwarding_vpn_credentials":            dataSourceTrafficForwardingVPNCredentials(),
-			"zia_gre_virtual_ip_address_list":                   dataSourceGreVirtualIPAddressesList(),
+			"zia_traffic_forwarding_gre_vip_recommended_list":   dataSourceTrafficForwardingGreVipRecommendedList(),
 			"zia_traffic_forwarding_static_ip":                  dataSourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_gre_tunnel":                 dataSourceTrafficForwardingGreTunnels(),
 			"zia_traffic_forwarding_gre_tunnel_info":            dataSourceTrafficForwardingIPGreTunnelInfo(),

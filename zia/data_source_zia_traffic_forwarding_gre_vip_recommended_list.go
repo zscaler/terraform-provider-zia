@@ -7,9 +7,9 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 )
 
-func dataSourceGreVirtualIPAddressesList() *schema.Resource {
+func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGreVirtualIPAddressesListRead,
+		Read: dataSourceTrafficForwardingGreVipRecommendedListRead,
 		Schema: map[string]*schema.Schema{
 			"source_ip": {
 				Type:     schema.TypeString,
@@ -56,7 +56,7 @@ func dataSourceGreVirtualIPAddressesList() *schema.Resource {
 	}
 }
 
-func dataSourceGreVirtualIPAddressesListRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	count, ok := getIntFromResourceData(d, "required_count")
 	if !ok {
