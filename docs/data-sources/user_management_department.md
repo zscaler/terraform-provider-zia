@@ -8,7 +8,7 @@ description: |-
 ---
 # zia_department_management (Data Source)
 
-The **zia_department_management** data source provides details about a specific user department created in the Zscaler Internet Access cloud or via the API. This data source can then be associated with several ZIA resources such as: URL filtering rules, Cloud Firewall rules, and locations.
+The **zia_department_management** -data source provides details about a specific user department created in the Zscaler Internet Access cloud or via the API. This data source can then be associated with several ZIA resources such as: URL filtering rules, Cloud Firewall rules, and locations.
 
 ## Example Usage
 

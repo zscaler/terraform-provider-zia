@@ -9,7 +9,7 @@ description: |-
 
 # zia_group_management (Data Source)
 
-The **zia_group_management** - data source provides details about a specific user group that may have been created in the Zscaler Internet Access portal. This data source can then be associated with a ZIA cloud firewall filtering rule, and URL filtering rules.
+The **zia_group_management** -- data source provides details about a specific user group that may have been created in the Zscaler Internet Access portal. This data source can then be associated with a ZIA cloud firewall filtering rule, and URL filtering rules.
 
 ## Example Usage
 
