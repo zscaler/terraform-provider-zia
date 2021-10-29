@@ -1,15 +1,15 @@
 ---
-subcategory: "Location Management"
+subcategory: "GRE Available Internal IP Ranges"
 layout: "zia"
 page_title: "ZIA: gre_internal_ip_range_list"
 description: |-
-  Gets the next available GRE tunnel internal IP address ranges
+  Gets the next available GRE tunnel internal IP address ranges.
   
 ---
 
 # zia_gre_internal_ip_range_list (Data Source)
 
-The **zia_gre_internal_ip_range_list** - data source retrieves details about available Zscaler GRE tunnel internal ip ranges for the purposes of GRE tunnel creation in the Zscaler Internet Access when the `ip_unnumbered` parameter is set to `false`
+The **zia_gre_internal_ip_range_list** - data source retrieves details about the next available GRE tunnel internal ip ranges for the purposes of GRE tunnel creation in the Zscaler Internet Access when the `ip_unnumbered` parameter is set to `false`
 
 ## Example Usage
 
@@ -17,6 +17,18 @@ The **zia_gre_internal_ip_range_list** - data source retrieves details about ava
 # Retrieve GRE available Internal IP Ranges
 # By default it will return the first 10 available internal ip ranges
 data "zia_gre_internal_ip_range_list" "example"{
+}
+
+output "zia_gre_internal_ip_range_list_example"{
+    value = data.zia_gre_internal_ip_range_list.example
+}
+```
+
+```hcl
+# Retrieve GRE available Internal IP Ranges
+# By using the `required_count` parameter it will return the indicated number of IP ranges.
+data "zia_gre_internal_ip_range_list" "example"{
+  required_count = 20
 }
 
 output "zia_gre_internal_ip_range_list_example"{
