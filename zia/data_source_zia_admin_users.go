@@ -239,15 +239,10 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 		_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 		_ = d.Set("is_password_expired", resp.IsPasswordExpired)
-		_ = d.Set("admin_scope", resp.AdminScope)
 		_ = d.Set("is_exec_mobile_app_enabled", resp.IsExecMobileAppEnabled)
 
 		if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
 			return fmt.Errorf("failed to read admin user role %s", err)
-		}
-
-		if err := d.Set("admin_scope", flattenAdminScope(resp.AdminScope)); err != nil {
-			return fmt.Errorf("failed to read admin scope %s", err)
 		}
 
 		if err := d.Set("exec_mobile_app_tokens", flattenExecMobileAppTokens(resp)); err != nil {
@@ -270,39 +265,6 @@ func flattenAdminUserRole(role *adminuserrolemgmt.Role) interface{} {
 	}
 }
 
-func flattenAdminScope(scope *adminuserrolemgmt.AdminScope) interface{} {
-	return []map[string]interface{}{
-		{
-			"type":                        scope.Type,
-			"scope_group_member_entities": flattenAdminScopeGroupMemberEntities(scope.AdminScopeGroupMemberEntities),
-			"admin_scope_entities":        flattenAdminScopeEntities(scope.AdminScopeEntities),
-		},
-	}
-}
-
-func flattenAdminScopeGroupMemberEntities(adminScopeGroupMemberEntities []adminuserrolemgmt.AdminScopeGroupMemberEntities) []interface{} {
-	adminScopeGroups := make([]interface{}, len(adminScopeGroupMemberEntities))
-	for i, adminScopeItem := range adminScopeGroupMemberEntities {
-		adminScopeGroups[i] = map[string]interface{}{
-			"id":         adminScopeItem.ID,
-			"name":       adminScopeItem.Name,
-			"extensions": adminScopeItem.Extensions,
-		}
-	}
-	return adminScopeGroups
-}
-
-func flattenAdminScopeEntities(adminScopeEntities []adminuserrolemgmt.AdminScopeEntities) []interface{} {
-	scopeEntities := make([]interface{}, len(adminScopeEntities))
-	for i, scopeEntityItem := range adminScopeEntities {
-		scopeEntities[i] = map[string]interface{}{
-			"id":         scopeEntityItem.ID,
-			"name":       scopeEntityItem.Name,
-			"extensions": scopeEntityItem.Extensions,
-		}
-	}
-	return scopeEntities
-}
 func flattenExecMobileAppTokens(mobileAppTokens *adminuserrolemgmt.AdminUsers) []interface{} {
 	execMobileAppTokens := make([]interface{}, len(mobileAppTokens.ExecMobileAppTokens))
 	for i, execMobileApp := range mobileAppTokens.ExecMobileAppTokens {

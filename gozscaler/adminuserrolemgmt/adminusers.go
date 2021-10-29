@@ -37,19 +37,17 @@ type Role struct {
 	IsNameL10Tag bool                   `json:"isNameL10nTag,omitempty"`
 	Extensions   map[string]interface{} `json:"extensions,omitempty"`
 }
-
 type AdminScope struct {
-	AdminScopeGroupMemberEntities []AdminScopeGroupMemberEntities `json:"scopeGroupMemberEntities"`
-	AdminScopeEntities            []AdminScopeEntities            `json:"ScopeEntities,omitempty"`
-	Type                          string                          `json:"Type,omitempty"`
+	ScopeGroupMemberEntities []ScopeGroupMemberEntities `json:"scopeGroupMemberEntities,omitempty"`
+	Type                     string                     `json:"Type,omitempty"`
+	ScopeEntities            []ScopeEntities            `json:"ScopeEntities,omitempty"`
 }
-
-type AdminScopeGroupMemberEntities struct {
+type ScopeGroupMemberEntities struct {
 	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
-type AdminScopeEntities struct {
+type ScopeEntities struct {
 	ID         int                    `json:"id,omitempty"`
 	Name       string                 `json:"name,omitempty"`
 	Extensions map[string]interface{} `json:"extensions,omitempty"`

@@ -72,19 +72,18 @@ func resourceAdminUsers() *schema.Resource {
 				Description: "Additional information about the admin or auditor.",
 			},
 			"admin_scope": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"scope_group_member_entities": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:     schema.TypeInt,
-										Computed: true,
+										Optional: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
@@ -92,7 +91,7 @@ func resourceAdminUsers() *schema.Resource {
 									},
 									"extensions": {
 										Type:     schema.TypeMap,
-										Computed: true,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -103,21 +102,15 @@ func resourceAdminUsers() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"ORGANIZATION",
-								"DEPARTMENT",
-								"LOCATION",
-								"LOCATION_GROUP",
-							}, false),
 						},
-						"admin_scope_entities": {
-							Type:     schema.TypeSet,
-							Computed: true,
+						"scope_entities": {
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:     schema.TypeInt,
-										Computed: true,
+										Optional: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
@@ -125,7 +118,7 @@ func resourceAdminUsers() *schema.Resource {
 									},
 									"extensions": {
 										Type:     schema.TypeMap,
-										Computed: true,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -186,6 +179,16 @@ func resourceAdminUsers() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"admin_scope_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"ORGANIZATION",
+					"DEPARTMENT",
+					"LOCATION",
+					"LOCATION_GROUP",
+				}, false),
+			},
 		},
 	}
 }
@@ -239,13 +242,8 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 	_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 	_ = d.Set("is_password_expired", resp.IsPasswordExpired)
-	_ = d.Set("admin_scope", resp.AdminScope)
 
 	if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
-		return err
-	}
-
-	if err := d.Set("admin_scope", flattenAdminScope(resp.AdminScope)); err != nil {
 		return err
 	}
 
@@ -282,8 +280,9 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
+	id, _ := getIntFromResourceData(d, "admin_id")
 	result := adminuserrolemgmt.AdminUsers{
-		ID:                          d.Get("admin_id").(int),
+		ID:                          id,
 		LoginName:                   d.Get("login_name").(string),
 		UserName:                    d.Get("user_name").(string),
 		Email:                       d.Get("email").(string),
@@ -298,16 +297,12 @@ func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 		IsProductUpdateCommEnabled:  d.Get("is_product_update_comm_enabled").(bool),
 		IsPasswordExpired:           d.Get("is_password_expired").(bool),
 		IsExecMobileAppEnabled:      d.Get("is_exec_mobile_app_enabled").(bool),
-		AdminScope:                  expandAdminScope(d),
 	}
 	role := expandAdminUserRoles(d)
 	if role != nil {
 		result.Role = role
 	}
-	scope := expandAdminScope(d)
-	if scope != nil {
-		result.AdminScope = scope
-	}
+
 	return result
 }
 
@@ -333,47 +328,4 @@ func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
 		}
 	}
 	return nil
-}
-
-func expandAdminScope(d *schema.ResourceData) *adminuserrolemgmt.AdminScope {
-	if adminScope, ok := d.GetOk("admin_scope"); ok {
-		scopeItem := adminScope.(*schema.Set).List()[0]
-		adminScope := scopeItem.(map[string]interface{})
-
-		return &adminuserrolemgmt.AdminScope{
-			AdminScopeGroupMemberEntities: expandScopeGroupMemberEntities(adminScope["scope_group_member_entities"].(*schema.Set)),
-			AdminScopeEntities:            expandScopeEntities(adminScope["admin_scope_entities"].(*schema.Set)),
-			Type:                          adminScope["type"].(string),
-		}
-	}
-
-	return nil
-}
-
-func expandScopeGroupMemberEntities(scopeGroupMember *schema.Set) []adminuserrolemgmt.AdminScopeGroupMemberEntities {
-	scopeGroups := make([]adminuserrolemgmt.AdminScopeGroupMemberEntities, scopeGroupMember.Len())
-	for i, scope := range scopeGroupMember.List() {
-		scopeGroupItem := scope.(map[string]interface{})
-		scopeGroups[i] = adminuserrolemgmt.AdminScopeGroupMemberEntities{
-			ID:         scopeGroupItem["id"].(int),
-			Name:       scopeGroupItem["name"].(string),
-			Extensions: scopeGroupItem["extensions"].(map[string]interface{}),
-		}
-	}
-
-	return scopeGroups
-}
-
-func expandScopeEntities(scopeEntity *schema.Set) []adminuserrolemgmt.AdminScopeEntities {
-	scopeEntities := make([]adminuserrolemgmt.AdminScopeEntities, scopeEntity.Len())
-	for i, scope := range scopeEntity.List() {
-		scopeentityItem := scope.(map[string]interface{})
-		scopeEntities[i] = adminuserrolemgmt.AdminScopeEntities{
-			ID:         scopeentityItem["id"].(int),
-			Name:       scopeentityItem["name"].(string),
-			Extensions: scopeentityItem["extensions"].(map[string]interface{}),
-		}
-	}
-
-	return scopeEntities
 }
