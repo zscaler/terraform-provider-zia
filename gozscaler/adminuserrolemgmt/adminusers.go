@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -38,9 +40,9 @@ type Role struct {
 	Extensions   map[string]interface{} `json:"extensions,omitempty"`
 }
 type AdminScope struct {
-	ScopeGroupMemberEntities []ScopeGroupMemberEntities `json:"scopeGroupMemberEntities,omitempty"`
-	Type                     string                     `json:"Type,omitempty"`
-	ScopeEntities            []ScopeEntities            `json:"ScopeEntities,omitempty"`
+	ScopeGroupMemberEntities []common.IDNameExtensions `json:"scopeGroupMemberEntities,omitempty"`
+	Type                     string                    `json:"Type,omitempty"`
+	ScopeEntities            []common.IDNameExtensions `json:"ScopeEntities,omitempty"`
 }
 type ScopeGroupMemberEntities struct {
 	ID         int                    `json:"id,omitempty"`

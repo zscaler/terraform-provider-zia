@@ -329,3 +329,23 @@ func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
 	}
 	return nil
 }
+
+func expandAdminScope(d *schema.ResourceData) adminuserrolemgmt.AdminScope {
+	var scopes adminuserrolemgmt.AdminScope
+	if scopeInterface, ok := d.GetOk("admin_scope"); ok {
+		scopesSet, ok := scopeInterface.(*schema.Set)
+		if !ok {
+			return scopes
+		}
+		scopes = make([]adminuserrolemgmt.AdminScope, len(scopesSet.List()))
+		for i, val := range scopesSet.List() {
+			scopeItem := val.(map[string]interface{})
+			scopes[i] = adminuserrolemgmt.AdminScope{
+				ScopeGroupMemberEntities: expandIDNameExtensionsMap(scopeItem, "scope_group_member_entities"),
+				Type:                     scopeItem["type"].(string),
+				ScopeEntities:            expandIDNameExtensionsMap(scopeItem, "scope_entities"),
+			}
+		}
+	}
+	return scopes
+}
