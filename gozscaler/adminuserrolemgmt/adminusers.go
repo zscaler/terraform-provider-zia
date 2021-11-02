@@ -41,7 +41,6 @@ type Role struct {
 	IsNameL10Tag bool                   `json:"isNameL10nTag,omitempty"`
 	Extensions   map[string]interface{} `json:"extensions,omitempty"`
 }
-
 type ExecMobileAppTokens struct {
 	Cloud       string `json:"cloud,omitempty"`
 	OrgId       string `json:"orgId,omitempty"`

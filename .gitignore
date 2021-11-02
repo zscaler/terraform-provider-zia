@@ -49,3 +49,4 @@ examples/quick-refactor.sh
 examples/terraform-set-logging.sh
 examples/zia_all_together
 dist/
+goreleaser.sh
