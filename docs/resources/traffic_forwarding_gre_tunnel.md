@@ -17,23 +17,23 @@ The **zia_traffic_forwarding_gre_tunnel** - resource provisions a GRE tunnel con
 ```hcl
 # ZIA Traffic Forwarding - GRE Tunnel
 // Creates a numbered GRE Tunnel
-resource "zia_traffic_forwarding_gre_tunnel" "telus_home_internet_01_gre01" {
-  source_ip = zia_traffic_forwarding_static_ip.example.ip_address
-  comment   = "GRE Tunnel Created with Terraform"
-  within_country = true
-  country_code = "CA"
-  ip_unnumbered = false
-  depends_on = [ zia_traffic_forwarding_static_ip.example ]
+resource "zia_traffic_forwarding_gre_tunnel" "example" {
+  source_ip         = zia_traffic_forwarding_static_ip.example.ip_address
+  comment           = "GRE Tunnel Created with Terraform"
+  within_country    = true
+  country_code      = "CA"
+  ip_unnumbered     = false
+  depends_on        = [ zia_traffic_forwarding_static_ip.example ]
 }
 
 # ZIA Traffic Forwarding - Static IP
 resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address =  "1.1.1.1"
-    routable_ip = true
-    comment = "Created with Terraform"
-    geo_override = true
-    latitude = -36.848461
-    longitude = 174.763336
+    ip_address      =  "1.1.1.1"
+    routable_ip     = true
+    comment         = "Created with Terraform"
+    geo_override    = true
+    latitude        = -36.848461
+    longitude       = 174.763336
 }
 ```
 
@@ -43,22 +43,22 @@ resource "zia_traffic_forwarding_static_ip" "example"{
 # ZIA Traffic Forwarding - GRE Tunnel
 // Creates an unnumbered GRE Tunnel
 resource "zia_traffic_forwarding_gre_tunnel" "telus_home_internet_01_gre01" {
-  source_ip = zia_traffic_forwarding_static_ip.example.ip_address
-  comment   = "GRE Tunnel Created with Terraform"
-  within_country = true
-  country_code = "CA"
-  ip_unnumbered = true
-  depends_on = [ zia_traffic_forwarding_static_ip.example ]
+  source_ip       = zia_traffic_forwarding_static_ip.example.ip_address
+  comment         = "GRE Tunnel Created with Terraform"
+  within_country  = true
+  country_code    = "CA"
+  ip_unnumbered   = true
+  depends_on      = [ zia_traffic_forwarding_static_ip.example ]
 }
 
 # ZIA Traffic Forwarding - Static IP
 resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address =  "1.1.1.1"
-    routable_ip = true
-    comment = "Created with Terraform"
-    geo_override = true
-    latitude = -36.848461
-    longitude = 174.763336
+    ip_address    =  "1.1.1.1"
+    routable_ip   = true
+    comment       = "Created with Terraform"
+    geo_override  = true
+    latitude      = -36.848461
+    longitude     = 174.763336
 }
 ```
 
