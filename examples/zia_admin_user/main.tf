@@ -10,7 +10,10 @@ terraform {
 provider "zia" {}
 
 
-/*
+data "zia_admin_roles" "example1"{
+    name = "Super Admin"
+}
+
 resource "zia_admin_users" "example1" {
   login_name = "zia-api2@securitygeek.io"
   user_name  = "John Smith Test"
@@ -21,13 +24,18 @@ resource "zia_admin_users" "example1" {
   }
   admin_scope {
     type = "ORGANIZATION"
+    scope_entities {
+      id = []
+    }
+    scope_group_member_entities {
+      id = [25658881]
+    }
   }
 }
 
 output "zia_admin_users_example1" {
-  value = zia_admin_users.example1
+  value = zia_admin_users.example1.user_name
 }
-*/
 
 
 data "zia_admin_users" "example" {

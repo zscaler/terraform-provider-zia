@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -11,25 +13,27 @@ const (
 )
 
 type AdminUsers struct {
-	ID                          int                   `json:"id,omitempty"`
-	LoginName                   string                `json:"loginName,omitempty"`
-	UserName                    string                `json:"userName,omitempty"`
-	Email                       string                `json:"email,omitempty"`
-	Comments                    string                `json:"comments,omitempty"`
-	Disabled                    bool                  `json:"disabled,omitempty"`
-	Password                    string                `json:"password,omitempty"`
-	PasswordLastModifiedTime    int                   `json:"pwdLastModifiedTime,omitempty"`
-	IsNonEditable               bool                  `json:"isNonEditable,omitempty"`
-	IsPasswordLoginAllowed      bool                  `json:"isPasswordLoginAllowed,omitempty"`
-	IsPasswordExpired           bool                  `json:"isPasswordExpired,omitempty"`
-	IsAuditor                   bool                  `json:"isAuditor,omitempty"`
-	IsSecurityReportCommEnabled bool                  `json:"isSecurityReportCommEnabled,omitempty"`
-	IsServiceUpdateCommEnabled  bool                  `json:"isServiceUpdateCommEnabled,omitempty"`
-	IsProductUpdateCommEnabled  bool                  `json:"isProductUpdateCommEnabled,omitempty"`
-	IsExecMobileAppEnabled      bool                  `json:"isExecMobileAppEnabled,omitempty"`
-	AdminScope                  *AdminScope           `json:"adminScope,omitempty"`
-	Role                        *Role                 `json:"role,omitempty"`
-	ExecMobileAppTokens         []ExecMobileAppTokens `json:"execMobileAppTokens,omitempty"`
+	ID                            int                       `json:"id,omitempty"`
+	LoginName                     string                    `json:"loginName,omitempty"`
+	UserName                      string                    `json:"userName,omitempty"`
+	Email                         string                    `json:"email,omitempty"`
+	Comments                      string                    `json:"comments,omitempty"`
+	Disabled                      bool                      `json:"disabled,omitempty"`
+	Password                      string                    `json:"password,omitempty"`
+	PasswordLastModifiedTime      int                       `json:"pwdLastModifiedTime,omitempty"`
+	IsNonEditable                 bool                      `json:"isNonEditable,omitempty"`
+	IsPasswordLoginAllowed        bool                      `json:"isPasswordLoginAllowed,omitempty"`
+	IsPasswordExpired             bool                      `json:"isPasswordExpired,omitempty"`
+	IsAuditor                     bool                      `json:"isAuditor,omitempty"`
+	IsSecurityReportCommEnabled   bool                      `json:"isSecurityReportCommEnabled,omitempty"`
+	IsServiceUpdateCommEnabled    bool                      `json:"isServiceUpdateCommEnabled,omitempty"`
+	IsProductUpdateCommEnabled    bool                      `json:"isProductUpdateCommEnabled,omitempty"`
+	IsExecMobileAppEnabled        bool                      `json:"isExecMobileAppEnabled,omitempty"`
+	AdminScopeGroupMemberEntities []common.IDNameExtensions `json:"adminScopescopeGroupMemberEntities,omitempty"`
+	AdminScopeEntities            []common.IDNameExtensions `json:"adminScopeScopeEntities,omitempty"`
+	AdminScopeType                string                    `json:"adminScopeType,omitempty"`
+	Role                          *Role                     `json:"role,omitempty"`
+	ExecMobileAppTokens           []ExecMobileAppTokens     `json:"execMobileAppTokens,omitempty"`
 }
 type Role struct {
 	ID           int                    `json:"id,omitempty"`
@@ -38,22 +42,6 @@ type Role struct {
 	Extensions   map[string]interface{} `json:"extensions,omitempty"`
 }
 
-type AdminScope struct {
-	AdminScopeGroupMemberEntities []AdminScopeGroupMemberEntities `json:"scopeGroupMemberEntities"`
-	AdminScopeEntities            []AdminScopeEntities            `json:"ScopeEntities,omitempty"`
-	Type                          string                          `json:"Type,omitempty"`
-}
-
-type AdminScopeGroupMemberEntities struct {
-	ID         int                    `json:"id,omitempty"`
-	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
-}
-type AdminScopeEntities struct {
-	ID         int                    `json:"id,omitempty"`
-	Name       string                 `json:"name,omitempty"`
-	Extensions map[string]interface{} `json:"extensions,omitempty"`
-}
 type ExecMobileAppTokens struct {
 	Cloud       string `json:"cloud,omitempty"`
 	OrgId       string `json:"orgId,omitempty"`
