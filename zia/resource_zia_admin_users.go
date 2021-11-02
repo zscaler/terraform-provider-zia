@@ -10,7 +10,6 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/urlcategories"
 )
 
 func resourceAdminUsers() *schema.Resource {
@@ -216,19 +215,6 @@ func flattenAdminUsersScopesLite(resp *adminuserrolemgmt.AdminUsers) []interface
 		"scope_group_member_entities": flattenIDs(resp.AdminScopeGroupMemberEntities),
 		"scope_entities":              flattenIDs(resp.AdminScopeEntities),
 	}
-	return scope
-}
-
-func flattenAdminScopesLite(scopes *urlcategories.URLCategory) []interface{} {
-	scope := make([]interface{}, len(scopes.Scopes))
-	for i, val := range scopes.Scopes {
-		scope[i] = map[string]interface{}{
-			"type":                        val.Type,
-			"scope_group_member_entities": flattenIDs(val.ScopeGroupMemberEntities),
-			"scope_entities":              flattenIDs(val.ScopeEntities),
-		}
-	}
-
 	return scope
 }
 
