@@ -55,20 +55,6 @@ func (service *Service) GetByName(networkServiceName string) (*NetworkServices, 
 	return nil, fmt.Errorf("no network services found with name: %s", networkServiceName)
 }
 
-/*
-func (service *Service) GetByProtocol(protocol string) (*NetworkServices, error) {
-	var networkServices []NetworkServices
-	url := fmt.Sprintf(networkServicesEndpoint, &networkServices)
-	if protocol != "" {
-		url = fmt.Sprintf("%s?protocol=%s", url, protocol)
-	}
-	err := service.Client.Read(url, &networkServices)
-	if err != nil {
-		return nil, err
-	}
-	return nil, fmt.Errorf("no network services found with name: %s", protocol)
-}
-*/
 func (service *Service) Create(networkService *NetworkServices) (*NetworkServices, error) {
 	resp, err := service.Client.Create(networkServicesEndpoint, *networkService)
 	if err != nil {
