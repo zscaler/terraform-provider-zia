@@ -3,21 +3,26 @@ subcategory: "Firewall Filtering - Network Services"
 layout: "zia"
 page_title: "ZIA: firewall_filtering_network_service"
 description: |-
-        Gets a list of all network services. The search parameters find matching values within the name or description attributes.
+      Adds a new network service.
 ---
-
 
 # zia_firewall_filtering_network_service (Resource)
 
 The **zia_firewall_filtering_network_service** - data source retrieves information about all network services.
 
 ```hcl
-data "zia_firewall_filtering_network_service" "example" {
-  name = "ICMP_ANY"
-}
-
-output "zia_firewall_filtering_network_service" {
-  value = data.zia_firewall_filtering_network_service.example
+resource "zia_firewall_filtering_network_service" "example" {
+  name        = "example"
+  description = "example"
+  src_tcp_ports {
+  }
+  dest_tcp_ports {
+    start = 5000
+    end = 5005
+  }
+    dest_tcp_ports {
+  }
+  type = "CUSTOM"
 }
 ```
 
@@ -25,20 +30,17 @@ output "zia_firewall_filtering_network_service" {
 
 The following arguments are supported:
 
-* `name` -(String)
+* `name` - (Required)
+* `description` - (Optional)
 
-### Read-Only
+* `is_name_l10n_tag` - (Optional
+* `tag` - (Optional)
+* `type` - (Optional) Supported values: `STANDARD`, `PREDEFINED`, `CUSTOM`
 
-* `description` - (String)
+`src_tcp_ports` - (Block List)
 
-* `is_name_l10n_tag` -(Boolean
-* `tag` -(String)
-* `type` -(String)
-
-`src_tcp_ports` -(Block List)
-
-* `start` - (Set of Number)
-* `end` - (Set of Number)
+* `start` - (Optional)
+* `end` - (Optional)
 
 `src_udp_ports` -(Block List)
 
@@ -47,8 +49,8 @@ The following arguments are supported:
 
 `dest_tcp_ports` - (Block List)
 
-* `start` - (Set of Number)
-* `end` - (Set of Number)
+* `start` - (Required)
+* `end` - (Required)
 
 `dest_udp_ports` -(Block List)
 
