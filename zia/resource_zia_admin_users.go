@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 func resourceAdminUsers() *schema.Resource {
@@ -74,32 +75,10 @@ func resourceAdminUsers() *schema.Resource {
 			"admin_scope": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Computed: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope_group_member_entities": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
+						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -110,29 +89,7 @@ func resourceAdminUsers() *schema.Resource {
 								"LOCATION_GROUP",
 							}, false),
 						},
-						"admin_scope_entities": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
+						"scope_entities": listIDsSchemaType("list of scope IDs"),
 					},
 				},
 			},
@@ -239,17 +196,26 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 	_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 	_ = d.Set("is_password_expired", resp.IsPasswordExpired)
-	_ = d.Set("admin_scope", resp.AdminScope)
 
 	if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
 		return err
 	}
 
-	if err := d.Set("admin_scope", flattenAdminScope(resp.AdminScope)); err != nil {
+	if err := d.Set("admin_scope", flattenAdminUsersScopesLite(resp)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenAdminUsersScopesLite(resp *adminuserrolemgmt.AdminUsers) []interface{} {
+	scope := make([]interface{}, 1)
+	scope[0] = map[string]interface{}{
+		"type":                        resp.AdminScopeType,
+		"scope_group_member_entities": flattenIDs(resp.AdminScopeGroupMemberEntities),
+		"scope_entities":              flattenIDs(resp.AdminScopeEntities),
+	}
+	return scope
 }
 
 func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
@@ -282,31 +248,30 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
+	adminScopeType, AdminScopeGroupMemberEntities, AdminScopeEntities := expandAdminUsersScopes(d)
 	result := adminuserrolemgmt.AdminUsers{
-		ID:                          d.Get("admin_id").(int),
-		LoginName:                   d.Get("login_name").(string),
-		UserName:                    d.Get("user_name").(string),
-		Email:                       d.Get("email").(string),
-		Comments:                    d.Get("comments").(string),
-		IsNonEditable:               d.Get("is_non_editable").(bool),
-		Disabled:                    d.Get("disabled").(bool),
-		IsAuditor:                   d.Get("is_auditor").(bool),
-		Password:                    d.Get("password").(string),
-		IsPasswordLoginAllowed:      d.Get("is_password_login_allowed").(bool),
-		IsSecurityReportCommEnabled: d.Get("is_security_report_comm_enabled").(bool),
-		IsServiceUpdateCommEnabled:  d.Get("is_service_update_comm_enabled").(bool),
-		IsProductUpdateCommEnabled:  d.Get("is_product_update_comm_enabled").(bool),
-		IsPasswordExpired:           d.Get("is_password_expired").(bool),
-		IsExecMobileAppEnabled:      d.Get("is_exec_mobile_app_enabled").(bool),
-		AdminScope:                  expandAdminScope(d),
+		ID:                            d.Get("admin_id").(int),
+		LoginName:                     d.Get("login_name").(string),
+		UserName:                      d.Get("user_name").(string),
+		Email:                         d.Get("email").(string),
+		Comments:                      d.Get("comments").(string),
+		IsNonEditable:                 d.Get("is_non_editable").(bool),
+		Disabled:                      d.Get("disabled").(bool),
+		IsAuditor:                     d.Get("is_auditor").(bool),
+		Password:                      d.Get("password").(string),
+		IsPasswordLoginAllowed:        d.Get("is_password_login_allowed").(bool),
+		IsSecurityReportCommEnabled:   d.Get("is_security_report_comm_enabled").(bool),
+		IsServiceUpdateCommEnabled:    d.Get("is_service_update_comm_enabled").(bool),
+		IsProductUpdateCommEnabled:    d.Get("is_product_update_comm_enabled").(bool),
+		IsPasswordExpired:             d.Get("is_password_expired").(bool),
+		IsExecMobileAppEnabled:        d.Get("is_exec_mobile_app_enabled").(bool),
+		AdminScopeGroupMemberEntities: AdminScopeGroupMemberEntities,
+		AdminScopeEntities:            AdminScopeEntities,
+		AdminScopeType:                adminScopeType,
 	}
 	role := expandAdminUserRoles(d)
 	if role != nil {
 		result.Role = role
-	}
-	scope := expandAdminScope(d)
-	if scope != nil {
-		result.AdminScope = scope
 	}
 	return result
 }
@@ -334,46 +299,16 @@ func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
 	}
 	return nil
 }
-
-func expandAdminScope(d *schema.ResourceData) *adminuserrolemgmt.AdminScope {
-	if adminScope, ok := d.GetOk("admin_scope"); ok {
-		scopeItem := adminScope.(*schema.Set).List()[0]
-		adminScope := scopeItem.(map[string]interface{})
-
-		return &adminuserrolemgmt.AdminScope{
-			AdminScopeGroupMemberEntities: expandScopeGroupMemberEntities(adminScope["scope_group_member_entities"].(*schema.Set)),
-			AdminScopeEntities:            expandScopeEntities(adminScope["admin_scope_entities"].(*schema.Set)),
-			Type:                          adminScope["type"].(string),
+func expandAdminUsersScopes(d *schema.ResourceData) (string, []common.IDNameExtensions, []common.IDNameExtensions) {
+	if scopeInterface, ok := d.GetOk("admin_scope"); ok {
+		scopesSet, ok := scopeInterface.(*schema.Set)
+		if !ok {
+			return "", []common.IDNameExtensions{}, []common.IDNameExtensions{}
+		}
+		for _, val := range scopesSet.List() {
+			scopeItem := val.(map[string]interface{})
+			return scopeItem["type"].(string), expandIDNameExtensionsMap(scopeItem, "scope_group_member_entities"), expandIDNameExtensionsMap(scopeItem, "scope_entities")
 		}
 	}
-
-	return nil
-}
-
-func expandScopeGroupMemberEntities(scopeGroupMember *schema.Set) []adminuserrolemgmt.AdminScopeGroupMemberEntities {
-	scopeGroups := make([]adminuserrolemgmt.AdminScopeGroupMemberEntities, scopeGroupMember.Len())
-	for i, scope := range scopeGroupMember.List() {
-		scopeGroupItem := scope.(map[string]interface{})
-		scopeGroups[i] = adminuserrolemgmt.AdminScopeGroupMemberEntities{
-			ID:         scopeGroupItem["id"].(int),
-			Name:       scopeGroupItem["name"].(string),
-			Extensions: scopeGroupItem["extensions"].(map[string]interface{}),
-		}
-	}
-
-	return scopeGroups
-}
-
-func expandScopeEntities(scopeEntity *schema.Set) []adminuserrolemgmt.AdminScopeEntities {
-	scopeEntities := make([]adminuserrolemgmt.AdminScopeEntities, scopeEntity.Len())
-	for i, scope := range scopeEntity.List() {
-		scopeentityItem := scope.(map[string]interface{})
-		scopeEntities[i] = adminuserrolemgmt.AdminScopeEntities{
-			ID:         scopeentityItem["id"].(int),
-			Name:       scopeentityItem["name"].(string),
-			Extensions: scopeentityItem["extensions"].(map[string]interface{}),
-		}
-	}
-
-	return scopeEntities
+	return "", []common.IDNameExtensions{}, []common.IDNameExtensions{}
 }
