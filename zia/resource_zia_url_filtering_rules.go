@@ -87,16 +87,19 @@ func resourceURLFilteringRules() *schema.Resource {
 				Default:  false,
 			},
 			"time_quota": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(15, 600),
 			},
 			"size_quota": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(10, 100000),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"validity_start_time": {
 				Type:     schema.TypeInt,

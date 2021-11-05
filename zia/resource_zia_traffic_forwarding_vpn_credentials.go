@@ -44,8 +44,9 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Sensitive: true,
 			},
 			"comments": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 		},
 	}
