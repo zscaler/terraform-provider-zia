@@ -169,22 +169,22 @@ func expandNetworkServices(d *schema.ResourceData) networkservices.NetworkServic
 		Type:          d.Get("type").(string),
 		IsNameL10nTag: d.Get("is_name_l10n_tag").(bool),
 	}
-	srcTcpPorts := expandNetwrokPorts(d, "src_tcp_ports")
+	srcTcpPorts := expandNetworkPorts(d, "src_tcp_ports")
 	if srcTcpPorts != nil {
 		result.SrcTCPPorts = srcTcpPorts
 	}
 
-	destTcpPorts := expandNetwrokPorts(d, "dest_tcp_ports")
+	destTcpPorts := expandNetworkPorts(d, "dest_tcp_ports")
 	if destTcpPorts != nil {
 		result.DestTCPPorts = destTcpPorts
 	}
 
-	SrcUdpPorts := expandNetwrokPorts(d, "src_udp_ports")
+	SrcUdpPorts := expandNetworkPorts(d, "src_udp_ports")
 	if SrcUdpPorts != nil {
 		result.SrcUDPPorts = SrcUdpPorts
 	}
 
-	DestUdpPorts := expandNetwrokPorts(d, "dest_udp_ports")
+	DestUdpPorts := expandNetworkPorts(d, "dest_udp_ports")
 	if DestUdpPorts != nil {
 		result.DestUDPPorts = DestUdpPorts
 	}

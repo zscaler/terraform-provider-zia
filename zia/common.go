@@ -179,7 +179,7 @@ func flattenNetwordPorts(ports []networkservices.NetworkPorts) []interface{} {
 	return portsObj
 }
 
-func expandNetwrokPorts(d *schema.ResourceData, key string) []networkservices.NetworkPorts {
+func expandNetworkPorts(d *schema.ResourceData, key string) []networkservices.NetworkPorts {
 	var ports []networkservices.NetworkPorts
 	if portsInterface, ok := d.GetOk(key); ok {
 		portSet, ok := portsInterface.(*schema.Set)
