@@ -200,8 +200,9 @@ func resourceLocationManagement() *schema.Resource {
 				}, false),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 		},
 	}

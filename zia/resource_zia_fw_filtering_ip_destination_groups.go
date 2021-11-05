@@ -51,9 +51,10 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description: "Destination IP addresses within the group",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about the destination IP group",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about the destination IP group",
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"ip_categories": {
 				Type:        schema.TypeSet,

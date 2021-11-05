@@ -50,8 +50,9 @@ func resourceFWNetworkServices() *schema.Resource {
 				}, false),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"is_name_l10n_tag": {
 				Type:     schema.TypeBool,

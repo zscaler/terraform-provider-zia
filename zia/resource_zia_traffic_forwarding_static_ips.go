@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
 )
@@ -33,14 +34,16 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Optional: true,
 			},
 			"latitude": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeFloat,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.FloatBetween(-90, 90),
 			},
 			"longitude": {
-				Type:     schema.TypeFloat,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeFloat,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.FloatBetween(-180, 180),
 			},
 			"routable_ip": {
 				Type:     schema.TypeBool,
