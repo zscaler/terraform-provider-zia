@@ -3,7 +3,9 @@ resource "zia_user_management" "john_ashcroft" {
  email = "john.ashcroft@acme.com"
  password = "P@ssw0rd123*"
  groups {
-  id = data.zia_group_management.normal_internet.id
+  id = [ data.zia_group_management.normal_internet.id,
+         data.zia_group_management.devops.id,
+         data.zia_group_management.engineering.id ]
   }
  department {
   id = data.zia_department_management.engineering.id
@@ -13,6 +15,10 @@ resource "zia_user_management" "john_ashcroft" {
 
 data "zia_group_management" "normal_internet" {
  name = "Normal_Internet"
+}
+
+data "zia_group_management" "devops" {
+ name = "DevOps"
 }
 
 data "zia_department_management" "engineering" {
