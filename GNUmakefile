@@ -9,6 +9,8 @@ default: build
 
 build: fmtcheck
 	go install
+	go mod vendor
+	go mod tidy
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
