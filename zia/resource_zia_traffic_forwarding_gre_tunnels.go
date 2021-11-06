@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
@@ -26,9 +27,10 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "The ID of the GRE tunnel.",
 			},
 			"source_ip": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The source IP address of the GRE tunnel. This is typically a static IP address in the organization or SD-WAN.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "The source IP address of the GRE tunnel. This is typically a static IP address in the organization or SD-WAN.",
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"primary_dest_vip": {
 				Type:        schema.TypeSet,
@@ -95,10 +97,11 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				},
 			},
 			"internal_ip_range": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Optional:    true,
-				Description: "The start of the internal IP address in /29 CIDR range",
+				Type:         schema.TypeString,
+				Computed:     true,
+				Optional:     true,
+				Description:  "The start of the internal IP address in /29 CIDR range",
+				ValidateFunc: validation.IsIPv4Range,
 			},
 
 			"last_modification_time": {
