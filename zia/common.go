@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 )
@@ -208,12 +209,14 @@ func resourceNetworkPortsSchema(desc string) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"start": {
-					Type:     schema.TypeInt,
-					Optional: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 65535),
 				},
 				"end": {
-					Type:     schema.TypeInt,
-					Optional: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 65535),
 				},
 			},
 		},
