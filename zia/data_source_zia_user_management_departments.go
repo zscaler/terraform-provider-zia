@@ -39,7 +39,7 @@ func dataSourceDepartmentManagement() *schema.Resource {
 func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Departments
+	var resp *usermanagement.Department
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for department id: %d\n", id)
