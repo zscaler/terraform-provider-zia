@@ -35,14 +35,16 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
 			},
 			"up_bandwidth": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Upload bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 99999999),
+				Description:  "Upload bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
 			},
 			"dn_bandwidth": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Download bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(1, 99999999),
+				Description:  "Download bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
 			},
 			"country": {
 				Type:     schema.TypeString,
