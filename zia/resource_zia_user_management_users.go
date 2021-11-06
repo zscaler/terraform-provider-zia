@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
 )
@@ -29,41 +30,13 @@ func resourceUserManagement() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "User name. This appears when choosing users for policies.",
 			},
 			"email": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization.",
-			},
-			"groups": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "List of Groups a user belongs to. Groups are used in policies.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Group name",
-						},
-						"idp_id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Unique identfier for the identity provider (IdP)",
-						},
-						"comments": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Additional information about the group",
-						},
-					},
-				},
 			},
 			"department": {
 				Type:     schema.TypeSet,
@@ -98,9 +71,10 @@ func resourceUserManagement() *schema.Resource {
 				},
 			},
 			"comments": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about this user.",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about this user.",
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"temp_auth_email": {
 				Type:        schema.TypeString,
@@ -108,11 +82,12 @@ func resourceUserManagement() *schema.Resource {
 				Description: "Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.",
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Sensitive: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
+			"groups": listIDsSchemaType("List of Groups a user belongs to. Groups are used in policies."),
 		},
 	}
 }
@@ -160,11 +135,11 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 	_ = d.Set("password", resp.Password)
 
-	if err := d.Set("groups", flattenGroupsSimple(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenGroupIDs(resp.Groups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("department", flattenDepartmentsSimple(resp.Departments)); err != nil {
+	if err := d.Set("department", flattenDepartment(resp.Department)); err != nil {
 		return err
 	}
 
@@ -208,96 +183,18 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func expandUsers(d *schema.ResourceData) usermanagement.User {
+func expandUsers(d *schema.ResourceData) usermanagement.Users {
 	id, _ := getIntFromResourceData(d, "user_id")
-	result := usermanagement.User{
+	result := usermanagement.Users{
 		ID:            id,
 		Name:          d.Get("name").(string),
 		Email:         d.Get("email").(string),
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
-		Groups:        expandGroups(d),
-		Departments:   expandDepartments(d),
+		Groups:        expandIDGroupSet(d, "groups"),
+		Department:    expandIDDepartment(d, "department"),
 	}
-	groups := expandGroups(d)
-	if groups != nil {
-		result.Groups = groups
-	}
-	departments := expandDepartments(d)
-	if departments != nil {
-		result.Departments = departments
-	}
+
 	return result
-}
-
-func expandGroups(d *schema.ResourceData) []usermanagement.Groups {
-	var groups []usermanagement.Groups
-	if groupsInterface, ok := d.GetOk("groups"); ok {
-		group := groupsInterface.([]interface{})
-		groups = make([]usermanagement.Groups, len(group))
-		for i, val := range group {
-			groupItem := val.(map[string]interface{})
-			groups[i] = usermanagement.Groups{
-				ID:       groupItem["id"].(int),
-				Name:     groupItem["name"].(string),
-				IdpID:    groupItem["idp_id"].(int),
-				Comments: groupItem["comments"].(string),
-			}
-		}
-	}
-
-	return groups
-}
-
-func expandDepartments(d *schema.ResourceData) *usermanagement.Departments {
-	departmentObj, ok := d.GetOk("department")
-	if !ok {
-		return nil
-	}
-	departments, ok := departmentObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(departments.List()) > 0 {
-		departmentObj := departments.List()[0]
-		department, ok := departmentObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		return &usermanagement.Departments{
-			ID:       department["id"].(int),
-			Name:     department["name"].(string),
-			IdpID:    department["idp_id"].(int),
-			Comments: department["comments"].(string),
-			Deleted:  department["deleted"].(bool),
-		}
-	}
-	return nil
-}
-
-func flattenGroupsSimple(group []usermanagement.Groups) []interface{} {
-	groups := make([]interface{}, len(group))
-	for i, val := range group {
-		groups[i] = map[string]interface{}{
-			"id":       val.ID,
-			"name":     val.Name,
-			"idp_id":   val.IdpID,
-			"comments": val.Comments,
-		}
-	}
-
-	return groups
-}
-
-func flattenDepartmentsSimple(departments *usermanagement.Departments) interface{} {
-	return []map[string]interface{}{
-		{
-			"id":       departments.ID,
-			"name":     departments.Name,
-			"idp_id":   departments.IdpID,
-			"comments": departments.Comments,
-			"deleted":  departments.Deleted,
-		},
-	}
 }

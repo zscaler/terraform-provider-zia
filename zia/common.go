@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
 )
@@ -68,6 +69,26 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
+func expandIDGroupSet(d *schema.ResourceData, key string) []common.Groups {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.Groups
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, common.Groups{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.Groups{}
+}
+
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
 	lastModifiedByObj, ok := d.GetOk(key)
 	if !ok {
@@ -92,7 +113,45 @@ func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameEx
 	return nil
 }
 
+func expandIDDepartment(d *schema.ResourceData, key string) *common.Department {
+	departmentObj, ok := d.GetOk(key)
+	if !ok {
+		return nil
+	}
+	departments, ok := departmentObj.(*schema.Set)
+	if !ok {
+		return nil
+	}
+	if len(departments.List()) > 0 {
+		departmentObj := departments.List()[0]
+		department, ok := departmentObj.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		return &common.Department{
+			ID:       department["id"].(int),
+			Name:     department["name"].(string),
+			IdpID:    department["idp_id"].(int),
+			Comments: department["comments"].(string),
+			Deleted:  department["deleted"].(bool),
+		}
+	}
+	return nil
+}
+
 func flattenIDs(list []common.IDNameExtensions) []interface{} {
+	result := make([]interface{}, 1)
+	mapIds := make(map[string]interface{})
+	ids := make([]int, len(list))
+	for i, item := range list {
+		ids[i] = item.ID
+	}
+	mapIds["id"] = ids
+	result[0] = mapIds
+	return result
+}
+
+func flattenGroupIDs(list []common.Groups) []interface{} {
 	result := make([]interface{}, 1)
 	mapIds := make(map[string]interface{})
 	ids := make([]int, len(list))
@@ -128,6 +187,20 @@ func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{
 	return lastModified
 }
 
+func flattenDepartment(department *common.Department) []interface{} {
+	departments := make([]interface{}, 0)
+	if department != nil {
+		departments = append(departments, map[string]interface{}{
+			"id":       department.ID,
+			"name":     department.Name,
+			"idp_id":   department.IdpID,
+			"comments": department.Comments,
+			"deleted":  department.Deleted,
+		})
+	}
+	return departments
+}
+
 func resourceNetworkPortsSchema(desc string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -136,12 +209,14 @@ func resourceNetworkPortsSchema(desc string) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"start": {
-					Type:     schema.TypeInt,
-					Optional: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 65535),
 				},
 				"end": {
-					Type:     schema.TypeInt,
-					Optional: true,
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 65535),
 				},
 			},
 		},

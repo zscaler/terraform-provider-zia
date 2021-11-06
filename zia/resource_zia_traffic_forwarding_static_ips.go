@@ -26,38 +26,44 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Description: "The ID of the Static IP.",
 			},
 			"ip_address": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsIPAddress,
+				Description:  "The static IP address",
 			},
 			"geo_override": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If not set, geographic coordinates and city are automatically determined from the IP address. Otherwise, the latitude and longitude coordinates must be provided.",
 			},
 			"latitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-90, 90),
+				Description:  "Required only if the geoOverride attribute is set. Latitude with 7 digit precision after decimal point, ranges between -90 and 90 degrees.",
 			},
 			"longitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-180, 180),
+				Description:  "Required only if the geoOverride attribute is set. Longitude with 7 digit precision after decimal point, ranges between -180 and 180 degrees.",
 			},
 			"routable_ip": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Indicates whether a non-RFC 1918 IP address is publicly routable. This attribute is ignored if there is no ZIA Private Service Edge associated to the organization.",
 			},
 			"managed_by": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Description: "This is an immutable reference to an entity. which mainly consists of id and name",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -74,14 +80,16 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				},
 			},
 			"last_modified_by": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Description: "This is an immutable reference to an entity. which mainly consists of id and name",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -98,8 +106,9 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				},
 			},
 			"comment": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Additional information about this static IP address",
 			},
 		},
 	}

@@ -103,7 +103,7 @@ func dataSourceUserManagement() *schema.Resource {
 func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.User
+	var resp *usermanagement.Users
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
@@ -132,11 +132,11 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
 
-		if err := d.Set("groups", flattenGroup(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenGroupIDs(resp.Groups)); err != nil {
 			return err
 		}
 
-		if err := d.Set("department", flattenDepartment(*resp.Departments)); err != nil {
+		if err := d.Set("department", flattenDepartment(resp.Department)); err != nil {
 			return err
 		}
 	} else {
@@ -144,30 +144,4 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	return nil
-}
-
-func flattenGroup(groups []usermanagement.Groups) []interface{} {
-	group := make([]interface{}, len(groups))
-	for i, val := range groups {
-		group[i] = map[string]interface{}{
-			"id":       val.ID,
-			"name":     val.Name,
-			"idp_id":   val.IdpID,
-			"comments": val.Comments,
-		}
-	}
-
-	return group
-}
-
-func flattenDepartment(department usermanagement.Departments) interface{} {
-	return []map[string]interface{}{
-		{
-			"id":       department.ID,
-			"name":     department.Name,
-			"idp_id":   department.IdpID,
-			"comments": department.Comments,
-			"deleted":  department.Deleted,
-		},
-	}
 }
