@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	locationsEndpoint = "/locations"
+	locationsEndpoint    = "/locations"
+	subLocationsEndpoint = "/sublocations"
 )
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.
@@ -67,7 +68,7 @@ type VPNCredentials struct {
 }
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations
-func (service *Service) Get(locationID int) (*Locations, error) {
+func (service *Service) GetLocation(locationID int) (*Locations, error) {
 	var location Locations
 	err := service.Client.Read(fmt.Sprintf("%s/%d", locationsEndpoint, locationID), &location)
 	if err != nil {
@@ -78,7 +79,7 @@ func (service *Service) Get(locationID int) (*Locations, error) {
 	return &location, nil
 }
 
-func (service *Service) GetByName(locationName string) (*Locations, error) {
+func (service *Service) GetLocationByName(locationName string) (*Locations, error) {
 	var locations []Locations
 	// We are assuming this location name will be in the firsy 1000 obejcts
 	err := service.Client.Read(fmt.Sprintf("%s?page=1&pageSize=1000", locationsEndpoint), &locations)

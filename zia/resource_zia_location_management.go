@@ -278,7 +278,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	if !ok {
 		return fmt.Errorf("no location management id is set")
 	}
-	resp, err := zClient.locationmanagement.Get(id)
+	resp, err := zClient.locationmanagement.GetLocation(id)
 
 	if err != nil {
 		if err.(*client.ErrorResponse).IsObjectNotFound() {

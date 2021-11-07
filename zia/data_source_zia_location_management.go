@@ -211,7 +211,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationmanagement.GetByName(name)
+		res, err := zClient.locationmanagement.GetLocationByName(name)
 		if err != nil {
 			return err
 		}
