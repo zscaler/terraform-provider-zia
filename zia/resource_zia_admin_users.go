@@ -75,7 +75,6 @@ func resourceAdminUsers() *schema.Resource {
 			"admin_scope": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
@@ -156,6 +155,9 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	if err := checkPasswordAllowed(req); err != nil {
 		return err
 	}
+	if err := checkAdminScopeType(req); err != nil {
+		return err
+	}
 	resp, err := zClient.adminuserrolemgmt.CreateAdminUser(req)
 	if err != nil {
 		return err
@@ -169,6 +171,13 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 func checkPasswordAllowed(pass adminuserrolemgmt.AdminUsers) error {
 	if pass.IsPasswordLoginAllowed && pass.Password == "" {
 		return fmt.Errorf("enter a password for the admin. It can be 8 to 100 characters and must contain at least one number, one special character, and one upper-case letter")
+	}
+	return nil
+}
+
+func checkAdminScopeType(scopeType adminuserrolemgmt.AdminUsers) error {
+	if scopeType.IsExecMobileAppEnabled && scopeType.AdminScopeType != "ORGANIZATION" {
+		return fmt.Errorf("mobile app access can only be enabled for an admin with organization scope")
 	}
 	return nil
 }
