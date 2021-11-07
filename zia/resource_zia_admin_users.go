@@ -108,10 +108,11 @@ func resourceAdminUsers() *schema.Resource {
 				Default:  false,
 			},
 			"password": {
-				Type:        schema.TypeString,
-				Description: "The admin's password. If admin single sign-on (SSO) is disabled, then this field is mandatory for POST requests. This information is not provided in a GET response.",
-				Optional:    true,
-				Sensitive:   true,
+				Type:         schema.TypeString,
+				Description:  "The admin's password. If admin single sign-on (SSO) is disabled, then this field is mandatory for POST requests. This information is not provided in a GET response.",
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(8, 100),
 			},
 			"is_password_login_allowed": {
 				Type:     schema.TypeBool,
@@ -152,7 +153,9 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 
 	req := expandAdminUsers(d)
 	log.Printf("[INFO] Creating zia admin user with request\n%+v\n", req)
-
+	if err := checkPasswordAllowed(req); err != nil {
+		return err
+	}
 	resp, err := zClient.adminuserrolemgmt.CreateAdminUser(req)
 	if err != nil {
 		return err
@@ -161,6 +164,13 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("admin_id", resp.ID)
 	return resourceAdminUsersRead(d, m)
+}
+
+func checkPasswordAllowed(pass adminuserrolemgmt.AdminUsers) error {
+	if pass.IsPasswordLoginAllowed && pass.Password == "" {
+		return fmt.Errorf("enter a password for the admin. It can be 8 to 100 characters and must contain at least one number, one special character, and one upper-case letter")
+	}
+	return nil
 }
 
 func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
