@@ -31,26 +31,31 @@ func resourceURLFilteringRules() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "URL Filtering Rule ID",
 			},
 			"rule_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "URL Filtering Rule ID",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Rule Name",
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"protocols": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Protocol criteria",
 			},
 			"url_categories": {
 				Type:     schema.TypeSet,
@@ -78,8 +83,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
 			},
 			"end_user_notification_url": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "URL of end user notification page to be displayed when the rule is matched. Not applicable if either 'overrideUsers' or 'overrideGroups' is specified.",
 			},
 			"block_override": {
 				Type:     schema.TypeBool,
@@ -90,38 +96,45 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(15, 600),
+				Description:  "Time quota in minutes, after which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
 			},
 			"size_quota": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(10, 100000),
+				Description:  "Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Description:  "Additional information about the URL Filtering rule",
 			},
 			"validity_start_time": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will be valid starting on this date and time.",
 			},
 			"validity_end_time": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will cease to be valid on this end date and time.",
 			},
 			"validity_time_zone_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
 			},
 			"last_modified_time": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "When the rule was last modified",
 			},
 			"last_modified_by": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Description: "Who modified the rule last",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -143,8 +156,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				},
 			},
 			"enforce_time_validity": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
 			"user_agent_types": {
 				Type:     schema.TypeSet,
@@ -152,8 +166,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Action taken when traffic matches rule criteria",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ANY",
 					"NONE",
