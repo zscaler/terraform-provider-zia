@@ -6,17 +6,17 @@ type IDNameExtensions struct {
 	Extensions map[string]interface{} `json:"extensions,omitempty"`
 }
 
-type Department struct {
-	ID       int    `json:"id"`
+type UserGroups struct {
+	ID       int    `json:"id,omitempty"`
 	Name     string `json:"name,omitempty"`
-	IdpID    int    `json:"idpId"`
+	IdpID    int    `json:"idp_id,omitempty"`
 	Comments string `json:"comments,omitempty"`
-	Deleted  bool   `json:"deleted"`
 }
 
-type Groups struct {
-	ID       int    `json:"id"`
+type UserDepartment struct {
+	ID       int    `json:"id,omitempty"`
 	Name     string `json:"name,omitempty"`
-	IdpID    int    `json:"idpId"`
+	IdpID    int    `json:"idp_id,omitempty"`
 	Comments string `json:"comments,omitempty"`
+	Deleted  bool   `json:"deleted,omitempty"`
 }

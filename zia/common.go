@@ -78,16 +78,16 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
-func expandIDGroupSet(d *schema.ResourceData, key string) []common.Groups {
+func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
 	setInterface, ok := d.GetOk(key)
 	if ok {
 		set := setInterface.(*schema.Set)
-		var result []common.Groups
+		var result []common.UserGroups
 		for _, item := range set.List() {
 			itemMap, _ := item.(map[string]interface{})
 			if itemMap != nil {
 				for _, id := range itemMap["id"].([]interface{}) {
-					result = append(result, common.Groups{
+					result = append(result, common.UserGroups{
 						ID: id.(int),
 					})
 				}
@@ -95,7 +95,7 @@ func expandIDGroupSet(d *schema.ResourceData, key string) []common.Groups {
 		}
 		return result
 	}
-	return []common.Groups{}
+	return []common.UserGroups{}
 }
 
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
@@ -122,8 +122,8 @@ func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameEx
 	return nil
 }
 
-func expandIDDepartment(d *schema.ResourceData, key string) *common.Department {
-	departmentObj, ok := d.GetOk(key)
+func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
+	departmentObj, ok := d.GetOk("department")
 	if !ok {
 		return nil
 	}
@@ -137,7 +137,7 @@ func expandIDDepartment(d *schema.ResourceData, key string) *common.Department {
 		if !ok {
 			return nil
 		}
-		return &common.Department{
+		return &common.UserDepartment{
 			ID:       department["id"].(int),
 			Name:     department["name"].(string),
 			IdpID:    department["idp_id"].(int),
@@ -160,7 +160,7 @@ func flattenIDs(list []common.IDNameExtensions) []interface{} {
 	return result
 }
 
-func flattenGroupIDs(list []common.Groups) []interface{} {
+func flattenUserGroupSet(list []common.UserGroups) []interface{} {
 	result := make([]interface{}, 1)
 	mapIds := make(map[string]interface{})
 	ids := make([]int, len(list))
@@ -196,18 +196,17 @@ func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{
 	return lastModified
 }
 
-func flattenDepartment(department *common.Department) []interface{} {
-	departments := make([]interface{}, 0)
-	if department != nil {
-		departments = append(departments, map[string]interface{}{
-			"id":       department.ID,
-			"name":     department.Name,
-			"idp_id":   department.IdpID,
-			"comments": department.Comments,
-			"deleted":  department.Deleted,
+func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
+	department := make([]interface{}, 0)
+	if userDepartment != nil {
+		department = append(department, map[string]interface{}{
+			"name":     userDepartment.Name,
+			"idp_id":   userDepartment.IdpID,
+			"comments": userDepartment.Comments,
+			"deleted":  userDepartment.Deleted,
 		})
 	}
-	return departments
+	return department
 }
 
 func resourceNetworkPortsSchema(desc string) *schema.Schema {

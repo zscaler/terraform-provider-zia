@@ -41,6 +41,7 @@ func resourceUserManagement() *schema.Resource {
 			"department": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -87,7 +88,7 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
-			"groups": listIDsSchemaType("List of Groups a user belongs to. Groups are used in policies."),
+			"groups": listIDsSchemaTypeCustom(8, "List of Groups a user belongs to. Groups are used in policies."),
 		},
 	}
 }
@@ -135,13 +136,21 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 	_ = d.Set("password", resp.Password)
 
-	if err := d.Set("groups", flattenGroupIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenUserGroupSet(resp.Groups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("department", flattenDepartment(resp.Department)); err != nil {
+	// if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
+	// 	return err
+	// }
+
+	if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
 		return err
 	}
+
+	// if err := d.Set("department", flattenDepartment(*resp.Department)); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -192,9 +201,15 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
-		Groups:        expandIDGroupSet(d, "groups"),
-		Department:    expandIDDepartment(d, "department"),
+	}
+	groups := expandUserGroups(d, "groups")
+	if groups != nil {
+		result.Groups = groups
 	}
 
+	department := expandUserDepartment(d)
+	if department != nil {
+		result.Department = department
+	}
 	return result
 }

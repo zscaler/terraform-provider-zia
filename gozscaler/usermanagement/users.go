@@ -16,17 +16,17 @@ const (
 )
 
 type Users struct {
-	ID            int                `json:"id"`
-	Name          string             `json:"name,omitempty"`
-	Email         string             `json:"email,omitempty"`
-	Groups        []common.Groups    `json:"groups,omitempty"`
-	Department    *common.Department `json:"department,omitempty"`
-	Comments      string             `json:"comments,omitempty"`
-	TempAuthEmail string             `json:"tempAuthEmail,omitempty"`
-	Password      string             `json:"password,omitempty"`
-	AdminUser     bool               `json:"adminUser"`
-	Type          string             `json:"type,omitempty"`
-	Deleted       bool               `json:"deleted"`
+	ID            int                    `json:"id"`
+	Name          string                 `json:"name,omitempty"`
+	Email         string                 `json:"email,omitempty"`
+	Groups        []common.UserGroups    `json:"groups,omitempty"`
+	Department    *common.UserDepartment `json:"department,omitempty"`
+	Comments      string                 `json:"comments,omitempty"`
+	TempAuthEmail string                 `json:"tempAuthEmail,omitempty"`
+	Password      string                 `json:"password,omitempty"`
+	AdminUser     bool                   `json:"adminUser"`
+	Type          string                 `json:"type,omitempty"`
+	Deleted       bool                   `json:"deleted"`
 }
 
 func (service *Service) Get(userID int) (*Users, error) {
