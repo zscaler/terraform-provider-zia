@@ -25,9 +25,9 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Optional: true,
 			},
 			"pre_shared_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-				// Sensitive: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"comments": {
 				Type:     schema.TypeString,
