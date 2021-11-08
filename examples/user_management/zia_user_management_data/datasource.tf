@@ -1,3 +1,4 @@
+/*
 data "zia_user_management" "john_ashcroft" {
  name = "John Ashcroft"
 }
@@ -5,3 +6,4 @@ data "zia_user_management" "john_ashcroft" {
 output "zia_user_management" {
   value = data.zia_user_management.john_ashcroft
 }
+*/

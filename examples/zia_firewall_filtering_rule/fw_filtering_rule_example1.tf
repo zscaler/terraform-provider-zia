@@ -34,5 +34,3 @@ data "zia_group_management" "normal_internet" {
 data "zia_firewall_filtering_time_window" "work_hours" {
     name = "Work hours"
 }
-
-

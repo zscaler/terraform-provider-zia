@@ -1,3 +1,4 @@
+/*
 data "zia_firewall_filtering_rule" "example" {
     name = "Office 365 One Click Rule"
 }
@@ -5,3 +6,4 @@ data "zia_firewall_filtering_rule" "example" {
 output "zia_firewall_filtering_rule" {
   value = data.zia_firewall_filtering_rule.example
 }
+*/
