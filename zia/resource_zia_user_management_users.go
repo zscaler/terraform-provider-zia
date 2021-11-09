@@ -140,17 +140,9 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
-	// 	return err
-	// }
-
 	if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
 		return err
 	}
-
-	// if err := d.Set("department", flattenDepartment(*resp.Department)); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }
