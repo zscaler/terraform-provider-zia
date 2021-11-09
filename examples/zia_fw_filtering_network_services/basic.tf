@@ -1,3 +1,4 @@
+/*
 resource "zia_firewall_filtering_network_service" "example" {
   name        = "example"
   description = "example"
@@ -23,3 +24,4 @@ resource "zia_firewall_filtering_network_service" "example" {
   }
   type = "CUSTOM"
 }
+*/

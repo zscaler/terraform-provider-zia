@@ -1,14 +1,3 @@
-terraform {
-    required_providers {
-        zia = {
-            version = "1.0.0"
-            source = "zscaler.com/zia/zia"
-        }
-    }
-}
-
-provider "zia" {}
-
 data "zia_traffic_forwarding_public_node_vips" "yvr1"{
     datacenter = "YVR1"
 }

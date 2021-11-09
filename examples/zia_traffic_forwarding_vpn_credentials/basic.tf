@@ -1,7 +1,7 @@
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type = "UFQDN"
     fqdn = "sjc-1-37@acme.com"
-    comments = "created automatically"
+    comments = "Created via Terraform"
     pre_shared_key = "newPassword123!"
 }
 
