@@ -72,7 +72,7 @@ func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	resp, err := zClient.ipsourcegroups.Get(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia ip source groups %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

@@ -211,7 +211,7 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	resp, err := zClient.gretunnels.GetGreTunnels(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing gre tunnel %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

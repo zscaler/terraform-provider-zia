@@ -144,7 +144,7 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	resp, err := zClient.staticips.Get(id)
 
 	if err != nil {
-		if errResp, ok := err.(*client.ErrorResponse); ok && errResp.IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing static ip %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

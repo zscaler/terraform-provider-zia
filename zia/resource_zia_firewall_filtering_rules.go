@@ -194,7 +194,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	resp, err := zClient.filteringrules.Get(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

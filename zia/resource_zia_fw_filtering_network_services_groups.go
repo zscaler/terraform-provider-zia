@@ -85,7 +85,7 @@ func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) e
 	resp, err := zClient.networkservices.GetNetworkServiceGroups(id)
 
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia network service groups %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
