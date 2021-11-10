@@ -35,8 +35,8 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("api responded with code: %d", resp.StatusCode)
+	if resp.StatusCode >= 299 {
+		return nil, checkErrorInResponse(resp, fmt.Errorf("api responded with code: %d", resp.StatusCode))
 	}
 	defer resp.Body.Close()
 
@@ -44,9 +44,7 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode > 299 {
-		return nil, fmt.Errorf("api returned an error status:%d, %s", resp.StatusCode, string(body))
-	}
+
 	return body, nil
 }
 

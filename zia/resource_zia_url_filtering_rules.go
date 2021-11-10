@@ -233,7 +233,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	resp, err := zClient.urlfilteringpolicies.Get(id)
 
 	if err != nil {
-		if obj, ok := err.(*client.ErrorResponse); ok && obj.IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

@@ -79,7 +79,7 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	resp, err := zClient.vpncredentials.Get(id)
 
 	if err != nil {
-		if obj, ok := err.(*client.ErrorResponse); ok && obj.IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing vpn credentials %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil

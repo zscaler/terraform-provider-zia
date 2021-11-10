@@ -52,7 +52,7 @@ func resourceActivationRead(d *schema.ResourceData, m interface{}) error {
 
 	resp, err := zClient.activation.GetActivationStatus()
 	if err != nil {
-		if err.(*client.ErrorResponse).IsObjectNotFound() {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Cannot obtain activation %s from ZIA", d.Id())
 			// Activation is not an actual object; hence no ID should be set.
 			// d.SetId("")
