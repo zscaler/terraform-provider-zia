@@ -82,5 +82,3 @@ Information about referencing Github Issues: https://help.github.com/articles/ba
 
 Are there any other GitHub issues (open or closed) or pull requests that should be linked here? Vendor documentation? For example:
 --->
-
-- #0000
