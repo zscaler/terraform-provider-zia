@@ -75,7 +75,7 @@ xcopy "%GOPATH%\bin\terraform-provider-zia.exe" "%APPDATA%\terraform.d\plugins\z
 Run the following commands if using powershell:
 
 ```sh
-cd "$env:GOPATH\src\github.com\willguibr\terraform-provider-zia"
+cd "$env:GOPATH\src\github.com\terraform-providers\terraform-provider-zia"
 go fmt
 go install
 xcopy "$env:GOPATH\bin\terraform-provider-zia.exe" "$env:APPDATA\terraform.d\plugins\zscaler.com\zia\zia\1.0.0\windows_amd64\" /Y
@@ -128,7 +128,9 @@ terraform {
 Examples
 --------
 
-Visit [here](https://github.com/willguibr/terraform-provider-zia/tree/master/website/docs/) for the complete documentation for all resources on github.
+Visit [here](https://github.com/
+
+/terraform-provider-zia/tree/master/website/docs/) for the complete documentation for all resources on github.
 
 Issues
 =========
