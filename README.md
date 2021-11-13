@@ -1,5 +1,3 @@
-[![Build Status](https://app.travis-ci.com/willguibr/terraform-provider-zia.svg?token=Djmu8v8CsRiipfYMXaRA&branch=master)](https://app.travis-ci.com/willguibr/terraform-provider-zia)
-
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 =========================================================================
 
