@@ -18,12 +18,12 @@ Requirements
 Building The Provider (Terraform v0.12+)
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/willguibr/terraform-provider-zia`
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-zia`
 
 ```sh
 mkdir -p $GOPATH/src/github.com/terraform-providers
 cd $GOPATH/src/github.com/terraform-providers
-git clone https://github.com/willguibr/terraform-provider-zia.git
+git clone https://github.com/terraform-providers/terraform-provider-zia.git
 ```
 
 To clone on windows
@@ -31,7 +31,7 @@ To clone on windows
 ```sh
 mkdir %GOPATH%\src\github.com\terraform-providers
 cd %GOPATH%\src\github.com\terraform-providers
-git clone https://github.com/willguibr/terraform-provider-zia.git
+git clone https://github.com/terraform-providers/terraform-provider-zia.git
 ```
 
 Enter the provider directory and build the provider
