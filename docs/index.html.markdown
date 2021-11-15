@@ -73,7 +73,7 @@ The ZIA provider offers various means of providing credentials for authenticatio
 
 ⚠️ **WARNING:** Hard-coding credentials into any Terraform configuration is not recommended, and risks secret leakage should this file be committed to public version control
 
-Static credentials can be provided by specifying the `zpa_username`, `zia_password`, `zia_api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
+Static credentials can be provided by specifying the `zia_username`, `zia_password`, `zia_api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
 
 **Usage:**
 
