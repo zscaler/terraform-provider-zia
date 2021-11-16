@@ -73,16 +73,16 @@ The ZIA provider offers various means of providing credentials for authenticatio
 
 ⚠️ **WARNING:** Hard-coding credentials into any Terraform configuration is not recommended, and risks secret leakage should this file be committed to public version control
 
-Static credentials can be provided by specifying the `zia_username`, `zia_password`, `zia_api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
+Static credentials can be provided by specifying the `username`, `password`, `api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
 
 **Usage:**
 
 ```hcl
 provider "zia" {
-  zpa_username      = 'xxxxxxxxxxxxxxxx'
-  zia_password      = 'xxxxxxxxxxxxxxxx'
-  zia_api_key       = 'xxxxxxxxxxxxxxxx'
-  zia_base_url      = 'https://zsapi.zscalerthree.net'
+  username      = 'xxxxxxxxxxxxxxxx'
+  password      = 'xxxxxxxxxxxxxxxx'
+  api_key       = 'xxxxxxxxxxxxxxxx'
+  zia_base_url  = 'https://zsapi.zscalerthree.net'
 }
 ```
 
