@@ -8,8 +8,6 @@ default: build
 
 build: fmtcheck
 	go install
-	go mod vendor
-	go mod tidy
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
@@ -19,6 +17,8 @@ else
 build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/1.0.0/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
+	go mod vendor
+	go mod tidy
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v1.0.0
