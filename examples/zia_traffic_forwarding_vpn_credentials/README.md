@@ -20,3 +20,5 @@ terraform apply theplan
 ```bash
 terraform destroy
 ```
+
+:warning: The following VPN Credential types are currently not supported via Terraform due to API constraints: `CN` and `XAUTH`
