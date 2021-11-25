@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.0
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.8.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.9.0
 )
 
 require (
@@ -13,6 +13,7 @@ require (
 	github.com/apparentlymart/go-textseg/v13 v13.0.0 // indirect
 	github.com/fatih/color v1.7.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320 // indirect
@@ -34,7 +35,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/oklog/run v1.0.0 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
-	github.com/zclconf/go-cty v1.8.4 // indirect
+	github.com/zclconf/go-cty v1.9.1 // indirect
 	golang.org/x/net v0.0.0-20210326060303-6b1517762897 // indirect
 	golang.org/x/sys v0.0.0-20210502180810-71e4cd670f79 // indirect
 	golang.org/x/text v0.3.5 // indirect
