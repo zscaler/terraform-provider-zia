@@ -16,6 +16,7 @@ type VPNCredentials struct {
 	ID           int        `json:"id"`
 	Type         string     `json:"type,omitempty"`
 	FQDN         string     `json:"fqdn"`
+	IPAddress    string     `json:"ipAddress"`
 	PreSharedKey string     `json:"preSharedKey,omitempty"`
 	Comments     string     `json:"comments,omitempty"`
 	Location     *Location  `json:"location"`
