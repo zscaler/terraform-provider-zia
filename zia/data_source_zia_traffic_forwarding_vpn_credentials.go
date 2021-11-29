@@ -24,6 +24,10 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"ip_address": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"pre_shared_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -110,6 +114,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("type", resp.Type)
 		_ = d.Set("fqdn", resp.FQDN)
+		_ = d.Set("ip_address", resp.IPAddress)
 		_ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
 		if err := d.Set("location", flattenVPNCredentialsLocation(resp.Location)); err != nil {

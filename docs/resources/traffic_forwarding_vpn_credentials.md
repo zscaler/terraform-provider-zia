@@ -19,10 +19,24 @@ The **zia_traffic_forwarding_vpn_credentials** - Adds VPN credentials that can b
 ## Example Usage
 
 ```hcl
-# ZIA Traffic Forwarding - VPN Credentials
+# ZIA Traffic Forwarding - VPN Credentials (UFQDN)
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type = "UFQDN"
     fqdn = "sjc-1-37@acme.com"
+    comments = "created automatically"
+    pre_shared_key = "newPassword123!"
+}
+
+output "zia_traffic_forwarding_vpn_credentials"{
+    value = zia_traffic_forwarding_vpn_credentials.example
+}
+```
+
+```hcl
+# ZIA Traffic Forwarding - VPN Credentials (IP)
+resource "zia_traffic_forwarding_vpn_credentials" "example"{
+    type = "IP"
+    ip_address = "1.1.1.1"
     comments = "created automatically"
     pre_shared_key = "newPassword123!"
 }
@@ -36,8 +50,9 @@ output "zia_traffic_forwarding_vpn_credentials"{
 
 The following arguments are supported:
 
-* `type` - (Required) VPN authentication type (i.e., how the VPN credential is sent to the server). It is not modifiable after VpnCredential is created.
+* `type` - (Required) VPN authentication type (i.e., how the VPN credential is sent to the server). It is not modifiable after VpnCredential is created. The supported values are: `UFQDN` and `IP`
 * `fqdn` - (Required) Fully Qualified Domain Name. Applicable only to `UFQDN` or `XAUTH` (or `HOSTED_MOBILE_USERS`) auth type.
+* `ip_address` - (Required) IP Address for the VON credentials.
 * `pre_shared_key` - (Required) Pre-shared key. This is a required field for UFQDN and IP auth type.
 * `comments` - (Optional) Additional information about this VPN credential.
 

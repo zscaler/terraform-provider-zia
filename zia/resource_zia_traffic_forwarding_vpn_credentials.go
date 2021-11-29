@@ -28,15 +28,18 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
-					"CN",
 					"IP",
 					"UFQDN",
-					"XAUTH",
 				}, false),
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"ip_address": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"pre_shared_key": {
 				Type:      schema.TypeString,
@@ -58,6 +61,10 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	req := expandVPNCredentials(d)
 	log.Printf("[INFO] Creating zia vpn credentials\n%+v\n", req)
 
+	if err := validateVpnCredentialType(req); err != nil {
+		return err
+	}
+
 	resp, _, err := zClient.vpncredentials.Create(&req)
 	if err != nil {
 		return err
@@ -67,6 +74,17 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	_ = d.Set("vpn_credental_id", resp.ID)
 
 	return resourceTrafficForwardingVPNCredentialsRead(d, m)
+}
+
+func validateVpnCredentialType(vpn vpncredentials.VPNCredentials) error {
+	if vpn.Type == "IP" && vpn.IPAddress == "" {
+		return fmt.Errorf("invalid input argument, ip_address is required")
+	}
+
+	if vpn.Type == "UFQDN" && vpn.FQDN == "" {
+		return fmt.Errorf("invalid input argument, fqdn attribute is required")
+	}
+	return nil
 }
 
 func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
@@ -94,6 +112,7 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	_ = d.Set("vpn_credental_id", resp.ID)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("fqdn", resp.FQDN)
+	_ = d.Set("ip_address", resp.IPAddress)
 	_ = d.Set("pre_shared_key", resp.PreSharedKey)
 	_ = d.Set("comments", resp.Comments)
 
@@ -140,6 +159,7 @@ func expandVPNCredentials(d *schema.ResourceData) vpncredentials.VPNCredentials 
 		ID:           id,
 		Type:         d.Get("type").(string),
 		FQDN:         d.Get("fqdn").(string),
+		IPAddress:    d.Get("ip_address").(string),
 		PreSharedKey: d.Get("pre_shared_key").(string),
 		Comments:     d.Get("comments").(string),
 	}
