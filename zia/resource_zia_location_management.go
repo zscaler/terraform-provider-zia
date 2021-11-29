@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -11,6 +12,16 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 )
 
+func resourceLocationManagementCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	parentID := diff.Get("parent_id").(int)
+	if parentID != 0 {
+		if ips := removeEmpty(ListToStringSlice(diff.Get("ip_addresses").([]interface{}))); len(ips) == 0 {
+			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty, location name:%v, parent id: %d", diff.Get("name"), parentID)
+		}
+	}
+	return nil
+}
+
 func resourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
 		Create:   resourceLocationManagementCreate,
@@ -18,6 +29,8 @@ func resourceLocationManagement() *schema.Resource {
 		Update:   resourceLocationManagementUpdate,
 		Delete:   resourceLocationManagementDelete,
 		Importer: &schema.ResourceImporter{},
+		// NLBs have restrictions on them at this time
+		CustomizeDiff: resourceLocationManagementCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"location_id": {
@@ -239,6 +252,13 @@ func resourceLocationManagement() *schema.Resource {
 func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
+	if parentIDInt, ok := d.GetOk("parent_id"); ok && parentIDInt.(int) != 0 {
+		ipInter, ipSet := d.GetOk("ip_addresses")
+		if !ipSet || len(removeEmpty(ListToStringSlice(ipInter.([]interface{})))) == 0 {
+			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty: %v", d.Get("name"))
+		}
+	}
+
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
 	if err := checkSurrogateIPDependencies(req); err != nil {
@@ -381,6 +401,16 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	return nil
 }
 
+func removeEmpty(list []string) []string {
+	result := []string{}
+	for _, i := range list {
+		if i != "" {
+			result = append(result, i)
+		}
+	}
+	return result
+}
+
 func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locations {
 	id, _ := getIntFromResourceData(d, "location_id")
 	result := locationmanagement.Locations{
@@ -391,7 +421,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		DnBandwidth:                         d.Get("dn_bandwidth").(int),
 		Country:                             d.Get("country").(string),
 		TZ:                                  d.Get("tz").(string),
-		IPAddresses:                         ListToStringSlice(d.Get("ip_addresses").([]interface{})),
+		IPAddresses:                         removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		SSLScanEnabled:                      d.Get("ssl_scan_enabled").(bool),
