@@ -24,12 +24,11 @@ func resourceLocationManagementCustomizeDiff(ctx context.Context, diff *schema.R
 
 func resourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceLocationManagementCreate,
-		Read:     resourceLocationManagementRead,
-		Update:   resourceLocationManagementUpdate,
-		Delete:   resourceLocationManagementDelete,
-		Importer: &schema.ResourceImporter{},
-		// NLBs have restrictions on them at this time
+		Create:        resourceLocationManagementCreate,
+		Read:          resourceLocationManagementRead,
+		Update:        resourceLocationManagementUpdate,
+		Delete:        resourceLocationManagementDelete,
+		Importer:      &schema.ResourceImporter{},
 		CustomizeDiff: resourceLocationManagementCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
@@ -43,9 +42,10 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "Location Name.",
 			},
 			"parent_id": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ip_addresses"},
+				Description:  "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
 			},
 			"up_bandwidth": {
 				Type:         schema.TypeInt,
@@ -69,9 +69,12 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "Timezone of the location. If not specified, it defaults to GMT.",
 			},
 			"ip_addresses": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringIsNotEmpty,
+				},
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
 			},
 			"ports": {
