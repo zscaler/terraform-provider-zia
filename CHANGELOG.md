@@ -1,4 +1,4 @@
-## 1.0.1 (November 29, 2021)
+## 1.0.2 (November 29, 2021)
 
 ## Bug Fixes
 
