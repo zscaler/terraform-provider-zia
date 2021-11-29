@@ -72,8 +72,11 @@ func resourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsNotEmpty,
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validation.IsIPv4Range,
+						validation.IsIPv4Address,
+					),
 				},
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
 			},
