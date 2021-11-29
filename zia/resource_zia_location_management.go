@@ -1,7 +1,6 @@
 package zia
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -12,24 +11,13 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 )
 
-func resourceLocationManagementCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	parentID := diff.Get("parent_id").(int)
-	if parentID != 0 {
-		if ips := removeEmpty(ListToStringSlice(diff.Get("ip_addresses").([]interface{}))); len(ips) == 0 {
-			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty, location name:%v, parent id: %d", diff.Get("name"), parentID)
-		}
-	}
-	return nil
-}
-
 func resourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceLocationManagementCreate,
-		Read:          resourceLocationManagementRead,
-		Update:        resourceLocationManagementUpdate,
-		Delete:        resourceLocationManagementDelete,
-		Importer:      &schema.ResourceImporter{},
-		CustomizeDiff: resourceLocationManagementCustomizeDiff,
+		Create:   resourceLocationManagementCreate,
+		Read:     resourceLocationManagementRead,
+		Update:   resourceLocationManagementUpdate,
+		Delete:   resourceLocationManagementDelete,
+		Importer: &schema.ResourceImporter{},
 
 		Schema: map[string]*schema.Schema{
 			"location_id": {
