@@ -73,17 +73,44 @@ The ZIA provider offers various means of providing credentials for authenticatio
 
 ⚠️ **WARNING:** Hard-coding credentials into any Terraform configuration is not recommended, and risks secret leakage should this file be committed to public version control
 
-Static credentials can be provided by specifying the `zpa_username`, `zia_password`, `zia_api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
+Static credentials can be provided by specifying the `username`, `password`, `api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
 
 **Usage:**
 
 ```hcl
 provider "zia" {
-  zpa_username      = 'xxxxxxxxxxxxxxxx'
-  zia_password      = 'xxxxxxxxxxxxxxxx'
-  zia_api_key       = 'xxxxxxxxxxxxxxxx'
-  zia_base_url      = 'https://zsapi.zscalerthree.net'
+  username      = 'xxxxxxxxxxxxxxxx'
+  password      = 'xxxxxxxxxxxxxxxx'
+  api_key       = 'xxxxxxxxxxxxxxxx'
+  zia_base_url  = 'https://zsapi.<zscaler_cloud_name>.net'
 }
+```
+
+### Environment variables
+
+You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_BASE_URL` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
+
+```hcl
+provider "zia" {}
+```
+
+**Usage:**
+
+```sh
+export ZIA_USERNAME = "xxxxxxxxxxxxxxxx"
+export ZIA_PASSWORD = "xxxxxxxxxxxxxxxx"
+export ZIA_API_KEY  = "xxxxxxxxxxxxxxxx"
+export ZIA_BASE_URL = "xxxxxxxxxxxxxxxx"
+terraform plan
+```
+
+If you are on Windows, use PowerShell to set the environmenr variables using the following commands:
+
+```sh
+$env:username = 'xxxxxxxxxxxxxxxx'
+$env:password = 'xxxxxxxxxxxxxxxx'
+$env:api_key = 'xxxxxxxxxxxxxxxx'
+$env:zia_base_url = 'https://zsapi.<zscaler_cloud_name>.net'
 ```
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>

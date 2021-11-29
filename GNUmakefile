@@ -1,25 +1,24 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep "zia/")
-WEBSITE_REPO=zscaler.com/hashicorp/terraform-website
 PKG_NAME=zia
 TF_PLUGIN_DIR=~/.terraform.d/plugins
-ZIA=zscaler.com/zia/zia
+ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
 
 default: build
 
 build: fmtcheck
 	go install
-	go mod vendor
-	go mod tidy
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA)/1.0.0/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/1.0.0/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA)/1.0.0/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/1.0.0/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
+	go mod vendor
+	go mod tidy
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v1.0.0

@@ -1,5 +1,3 @@
-[![Build Status](https://app.travis-ci.com/willguibr/terraform-provider-zia.svg?token=Djmu8v8CsRiipfYMXaRA&branch=master)](https://app.travis-ci.com/willguibr/terraform-provider-zia)
-
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 =========================================================================
 
@@ -8,7 +6,7 @@ Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 - Website: <https://www.terraform.io>
 - Documentation: <https://help.zscaler.com/zia>
 - Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
-<img src="https://cdn.rawgit.com/hashicorp/terraform-website/master/content/source/assets/images/logo-hashicorp.svg" width="600px">
+<img src="https://github.com/hashicorp/terraform-website/blob/master/content/source/assets/images/logo-terraform-main.svg" width="600px">
 
 Requirements
 ------------
@@ -20,12 +18,12 @@ Requirements
 Building The Provider (Terraform v0.12+)
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/willguibr/terraform-provider-zia`
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-zia`
 
 ```sh
 mkdir -p $GOPATH/src/github.com/terraform-providers
 cd $GOPATH/src/github.com/terraform-providers
-git clone https://github.com/willguibr/terraform-provider-zia.git
+git clone https://github.com/terraform-providers/terraform-provider-zia.git
 ```
 
 To clone on windows
@@ -33,7 +31,7 @@ To clone on windows
 ```sh
 mkdir %GOPATH%\src\github.com\terraform-providers
 cd %GOPATH%\src\github.com\terraform-providers
-git clone https://github.com/willguibr/terraform-provider-zia.git
+git clone https://github.com/terraform-providers/terraform-provider-zia.git
 ```
 
 Enter the provider directory and build the provider
@@ -77,7 +75,7 @@ xcopy "%GOPATH%\bin\terraform-provider-zia.exe" "%APPDATA%\terraform.d\plugins\z
 Run the following commands if using powershell:
 
 ```sh
-cd "$env:GOPATH\src\github.com\willguibr\terraform-provider-zia"
+cd "$env:GOPATH\src\github.com\terraform-providers\terraform-provider-zia"
 go fmt
 go install
 xcopy "$env:GOPATH\bin\terraform-provider-zia.exe" "$env:APPDATA\terraform.d\plugins\zscaler.com\zia\zia\1.0.0\windows_amd64\" /Y
@@ -130,7 +128,9 @@ terraform {
 Examples
 --------
 
-Visit [here](https://github.com/willguibr/terraform-provider-zia/tree/master/website/docs/) for the complete documentation for all resources on github.
+Visit [here](https://github.com/
+
+/terraform-provider-zia/tree/master/website/docs/) for the complete documentation for all resources on github.
 
 Issues
 =========

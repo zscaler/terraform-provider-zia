@@ -30,9 +30,10 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "Location Name.",
 			},
 			"parent_id": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				RequiredWith: []string{"ip_addresses"},
+				Description:  "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
 			},
 			"up_bandwidth": {
 				Type:         schema.TypeInt,
@@ -56,9 +57,15 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "Timezone of the location. If not specified, it defaults to GMT.",
 			},
 			"ip_addresses": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.Any(
+						validation.IsIPv4Range,
+						validation.IsIPv4Address,
+					),
+				},
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
 			},
 			"ports": {
@@ -239,6 +246,13 @@ func resourceLocationManagement() *schema.Resource {
 func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
+	if parentIDInt, ok := d.GetOk("parent_id"); ok && parentIDInt.(int) != 0 {
+		ipInter, ipSet := d.GetOk("ip_addresses")
+		if !ipSet || len(removeEmpty(ListToStringSlice(ipInter.([]interface{})))) == 0 {
+			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty: %v", d.Get("name"))
+		}
+	}
+
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
 	if err := checkSurrogateIPDependencies(req); err != nil {
@@ -381,6 +395,16 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	return nil
 }
 
+func removeEmpty(list []string) []string {
+	result := []string{}
+	for _, i := range list {
+		if i != "" {
+			result = append(result, i)
+		}
+	}
+	return result
+}
+
 func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locations {
 	id, _ := getIntFromResourceData(d, "location_id")
 	result := locationmanagement.Locations{
@@ -391,7 +415,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		DnBandwidth:                         d.Get("dn_bandwidth").(int),
 		Country:                             d.Get("country").(string),
 		TZ:                                  d.Get("tz").(string),
-		IPAddresses:                         ListToStringSlice(d.Get("ip_addresses").([]interface{})),
+		IPAddresses:                         removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		SSLScanEnabled:                      d.Get("ssl_scan_enabled").(bool),
