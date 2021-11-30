@@ -27,7 +27,8 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			},
 			"ip_address": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.IsIPAddress,
 				Description:  "The static IP address",
 			},
