@@ -27,6 +27,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"IP",
 					"UFQDN",
