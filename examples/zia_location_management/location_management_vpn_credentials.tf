@@ -1,14 +1,3 @@
-terraform {
-    required_providers {
-        zia = {
-            version = "1.0.0"
-            source = "zscaler.com/zia/zia"
-        }
-    }
-}
-
-provider "zia" {}
-
 resource "zia_location_management" "usa_sjc37"{
     name = "USA_SJC_37"
     description = "Created with Terraform"
