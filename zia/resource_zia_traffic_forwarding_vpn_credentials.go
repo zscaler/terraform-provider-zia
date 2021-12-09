@@ -34,8 +34,9 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				}, false),
 			},
 			"fqdn": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringIsNotEmpty,
 			},
 			"ip_address": {
 				Type:         schema.TypeString,
