@@ -85,17 +85,20 @@ func resourceLocationManagement() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"CN",
 								"IP",
 								"UFQDN",
-								"XAUTH",
 							}, false),
 						},
 						"fqdn": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+						},
+						"ip_address": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsIPAddress,
 						},
 						"pre_shared_key": {
 							Type:      schema.TypeString,
@@ -350,6 +353,7 @@ func flattenLocationVPNCredentialsSimple(vpnCredential []locationmanagement.VPNC
 			"id":             vpnCredential.ID,
 			"type":           vpnCredential.Type,
 			"fqdn":           vpnCredential.FQDN,
+			"ip_address":     vpnCredential.IPAddress,
 			"pre_shared_key": vpnCredential.PreSharedKey,
 			"comments":       vpnCredential.Comments,
 		}
