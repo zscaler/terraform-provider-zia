@@ -17,8 +17,7 @@ else
 build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/1.0.2/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
-	go mod vendor
-	go mod tidy
+	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v1.0.2

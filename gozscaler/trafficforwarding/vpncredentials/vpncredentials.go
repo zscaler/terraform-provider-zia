@@ -15,12 +15,12 @@ const (
 type VPNCredentials struct {
 	ID           int        `json:"id"`
 	Type         string     `json:"type,omitempty"`
-	FQDN         string     `json:"fqdn"`
-	IPAddress    string     `json:"ipAddress"`
+	FQDN         string     `json:"fqdn,omitempty"`
+	IPAddress    string     `json:"ipAddress,omitempty"`
 	PreSharedKey string     `json:"preSharedKey,omitempty"`
 	Comments     string     `json:"comments,omitempty"`
-	Location     *Location  `json:"location"`
-	ManagedBy    *ManagedBy `json:"managedBy"`
+	Location     *Location  `json:"location,omitempty"`
+	ManagedBy    *ManagedBy `json:"managedBy,omitempty"`
 }
 type Location struct {
 	ID         int                    `json:"id"`

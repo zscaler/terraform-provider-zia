@@ -115,7 +115,6 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("fqdn", resp.FQDN)
 	_ = d.Set("ip_address", resp.IPAddress)
-	_ = d.Set("pre_shared_key", resp.PreSharedKey)
 	_ = d.Set("comments", resp.Comments)
 
 	return nil

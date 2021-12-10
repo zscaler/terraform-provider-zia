@@ -81,11 +81,12 @@ func resourceLocationManagement() *schema.Resource {
 						"id": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"IP",
 								"UFQDN",
@@ -94,10 +95,12 @@ func resourceLocationManagement() *schema.Resource {
 						"fqdn": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"ip_address": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IsIPAddress,
 						},
 						"pre_shared_key": {
@@ -261,6 +264,9 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	if err := checkSurrogateIPDependencies(req); err != nil {
 		return err
 	}
+	if err := checkVPNCredentials(req); err != nil {
+		return err
+	}
 	resp, err := zClient.locationmanagement.Create(&req)
 	if err != nil {
 		return err
@@ -271,7 +277,14 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 
 	return resourceLocationManagementRead(d, m)
 }
-
+func checkVPNCredentials(locations locationmanagement.Locations) error {
+	for _, vpn := range locations.VPNCredentials {
+		if vpn.Type == "IP" && vpn.IPAddress == "" {
+			return fmt.Errorf("ip_address is required when VPN credential is of type IP in: %d", vpn.ID)
+		}
+	}
+	return nil
+}
 func checkSurrogateIPDependencies(loc locationmanagement.Locations) error {
 	if loc.SurrogateIP && loc.IdleTimeInMinutes == 0 {
 		return fmt.Errorf("surrogate IP requires setting of an idle timeout")
@@ -460,11 +473,11 @@ func expandLocationManagementVPNCredentials(d *schema.ResourceData) []locationma
 				ID:           vpnItem["id"].(int),
 				Type:         vpnItem["type"].(string),
 				FQDN:         vpnItem["fqdn"].(string),
+				IPAddress:    vpnItem["ip_address"].(string),
 				PreSharedKey: vpnItem["pre_shared_key"].(string),
 				Comments:     vpnItem["comments"].(string),
 			}
 		}
 	}
-
 	return vpnCredentials
 }
