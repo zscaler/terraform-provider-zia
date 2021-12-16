@@ -280,7 +280,7 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 func checkVPNCredentials(locations locationmanagement.Locations) error {
 	for _, vpn := range locations.VPNCredentials {
 		if vpn.Type == "IP" && vpn.IPAddress == "" {
-			return fmt.Errorf("ip_address is required when VPN credential is of type IP in: %d", vpn.ID)
+			return fmt.Errorf("ip_address is required when VPN credential is of type IP")
 		}
 	}
 	return nil
