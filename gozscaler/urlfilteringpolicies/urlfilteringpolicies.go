@@ -19,13 +19,13 @@ type URLFilteringRule struct {
 	Name                   string                    `json:"name,omitempty"`
 	Order                  int                       `json:"order,omitempty"`
 	Protocols              []string                  `json:"protocols,omitempty"`
-	URLCategories          []string                  `json:"urlCategories,omitempty"`
+	URLCategories          []string                  `json:"urlCategories"`
 	State                  string                    `json:"state,omitempty"`
 	UserAgentTypes         []string                  `json:"userAgentTypes,omitempty"`
 	Rank                   int                       `json:"rank,omitempty"`
 	RequestMethods         []string                  `json:"requestMethods,omitempty"`
 	EndUserNotificationURL string                    `json:"endUserNotificationUrl,omitempty"`
-	BlockOverride          bool                      `json:"blockOverride,omitempty"`
+	BlockOverride          bool                      `json:"blockOverride"`
 	TimeQuota              int                       `json:"timeQuota,omitempty"`
 	SizeQuota              int                       `json:"sizeQuota,omitempty"`
 	Description            string                    `json:"description,omitempty"`
@@ -33,9 +33,9 @@ type URLFilteringRule struct {
 	ValidityEndTime        int                       `json:"validityEndTime,omitempty"`
 	ValidityTimeZoneID     string                    `json:"validityTimeZoneId,omitempty"`
 	LastModifiedTime       int                       `json:"lastModifiedTime,omitempty"`
-	EnforceTimeValidity    bool                      `json:"enforceTimeValidity,omitempty"`
+	EnforceTimeValidity    bool                      `json:"enforceTimeValidity"`
 	Action                 string                    `json:"action,omitempty"`
-	Ciparule               bool                      `json:"ciparule,omitempty"`
+	Ciparule               bool                      `json:"ciparule"`
 	LastModifiedBy         *common.IDNameExtensions  `json:"lastModifiedBy,omitempty"`
 	OverrideUsers          []common.IDNameExtensions `json:"overrideUsers,omitempty"`
 	OverrideGroups         []common.IDNameExtensions `json:"overrideGroups,omitempty"`

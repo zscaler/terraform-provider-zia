@@ -18,7 +18,7 @@ type FirewallFilteringRules struct {
 	ID                  int                       `json:"id,omitempty"`
 	Name                string                    `json:"name,omitempty"`
 	Order               int                       `json:"order,omitempty"`
-	Rank                int                       `json:"rank,omitempty"`
+	Rank                int                       `json:"rank"`
 	AccessControl       string                    `json:"accessControl,omitempty"`
 	EnableFullLogging   bool                      `json:"enableFullLogging"`
 	Action              string                    `json:"action,omitempty"`
@@ -31,8 +31,8 @@ type FirewallFilteringRules struct {
 	DestIpCategories    []string                  `json:"destIpCategories,omitempty"`
 	DestCountries       []string                  `json:"destCountries,omitempty"`
 	NwApplications      []string                  `json:"nwApplications,omitempty"`
-	DefaultRule         bool                      `json:"defaultRule,omitempty"`
-	Predefined          bool                      `json:"predefined,omitempty"`
+	DefaultRule         bool                      `json:"defaultRule"`
+	Predefined          bool                      `json:"predefined"`
 	Locations           []common.IDNameExtensions `json:"locations,omitempty"`
 	LocationsGroups     []common.IDNameExtensions `json:"locationGroups,omitempty"`      // The location groups to which the Firewall Filtering policy rule applies
 	Departments         []common.IDNameExtensions `json:"departments,omitempty"`         // The departments to which the Firewall Filtering policy rule applies

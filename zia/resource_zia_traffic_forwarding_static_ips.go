@@ -34,6 +34,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			},
 			"geo_override": {
 				Type:        schema.TypeBool,
+				Computed:    true,
 				Optional:    true,
 				Description: "If not set, geographic coordinates and city are automatically determined from the IP address. Otherwise, the latitude and longitude coordinates must be provided.",
 			},
@@ -54,6 +55,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"routable_ip": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Indicates whether a non-RFC 1918 IP address is publicly routable. This attribute is ignored if there is no ZIA Private Service Edge associated to the organization.",
 			},
 			"managed_by": {
