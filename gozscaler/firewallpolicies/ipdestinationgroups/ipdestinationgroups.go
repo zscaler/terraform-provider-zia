@@ -16,7 +16,7 @@ type IPDestinationGroups struct {
 	ID           int      `json:"id"`
 	Name         string   `json:"name,omitempty"`
 	Type         string   `json:"type,omitempty"`
-	Addresses    []string `json:"addresses,omitempty"`
+	Addresses    []string `json:"addresses"`
 	Description  string   `json:"description,omitempty"`
 	IPCategories []string `json:"ipCategories,omitempty"`
 	Countries    []string `json:"countries,omitempty"`

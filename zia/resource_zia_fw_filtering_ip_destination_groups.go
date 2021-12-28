@@ -48,6 +48,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				Description: "Destination IP addresses within the group",
 			},
 			"description": {
