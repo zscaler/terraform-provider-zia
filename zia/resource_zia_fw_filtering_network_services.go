@@ -32,10 +32,7 @@ func resourceFWNetworkServices() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tag": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+			"tag":            getCloudFirewallNwServicesTag(),
 			"src_tcp_ports":  resourceNetworkPortsSchema("src tcp ports"),
 			"dest_tcp_ports": resourceNetworkPortsSchema("dest tcp ports"),
 			"src_udp_ports":  resourceNetworkPortsSchema("src udp ports"),

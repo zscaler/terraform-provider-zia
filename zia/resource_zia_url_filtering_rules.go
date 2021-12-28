@@ -51,18 +51,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
-			"protocols": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Protocol criteria",
-			},
-			"url_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"state": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,17 +60,11 @@ func resourceURLFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"rank": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				// Default:     7,
-				Description: "Admin rank of the admin who creates this rule",
-			},
-			"request_methods": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      7,
+				ValidateFunc: validation.IntBetween(1, 7),
+				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"end_user_notification_url": {
 				Type:        schema.TypeString,
@@ -197,6 +179,9 @@ func resourceURLFilteringRules() *schema.Resource {
 			"override_groups": listIDsSchemaType("list of override groups"),
 			"location_groups": listIDsSchemaTypeCustom(32, "list of locations groups"),
 			"labels":          listIDsSchemaType("list of labels"),
+			"url_categories":  getURLCategories(),
+			"request_methods": getURLRequestMethods(),
+			"protocols":       getURLProtocols(),
 		},
 	}
 }

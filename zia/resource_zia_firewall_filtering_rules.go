@@ -126,17 +126,17 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"dest_countries": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
-				Elem:        &schema.Schema{Type: schema.TypeString},
-			},
-			"nw_applications": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			// "dest_countries": {
+			// 	Type:        schema.TypeSet,
+			// 	Optional:    true,
+			// 	Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
+			// 	Elem:        &schema.Schema{Type: schema.TypeString},
+			// },
+			// "nw_applications": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	Elem:     &schema.Schema{Type: schema.TypeString},
+			// },
 			"default_rule": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -163,6 +163,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"nw_application_groups": listIDsSchemaType("list of nw application groups"),
 			"nw_service_groups":     listIDsSchemaType("list of nw service groups"),
 			"nw_services":           listIDsSchemaTypeCustom(1024, "list of nw services"),
+			"dest_countries":        getCloudFirewallDstCountries(),
+			"nw_applications":       getCloudFirewallNwApplications(),
 		},
 	}
 }
