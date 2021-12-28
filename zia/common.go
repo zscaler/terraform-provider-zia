@@ -281,3 +281,97 @@ func expandNetworkPorts(d *schema.ResourceData, key string) []networkservices.Ne
 	}
 	return ports
 }
+
+func getURLCategories() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "List of URL categories for which rule must be applied",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateURLFilteringCategories(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}
+
+func getURLRequestMethods() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateURLFilteringRequestMethods(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}
+
+func getURLProtocols() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Supported Protocol criteria",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateURLFilteringProtocols(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}
+
+func getLocationManagementCountries() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		ValidateFunc: validateLocationManagementCountries(),
+		Description:  "Supported Countries",
+		Optional:     true,
+		Computed:     true,
+	}
+}
+
+func getLocationManagementTimeZones() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		ValidateFunc: validateLocationManagementTimeZones(),
+		Description:  "Timezone of the location. If not specified, it defaults to GMT.",
+		Optional:     true,
+		Computed:     true,
+	}
+}
+
+func getCloudFirewallDstCountries() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateCloudFirewallDstCountries(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}
+
+func getCloudFirewallNwApplications() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "User-defined network service applications on which the rule is applied. If not set, the rule is not restricted to a specific network service application.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateCloudFirewallNwApplications(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}
+
+func getCloudFirewallNwServicesTag() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		ValidateFunc: validateCloudFirewallNwServicesTag(),
+		Optional:     true,
+		Computed:     true,
+	}
+}

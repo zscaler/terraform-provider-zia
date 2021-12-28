@@ -58,20 +58,22 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description:  "Additional information about the destination IP group",
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
-			"ip_categories": {
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Computed:    true,
-				Description: "Destination IP address URL categories. You can identify destinations based on the URL category of the domain.",
-			},
-			"countries": {
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Computed:    true,
-				Description: "Destination IP address counties. You can identify destinations based on the location of a server.",
-			},
+			// "ip_categories": {
+			// 	Type:        schema.TypeSet,
+			// 	Elem:        &schema.Schema{Type: schema.TypeString},
+			// 	Optional:    true,
+			// 	Computed:    true,
+			// 	Description: "Destination IP address URL categories. You can identify destinations based on the URL category of the domain.",
+			// },
+			// "countries": {
+			// 	Type:        schema.TypeSet,
+			// 	Elem:        &schema.Schema{Type: schema.TypeString},
+			// 	Optional:    true,
+			// 	Computed:    true,
+			// 	Description: "Destination IP address counties. You can identify destinations based on the location of a server.",
+			// },
+			"ip_categories": getURLCategories(),
+			"countries":     getCloudFirewallDstCountries(),
 		},
 	}
 }
