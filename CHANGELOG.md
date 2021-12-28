@@ -1,3 +1,13 @@
+## 1.0.3 (December 28, 2021)
+
+## Bug Fixes
+
+- Fixed issue where Terraform showed that resources had been modified even though nothing had been changed in the upstream resources.PR#45 🔧
+
+## Enhacements
+
+- Added multiple validators across several resources for better API abstraction and mistake prevention during `terraform apply` PR#46 :rocket:
+
 ## 1.0.2 (November 29, 2021)
 
 ## Bug Fixes
