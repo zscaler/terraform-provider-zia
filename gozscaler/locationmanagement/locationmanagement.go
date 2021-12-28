@@ -25,22 +25,22 @@ type Locations struct {
 	IPAddresses                         []string         `json:"ipAddresses,omitempty"`
 	Ports                               string           `json:"ports,omitempty"`
 	VPNCredentials                      []VPNCredentials `json:"vpnCredentials,omitempty"`
-	AuthRequired                        bool             `json:"authRequired,omitempty"`
-	SSLScanEnabled                      bool             `json:"sslScanEnabled,omitempty"`
-	ZappSSLScanEnabled                  bool             `json:"zappSSLScanEnabled,omitempty"`
-	XFFForwardEnabled                   bool             `json:"xffForwardEnabled,omitempty"`
-	SurrogateIP                         bool             `json:"surrogateIP,omitempty"`
+	AuthRequired                        bool             `json:"authRequired"`
+	SSLScanEnabled                      bool             `json:"sslScanEnabled"`
+	ZappSSLScanEnabled                  bool             `json:"zappSSLScanEnabled"`
+	XFFForwardEnabled                   bool             `json:"xffForwardEnabled"`
+	SurrogateIP                         bool             `json:"surrogateIP"`
 	IdleTimeInMinutes                   int              `json:"idleTimeInMinutes,omitempty"`
 	DisplayTimeUnit                     string           `json:"displayTimeUnit,omitempty"`
-	SurrogateIPEnforcedForKnownBrowsers bool             `json:"surrogateIPEnforcedForKnownBrowsers,omitempty"`
+	SurrogateIPEnforcedForKnownBrowsers bool             `json:"surrogateIPEnforcedForKnownBrowsers"`
 	SurrogateRefreshTimeInMinutes       int              `json:"surrogateRefreshTimeInMinutes,omitempty"`
 	SurrogateRefreshTimeUnit            string           `json:"surrogateRefreshTimeUnit,omitempty"`
-	OFWEnabled                          bool             `json:"ofwEnabled,omitempty"`
-	IPSControl                          bool             `json:"ipsControl,omitempty"`
-	AUPEnabled                          bool             `json:"aupEnabled,omitempty"`
-	CautionEnabled                      bool             `json:"cautionEnabled,omitempty"`
-	AUPBlockInternetUntilAccepted       bool             `json:"aupBlockInternetUntilAccepted,omitempty"`
-	AUPForceSSLInspection               bool             `json:"aupForceSslInspection,omitempty"`
+	OFWEnabled                          bool             `json:"ofwEnabled"`
+	IPSControl                          bool             `json:"ipsControl"`
+	AUPEnabled                          bool             `json:"aupEnabled"`
+	CautionEnabled                      bool             `json:"cautionEnabled"`
+	AUPBlockInternetUntilAccepted       bool             `json:"aupBlockInternetUntilAccepted"`
+	AUPForceSSLInspection               bool             `json:"aupForceSslInspection"`
 	AUPTimeoutInDays                    int              `json:"aupTimeoutInDays,omitempty"`
 	Profile                             string           `json:"profile,omitempty"`
 	Description                         string           `json:"description,omitempty"`

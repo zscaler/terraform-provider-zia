@@ -42,7 +42,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      7,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 7),
 				Description:  "Admin rank of the Firewall Filtering policy rule",
 			},
@@ -140,13 +140,13 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"default_rule": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "If set to true, the default rule is applied",
 			},
 			"predefined": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
 			"locations":             listIDsSchemaTypeCustom(8, "list of locations for which rule must be applied"),

@@ -134,11 +134,13 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 			"within_country": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Restrict the data center virtual IP addresses (VIPs) only to those within the same country as the source IP address",
 			},
 			"country_code": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "When within_country is enabled, you must set this to the country code.",
 			},
 			"comment": {
@@ -147,9 +149,10 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "Additional information about this GRE tunnel",
 			},
 			"ip_unnumbered": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  "This is required to support the automated SD-WAN provisioning of GRE tunnels, when set to true gre_tun_ip and gre_tun_id are set to null",
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "This is required to support the automated SD-WAN provisioning of GRE tunnels, when set to true gre_tun_ip and gre_tun_id are set to null",
 			},
 		},
 	}

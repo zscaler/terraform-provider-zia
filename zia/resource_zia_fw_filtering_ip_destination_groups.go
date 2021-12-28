@@ -38,6 +38,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 			"type": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Destination IP group type (i.e., the group can contain destination IP addresses or FQDNs)",
 				ValidateFunc: validation.StringInSlice([]string{
 					"DSTN_IP",
@@ -61,12 +62,14 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				Description: "Destination IP address URL categories. You can identify destinations based on the URL category of the domain.",
 			},
 			"countries": {
 				Type:        schema.TypeSet,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Optional:    true,
+				Computed:    true,
 				Description: "Destination IP address counties. You can identify destinations based on the location of a server.",
 			},
 		},

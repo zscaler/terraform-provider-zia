@@ -60,6 +60,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"url_categories": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
@@ -71,9 +72,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"rank": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Default:     7,
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+				// Default:     7,
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"request_methods": {
@@ -90,7 +92,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"block_override": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"time_quota": {
 				Type:         schema.TypeInt,
@@ -158,6 +160,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"enforce_time_validity": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
 			"user_agent_types": {
@@ -182,7 +185,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"ciparule": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     false,
+				Computed:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
 			"locations":       listIDsSchemaTypeCustom(8, "Name-ID pairs of locations for which rule must be applied"),
