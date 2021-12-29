@@ -6,6 +6,21 @@
 
 ## Enhacements
 
+- The provider now supports the ability to import resources via its `name` and/or `id` property to support easier migration of existing ZIA resources via `terraform import` command.
+The  following resources are supported:
+    - resource_zia_admin_users - [PR#51](https://github.com/willguibr/terraform-provider-zia/issues/51)] :rocket:
+    - resource_zia_dlp_dictionaries - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_firewall_filtering_rules - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_fw_filtering_ip_destination_groups - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_fw_filtering_ip_source_groups - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_fw_filtering_network_application_groups - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_fw_filtering_network_services_groups - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_fw_filtering_network_services - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_location_management - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_url_categories - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_url_filtering_rules - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+    - resource_zia_user_management_users - [PR#51](https://github.com/willguibr/terraform-provider-zia/pull/51) :rocket:
+
 - Added multiple validators across several resources for better API abstraction and mistake prevention during `terraform apply` PR#46 :rocket:
 
 ## 1.0.2 (November 29, 2021)

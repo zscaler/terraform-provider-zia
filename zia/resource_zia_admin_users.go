@@ -14,11 +14,31 @@ import (
 
 func resourceAdminUsers() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceAdminUsersCreate,
-		Read:     resourceAdminUsersRead,
-		Update:   resourceAdminUsersUpdate,
-		Delete:   resourceAdminUsersDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceAdminUsersCreate,
+		Read:   resourceAdminUsersRead,
+		Update: resourceAdminUsersUpdate,
+		Delete: resourceAdminUsersDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("admin_id", id)
+				} else {
+					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("admin_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"admin_id": {

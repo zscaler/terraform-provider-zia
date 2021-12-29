@@ -43,12 +43,12 @@ type Role struct {
 }
 type ExecMobileAppTokens struct {
 	Cloud       string `json:"cloud,omitempty"`
-	OrgId       string `json:"orgId,omitempty"`
+	OrgId       int    `json:"orgId,omitempty"`
 	Name        string `json:"name,omitempty"`
 	TokenId     string `json:"tokenId,omitempty"`
 	Token       string `json:"token,omitempty"`
-	TokenExpiry string `json:"tokenExpiry,omitempty"`
-	CreateTime  string `json:"createTime,omitempty"`
+	TokenExpiry int    `json:"tokenExpiry,omitempty"`
+	CreateTime  int    `json:"createTime,omitempty"`
 	DeviceId    string `json:"deviceId,omitempty"`
 	DeviceName  string `json:"deviceName,omitempty"`
 }
