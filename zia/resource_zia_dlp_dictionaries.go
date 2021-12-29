@@ -13,11 +13,31 @@ import (
 
 func resourceDLPDictionaries() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceDLPDictionariesCreate,
-		Read:     resourceDLPDictionariesRead,
-		Update:   resourceDLPDictionariesUpdate,
-		Delete:   resourceDLPDictionariesDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceDLPDictionariesCreate,
+		Read:   resourceDLPDictionariesRead,
+		Update: resourceDLPDictionariesUpdate,
+		Delete: resourceDLPDictionariesDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("dictionary_id", id)
+				} else {
+					resp, err := zClient.dlpdictionaries.GetByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("dictionary_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"dictionary_id": {
@@ -124,7 +144,7 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 
 	id, ok := getIntFromResourceData(d, "dictionary_id")
 	if !ok {
-		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+		return fmt.Errorf("no DLP dictionary id is set")
 	}
 	resp, err := zClient.dlpdictionaries.Get(id)
 

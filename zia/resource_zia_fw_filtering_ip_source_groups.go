@@ -13,11 +13,31 @@ import (
 
 func resourceFWIPSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceFWIPSourceGroupsCreate,
-		Read:     resourceFWIPSourceGroupsRead,
-		Update:   resourceFWIPSourceGroupsUpdate,
-		Delete:   resourceFWIPSourceGroupsDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceFWIPSourceGroupsCreate,
+		Read:   resourceFWIPSourceGroupsRead,
+		Update: resourceFWIPSourceGroupsUpdate,
+		Delete: resourceFWIPSourceGroupsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("ip_source_group_id", id)
+				} else {
+					resp, err := zClient.ipsourcegroups.GetByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("ip_source_group_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {

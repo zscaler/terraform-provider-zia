@@ -13,11 +13,31 @@ import (
 
 func resourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceLocationManagementCreate,
-		Read:     resourceLocationManagementRead,
-		Update:   resourceLocationManagementUpdate,
-		Delete:   resourceLocationManagementDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceLocationManagementCreate,
+		Read:   resourceLocationManagementRead,
+		Update: resourceLocationManagementUpdate,
+		Delete: resourceLocationManagementDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("location_id", id)
+				} else {
+					resp, err := zClient.locationmanagement.GetLocationByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("location_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"location_id": {
