@@ -13,11 +13,31 @@ import (
 
 func resourceUserManagement() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceUserManagementCreate,
-		Read:     resourceUserManagementRead,
-		Update:   resourceUserManagementUpdate,
-		Delete:   resourceUserManagementDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceUserManagementCreate,
+		Read:   resourceUserManagementRead,
+		Update: resourceUserManagementUpdate,
+		Delete: resourceUserManagementDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("user_id", id)
+				} else {
+					resp, err := zClient.usermanagement.GetUserByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("user_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {

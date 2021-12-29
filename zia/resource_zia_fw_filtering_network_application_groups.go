@@ -13,11 +13,31 @@ import (
 
 func resourceFWNetworkApplicationGroups() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceFWNetworkApplicationGroupsCreate,
-		Read:     resourceFWNetworkApplicationGroupsRead,
-		Update:   resourceFWNetworkApplicationGroupsUpdate,
-		Delete:   resourceFWNetworkApplicationGroupsDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceFWNetworkApplicationGroupsCreate,
+		Read:   resourceFWNetworkApplicationGroupsRead,
+		Update: resourceFWNetworkApplicationGroupsUpdate,
+		Delete: resourceFWNetworkApplicationGroupsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("app_id", id)
+				} else {
+					resp, err := zClient.networkapplications.GetNetworkApplicationGroupsByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("app_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {

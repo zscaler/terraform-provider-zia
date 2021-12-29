@@ -13,11 +13,31 @@ import (
 
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceFirewallFilteringRulesCreate,
-		Read:     resourceFirewallFilteringRulesRead,
-		Update:   resourceFirewallFilteringRulesUpdate,
-		Delete:   resourceFirewallFilteringRulesDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceFirewallFilteringRulesCreate,
+		Read:   resourceFirewallFilteringRulesRead,
+		Update: resourceFirewallFilteringRulesUpdate,
+		Delete: resourceFirewallFilteringRulesDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("rule_id", id)
+				} else {
+					resp, err := zClient.filteringrules.GetByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("rule_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -126,17 +146,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			// "dest_countries": {
-			// 	Type:        schema.TypeSet,
-			// 	Optional:    true,
-			// 	Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
-			// 	Elem:        &schema.Schema{Type: schema.TypeString},
-			// },
-			// "nw_applications": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// },
 			"default_rule": {
 				Type:        schema.TypeBool,
 				Optional:    true,

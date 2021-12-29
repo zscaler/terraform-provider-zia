@@ -13,11 +13,31 @@ import (
 
 func resourceFWNetworkServiceGroups() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceFWNetworkServiceGroupsCreate,
-		Read:     resourceFWNetworkServiceGroupsRead,
-		Update:   resourceFWNetworkServiceGroupsUpdate,
-		Delete:   resourceFWNetworkServiceGroupsDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceFWNetworkServiceGroupsCreate,
+		Read:   resourceFWNetworkServiceGroupsRead,
+		Update: resourceFWNetworkServiceGroupsUpdate,
+		Delete: resourceFWNetworkServiceGroupsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("network_service_group_id", id)
+				} else {
+					resp, err := zClient.networkservices.GetNetworkServiceGroupsByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("network_service_group_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {

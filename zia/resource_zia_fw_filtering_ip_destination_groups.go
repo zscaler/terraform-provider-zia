@@ -13,11 +13,31 @@ import (
 
 func resourceFWIPDestinationGroups() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceFWIPDestinationGroupsCreate,
-		Read:     resourceFWIPDestinationGroupsRead,
-		Update:   resourceFWIPDestinationGroupsUpdate,
-		Delete:   resourceFWIPDestinationGroupsDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceFWIPDestinationGroupsCreate,
+		Read:   resourceFWIPDestinationGroupsRead,
+		Update: resourceFWIPDestinationGroupsUpdate,
+		Delete: resourceFWIPDestinationGroupsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					d.Set("ip_destination_id", id)
+				} else {
+					resp, err := zClient.ipdestinationgroups.GetByName(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						d.Set("ip_destination_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -58,20 +78,6 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description:  "Additional information about the destination IP group",
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
-			// "ip_categories": {
-			// 	Type:        schema.TypeSet,
-			// 	Elem:        &schema.Schema{Type: schema.TypeString},
-			// 	Optional:    true,
-			// 	Computed:    true,
-			// 	Description: "Destination IP address URL categories. You can identify destinations based on the URL category of the domain.",
-			// },
-			// "countries": {
-			// 	Type:        schema.TypeSet,
-			// 	Elem:        &schema.Schema{Type: schema.TypeString},
-			// 	Optional:    true,
-			// 	Computed:    true,
-			// 	Description: "Destination IP address counties. You can identify destinations based on the location of a server.",
-			// },
 			"ip_categories": getURLCategories(),
 			"countries":     getCloudFirewallDstCountries(),
 		},
