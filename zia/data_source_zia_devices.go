@@ -19,26 +19,31 @@ func dataSourceDevices() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
+				Computed:    true,
 				Optional:    true,
 				Description: "The device name.",
 			},
 			"device_group_type": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "The device group type.",
 			},
 			"device_model": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "The device model.",
 			},
 			"os_type": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "The operating system (OS).",
 			},
 			"os_version": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "The operating system version.",
 			},
@@ -54,6 +59,7 @@ func dataSourceDevices() *schema.Resource {
 			},
 			"owner_name": {
 				Type:        schema.TypeString,
+				Optional:    true,
 				Computed:    true,
 				Description: "The device owner's user name.",
 			},
@@ -78,6 +84,46 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
 		res, err := zClient.devicegroups.GetDevicesByName(name)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	model, _ := d.Get("device_model").(string)
+	if resp == nil && model != "" {
+		log.Printf("[INFO] Getting data for device model : %s\n", model)
+		res, err := zClient.devicegroups.GetDevicesByModel(model)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	owner, _ := d.Get("owner_name").(string)
+	if resp == nil && owner != "" {
+		log.Printf("[INFO] Getting data for owner : %s\n", owner)
+		res, err := zClient.devicegroups.GetDevicesByOwner(owner)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	osType, _ := d.Get("os_type").(string)
+	if resp == nil && osType != "" {
+		log.Printf("[INFO] Getting data for OS Type : %s\n", osType)
+		res, err := zClient.devicegroups.GetDevicesByOSType(osType)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	osVersion, _ := d.Get("os_version").(string)
+	if resp == nil && osVersion != "" {
+		log.Printf("[INFO] Getting data for OS Version : %s\n", osVersion)
+		res, err := zClient.devicegroups.GetDevicesByOSVersion(osVersion)
 		if err != nil {
 			return err
 		}
