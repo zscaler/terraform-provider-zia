@@ -6,6 +6,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/activation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/devicegroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
@@ -52,6 +53,7 @@ type Client struct {
 	locationmanagement   *locationmanagement.Service
 	locationgroups       *locationgroups.Service
 	activation           *activation.Service
+	devicegroups         *devicegroups.Service
 }
 
 type Config struct {
@@ -88,6 +90,7 @@ func (c *Config) Client() (*Client, error) {
 		locationmanagement:   locationmanagement.New(cli),
 		locationgroups:       locationgroups.New(cli),
 		activation:           activation.New(cli),
+		devicegroups:         devicegroups.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
