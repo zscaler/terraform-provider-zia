@@ -290,6 +290,16 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+<<<<<<< HEAD
+=======
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+>>>>>>> zia_device_group
 					},
 				},
 			},
@@ -306,6 +316,16 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+<<<<<<< HEAD
+=======
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+>>>>>>> zia_device_group
 					},
 				},
 			},
@@ -448,6 +468,14 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		}
 
 		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationGroups)); err != nil {
+			return err
+		}
+
+		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
+			return err
+		}
+
+		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
 			return err
 		}
 
