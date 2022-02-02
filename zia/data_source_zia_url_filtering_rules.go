@@ -277,6 +277,38 @@ func dataSourceURLFilteringRules() *schema.Resource {
 					},
 				},
 			},
+			"device_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"devices": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"validity_start_time": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -426,7 +458,12 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 			return err
 		}
-
+		if err := d.Set("device_groups", flattenDeviceGroupsSet(resp.DeviceGroups)); err != nil {
+			return err
+		}
+		if err := d.Set("devices", flattenDevicesSet(resp.Devices)); err != nil {
+			return err
+		}
 	} else {
 		return fmt.Errorf("couldn't find any url filtering rule with name '%s' or id '%d'", name, id)
 	}

@@ -198,6 +198,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"override_users":  listIDsSchemaType("list of override users"),
 			"override_groups": listIDsSchemaType("list of override groups"),
 			"device_groups":   listIDsSchemaType("list of device groups"),
+			"devices":         listIDsSchemaType("list of devices"),
 			"location_groups": listIDsSchemaTypeCustom(32, "list of locations groups"),
 			"labels":          listIDsSchemaType("list of labels"),
 			"url_categories":  getURLCategories(),
@@ -313,7 +314,12 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+
+	if err := d.Set("device_groups", flattenDeviceGroupsSet(resp.DeviceGroups)); err != nil {
+		return err
+	}
+
+	if err := d.Set("devices", flattenDevicesSet(resp.Devices)); err != nil {
 		return err
 	}
 	return nil
@@ -425,9 +431,13 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	if lastModifiedBy != nil {
 		result.LastModifiedBy = lastModifiedBy
 	}
-	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
+	deviceGroups := expandDeviceGroups(d, "device_groups")
 	if deviceGroups != nil {
 		result.DeviceGroups = deviceGroups
+	}
+	devices := expandDevices(d, "devices")
+	if devices != nil {
+		result.Devices = devices
 	}
 	return result
 }

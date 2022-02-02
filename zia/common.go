@@ -98,6 +98,46 @@ func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
 	return []common.UserGroups{}
 }
 
+func expandDeviceGroups(d *schema.ResourceData, key string) []common.DeviceGroups {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.DeviceGroups
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, common.DeviceGroups{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.DeviceGroups{}
+}
+
+func expandDevices(d *schema.ResourceData, key string) []common.Devices {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.Devices
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				for _, id := range itemMap["id"].([]interface{}) {
+					result = append(result, common.Devices{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.Devices{}
+}
+
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
 	lastModifiedByObj, ok := d.GetOk(key)
 	if !ok {
@@ -161,6 +201,30 @@ func flattenIDs(list []common.IDNameExtensions) []interface{} {
 }
 
 func flattenUserGroupSet(list []common.UserGroups) []interface{} {
+	result := make([]interface{}, 1)
+	mapIds := make(map[string]interface{})
+	ids := make([]int, len(list))
+	for i, item := range list {
+		ids[i] = item.ID
+	}
+	mapIds["id"] = ids
+	result[0] = mapIds
+	return result
+}
+
+func flattenDeviceGroupsSet(list []common.DeviceGroups) []interface{} {
+	result := make([]interface{}, 1)
+	mapIds := make(map[string]interface{})
+	ids := make([]int, len(list))
+	for i, item := range list {
+		ids[i] = item.ID
+	}
+	mapIds["id"] = ids
+	result[0] = mapIds
+	return result
+}
+
+func flattenDevicesSet(list []common.Devices) []interface{} {
 	result := make([]interface{}, 1)
 	mapIds := make(map[string]interface{})
 	ids := make([]int, len(list))
