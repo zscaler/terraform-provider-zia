@@ -315,11 +315,11 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if err := d.Set("device_groups", flattenDeviceGroupsSet(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("devices", flattenDevicesSet(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
 		return err
 	}
 	return nil
@@ -431,11 +431,11 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	if lastModifiedBy != nil {
 		result.LastModifiedBy = lastModifiedBy
 	}
-	deviceGroups := expandDeviceGroups(d, "device_groups")
+	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
 	if deviceGroups != nil {
 		result.DeviceGroups = deviceGroups
 	}
-	devices := expandDevices(d, "devices")
+	devices := expandIDNameExtensionsSet(d, "devices")
 	if devices != nil {
 		result.Devices = devices
 	}
