@@ -37,6 +37,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"zia_admin_users":                                   resourceAdminUsers(),
 			"zia_dlp_dictionaries":                              resourceDLPDictionaries(),
+			"zia_dlp_notification_templates":                    resourceDLPNotificationTemplates(),
 			"zia_firewall_filtering_rule":                       resourceFirewallFilteringRules(),
 			"zia_firewall_filtering_destination_groups":         resourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_ip_source_groups":           resourceFWIPSourceGroups(),
@@ -79,6 +80,7 @@ func Provider() *schema.Provider {
 			"zia_location_management":                           dataSourceLocationManagement(),
 			"zia_location_groups":                               dataSourceLocationGroup(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
+			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
 			"zia_device_groups":                                 dataSourceDeviceGroups(),
 			"zia_devices":                                       dataSourceDevices(),
 			"zia_activation_status":                             dataSourceActivationStatus(),
