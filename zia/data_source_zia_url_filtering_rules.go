@@ -290,8 +290,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-<<<<<<< HEAD
-=======
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -299,7 +297,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
->>>>>>> zia_device_group
 					},
 				},
 			},
@@ -316,8 +313,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-<<<<<<< HEAD
-=======
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -325,7 +320,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
->>>>>>> zia_device_group
 					},
 				},
 			},
