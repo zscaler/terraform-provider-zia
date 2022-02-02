@@ -196,6 +196,18 @@ func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{
 	return lastModified
 }
 
+func flattenCreatedBy(createdBy *common.IDNameExtensions) []interface{} {
+	created := make([]interface{}, 0)
+	if createdBy != nil {
+		created = append(created, map[string]interface{}{
+			"id":         createdBy.ID,
+			"name":       createdBy.Name,
+			"extensions": createdBy.Extensions,
+		})
+	}
+	return created
+}
+
 func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
 	department := make([]interface{}, 0)
 	if userDepartment != nil {

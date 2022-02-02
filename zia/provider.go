@@ -52,6 +52,7 @@ func Provider() *schema.Provider {
 			"zia_url_filtering_rules":                           resourceURLFilteringRules(),
 			"zia_user_management":                               resourceUserManagement(),
 			"zia_activation_status":                             resourceActivationStatus(),
+			"zia_rule_labels":                                   resourceRuleLabels(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -83,6 +84,7 @@ func Provider() *schema.Provider {
 			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
 			"zia_device_groups":                                 dataSourceDeviceGroups(),
 			"zia_devices":                                       dataSourceDevices(),
+			"zia_rule_labels":                                   dataSourceRuleLabels(),
 			"zia_activation_status":                             dataSourceActivationStatus(),
 		},
 
