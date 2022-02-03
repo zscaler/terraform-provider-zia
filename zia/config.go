@@ -8,6 +8,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/devicegroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_notification_templates"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
@@ -57,6 +58,7 @@ type Client struct {
 	activation                 *activation.Service
 	devicegroups               *devicegroups.Service
 	dlp_notification_templates *dlp_notification_templates.Service
+	dlp_web_rules              *dlp_web_rules.Service
 	rule_labels                *rule_labels.Service
 }
 
@@ -96,6 +98,7 @@ func (c *Config) Client() (*Client, error) {
 		activation:                 activation.New(cli),
 		devicegroups:               devicegroups.New(cli),
 		dlp_notification_templates: dlp_notification_templates.New(cli),
+		dlp_web_rules:              dlp_web_rules.New(cli),
 		rule_labels:                rule_labels.New(cli),
 	}
 
