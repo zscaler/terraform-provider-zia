@@ -7,6 +7,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/devicegroups"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_engines"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_notification_templates"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
@@ -43,6 +44,9 @@ type Client struct {
 	networkapplications        *networkapplications.Service
 	networkservices            *networkservices.Service
 	dlpdictionaries            *dlpdictionaries.Service
+	dlp_notification_templates *dlp_notification_templates.Service
+	dlp_web_rules              *dlp_web_rules.Service
+	dlp_engines                *dlp_engines.Service
 	timewindow                 *timewindow.Service
 	urlcategories              *urlcategories.Service
 	urlfilteringpolicies       *urlfilteringpolicies.Service
@@ -57,9 +61,8 @@ type Client struct {
 	locationgroups             *locationgroups.Service
 	activation                 *activation.Service
 	devicegroups               *devicegroups.Service
-	dlp_notification_templates *dlp_notification_templates.Service
-	dlp_web_rules              *dlp_web_rules.Service
-	rule_labels                *rule_labels.Service
+
+	rule_labels *rule_labels.Service
 }
 
 type Config struct {
@@ -83,6 +86,9 @@ func (c *Config) Client() (*Client, error) {
 		networkapplications:        networkapplications.New(cli),
 		networkservices:            networkservices.New(cli),
 		dlpdictionaries:            dlpdictionaries.New(cli),
+		dlp_notification_templates: dlp_notification_templates.New(cli),
+		dlp_web_rules:              dlp_web_rules.New(cli),
+		dlp_engines:                dlp_engines.New(cli),
 		timewindow:                 timewindow.New(cli),
 		urlcategories:              urlcategories.New(cli),
 		urlfilteringpolicies:       urlfilteringpolicies.New(cli),
@@ -97,9 +103,8 @@ func (c *Config) Client() (*Client, error) {
 		locationgroups:             locationgroups.New(cli),
 		activation:                 activation.New(cli),
 		devicegroups:               devicegroups.New(cli),
-		dlp_notification_templates: dlp_notification_templates.New(cli),
-		dlp_web_rules:              dlp_web_rules.New(cli),
-		rule_labels:                rule_labels.New(cli),
+
+		rule_labels: rule_labels.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

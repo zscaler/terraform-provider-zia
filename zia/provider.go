@@ -84,6 +84,7 @@ func Provider() *schema.Provider {
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
 			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
 			"zia_dlp_web_rules":                                 dataSourceDlpWebRules(),
+			"zia_dlp_engines":                                   dataSourceDLPEngines(),
 			"zia_device_groups":                                 dataSourceDeviceGroups(),
 			"zia_devices":                                       dataSourceDevices(),
 			"zia_rule_labels":                                   dataSourceRuleLabels(),
