@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -42,6 +43,20 @@ func (service *Service) Get(vpnCredentialID int) (*VPNCredentials, error) {
 
 	log.Printf("Returning VPN Credentials from Get: %d", vpnCredentials.ID)
 	return &vpnCredentials, nil
+}
+
+func (service *Service) GetVPNByType(vpnType string) (*VPNCredentials, error) {
+	var vpnTypes []VPNCredentials
+	err := service.Client.Read(fmt.Sprintf("%s?type=%s", vpnCredentialsEndpoint, url.QueryEscape(vpnType)), &vpnTypes)
+	if err != nil {
+		return nil, err
+	}
+	for _, vpn := range vpnTypes {
+		if strings.EqualFold(vpn.Type, vpnType) {
+			return &vpn, nil
+		}
+	}
+	return nil, fmt.Errorf("no VPN found with type: %s", vpnType)
 }
 
 func (service *Service) GetByFQDN(vpnCredentialName string) (*VPNCredentials, error) {

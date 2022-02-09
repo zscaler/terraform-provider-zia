@@ -14,7 +14,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -22,7 +22,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"confidence_threshold": {
 				Type:     schema.TypeString,
@@ -75,6 +75,80 @@ func dataSourceDLPDictionaries() *schema.Resource {
 			"dictionary_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"exact_data_match_details": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "Exact Data Match (EDM) related information for custom DLP dictionaries.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dictionary_edm_mapping_id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The unique identifier for the EDM mapping",
+						},
+						"schema_id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The unique identifier for the EDM template (or schema).",
+						},
+						"primary_field": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The EDM template's primary field.",
+						},
+						"secondary_fields": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The EDM template's secondary fields.",
+						},
+						"secondary_field_match_on": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The EDM secondary field to match on.",
+						},
+					},
+				},
+			},
+			"idm_profile_match_accuracy": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"adp_idm_profile": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "The action applied to a DLP dictionary using patterns",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:        schema.TypeInt,
+										Computed:    true,
+										Description: "Identifier that uniquely identifies an entity",
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"match_accuracy": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The IDM template match accuracy.",
+						},
+					},
+				},
+			},
+			"proximity": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The DLP dictionary proximity length.",
 			},
 		},
 	}
@@ -149,4 +223,19 @@ func flattenPatterns(patterns *dlpdictionaries.DlpDictionary) []interface{} {
 	}
 
 	return dlpPatterns
+}
+
+func flattenEDMDetails(edm *dlpdictionaries.DlpDictionary) []interface{} {
+	edmDetails := make([]interface{}, len(edm.EDMMatchDetails))
+	for i, val := range edm.EDMMatchDetails {
+		edmDetails[i] = map[string]interface{}{
+			"dictionary_edm_mapping_id": val.DictionaryEdmMappingID,
+			"schema_id":                 val.SchemaID,
+			"primary_field":             val.PrimaryField,
+			"secondary_fields":          val.SecondaryFields,
+			"secondary_field_match_on":  val.SecondaryFieldMatchOn,
+		}
+	}
+
+	return edmDetails
 }

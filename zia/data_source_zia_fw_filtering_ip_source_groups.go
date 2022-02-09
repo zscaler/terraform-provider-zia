@@ -15,10 +15,12 @@ func dataSourceFWIPSourceGroups() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
+				Optional: true,
 			},
 			"ip_addresses": {
 				Type:     schema.TypeList,

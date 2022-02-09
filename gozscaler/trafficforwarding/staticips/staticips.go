@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -46,6 +47,20 @@ func (service *Service) Get(staticIpID int) (*StaticIP, error) {
 
 	log.Printf("Returning static ip from Get: %d", staticIP.ID)
 	return &staticIP, nil
+}
+
+func (service *Service) GetByIPAddress(address string) (*StaticIP, error) {
+	var staticIPs []StaticIP
+	err := service.Client.Read(staticIPEndpoint, &staticIPs)
+	if err != nil {
+		return nil, err
+	}
+	for _, static := range staticIPs {
+		if strings.EqualFold(static.IpAddress, address) {
+			return &static, nil
+		}
+	}
+	return nil, fmt.Errorf("no device group found with name: %s", address)
 }
 
 func (service *Service) Create(staticIpID *StaticIP) (*StaticIP, *http.Response, error) {

@@ -15,6 +15,7 @@ func dataSourceRuleLabels() *schema.Resource {
 			"id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "The unique identifier for the rule label.",
 			},
 			"name": {

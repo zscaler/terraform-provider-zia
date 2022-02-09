@@ -13,17 +13,20 @@ const (
 )
 
 type DlpDictionary struct {
-	ID                    int        `json:"id"`
-	Name                  string     `json:"name,omitempty"`
-	Description           string     `json:"description,omitempty"`
-	ConfidenceThreshold   string     `json:"confidenceThreshold,omitempty"`
-	Phrases               []Phrases  `json:"phrases"`
-	CustomPhraseMatchType string     `json:"customPhraseMatchType"`
-	Patterns              []Patterns `json:"patterns"`
-	NameL10nTag           bool       `json:"nameL10nTag"`
-	Custom                bool       `json:"custom"`
-	ThresholdType         string     `json:"thresholdType"`
-	DictionaryType        string     `json:"dictionaryType"`
+	ID                      int                       `json:"id"`
+	Name                    string                    `json:"name,omitempty"`
+	Description             string                    `json:"description,omitempty"`
+	ConfidenceThreshold     string                    `json:"confidenceThreshold,omitempty"`
+	CustomPhraseMatchType   string                    `json:"customPhraseMatchType,omitempty"`
+	NameL10nTag             bool                      `json:"nameL10nTag"`
+	Custom                  bool                      `json:"custom"`
+	ThresholdType           string                    `json:"thresholdType,omitempty"`
+	DictionaryType          string                    `json:"dictionaryType,omitempty"`
+	Proximity               int                       `json:"proximity,omitempty"`
+	Phrases                 []Phrases                 `json:"phrases"`
+	Patterns                []Patterns                `json:"patterns"`
+	EDMMatchDetails         []EDMMatchDetails         `json:"exactDataMatchDetails"`
+	IDMProfileMatchAccuracy []IDMProfileMatchAccuracy `json:"idmProfileMatchAccuracy"`
 }
 
 type Phrases struct {
@@ -34,6 +37,18 @@ type Phrases struct {
 type Patterns struct {
 	Action  string `json:"action,omitempty"`
 	Pattern string `json:"pattern,omitempty"`
+}
+type EDMMatchDetails struct {
+	DictionaryEdmMappingID int    `json:"dictionaryEdmMappingId,omitempty"`
+	SchemaID               int    `json:"schemaId,omitempty"`
+	PrimaryField           int    `json:"primaryField,omitempty"`
+	SecondaryFields        int    `json:"secondaryFields,omitempty"`
+	SecondaryFieldMatchOn  string `json:"secondaryFieldMatchOn,omitempty"`
+}
+
+type IDMProfileMatchAccuracy struct {
+	AdpIdmProfile string `json:"adpIdmProfile,omitempty"`
+	MatchAccuracy string `json:"matchAccuracy,omitempty"`
 }
 
 func (service *Service) Get(dlpDictionariesID int) (*DlpDictionary, error) {

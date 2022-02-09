@@ -45,16 +45,19 @@ func resourceDLPDictionaries() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DLP dictionary's name",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The desciption of the DLP dictionary",
 			},
 			"confidence_threshold": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DLP confidence threshold",
 				ValidateFunc: validation.StringInSlice([]string{
 					"CONFIDENCE_LEVEL_LOW",
 					"CONFIDENCE_LEVEL_MEDIUM",
@@ -86,40 +89,133 @@ func resourceDLPDictionaries() *schema.Resource {
 				}, false),
 			},
 			"patterns": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The action applied to a DLP dictionary using patterns",
 						},
 						"pattern": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "DLP dictionary pattern",
 						},
 					},
 				},
 			},
 			"name_l10n_tag": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether the name is localized or not. This is always set to True for predefined DLP dictionaries.",
 			},
 			"threshold_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "DLP threshold type",
 			},
 			"dictionary_type": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DLP dictionary type.",
 				ValidateFunc: validation.StringInSlice([]string{
 					"PATTERNS_AND_PHRASES",
 					"EXACT_DATA_MATCH",
 					"INDEXED_DATA_MATCH",
 				}, false),
 			},
+			"exact_data_match_details": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Description: "Exact Data Match (EDM) related information for custom DLP dictionaries.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dictionary_edm_mapping_id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The unique identifier for the EDM mapping",
+						},
+						"schema_id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "The unique identifier for the EDM template (or schema).",
+						},
+						"primary_field": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "The EDM template's primary field.",
+						},
+						"secondary_fields": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "The EDM template's secondary fields.",
+						},
+						"secondary_field_match_on": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The EDM secondary field to match on.",
+							ValidateFunc: validation.StringInSlice([]string{
+								"MATCHON_NONE", "MATCHON_ANY_1", "MATCHON_ANY_2",
+								"MATCHON_ANY_3", "MATCHON_ANY_4", "MATCHON_ANY_5",
+								"MATCHON_ANY_6", "MATCHON_ANY_7", "MATCHON_ANY_8",
+								"MATCHON_ANY_9", "MATCHON_ANY_10", "MATCHON_ANY_11",
+								"MATCHON_ANY_12", "MATCHON_ANY_13", "MATCHON_ANY_14",
+								"MATCHON_ANY_15", "MATCHON_ALL",
+							}, false),
+						},
+					},
+				},
+			},
+			"idm_profile_match_accuracy": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				Description: "List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"adp_idm_profile": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The action applied to a DLP dictionary using patterns",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:        schema.TypeInt,
+										Computed:    true,
+										Description: "Identifier that uniquely identifies an entity",
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"match_accuracy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The IDM template match accuracy.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"LOW", "MEDIUM", "HEAVY",
+				}, false),
+			},
+			"proximity": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The DLP dictionary proximity length.",
+			},
 		},
 	}
+
 }
 
 func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error {
@@ -169,6 +265,7 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 	_ = d.Set("threshold_type", resp.ThresholdType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
+	_ = d.Set("proximity", resp.Proximity)
 	if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
 		return err
 	}
@@ -176,6 +273,14 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("patterns", flattenPatterns(resp)); err != nil {
 		return err
 	}
+	if err := d.Set("exact_data_match_details", flattenEDMDetails(resp)); err != nil {
+		return err
+	}
+
+	// Need to fully flatten this menu
+	// if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatch(resp)); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -234,6 +339,11 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 	if phrases != nil {
 		result.Patterns = patterns
 	}
+
+	edmDetails := expandEDMDetails(d)
+	if edmDetails != nil {
+		result.EDMMatchDetails = edmDetails
+	}
 	return result
 }
 
@@ -269,4 +379,24 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 	}
 
 	return dlpPatternsItems
+}
+
+func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails {
+	var dlpEdmDetails []dlpdictionaries.EDMMatchDetails
+	if dlpEdmInterface, ok := d.GetOk("exact_data_match_details"); ok {
+		dlpEdmDetail := dlpEdmInterface.([]interface{})
+		dlpEdmDetails = make([]dlpdictionaries.EDMMatchDetails, len(dlpEdmDetail))
+		for i, pattern := range dlpEdmDetail {
+			dlpEdmItem := pattern.(map[string]interface{})
+			dlpEdmDetails[i] = dlpdictionaries.EDMMatchDetails{
+				DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
+				SchemaID:               dlpEdmItem["schema_id"].(int),
+				PrimaryField:           dlpEdmItem["primary_field"].(int),
+				SecondaryFields:        dlpEdmItem["secondary_fields"].(int),
+				SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
+			}
+		}
+	}
+
+	return dlpEdmDetails
 }

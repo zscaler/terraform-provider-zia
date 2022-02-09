@@ -20,6 +20,16 @@ func dataSourceURLCategories() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"keywords": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"keywords_retaining_parent_category": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"urls": {
 				Type:     schema.TypeList,
 				Computed: true,
