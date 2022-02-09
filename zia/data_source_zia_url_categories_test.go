@@ -1,42 +1,31 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/willguibr/terraform-provider-zia/zia/common/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/variable"
 )
 
 func TestAccDataSourceURLCategories_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLCategories)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckDataSourceURLCategoriesConfig_basic),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.ConfiguredName, variable.CategoryDescription, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.zia_url_categories.custom05", "id"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_url_categories.custom06", "id"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_url_categories.custom07", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					// resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "super_category", resourceTypeAndName, "super_category"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "configured_name", resourceTypeAndName, "configured_name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
 				),
 			},
 		},
 	})
 }
-
-const testAccCheckDataSourceURLCategoriesConfig_basic = `
-data "zia_url_categories" "custom05"{
-    id = "CUSTOM_05"
-}
-
-data "zia_url_categories" "custom06"{
-    id = "CUSTOM_06"
-}
-
-data "zia_url_categories" "custom07"{
-    id = "CUSTOM_07"
-}
-`

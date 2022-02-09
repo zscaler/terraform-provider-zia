@@ -15,10 +15,12 @@ func dataSourceURLCategories() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"keywords": {
 				Type:     schema.TypeList,
@@ -43,6 +45,7 @@ func dataSourceURLCategories() *schema.Resource {
 			"custom_category": {
 				Type:     schema.TypeBool,
 				Computed: true,
+				Optional: true,
 			},
 			"super_category": {
 				Type:     schema.TypeString,
@@ -173,7 +176,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	name, _ := d.Get("configured_name").(string)
-	if resp == nil && id != "" {
+	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting url categories : %s\n", name)
 		res, err := zClient.urlcategories.GetCustomURLCategories(name)
 		if err != nil {

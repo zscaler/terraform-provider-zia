@@ -1,62 +1,30 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/willguibr/terraform-provider-zia/zia/common/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/variable"
 )
 
-func TestAccDataSourceRuleLabels_ByIdAndName(t *testing.T) {
-	rName := acctest.RandString(15)
-	rDesc := acctest.RandString(15)
-	resourceName := "data.zia_rule_labels.by_id"
-	resourceName2 := "data.zia_rule_labels.by_name"
+func TestAccDataSourceRuleLabels_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRuleLabelsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceRuleLabelsByID(rName, rDesc),
+				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceRuleLabels(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rDesc),
-					resource.TestCheckResourceAttr(resourceName2, "name", rName),
-					resource.TestCheckResourceAttr(resourceName2, "description", rDesc),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
 				),
-				PreventPostDestroyRefresh: true,
 			},
 		},
 	})
-}
-
-func testAccDataSourceRuleLabelsByID(rName, rDesc string) string {
-	return fmt.Sprintf(`
-	resource "zia_rule_labels" "testAcc" {
-		name = "%s"
-		description = "%s"
-	}
-	data "zia_rule_labels" "by_name" {
-		name = zia_rule_labels.testAcc.name
-	}
-	data "zia_rule_labels" "by_id" {
-		id = zia_rule_labels.testAcc.id
-	}
-	`, rName, rDesc)
-}
-
-func testAccDataSourceRuleLabels(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no data source called %s", name)
-		}
-		return nil
-	}
 }

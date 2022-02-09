@@ -14,15 +14,18 @@ func dataSourceAdminUsers() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
+				Computed: true,
 				Optional: true,
 			},
 			"login_name": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"email": {
 				Type:     schema.TypeString,
