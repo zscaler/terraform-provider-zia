@@ -197,6 +197,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"time_windows":    listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
 			"override_users":  listIDsSchemaType("list of override users"),
 			"override_groups": listIDsSchemaType("list of override groups"),
+			"device_groups":   listIDsSchemaType("list of device groups"),
 			"location_groups": listIDsSchemaTypeCustom(32, "list of locations groups"),
 			"labels":          listIDsSchemaType("list of labels"),
 			"url_categories":  getURLCategories(),
@@ -312,7 +313,9 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
-
+	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -421,6 +424,10 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	lastModifiedBy := expandIDNameExtensions(d, "last_modified_by")
 	if lastModifiedBy != nil {
 		result.LastModifiedBy = lastModifiedBy
+	}
+	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
+	if deviceGroups != nil {
+		result.DeviceGroups = deviceGroups
 	}
 	return result
 }
