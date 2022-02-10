@@ -49,7 +49,7 @@ func resourceAdminUsers() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_name": {
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Admin or auditor's username.",
@@ -223,7 +223,7 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("admin_id", resp.ID)
 	_ = d.Set("login_name", resp.LoginName)
-	_ = d.Set("user_name", resp.UserName)
+	_ = d.Set("username", resp.UserName)
 	_ = d.Set("email", resp.Email)
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("is_non_editable", resp.IsNonEditable)
@@ -291,7 +291,7 @@ func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 	result := adminuserrolemgmt.AdminUsers{
 		ID:                            d.Get("admin_id").(int),
 		LoginName:                     d.Get("login_name").(string),
-		UserName:                      d.Get("user_name").(string),
+		UserName:                      d.Get("username").(string),
 		Email:                         d.Get("email").(string),
 		Comments:                      d.Get("comments").(string),
 		IsNonEditable:                 d.Get("is_non_editable").(bool),

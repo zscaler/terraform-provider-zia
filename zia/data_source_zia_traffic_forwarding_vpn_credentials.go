@@ -15,10 +15,12 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -29,9 +31,9 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Optional: true,
 			},
 			"pre_shared_key": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Computed: true,
+				// Sensitive: true,
 			},
 			"comments": {
 				Type:     schema.TypeString,
@@ -110,12 +112,22 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		resp = res
 	}
 
+	vpnType, _ := d.Get("type").(string)
+	if resp == nil && vpnType != "" {
+		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
+		res, err := zClient.vpncredentials.GetVPNByType(vpnType)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("type", resp.Type)
 		_ = d.Set("fqdn", resp.FQDN)
 		_ = d.Set("ip_address", resp.IPAddress)
-		_ = d.Set("pre_shared_key", resp.PreSharedKey)
+		// _ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
 		if err := d.Set("location", flattenVPNCredentialsLocation(resp.Location)); err != nil {
 			return err

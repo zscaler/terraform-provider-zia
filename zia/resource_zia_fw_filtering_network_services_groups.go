@@ -57,7 +57,6 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "list of services IDs",
-				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
