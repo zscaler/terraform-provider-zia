@@ -1,3 +1,17 @@
+<<<<<<< HEAD
+terraform {
+    required_providers {
+        zia = {
+            version = "1.0.4"
+            source = "zscaler.com/zia/zia"
+        }
+    }
+}
+
+provider "zia" {}
+
+=======
+>>>>>>> zia_acceptance_tests_new
 data "zia_device_groups" "ios"{
     name = "IOS"
 }
