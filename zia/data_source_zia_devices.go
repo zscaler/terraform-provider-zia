@@ -139,11 +139,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("os_version", resp.OSVersion)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("owner_user_id", resp.OwnerUserId)
-<<<<<<< HEAD
-		_ = d.Set("owner_user_name", resp.OwnerName)
-=======
 		_ = d.Set("owner_name", resp.OwnerName)
->>>>>>> zia_acceptance_tests_new
 
 	} else {
 		return fmt.Errorf("couldn't find any device name '%s' or id '%d'", name, id)
