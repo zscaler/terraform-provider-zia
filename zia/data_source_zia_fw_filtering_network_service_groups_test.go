@@ -9,20 +9,21 @@ import (
 	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccDataSourceRuleLabels_Basic(t *testing.T) {
-	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+func TestAccDataSourceFWNetworkServiceGroups_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRuleLabelsDestroy,
+		CheckDestroy: testAccCheckFWNetworkServiceGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
+				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "services", resourceTypeAndName, "services"),
 				),
 			},
 		},

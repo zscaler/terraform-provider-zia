@@ -15,9 +15,11 @@ func dataSourceFWNetworkServices() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
+				Computed: true,
 				Optional: true,
 			},
 			"tag": {

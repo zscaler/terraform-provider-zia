@@ -22,7 +22,7 @@ func dataSourceAdminUsers() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"user_name": {
+			"username": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -230,7 +230,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("login_name", resp.LoginName)
-		_ = d.Set("user_name", resp.UserName)
+		_ = d.Set("username", resp.UserName)
 		_ = d.Set("email", resp.Email)
 		_ = d.Set("comments", resp.Comments)
 		_ = d.Set("is_non_editable", resp.IsNonEditable)

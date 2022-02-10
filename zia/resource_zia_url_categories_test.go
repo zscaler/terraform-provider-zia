@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlcategories"
-	"github.com/willguibr/terraform-provider-zia/zia/common/method"
 	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/variable"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceURLCategoriesBasic(t *testing.T) {
@@ -27,7 +27,6 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "super_category", variable.SuperCategoryName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),
@@ -39,7 +38,6 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "super_category", variable.SuperCategoryName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),

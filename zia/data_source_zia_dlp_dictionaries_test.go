@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -9,16 +10,16 @@ import (
 	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccDataSourceRuleLabels_Basic(t *testing.T) {
-	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRuleLabelsDestroy,
+		CheckDestroy: testAccCheckDLPDictionariesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
@@ -28,3 +29,4 @@ func TestAccDataSourceRuleLabels_Basic(t *testing.T) {
 		},
 	})
 }
+*/
