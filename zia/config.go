@@ -19,6 +19,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/rule_labels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnelinfo"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
@@ -60,6 +61,7 @@ type Client struct {
 	locationgroups             *locationgroups.Service
 	activation                 *activation.Service
 	devicegroups               *devicegroups.Service
+	rule_labels                *rule_labels.Service
 }
 
 type Config struct {
@@ -100,6 +102,7 @@ func (c *Config) Client() (*Client, error) {
 		locationgroups:             locationgroups.New(cli),
 		activation:                 activation.New(cli),
 		devicegroups:               devicegroups.New(cli),
+		rule_labels:                rule_labels.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
