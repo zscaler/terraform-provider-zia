@@ -7,6 +7,11 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/devicegroups"
+<<<<<<< HEAD
+=======
+	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_notification_templates"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
+>>>>>>> zia_acceptance_tests_new
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
@@ -16,6 +21,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/rule_labels"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnelinfo"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
@@ -33,6 +39,7 @@ func init() {
 }
 
 type Client struct {
+<<<<<<< HEAD
 	adminuserrolemgmt    *adminuserrolemgmt.Service
 	filteringrules       *filteringrules.Service
 	ipdestinationgroups  *ipdestinationgroups.Service
@@ -54,6 +61,32 @@ type Client struct {
 	locationgroups       *locationgroups.Service
 	activation           *activation.Service
 	devicegroups         *devicegroups.Service
+=======
+	adminuserrolemgmt          *adminuserrolemgmt.Service
+	filteringrules             *filteringrules.Service
+	ipdestinationgroups        *ipdestinationgroups.Service
+	ipsourcegroups             *ipsourcegroups.Service
+	networkapplications        *networkapplications.Service
+	networkservices            *networkservices.Service
+	dlpdictionaries            *dlpdictionaries.Service
+	timewindow                 *timewindow.Service
+	urlcategories              *urlcategories.Service
+	urlfilteringpolicies       *urlfilteringpolicies.Service
+	usermanagement             *usermanagement.Service
+	gretunnels                 *gretunnels.Service
+	gretunnelinfo              *gretunnelinfo.Service
+	greinternalipranges        *greinternalipranges.Service
+	staticips                  *staticips.Service
+	virtualipaddresslist       *virtualipaddresslist.Service
+	vpncredentials             *vpncredentials.Service
+	locationmanagement         *locationmanagement.Service
+	locationgroups             *locationgroups.Service
+	activation                 *activation.Service
+	devicegroups               *devicegroups.Service
+	dlp_notification_templates *dlp_notification_templates.Service
+	dlp_web_rules              *dlp_web_rules.Service
+	rule_labels                *rule_labels.Service
+>>>>>>> zia_acceptance_tests_new
 }
 
 type Config struct {
@@ -70,6 +103,7 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	ziaClient := &Client{
+<<<<<<< HEAD
 		adminuserrolemgmt:    adminuserrolemgmt.New(cli),
 		filteringrules:       filteringrules.New(cli),
 		ipdestinationgroups:  ipdestinationgroups.New(cli),
@@ -91,6 +125,32 @@ func (c *Config) Client() (*Client, error) {
 		locationgroups:       locationgroups.New(cli),
 		activation:           activation.New(cli),
 		devicegroups:         devicegroups.New(cli),
+=======
+		adminuserrolemgmt:          adminuserrolemgmt.New(cli),
+		filteringrules:             filteringrules.New(cli),
+		ipdestinationgroups:        ipdestinationgroups.New(cli),
+		ipsourcegroups:             ipsourcegroups.New(cli),
+		networkapplications:        networkapplications.New(cli),
+		networkservices:            networkservices.New(cli),
+		dlpdictionaries:            dlpdictionaries.New(cli),
+		timewindow:                 timewindow.New(cli),
+		urlcategories:              urlcategories.New(cli),
+		urlfilteringpolicies:       urlfilteringpolicies.New(cli),
+		usermanagement:             usermanagement.New(cli),
+		virtualipaddresslist:       virtualipaddresslist.New(cli),
+		vpncredentials:             vpncredentials.New(cli),
+		gretunnels:                 gretunnels.New(cli),
+		gretunnelinfo:              gretunnelinfo.New(cli),
+		greinternalipranges:        greinternalipranges.New(cli),
+		staticips:                  staticips.New(cli),
+		locationmanagement:         locationmanagement.New(cli),
+		locationgroups:             locationgroups.New(cli),
+		activation:                 activation.New(cli),
+		devicegroups:               devicegroups.New(cli),
+		dlp_notification_templates: dlp_notification_templates.New(cli),
+		dlp_web_rules:              dlp_web_rules.New(cli),
+		rule_labels:                rule_labels.New(cli),
+>>>>>>> zia_acceptance_tests_new
 	}
 
 	log.Println("[INFO] initialized ZIA client")

@@ -23,6 +23,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 			"vpn_credental_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				ForceNew: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -37,16 +38,19 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
+				ForceNew:     true,
 			},
 			"ip_address": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsIPAddress,
+				ForceNew:     true,
 			},
 			"pre_shared_key": {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
+				ForceNew:  true,
 			},
 			"comments": {
 				Type:         schema.TypeString,

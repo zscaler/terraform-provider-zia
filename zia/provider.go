@@ -37,6 +37,8 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"zia_admin_users":                                   resourceAdminUsers(),
 			"zia_dlp_dictionaries":                              resourceDLPDictionaries(),
+			"zia_dlp_notification_templates":                    resourceDLPNotificationTemplates(),
+			"zia_dlp_web_rules":                                 resourceDlpWebRules(),
 			"zia_firewall_filtering_rule":                       resourceFirewallFilteringRules(),
 			"zia_firewall_filtering_destination_groups":         resourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_ip_source_groups":           resourceFWIPSourceGroups(),
@@ -51,6 +53,7 @@ func Provider() *schema.Provider {
 			"zia_url_filtering_rules":                           resourceURLFilteringRules(),
 			"zia_user_management":                               resourceUserManagement(),
 			"zia_activation_status":                             resourceActivationStatus(),
+			"zia_rule_labels":                                   resourceRuleLabels(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -79,8 +82,16 @@ func Provider() *schema.Provider {
 			"zia_location_management":                           dataSourceLocationManagement(),
 			"zia_location_groups":                               dataSourceLocationGroup(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
+<<<<<<< HEAD
 			"zia_device_groups":                                 dataSourceDeviceGroups(),
 			"zia_devices":                                       dataSourceDevices(),
+=======
+			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
+			"zia_dlp_web_rules":                                 dataSourceDlpWebRules(),
+			"zia_device_groups":                                 dataSourceDeviceGroups(),
+			"zia_devices":                                       dataSourceDevices(),
+			"zia_rule_labels":                                   dataSourceRuleLabels(),
+>>>>>>> zia_acceptance_tests_new
 			"zia_activation_status":                             dataSourceActivationStatus(),
 		},
 

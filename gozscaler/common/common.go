@@ -20,3 +20,13 @@ type UserDepartment struct {
 	Comments string `json:"comments,omitempty"`
 	Deleted  bool   `json:"deleted,omitempty"`
 }
+
+type DeviceGroups struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type Devices struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}

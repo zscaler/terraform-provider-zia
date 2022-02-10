@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 terraform {
     required_providers {
         zia = {
@@ -9,6 +10,8 @@ terraform {
 
 provider "zia" {}
 
+=======
+>>>>>>> zia_acceptance_tests_new
 data "zia_device_groups" "ios"{
     name = "IOS"
 }

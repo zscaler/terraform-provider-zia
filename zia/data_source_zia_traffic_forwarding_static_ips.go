@@ -15,10 +15,12 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"ip_address": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"geo_override": {
 				Type:     schema.TypeBool,
@@ -69,6 +71,13 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -88,6 +97,15 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	if ok {
 		log.Printf("[INFO] Getting data for static ip id: %d\n", id)
 		res, err := zClient.staticips.Get(id)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+	ipAddress, _ := d.Get("ip_address").(string)
+	if resp == nil && ipAddress != "" {
+		log.Printf("[INFO] Getting data for static ip : %s\n", ipAddress)
+		res, err := zClient.staticips.GetByIPAddress(ipAddress)
 		if err != nil {
 			return err
 		}
