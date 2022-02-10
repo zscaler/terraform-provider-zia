@@ -25,7 +25,7 @@ UPDATES:
 
 ## New Acceptance Tests
 
-- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#51](https://github.com/willguibr/terraform-provider-zpa/pull/51)
+- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#54](https://github.com/willguibr/terraform-provider-zpa/pull/51)
 - Added GoRelease workflow to GitHub Actions CI/CD for automatic software release.
 
 ## 1.0.3 (December 28, 2021)
