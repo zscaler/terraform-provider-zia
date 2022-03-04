@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1 (February 11, 2022)
+
+ENHACEMENTS:
+
+- Added additional schema parameter options to the following resources: ``resource_zia_url_categories`` and ``data_source_zia_url_categories`` [PR#55](https://github.com/willguibr/terraform-provider-zpa/pull/55) :rocket:
+
 ## 2.0.0 (February 9, 2022)
 
 ## New Resources and DataSources

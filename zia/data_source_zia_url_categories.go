@@ -42,6 +42,16 @@ func dataSourceURLCategories() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"ip_ranges": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ip_ranges_retaining_parent_category": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"custom_category": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -145,15 +155,19 @@ func dataSourceURLCategories() *schema.Resource {
 					},
 				},
 			},
-			"val": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"custom_urls_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"urls_retaining_parent_category_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"custom_ip_ranges_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"ip_ranges_retaining_parent_category_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -192,13 +206,17 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
 		_ = d.Set("urls", resp.Urls)
 		_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
+		_ = d.Set("ip_ranges", resp.IPRanges)
+		_ = d.Set("ip_ranges_retaining_parent_category", resp.IPRangesRetainingParentCategory)
 		_ = d.Set("custom_category", resp.CustomCategory)
+		_ = d.Set("super_category", resp.SuperCategory)
 		_ = d.Set("editable", resp.Editable)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("type", resp.Type)
-		_ = d.Set("val", resp.Val)
 		_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
 		_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
+		_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
+		_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 
 		if err := d.Set("scopes", flattenScopes(resp)); err != nil {
 			return err
