@@ -1,0 +1,93 @@
+# This GitHub action runs your tests for each commit push and/or PR. Optionally
+# you can turn it on using a cron schedule for regular testing.
+#
+name: Acceptance Tests
+on:
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  # For systems with an upstream API that could drift unexpectedly (like most SaaS systems, etc.),
+  # we recommend testing at a regular interval not necessarily tied to code changes. This will
+  # ensure you are alerted to something breaking due to an API change, even if the code did not
+  # change.
+  # schedule:
+  #   - cron: '0 13 * * *'
+jobs:
+  # ensure the code builds...
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '1.17'
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2.4.0
+
+    - name: Go Mod Vendor
+      run: go mod vendor
+
+    - name: Go Mod Tidy
+      run: go mod tidy
+
+    - name: Build
+      run: |
+        go build -v .
+
+  # run acceptance tests in a matrix with Terraform core versions
+  test:
+    name: Matrix Test
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # list whatever Terraform versions here you would like to support
+        terraform:
+          # - '0.13.*'
+          # - '0.14.*'
+          # - '0.15.*'
+          - '1.0.*'
+          - '1.1.*'
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: '1.17'
+      id: go
+
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: ${{ matrix.terraform }}
+        terraform_wrapper: false
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2.4.0
+
+    - name: Go Mod Vendor
+      run: go mod vendor
+
+    - name: Go Mod Tidy
+      run: go mod tidy
+
+    - name: TF acceptance tests
+      timeout-minutes: 10
+      env:
+        TF_ACC: "1"
+        TESTARGS: -parallel 20
+        ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+        ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+        ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+        ZIA_BASE_URL: ${{ secrets.ZIA_BASE_URL }}
