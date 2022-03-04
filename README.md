@@ -1,3 +1,4 @@
+[![Tests](https://github.com/willguibr/terraform-provider-zia/actions/workflows/test.yml/badge.svg)](https://github.com/willguibr/terraform-provider-zia/actions/workflows/test.yml)
 [![Release](https://github.com/willguibr/terraform-provider-zia/actions/workflows/release.yml/badge.svg)](https://github.com/willguibr/terraform-provider-zia/actions/workflows/release.yml)
 
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
