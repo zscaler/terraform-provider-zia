@@ -91,3 +91,11 @@ jobs:
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
         ZIA_BASE_URL: ${{ secrets.ZIA_BASE_URL }}
+
+        # Set whatever additional acceptance test env vars here. You can
+        # optionally use data from your repository secrets using the
+        # following syntax:
+        # SOME_VAR: ${{ secrets.SOME_VAR }}
+
+      run: |
+        go test -v -cover ./zia/
