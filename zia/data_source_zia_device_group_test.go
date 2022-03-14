@@ -39,22 +39,24 @@ const testAccCheckDataSourceDeviceGroupsConfig_basic = `
 data "zia_device_groups" "ios"{
     name = "IOS"
 }
-data "zia_device_groups" "android"{
-    name = "Android"
-}
-data "zia_device_groups" "windows"{
-    name = "Windows"
-}
-data "zia_device_groups" "mac"{
-    name = "Mac"
-}
-data "zia_device_groups" "linux"{
-    name = "Linux"
-}
-data "zia_device_groups" "no_client_connector"{
-    name = "No Client Connector"
-}
-data "zia_device_groups" "cloud_browser_isolation"{
-    name = "Cloud Browser Isolation"
-}
+
 `
+
+// data "zia_device_groups" "android"{
+//     name = "Android"
+// }
+// data "zia_device_groups" "windows"{
+//     name = "Windows"
+// }
+// data "zia_device_groups" "mac"{
+//     name = "Mac"
+// }
+// data "zia_device_groups" "linux"{
+//     name = "Linux"
+// }
+// data "zia_device_groups" "no_client_connector"{
+//     name = "No Client Connector"
+// }
+// data "zia_device_groups" "cloud_browser_isolation"{
+//     name = "Cloud Browser Isolation"
+// }
