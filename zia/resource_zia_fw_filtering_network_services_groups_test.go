@@ -147,7 +147,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkServiceGroups,
 		generatedName,
-		variable.FWNetworkServicesGroupName,
+		generatedName,
 		description,
 	)
 }
