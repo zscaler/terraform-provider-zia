@@ -24,7 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-
+    - uses: actions/checkout@v2
+    - uses: ahmadnassri/action-dependabot-auto-merge@v2
+      with:
+        target: minor
+        
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
