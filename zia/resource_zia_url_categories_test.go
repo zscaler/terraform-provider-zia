@@ -26,7 +26,7 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),
@@ -37,7 +37,7 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),
@@ -124,7 +124,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.URLCategories,
 		generatedName,
-		generatedName,
+		variable.ConfiguredName,
 		description,
 		strconv.FormatBool(custom_category),
 	)
