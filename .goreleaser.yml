@@ -52,4 +52,6 @@ release:
   # If you want to manually examine the release before its live, uncomment this line:
   # draft: true
 changelog:
-  skip: true
+  skip: false
+  use: github
+  sort: asc
