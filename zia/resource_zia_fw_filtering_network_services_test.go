@@ -27,7 +27,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 				),
 			},
@@ -37,7 +37,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 				),
 			},
@@ -151,7 +151,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkServices,
 		generatedName,
-		variable.FWNetworkServicesName,
+		generatedName,
 		description,
 	)
 }

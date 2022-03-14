@@ -27,7 +27,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -37,7 +37,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -130,7 +130,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.RuleLabels,
 		generatedName,
-		variable.RuleLabelName,
+		generatedName,
 		description,
 	)
 }

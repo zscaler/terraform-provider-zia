@@ -27,7 +27,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWRuleResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
@@ -39,6 +39,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
@@ -161,7 +162,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.FirewallFilteringRules,
 		generatedName,
-		variable.FWRuleResourceName,
+		generatedName,
 		description,
 		action,
 		state,

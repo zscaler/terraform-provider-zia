@@ -23,10 +23,10 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.ConfiguredName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),
@@ -34,10 +34,10 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.ConfiguredName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 				),
@@ -90,7 +90,7 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 	}
 }
 
-func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, description, configured_name string, custom_category bool) string {
+func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, description string, custom_category bool) string {
 	return fmt.Sprintf(`
 // rule label resource
 %s
@@ -100,7 +100,7 @@ data "%s" "%s" {
 }
 `,
 		// resource variables
-		URLCategoriesResourceHCL(generatedName, configured_name, description, custom_category),
+		URLCategoriesResourceHCL(generatedName, description, custom_category),
 
 		// data source variables
 		resourcetype.URLCategories,
@@ -109,7 +109,7 @@ data "%s" "%s" {
 	)
 }
 
-func URLCategoriesResourceHCL(generatedName, configured_name, description string, custom_category bool) string {
+func URLCategoriesResourceHCL(generatedName, description string, custom_category bool) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	super_category 		= "USER_DEFINED"
@@ -124,7 +124,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.URLCategories,
 		generatedName,
-		variable.ConfiguredName,
+		generatedName,
 		description,
 		strconv.FormatBool(custom_category),
 	)

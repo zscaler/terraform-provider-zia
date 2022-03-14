@@ -27,7 +27,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 				),
 			},
@@ -37,7 +37,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 				),
 			},
@@ -143,7 +143,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkAppGroups,
 		generatedName,
-		variable.FWAppGroupName,
+		generatedName,
 		description,
 	)
 }

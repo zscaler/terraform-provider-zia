@@ -17,7 +17,6 @@ const (
 
 // Firewall Filtering Rule resource/datasource
 const (
-	FWRuleResourceName        = "this is an acceptance test"
 	FWRuleResourceDescription = "this is an acceptance test"
 	FWRuleResourceAction      = "ALLOW"
 	FWRuleResourceState       = "ENABLED"
@@ -51,7 +50,6 @@ const (
 
 // Firewall network services resource/datasource
 const (
-	FWNetworkServicesName        = "this is an acceptance test"
 	FWNetworkServicesDescription = "this is an acceptance test"
 )
 
@@ -88,6 +86,5 @@ const (
 
 // Rule Labels
 const (
-	RuleLabelName        = "testAcc_rule_label"
 	RuleLabelDescription = "testAcc_rule_label"
 )

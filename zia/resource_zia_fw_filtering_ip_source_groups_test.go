@@ -27,7 +27,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWSRCGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 				),
 			},
@@ -37,7 +37,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWSRCGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 				),
 			},
@@ -131,7 +131,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringSourceGroup,
 		generatedName,
-		variable.FWSRCGroupName,
+		generatedName,
 		description,
 	)
 }

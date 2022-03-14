@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-        
+
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
@@ -58,8 +58,8 @@ jobs:
           # - '0.13.*'
           # - '0.14.*'
           # - '0.15.*'
-          # - '1.0.*'
-          - '1.1.*'
+          - '1.0.*'
+          # - '1.1.*'
     steps:
 
     - name: Set up Go
@@ -99,3 +99,9 @@ jobs:
 
       run: |
         go test -v -cover ./zia/
+
+    - name: Compile ZIA_Activator
+      run: |
+        go build ../cli/ziaActivator.go
+        mv ziaActivator ~/bin
+        ziaActivator
