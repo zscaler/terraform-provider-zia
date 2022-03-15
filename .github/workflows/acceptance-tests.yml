@@ -26,19 +26,17 @@ jobs:
     steps:
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v2
       with:
         go-version: '1.17'
       id: go
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: Go Mod Vendor
-      run: go mod vendor
-
-    - name: Go Mod Tidy
-      run: go mod tidy
+    - name: Download Go Dependencies
+      run: |
+        go mod vendor && go mod tidy
 
     - name: Build
       run: |
@@ -63,7 +61,7 @@ jobs:
     steps:
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v2
       with:
         go-version: '1.17'
       id: go
@@ -74,13 +72,11 @@ jobs:
         terraform_wrapper: false
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: Go Mod Vendor
-      run: go mod vendor
-
-    - name: Go Mod Tidy
-      run: go mod tidy
+    - name: Download Go Dependencies
+      run: |
+        go mod vendor && go mod tidy
 
     - name: TF acceptance tests
       timeout-minutes: 10
@@ -96,12 +92,9 @@ jobs:
         # optionally use data from your repository secrets using the
         # following syntax:
         # SOME_VAR: ${{ secrets.SOME_VAR }}
-
       run: |
         go test -v -cover ./zia/
-
-    - name: Compile ZIA_Activator
-      run: |
-        go build ../cli/ziaActivator.go
-        mv ziaActivator ~/bin
+        go mod vendor && go mod tidy
+        go build ./cli/ziaActivator.go
+        mv ziaActivator /usr/local/bin
         ziaActivator
