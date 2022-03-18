@@ -25,25 +25,27 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAdminUsersDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail, variable.AdminPasswordLoginAllowed),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", variable.AdminUserLoginName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", variable.AdminUserEmail),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", variable.AdminUserPassword),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "is_password_login_allowed", strconv.FormatBool(variable.AdminPasswordLoginAllowed)),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail, variable.AdminPasswordLoginAllowed),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", variable.AdminUserLoginName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", variable.AdminUserEmail),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", variable.AdminUserPassword),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "is_password_login_allowed", strconv.FormatBool(variable.AdminPasswordLoginAllowed)),
 				),
 			},
 		},
@@ -106,7 +108,7 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 	}
 }
 
-func testAccCheckAdminUsersConfigure(resourceTypeAndName, loginname, adminusername, email, password string) string {
+func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, loginname, username, email string, password_allowed bool) string {
 	return fmt.Sprintf(`
 // admin user resource
 %s
@@ -116,35 +118,54 @@ data "%s" "%s" {
 }
 `,
 		// resource variables
-		AdminUsersResourceHCL(loginname, adminusername, email, password),
+		AdminUsersResourceHCL(generatedName, loginname, username, email, password_allowed),
 
 		// data source variables
 		resourcetype.AdminUsers,
-		loginname,
+		generatedName,
 		resourceTypeAndName,
 	)
 }
 
-func AdminUsersResourceHCL(loginname, adminusername, email, password string) string {
+func AdminUsersResourceHCL(generatedName, loginname, username, email string, password_allowed bool) string {
 	return fmt.Sprintf(`
+
+data "zia_admin_roles" "super_admin" {
+	name = "Super Admin"
+}
+
+data "zia_location_groups" "corporate_user_traffic_group" {
+	name = "Corporate User Traffic Group"
+}
+
 resource "%s" "%s" {
 	login_name                      = "%s"
-	username                       = "%s"
+	username                        = "%s"
 	email                           = "%s"
-	password                        = "%s"
+	password                        = "Password@123!"
 	comments                        = "Administrator Group"
-	is_password_login_allowed       = true
+	is_password_login_allowed       = "%s"
 	is_security_report_comm_enabled = true
 	is_service_update_comm_enabled  = true
 	is_product_update_comm_enabled  = true
+	role {
+		id = data.zia_admin_roles.super_admin.id
+	}
+	admin_scope {
+		type = "LOCATION_GROUP"
+		scope_entities {
+		  id = [data.zia_location_groups.corporate_user_traffic_group.id]
+		}
+	}
+}
 `,
 		// resource variables
 		resourcetype.AdminUsers,
+		generatedName,
 		variable.AdminUserLoginName,
-		loginname,
-		adminusername,
-		email,
-		password,
+		variable.AdminUserName,
+		variable.AdminUserEmail,
+		strconv.FormatBool(password_allowed),
 	)
 }
 */

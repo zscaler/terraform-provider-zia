@@ -10,9 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
-	"github.com/willguibr/terraform-provider-zia/zia/common/method"
 	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/variable"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
@@ -22,13 +22,13 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckURLFilteringRulesDestroy,
+		CheckDestroy: testAccCheckURLFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
+				Config: testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.URLFilteringRuleResourceName),
+					testAccCheckURLFilteringRuleExists(resourceTypeAndName, &rules),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
@@ -37,10 +37,10 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.URLFilteringRuleResourceName),
+					testAccCheckURLFilteringRuleExists(resourceTypeAndName, &rules),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
@@ -50,7 +50,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 	})
 }
 
-func testAccCheckURLFilteringRulesDestroy(s *terraform.State) error {
+func testAccCheckURLFilteringRuleDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
@@ -78,7 +78,7 @@ func testAccCheckURLFilteringRulesDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpolicies.URLFilteringRule) resource.TestCheckFunc {
+func testAccCheckURLFilteringRuleExists(resource string, rule *urlfilteringpolicies.URLFilteringRule) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -106,7 +106,7 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 	}
 }
 
-func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
+func testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
 // url filtering rule resource
 %s
@@ -116,7 +116,7 @@ data "%s" "%s" {
 }
 `,
 		// resource variables
-		URLFilteringRulesResourceHCL(generatedName, description, action, state),
+		URLFilteringRuleResourceHCL(generatedName, description, action, state),
 
 		// data source variables
 		resourcetype.URLFilteringRules,
@@ -125,23 +125,23 @@ data "%s" "%s" {
 	)
 }
 
-func URLFilteringRulesResourceHCL(generatedName, description, action, state string) string {
+func URLFilteringRuleResourceHCL(generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "%s"
-    description = "%s"
+	name = "%s"
+	description = "%s"
 	action = "%s"
-    state = "%s"
-    order = 2
-    url_categories = ["ANY"]
-    protocols = ["ANY_RULE"]
-    request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+	state = "%s"
+	order = 2
+	url_categories = ["ANY"]
+	protocols = ["ANY_RULE"]
+	request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
 `,
 		// resource variables
 		resourcetype.URLFilteringRules,
 		generatedName,
-		variable.URLFilteringRuleResourceName,
+		generatedName,
 		description,
 		action,
 		state,

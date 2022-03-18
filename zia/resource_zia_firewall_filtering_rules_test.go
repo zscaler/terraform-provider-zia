@@ -107,7 +107,6 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 
 func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
-// firewall filtering rule resource
 %s
 
 data "%s" "%s" {

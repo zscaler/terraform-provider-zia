@@ -2,10 +2,10 @@ package variable
 
 // url filtering rules
 const (
-	URLFilteringRuleResourceName = "testAcc_url_filtering_rule"
-	URLFilteringRuleDescription  = "testAcc_url_filtering_rule"
-	URLFilteringRuleAction       = "ALLOW"
-	URLFilteringRuleState        = "ENABLED"
+	URLFilteringRuleName        = "testAcc_url_filtering_rule"
+	URLFilteringRuleDescription = "testAcc_url_filtering_rule"
+	URLFilteringRuleAction      = "ALLOW"
+	URLFilteringRuleState       = "ENABLED"
 )
 
 // Custom URL Categories resource/datasource
@@ -70,6 +70,23 @@ const (
 	VPNCredentialIPAddress    = "118.189.211.221"
 )
 
+// Traffic Forwarding GRE Tunnels resource/datasource
+const (
+	TrafficFWGRETunnComment   = "this is an acceptance test"
+	TrafficFWGRECountryCode   = "US"
+	TrafficFWGREWithinCountry = true
+	TrafficFWGREUnnumbered    = true
+)
+
+// Location Management resource/datasource
+const (
+	LocationName         = "this is an acceptance test"
+	LocationDescription  = "this is an acceptance test"
+	LocationCountry      = "UNITED_STATES"
+	LocationTZ           = "UNITED_STATES_AMERICA_LOS_ANGELES"
+	LocationAuthRequired = true
+)
+
 // DLP Dictionaries resource/datasource
 const (
 	DLPDictionaryResourceName = "this is an acceptance test"
@@ -78,10 +95,11 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "testAcc@securitygeek.io"
-	AdminUserName      = "Test Acc"
-	AdminUserEmail     = "testAcc@securitygeek.io"
-	AdminUserPassword  = "Password@123!"
+	AdminUserLoginName        = "asandler@securitygeek.io"
+	AdminUserName             = "Adam Sandler"
+	AdminUserEmail            = "asandler@securitygeek.io"
+	AdminUserPassword         = "Password@123!"
+	AdminPasswordLoginAllowed = true
 )
 
 // Rule Labels

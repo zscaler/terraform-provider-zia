@@ -2,6 +2,7 @@ package zia
 
 /*
 import (
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,13 +20,13 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckAdminUsersDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail, variable.AdminPasswordLoginAllowed),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "login_name", resourceTypeAndName, "login_name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "username", resourceTypeAndName, "username"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, "email"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "password", resourceTypeAndName, "password"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "is_password_login_allowed", strconv.FormatBool(variable.AdminPasswordLoginAllowed)),
 				),
 			},
 		},
