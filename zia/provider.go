@@ -27,9 +27,9 @@ func Provider() *schema.Provider {
 				Required:    true,
 				Sensitive:   true,
 			},
-			"zia_base_url": {
+			"zia_cloud": {
 				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_BASE_URL"),
+				DefaultFunc: envDefaultFunc("ZIA_CLOUD"),
 				Required:    true,
 			},
 		},
@@ -98,10 +98,10 @@ func Provider() *schema.Provider {
 func ziaConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[INFO] Initializing ZIA client")
 	config := Config{
-		Username:   d.Get("username").(string),
-		Password:   d.Get("password").(string),
-		APIKey:     d.Get("api_key").(string),
-		ZIABaseURL: d.Get("zia_base_url").(string),
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
+		APIKey:   d.Get("api_key").(string),
+		ZIACloud: d.Get("zia_cloud").(string),
 	}
 
 	return config.Client()

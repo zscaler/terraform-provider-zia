@@ -51,8 +51,8 @@ func testAccPreCheck(t *testing.T) {
 	if v := os.Getenv("ZIA_API_KEY"); v == "" {
 		t.Fatal("ZIA_API_KEY must be set for acceptance tests.")
 	}
-	if v := os.Getenv("ZIA_BASE_URL"); v == "" {
-		t.Fatal("ZIA_BASE_URL must be set for acceptance tests.")
+	if v := os.Getenv("ZIA_CLOUD"); v == "" {
+		t.Fatal("ZIA_CLOUD must be set for acceptance tests.")
 	}
 }
 
@@ -63,9 +63,9 @@ func accPreCheck() error {
 	username := os.Getenv("ZIA_USERNAME")
 	password := os.Getenv("ZIA_PASSWORD")
 	api_key := os.Getenv("ZIA_API_KEY")
-	zia_base_url := os.Getenv("ZIA_BASE_URL")
-	if username == "" && (username == "" || password == "" || api_key == "" || zia_base_url == "") {
-		return errors.New("either ZIA_USERNAME or ZIA_PASSWORD, ZIA_API_KEY and ZIA_BASE_URL must be set for acceptance tests")
+	zia_cloud := os.Getenv("ZIA_CLOUD")
+	if username == "" && (username == "" || password == "" || api_key == "" || zia_cloud == "") {
+		return errors.New("either ZIA_USERNAME or ZIA_PASSWORD, ZIA_API_KEY and ZIA_CLOUD must be set for acceptance tests")
 	}
 	return nil
 }

@@ -65,14 +65,14 @@ type Client struct {
 }
 
 type Config struct {
-	Username   string
-	Password   string
-	APIKey     string
-	ZIABaseURL string
+	Username string
+	Password string
+	APIKey   string
+	ZIACloud string
 }
 
 func (c *Config) Client() (*Client, error) {
-	cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
+	cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIACloud)
 	if err != nil {
 		return nil, err
 	}

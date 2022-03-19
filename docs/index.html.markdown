@@ -73,7 +73,7 @@ The ZIA provider offers various means of providing credentials for authenticatio
 
 ⚠️ **WARNING:** Hard-coding credentials into any Terraform configuration is not recommended, and risks secret leakage should this file be committed to public version control
 
-Static credentials can be provided by specifying the `username`, `password`, `api_key`, `zia_base_url` arguments in-line in the ZIA provider block:
+Static credentials can be provided by specifying the `username`, `password`, `api_key`, `zia_cloud` arguments in-line in the ZIA provider block:
 
 **Usage:**
 
@@ -82,13 +82,13 @@ provider "zia" {
   username      = 'xxxxxxxxxxxxxxxx'
   password      = 'xxxxxxxxxxxxxxxx'
   api_key       = 'xxxxxxxxxxxxxxxx'
-  zia_base_url  = 'https://zsapi.<zscaler_cloud_name>.net'
+  zia_cloud  = '<zscaler_cloud_name>'
 }
 ```
 
 ### Environment variables
 
-You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_BASE_URL` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
+You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_CLOUD` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
 
 ```hcl
 provider "zia" {}
@@ -100,7 +100,7 @@ provider "zia" {}
 export ZIA_USERNAME = "xxxxxxxxxxxxxxxx"
 export ZIA_PASSWORD = "xxxxxxxxxxxxxxxx"
 export ZIA_API_KEY  = "xxxxxxxxxxxxxxxx"
-export ZIA_BASE_URL = "xxxxxxxxxxxxxxxx"
+export ZIA_CLOUD = "xxxxxxxxxxxxxxxx"
 terraform plan
 ```
 
@@ -110,7 +110,7 @@ If you are on Windows, use PowerShell to set the environmenr variables using the
 $env:username = 'xxxxxxxxxxxxxxxx'
 $env:password = 'xxxxxxxxxxxxxxxx'
 $env:api_key = 'xxxxxxxxxxxxxxxx'
-$env:zia_base_url = 'https://zsapi.<zscaler_cloud_name>.net'
+$env:zia_cloud = '<zscaler_cloud_name>'
 ```
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>
