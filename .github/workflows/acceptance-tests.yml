@@ -86,7 +86,7 @@ jobs:
         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
-        ZIA_BASE_URL: ${{ secrets.ZIA_BASE_URL }}
+        ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
 
         # Set whatever additional acceptance test env vars here. You can
         # optionally use data from your repository secrets using the

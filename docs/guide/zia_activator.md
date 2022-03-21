@@ -31,9 +31,9 @@ func main() {
   Username:   getEnvVarOrFail("ZIA_USERNAME"),
   Password:   getEnvVarOrFail("ZIA_PASSWORD"),
   APIKey:     getEnvVarOrFail("ZIA_API_KEY"),
-  ZIABaseURL: getEnvVarOrFail("ZIA_BASE_URL"),
+  ZIACloud: getEnvVarOrFail("ZIA_CLOUD"),
  }
- cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL)
+ cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIACloud)
  if err != nil {
   log.Fatalf("[ERROR] Failed Initializing ZIA client: %v\n", err)
  }

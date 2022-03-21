@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func Provider() *schema.Provider {
@@ -27,10 +28,19 @@ func Provider() *schema.Provider {
 				Required:    true,
 				Sensitive:   true,
 			},
-			"zia_base_url": {
+			"zia_cloud": {
 				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_BASE_URL"),
-				Required:    true,
+				DefaultFunc: envDefaultFunc("ZIA_CLOUD"),
+				ValidateFunc: validation.StringInSlice([]string{
+					"zscaler",
+					"zscalerone",
+					"zscalertwo",
+					"zscalerthree",
+					"zscloud",
+					"zscalerbeta",
+					"zscalergov",
+				}, false),
+				Required: true,
 			},
 		},
 
@@ -98,10 +108,10 @@ func Provider() *schema.Provider {
 func ziaConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[INFO] Initializing ZIA client")
 	config := Config{
-		Username:   d.Get("username").(string),
-		Password:   d.Get("password").(string),
-		APIKey:     d.Get("api_key").(string),
-		ZIABaseURL: d.Get("zia_base_url").(string),
+		Username: d.Get("username").(string),
+		Password: d.Get("password").(string),
+		APIKey:   d.Get("api_key").(string),
+		ZIACloud: d.Get("zia_cloud").(string),
 	}
 
 	return config.Client()

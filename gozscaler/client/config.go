@@ -14,7 +14,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -97,21 +96,13 @@ func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
 }
 
 // NewClientZIA NewClient Returns a Client from credentials passed as parameters
-func NewClientZIA(username, password, apiKey, url string) (*Client, error) {
+func NewClientZIA(username, password, apiKey, ziaCloud string) (*Client, error) {
 	httpClient := getHTTPClient()
 	var logger *log.Logger
 	if loggerEnv := os.Getenv("ZSCALER_SDK_LOG"); loggerEnv == "true" {
 		logger = getDefaultLogger()
 	}
-	if strings.HasSuffix(url, "/") {
-		url = fmt.Sprintf("%s%s", url, ziaAPIVersion)
-	} else {
-		url = fmt.Sprintf("%s/%s", url, ziaAPIVersion)
-	}
-	// 	Make sure http protocol is in use
-	if !strings.HasPrefix(url, "https://") && !strings.HasPrefix(url, "http://") {
-		url = fmt.Sprintf("%s%s", defaultProtocol, url)
-	}
+	url := fmt.Sprintf("https://zsapi.%s.net/%s", ziaCloud, ziaAPIVersion)
 	cli := Client{
 		userName:   username,
 		password:   password,
