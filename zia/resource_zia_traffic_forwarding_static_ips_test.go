@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -141,3 +142,4 @@ resource "%s" "%s" {
 		strconv.FormatBool(routableIP),
 	)
 }
+*/

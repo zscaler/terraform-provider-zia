@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -29,3 +30,4 @@ func TestAccDataSourceFWNetworkServiceGroups_Basic(t *testing.T) {
 		},
 	})
 }
+*/

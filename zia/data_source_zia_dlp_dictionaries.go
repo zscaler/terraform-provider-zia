@@ -14,11 +14,13 @@ func dataSourceDLPDictionaries() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -98,9 +100,9 @@ func dataSourceDLPDictionaries() *schema.Resource {
 							Description: "The EDM template's primary field.",
 						},
 						"secondary_fields": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "The EDM template's secondary fields.",
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"secondary_field_match_on": {
 							Type:        schema.TypeString,
@@ -191,6 +193,9 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		}
 
 		if err := d.Set("patterns", flattenPatterns(resp)); err != nil {
+			return err
+		}
+		if err := d.Set("exact_data_match_details", flattenEDMDetails(resp)); err != nil {
 			return err
 		}
 

@@ -49,7 +49,7 @@ func resourceDlpWebRules() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "The DLP policy rule name.",
 			},
 			"description": {
@@ -68,13 +68,14 @@ func resourceDlpWebRules() *schema.Resource {
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      7,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 7),
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			// "url_categories": {
@@ -106,33 +107,46 @@ func resourceDlpWebRules() *schema.Resource {
 			"file_types": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of file types to which the DLP policy rule must be applied.",
 			},
 			"cloud_applications": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
 			},
 			"min_size": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The action taken when traffic matches the DLP policy rule criteria.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ANY",
+					"NONE",
+					"BLOCK",
+					"ALLOW",
+					"ICAP_RESPONSE",
+				}, false),
 			},
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enables or disables the DLP policy rule.",
 			},
 			"auditor": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Description: "The auditor to which the DLP policy rule must be applied.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -159,11 +173,13 @@ func resourceDlpWebRules() *schema.Resource {
 			"external_auditor_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The email address of an external auditor to whom DLP email notifications are sent.",
 			},
 			"notification_template": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Description: "The template used for DLP notification emails.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -190,16 +206,19 @@ func resourceDlpWebRules() *schema.Resource {
 			"match_only": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "The match only criteria for DLP engines.",
 			},
 			"last_modified_time": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Timestamp when the DLP policy rule was last modified.",
 			},
 			"last_modified_by": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Description: "The admin that modified the DLP policy rule last.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -226,6 +245,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"icap_server": {
 				Type:        schema.TypeList,
 				Optional:    true,
+				Computed:    true,
 				Description: "The DLP server, using ICAP, to which the transaction content is forwarded.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -252,16 +272,19 @@ func resourceDlpWebRules() *schema.Resource {
 			"without_content_inspection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
 			},
 			"ocr_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enables or disables image file scanning.",
 			},
 			"zscaler_incident_reciever": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
 			"locations":       listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
@@ -272,7 +295,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"dlp_engines":     listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
 			"time_windows":    listIDsSchemaType("list of time interval during which rule must be enforced."),
 			"labels":          listIDsSchemaType("list of Labels that are applicable to the rule."),
-			"url_categories":  listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
+			"url_categories":  listIDsSchemaType("The list of URL categories to which the DLP policy rule must be applied."),
 		},
 	}
 }

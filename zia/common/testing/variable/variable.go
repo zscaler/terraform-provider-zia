@@ -89,8 +89,14 @@ const (
 
 // DLP Dictionaries resource/datasource
 const (
-	DLPDictionaryResourceName = "this is an acceptance test"
-	DLPDictionaryDescription  = "this is an acceptance test"
+	DLPDictionaryDescription = "this is an acceptance test"
+)
+
+// DLP Web Rule resource/datasource
+const (
+	DLPRuleResourceDescription = "this is an acceptance test"
+	DLPRuleResourceAction      = "ANY"
+	DLPRuleResourceState       = "ENABLED"
 )
 
 // Admin Users

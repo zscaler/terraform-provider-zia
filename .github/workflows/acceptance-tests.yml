@@ -7,10 +7,12 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+      - 'cli/**'
   push:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+      - 'cli/**'
   # For systems with an upstream API that could drift unexpectedly (like most SaaS systems, etc.),
   # we recommend testing at a regular interval not necessarily tied to code changes. This will
   # ensure you are alerted to something breaking due to an API change, even if the code did not

@@ -15,6 +15,7 @@ const (
 	TrafficForwardingGRETunnel      = "zia_traffic_forwarding_gre_tunnel"
 	LocationManagement              = "zia_location_management"
 	DLPDictionaries                 = "zia_dlp_dictionaries"
+	DLPWebRules                     = "zia_dlp_web_rules"
 	AdminUsers                      = "zia_admin_users"
 	RuleLabels                      = "zia_rule_labels"
 )

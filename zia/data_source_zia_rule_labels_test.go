@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -28,3 +29,4 @@ func TestAccDataSourceRuleLabels_Basic(t *testing.T) {
 		},
 	})
 }
+*/

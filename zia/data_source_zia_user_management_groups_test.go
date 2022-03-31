@@ -33,12 +33,15 @@ const testAccCheckDataSourceGroupManagementConfig_basic = `
 data "zia_group_management" "devops"{
     name = "DevOps"
 }
+
 data "zia_group_management" "executives"{
     name = "Executives"
 }
+
 data "zia_group_management" "sales"{
     name = "Sales"
 }
+
 data "zia_group_management" "marketing"{
     name = "Marketing"
 }

@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"strconv"
@@ -129,3 +130,4 @@ resource "%s" "%s" {
 		strconv.FormatBool(custom_category),
 	)
 }
+*/

@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"testing"
 
@@ -29,4 +28,3 @@ func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
 		},
 	})
 }
-*/

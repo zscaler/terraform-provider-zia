@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -28,7 +27,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 				),
 			},
@@ -38,7 +37,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 				),
 			},
@@ -91,12 +90,12 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.dlpdictionaries.Get(id)
+		receivedDictionary, err := apiClient.dlpdictionaries.Get(id)
 
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
-		*dictionary = *receivedRule
+		*dictionary = *receivedDictionary
 
 		return nil
 	}
@@ -128,7 +127,7 @@ resource "%s" "%s" {
     description = "%s"
     phrases {
         action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "YourPhrase"
+        phrase = "529de800-1025-4346-90be-57732e6fea73"
     }
     custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
     patterns {
@@ -141,8 +140,7 @@ resource "%s" "%s" {
 		// resource variables
 		resourcetype.DLPDictionaries,
 		generatedName,
-		variable.DLPDictionaryResourceName,
+		generatedName,
 		description,
 	)
 }
-*/

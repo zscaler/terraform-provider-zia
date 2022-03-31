@@ -149,9 +149,9 @@ func resourceDLPDictionaries() *schema.Resource {
 							Description: "The EDM template's primary field.",
 						},
 						"secondary_fields": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The EDM template's secondary fields.",
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"secondary_field_match_on": {
 							Type:        schema.TypeString,
@@ -277,7 +277,7 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// Need to fully flatten this menu
+	// Need to fully flatten and expand this menu
 	// if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatch(resp)); err != nil {
 	// 	return err
 	// }
@@ -319,6 +319,8 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	log.Printf("[INFO] dlp dictionary deleted")
 	return nil
 }
+
+// Need to make all below expand functions as SchemaSet
 
 func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
@@ -392,7 +394,7 @@ func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails 
 				DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
 				SchemaID:               dlpEdmItem["schema_id"].(int),
 				PrimaryField:           dlpEdmItem["primary_field"].(int),
-				SecondaryFields:        dlpEdmItem["secondary_fields"].(int),
+				SecondaryFields:        dlpEdmItem["secondary_fields"].([]int),
 				SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
 			}
 		}
