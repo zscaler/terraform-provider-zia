@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -139,3 +140,4 @@ resource "%s" "%s" {
 		dst_type,
 	)
 }
+*/
