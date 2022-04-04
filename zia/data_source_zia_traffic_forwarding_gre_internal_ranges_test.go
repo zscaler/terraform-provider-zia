@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -28,3 +29,4 @@ data "zia_gre_internal_ip_range_list" "internal_gre"{
     required_count = 10
 }
 `
+*/

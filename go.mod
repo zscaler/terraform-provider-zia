@@ -1,11 +1,11 @@
 module github.com/willguibr/terraform-provider-zia
 
-go 1.17
+go 1.18
 
 require (
 	github.com/hashicorp/go-retryablehttp v0.7.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.11.0
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.13.0
 )
 
 require (

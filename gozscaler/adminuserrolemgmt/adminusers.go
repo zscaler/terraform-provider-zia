@@ -63,7 +63,7 @@ func (service *Service) GetAdminUsers(adminUserId int) (*AdminUsers, error) {
 	return v, nil
 }
 
-func (service *Service) GetAdminUsersByName(adminUsersLoginName string) (*AdminUsers, error) {
+func (service *Service) GetAdminUsersByLoginName(adminUsersLoginName string) (*AdminUsers, error) {
 	var adminUsers []AdminUsers
 	err := service.Client.Read(adminUsersEndpoint, &adminUsers)
 	if err != nil {
@@ -74,7 +74,21 @@ func (service *Service) GetAdminUsersByName(adminUsersLoginName string) (*AdminU
 			return &adminUser, nil
 		}
 	}
-	return nil, fmt.Errorf("no admin user found with name: %s", adminUsersLoginName)
+	return nil, fmt.Errorf("no admin login found with name: %s", adminUsersLoginName)
+}
+
+func (service *Service) GetAdminByUsername(adminUsername string) (*AdminUsers, error) {
+	var adminUsers []AdminUsers
+	err := service.Client.Read(adminUsersEndpoint, &adminUsers)
+	if err != nil {
+		return nil, err
+	}
+	for _, adminUser := range adminUsers {
+		if strings.EqualFold(adminUser.UserName, adminUsername) {
+			return &adminUser, nil
+		}
+	}
+	return nil, fmt.Errorf("no admin found with username: %s", adminUsername)
 }
 
 func (service *Service) CreateAdminUser(adminUser AdminUsers) (*AdminUsers, error) {

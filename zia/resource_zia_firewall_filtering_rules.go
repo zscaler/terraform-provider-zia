@@ -59,6 +59,16 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Computed:    true,
 				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
+			"state": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ENABLED",
+					"DISABLED",
+				}, false),
+			},
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -87,16 +97,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 					"BLOCK_RESET",
 					"BLOCK_ICMP",
 					"EVAL_NWAPP",
-				}, false),
-			},
-			"state": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ENABLED",
-					"DISABLED",
 				}, false),
 			},
 			"description": {

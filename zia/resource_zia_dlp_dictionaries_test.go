@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccResourceDLPDictionariesBasic(t *testing.T) {
+func TestAccResourceDLPDictionaries_basic(t *testing.T) {
 	var dictionary dlpdictionaries.DlpDictionary
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
+	rName := acctest.RandString(5)
+	rDesc := acctest.RandString(20)
+	resourceName := "zia_dlp_dictionaries.test-dlp-dict"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,53 +24,41 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckDLPDictionariesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
+				Config: testAccDLPDictionariesBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
+					testAccCheckDLPDictionariesExists("zia_dlp_dictionaries.test-dlp-dict", &dictionary),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-dlp-dict-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test-dlp-dict-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName, "dictionary_type", "PATTERNS_AND_PHRASES"),
 				),
 			},
-
-			// Update test
-			{
-				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
-				),
-			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }
 
-func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccDLPDictionariesBasic(rName, rDesc string) string {
+	return fmt.Sprintf(`
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.DLPDictionaries {
-			continue
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		rule, err := apiClient.dlpdictionaries.Get(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("dlp dictionaries with id %d exists and wasn't destroyed", id)
-		}
-	}
-
-	return nil
+resource "zia_dlp_dictionaries" "test-dlp-dict"{
+    name = "test-dlp-dict-%s"
+    description = "test-dlp-dict-%s"
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "529de800-1025-4346-90be-57732e6fea73"
+    }
+    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "YourPattern"
+    }
+    dictionary_type = "PATTERNS_AND_PHRASES"
+}
+	`, rName, rDesc)
 }
 
 func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionaries.DlpDictionary) resource.TestCheckFunc {
@@ -101,46 +89,30 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 	}
 }
 
-func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, description string) string {
-	return fmt.Sprintf(`
-// dlp dictionary resource
-%s
+func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		DLPDictionariesResourceHCL(generatedName, description),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "zia_dlp_dictionaries" {
+			continue
+		}
 
-		// data source variables
-		resourcetype.DLPDictionaries,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func DLPDictionariesResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-    name = "%s"
-    description = "%s"
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "529de800-1025-4346-90be-57732e6fea73"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    patterns {
-        action = "PATTERN_COUNT_TYPE_UNIQUE"
-        pattern = "YourPattern"
-    }
-    dictionary_type = "PATTERNS_AND_PHRASES"
-}
-`,
-		// resource variables
-		resourcetype.DLPDictionaries,
-		generatedName,
-		generatedName,
-		description,
-	)
+		rule, err := apiClient.dlpdictionaries.Get(id)
+
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("dlp dictionaries with id %d exists and wasn't destroyed", id)
+		}
+	}
+
+	return nil
 }

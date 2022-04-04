@@ -28,7 +28,7 @@ func resourceAdminUsers() *schema.Resource {
 					// assume if the passed value is an int
 					d.Set("admin_id", id)
 				} else {
-					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByName(id)
+					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						d.Set("admin_id", resp.ID)

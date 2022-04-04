@@ -1,12 +1,11 @@
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
-  user_name                       = "John Smith"
+  username                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
   password                        = "AeQ9E5w8B$"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
-  is_product_update_comm_enabled  = true
   is_exec_mobile_app_enabled      = false
   comments                        = "Administrator Group"
   role {

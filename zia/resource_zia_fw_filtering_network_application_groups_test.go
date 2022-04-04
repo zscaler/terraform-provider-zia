@@ -1,23 +1,22 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
-	var appGroups networkapplications.NetworkApplicationGroups
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkAppGroups)
+func TestAccResourceFWNetworkApplicationGroups_basic(t *testing.T) {
+	var apGroups networkapplications.NetworkApplicationGroups
+	rName := acctest.RandString(5)
+	rDesc := acctest.RandString(20)
+	resourceName := "zia_firewall_filtering_network_application_groups.test-fw-nw-app-group"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,53 +24,38 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFWNetworkApplicationGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
+				Config: testAccCheckFWNetworkApplicationGroupsBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
-				),
-			},
-
-			// Update test
-			{
-				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
+					testAccCheckFWNetworkApplicationGroupsExists("zia_firewall_filtering_network_application_groups.test-fw-nw-app-group", &apGroups),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-app-group-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-app-group-"+rDesc),
+					// resource.TestCheckResourceAttr(resourceName, "network_applications", "network_applications"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFWNetworkApplicationGroupsDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckFWNetworkApplicationGroupsBasic(rName, rDesc string) string {
+	return fmt.Sprintf(`
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.FWFilteringNetworkAppGroups {
-			continue
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		rule, err := apiClient.networkapplications.GetNetworkApplicationGroups(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("network application group with id %d exists and wasn't destroyed", id)
-		}
-	}
-
-	return nil
+resource "zia_firewall_filtering_network_application_groups" "test-fw-nw-app-group" {
+	name        = "test-fw-nw-app-group-%s"
+	description = "test-fw-nw-app-group-%s"
+	network_applications  = [ "YAMMER",
+							"OFFICE365",
+							"SKYPE_FOR_BUSINESS",
+							"OUTLOOK",
+							"SHAREPOINT",
+							"SHAREPOINT_ADMIN",
+							"SHAREPOINT_BLOG",
+							"SHAREPOINT_CALENDAR",
+							"SHAREPOINT_DOCUMENT",
+							"SHAREPOINT_ONLINE",
+							"ONEDRIVE"
+			]
+}
+	`, rName, rDesc)
 }
 
 func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *networkapplications.NetworkApplicationGroups) resource.TestCheckFunc {
@@ -102,50 +86,30 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 	}
 }
 
-func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
-	return fmt.Sprintf(`
-// network application group resource
-%s
+func testAccCheckFWNetworkApplicationGroupsDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWNetworkApplicationGroupsResourceHCL(generatedName, description),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "zia_firewall_filtering_network_application_groups" {
+			continue
+		}
 
-		// data source variables
-		resourcetype.FWFilteringNetworkAppGroups,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func FWNetworkApplicationGroupsResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-    name = "%s"
-    description = "%s"
-    network_applications = [
-            "YAMMER",
-            "OFFICE365",
-            "SKYPE_FOR_BUSINESS",
-            "OUTLOOK",
-            "SHAREPOINT",
-            "SHAREPOINT_ADMIN",
-            "SHAREPOINT_BLOG",
-            "SHAREPOINT_CALENDAR",
-            "SHAREPOINT_DOCUMENT",
-            "SHAREPOINT_ONLINE",
-            "ONEDRIVE"
-    ]
+		rule, err := apiClient.networkapplications.GetNetworkApplicationGroups(id)
+
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("network application group with id %d exists and wasn't destroyed", id)
+		}
+	}
+
+	return nil
 }
-`,
-		// resource variables
-		resourcetype.FWFilteringNetworkAppGroups,
-		generatedName,
-		generatedName,
-		description,
-	)
-}
-*/

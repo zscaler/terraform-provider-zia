@@ -6,17 +6,18 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccResourceLocationManagementBasic(t *testing.T) {
+func TestAccResourceLocationManagement_basic(t *testing.T) {
 	var locations locationmanagement.Locations
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.LocationManagement)
+	rName := acctest.RandString(5)
+	rDesc := acctest.RandString(20)
+	resourceName := "zia_location_management.test_zs_sjc2022_type_ip"
+	resourceName2 := "zia_location_management.test_zs_sjc2022_type_ufqdn"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,59 +25,127 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 		CheckDestroy: testAccCheckLocationManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, variable.LocationDescription, variable.LocationCountry, variable.LocationTZ, variable.LocationAuthRequired),
+				// Test Location Management with VPN Credential Type IP
+				Config: testAccCheckResourceLocationManagementVPNTypeIP(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.LocationDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "country", variable.LocationCountry),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "tz", variable.LocationTZ),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "auth_required", strconv.FormatBool(variable.LocationAuthRequired)),
+					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ip", &locations),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_zs_sjc2022_type_ip-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test_zs_sjc2022_type_ip-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName, "country", "UNITED_STATES"),
+					resource.TestCheckResourceAttr(resourceName, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
+					resource.TestCheckResourceAttr(resourceName, "display_time_unit", "HOUR"),
+					resource.TestCheckResourceAttr(resourceName, "auth_required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "surrogate_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName, "xff_forward_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ofw_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
 				),
 			},
-
-			// Update test
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, variable.LocationDescription, variable.LocationCountry, variable.LocationTZ, variable.LocationAuthRequired),
+				// Test Location Management with VPN Credential Type UFQDN
+				Config: testAccCheckResourceLocationManagementVPNTypeUFQDN(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.LocationDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "country", variable.LocationCountry),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "tz", variable.LocationTZ),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "auth_required", strconv.FormatBool(variable.LocationAuthRequired)),
+					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ufqdn", &locations),
+					resource.TestCheckResourceAttr(resourceName2, "name", "test_zs_sjc2022_type_ufqdn-"+rName),
+					resource.TestCheckResourceAttr(resourceName2, "description", "test_zs_sjc2022_type_ufqdn-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName2, "country", "UNITED_STATES"),
+					resource.TestCheckResourceAttr(resourceName2, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
+					resource.TestCheckResourceAttr(resourceName2, "display_time_unit", "HOUR"),
+					resource.TestCheckResourceAttr(resourceName2, "auth_required", "true"),
+					resource.TestCheckResourceAttr(resourceName2, "surrogate_ip", "true"),
+					resource.TestCheckResourceAttr(resourceName2, "xff_forward_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName2, "ofw_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName2, "ips_control", "true"),
+					resource.TestCheckResourceAttr(resourceName2, "ips_control", "true"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckLocationManagementDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckResourceLocationManagementVPNTypeIP(rName, rDesc string) string {
+	return fmt.Sprintf(`
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.LocationManagement {
-			continue
-		}
+resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ip"{
+	comment 		= "Test SJC2022 - Static IP"
+	ip_address 		=  "121.234.54.92"
+	routable_ip 	= true
+	geo_override 	= true
+	latitude 		= -36.848461
+	longitude 		= 174.763336
+}
 
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
+resource "zia_traffic_forwarding_vpn_credentials" "test_zs_sjc2022_type_ip"{
+	comments    	= "Test SJC2022 - VPN Credentials"
+	type        	= "IP"
+	ip_address  	=  zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
+	pre_shared_key 	= "newPassword123!"
+	depends_on 		= [ zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip ]
+}
 
-		rule, err := apiClient.locationmanagement.GetLocation(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("location with id %d exists and wasn't destroyed", id)
-		}
+resource "zia_location_management" "test_zs_sjc2022_type_ip"{
+	name 					= "test_zs_sjc2022_type_ip-%s"
+	description 			= "test_zs_sjc2022_type_ip-%s"
+	country 				= "UNITED_STATES"
+	tz 						= "UNITED_STATES_AMERICA_LOS_ANGELES"
+	auth_required 			= true
+	idle_time_in_minutes 	= 720
+	display_time_unit 		= "HOUR"
+	surrogate_ip 			= true
+	xff_forward_enabled 	= true
+	ofw_enabled 			= true
+	ips_control 			= true
+	ip_addresses 			= [ zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address ]
+	depends_on 				= [ zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip, zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ip]
+	vpn_credentials {
+		id = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ip.vpn_credental_id
+		type = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ip.type
+		ip_address = zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
 	}
+}
+	`, rName, rDesc)
+}
 
-	return nil
+func testAccCheckResourceLocationManagementVPNTypeUFQDN(rName, rDesc string) string {
+	return fmt.Sprintf(`
+
+resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
+	comment 		= "Test SJC2022 - Static IP"
+	ip_address 		=  "121.234.54.93"
+	routable_ip 	= true
+	geo_override 	= true
+	latitude 		= -36.848461
+	longitude 		= 174.763336
+}
+
+resource "zia_traffic_forwarding_vpn_credentials" "test_zs_sjc2022_type_ufqdn"{
+	comments    	= "Test SJC2022 - VPN Credentials"
+	type        	= "UFQDN"
+	fqdn  			=  "test_zs_sjc2022_type_ufqdn@securitygeek.io"
+	pre_shared_key 	= "newPassword123!"
+}
+
+resource "zia_location_management" "test_zs_sjc2022_type_ufqdn"{
+	name 					= "test_zs_sjc2022_type_ufqdn-%s"
+	description 			= "test_zs_sjc2022_type_ufqdn-%s"
+	country 				= "UNITED_STATES"
+	tz 						= "UNITED_STATES_AMERICA_LOS_ANGELES"
+	auth_required 			= true
+	idle_time_in_minutes 	= 720
+	display_time_unit 		= "HOUR"
+	surrogate_ip 			= true
+	xff_forward_enabled 	= true
+	ofw_enabled 			= true
+	ips_control 			= true
+	ip_addresses 			= [ zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ufqdn.ip_address ]
+	depends_on 				= [ zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ufqdn, zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn]
+	vpn_credentials {
+		id = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn.vpn_credental_id
+		type = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn.type
+	}
+}
+	`, rName, rDesc)
 }
 
 func testAccCheckLocationManagementExists(resource string, location *locationmanagement.Locations) resource.TestCheckFunc {
@@ -107,68 +176,30 @@ func testAccCheckLocationManagementExists(resource string, location *locationman
 	}
 }
 
-func testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, description, country, tz string, authRequired bool) string {
-	return fmt.Sprintf(`
-%s
+func testAccCheckLocationManagementDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		LocationManagementResourceHCL(generatedName, description, country, tz, authRequired),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "zia_location_management" {
+			continue
+		}
 
-		// data source variables
-		resourcetype.LocationManagement,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func LocationManagementResourceHCL(generatedName, description, country, tz string, authRequired bool) string {
-	return fmt.Sprintf(`
-resource "zia_traffic_forwarding_static_ip" "testAcc_usa_sjc40"{
-	ip_address 		= "118.189.211.222"
-	routable_ip 	= true
-	comment 		= "SJC37 - Static IP"
-	geo_override 	= false
-}
+		rule, err := apiClient.locationmanagement.GetLocation(id)
 
-resource "zia_traffic_forwarding_vpn_credentials" "testAcc_usa_sjc40"{
-    type 			= "UFQDN"
-    fqdn 			= "usa_sjc40@securitygeek.io"
-    comments    	= "Acceptance Test"
-    pre_shared_key 	= "newPassword123!"
-	depends_on 		= [ zia_traffic_forwarding_static_ip.testAcc_usa_sjc40 ]
-}
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
 
-resource "%s" "%s" {
-    name 					= "%s"
-    description 			= "%s"
-    country 				= "%s"
-    tz 						= "%s"
-    auth_required 			= "%s"
-    idle_time_in_minutes 	= 720
-    display_time_unit 		= "HOUR"
-    surrogate_ip 			= true
-    xff_forward_enabled 	= true
-    ofw_enabled 			= true
-    ips_control 			= true
-    ip_addresses 			= [ zia_traffic_forwarding_static_ip.testAcc_usa_sjc40.ip_address ]
-    vpn_credentials {
-       id 	= zia_traffic_forwarding_vpn_credentials.testAcc_usa_sjc40.vpn_credental_id
-       type = zia_traffic_forwarding_vpn_credentials.testAcc_usa_sjc40.type
-    }
-    depends_on = [ zia_traffic_forwarding_static_ip.testAcc_usa_sjc40, zia_traffic_forwarding_vpn_credentials.testAcc_usa_sjc40 ]
-}
-`,
-		// resource variables
-		resourcetype.LocationManagement,
-		generatedName,
-		generatedName,
-		description,
-		country,
-		tz,
-		strconv.FormatBool(authRequired),
-	)
+		if rule != nil {
+			return fmt.Errorf("location with id %d exists and wasn't destroyed", id)
+		}
+	}
+
+	return nil
 }

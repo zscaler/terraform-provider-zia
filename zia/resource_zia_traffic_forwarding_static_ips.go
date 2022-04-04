@@ -161,6 +161,7 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	log.Printf("[INFO] Getting static ip:\n%+v\n", resp)
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("static_ip_id", resp.ID)
+	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_address", resp.IpAddress)
 	_ = d.Set("geo_override", resp.GeoOverride)
 	_ = d.Set("latitude", resp.Latitude)

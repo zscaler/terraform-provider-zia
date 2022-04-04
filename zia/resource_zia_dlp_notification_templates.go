@@ -61,11 +61,11 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 			},
 			"plain_text_message": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"html_message": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 		},
 	}

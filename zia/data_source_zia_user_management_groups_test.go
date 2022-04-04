@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -46,3 +47,4 @@ data "zia_group_management" "marketing"{
     name = "Marketing"
 }
 `
+*/

@@ -21,10 +21,10 @@ func listIDsSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
 		ids.MaxItems = maxItems
 	}
 	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Computed:    true,
-		MaxItems:    1,
+		Type:     schema.TypeSet,
+		Optional: true,
+		// Computed:    true,
+		// MaxItems:    1,
 		Description: desc,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -340,7 +340,7 @@ func getURLRequestMethods() *schema.Schema {
 			ValidateFunc: validateURLFilteringRequestMethods(),
 		},
 		Optional: true,
-		Computed: true,
+		// Computed: true,
 	}
 }
 
@@ -353,7 +353,7 @@ func getURLProtocols() *schema.Schema {
 			ValidateFunc: validateURLFilteringProtocols(),
 		},
 		Optional: true,
-		Computed: true,
+		// Computed: true,
 	}
 }
 

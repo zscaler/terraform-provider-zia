@@ -7,17 +7,18 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlfilteringpolicies"
 	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 	var rules urlfilteringpolicies.URLFilteringRule
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
+	rName := acctest.RandString(5)
+	rDesc := acctest.RandString(20)
+	resourceName := "zia_url_filtering_rules.test-url-rule"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,57 +26,39 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckURLFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
+				Config: testAccCheckURLFilteringRuleBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckURLFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
+					testAccCheckURLFilteringRuleExists("zia_url_filtering_rules.test-url-rule", &rules),
+					resource.TestCheckResourceAttr(resourceName, "name", "tfurl-rule-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "tfurl-rule-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 				),
 			},
-
-			// Update test
-			{
-				Config: testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckURLFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
-				),
-			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// },
 		},
 	})
 }
 
-func testAccCheckURLFilteringRuleDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckURLFilteringRuleBasic(rName, rDesc string) string {
+	return fmt.Sprintf(`
+resource "zia_url_filtering_rules" "test-url-rule" {
+	name = "tfurl-rule-%s"
+	description = "tfurl-rule-%s"
+	state = "ENABLED"
+	action = "ALLOW"
+	order = 1
+	rank = 7
+	url_categories = ["ANY"]
+	protocols = ["HTTPS_RULE", "HTTP_RULE"]
+	request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+}
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.URLFilteringRules {
-			continue
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		rule, err := apiClient.urlfilteringpolicies.Get(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("url filtering rule with id %d exists and wasn't destroyed", id)
-		}
-	}
-
-	return nil
+`, rName, rDesc)
 }
 
 func testAccCheckURLFilteringRuleExists(resource string, rule *urlfilteringpolicies.URLFilteringRule) resource.TestCheckFunc {
@@ -106,45 +89,31 @@ func testAccCheckURLFilteringRuleExists(resource string, rule *urlfilteringpolic
 	}
 }
 
-func testAccCheckURLFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
-// url filtering rule resource
-%s
+func testAccCheckURLFilteringRuleDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		URLFilteringRuleResourceHCL(generatedName, description, action, state),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != resourcetype.URLFilteringRules {
+			continue
+		}
 
-		// data source variables
-		resourcetype.URLFilteringRules,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func URLFilteringRuleResourceHCL(generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-	name = "%s"
-	description = "%s"
-	action = "%s"
-	state = "%s"
-	order = 2
-	url_categories = ["ANY"]
-	protocols = ["ANY_RULE"]
-	request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-}
-`,
-		// resource variables
-		resourcetype.URLFilteringRules,
-		generatedName,
-		generatedName,
-		description,
-		action,
-		state,
-	)
+		rule, err := apiClient.urlfilteringpolicies.Get(id)
+
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("url filtering rule with id %d exists and wasn't destroyed", id)
+		}
+	}
+
+	return nil
 }
 */

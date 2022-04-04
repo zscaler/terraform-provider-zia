@@ -162,7 +162,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	var resp *dlpdictionaries.DlpDictionary
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
+		log.Printf("[INFO] Getting data for dlp dictionary id: %d\n", id)
 		res, err := zClient.dlpdictionaries.Get(id)
 		if err != nil {
 			return err
@@ -171,7 +171,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", name)
+		log.Printf("[INFO] Getting data for dlp dictionary: %s\n", name)
 		res, err := zClient.dlpdictionaries.GetByName(name)
 		if err != nil {
 			return err
