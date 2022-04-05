@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
 )
 
@@ -65,7 +66,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				}, false),
 			},
 			"phrases": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -89,7 +90,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				}, false),
 			},
 			"patterns": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
@@ -128,7 +129,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				}, false),
 			},
 			"exact_data_match_details": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Exact Data Match (EDM) related information for custom DLP dictionaries.",
 				Elem: &schema.Resource{
@@ -170,25 +171,27 @@ func resourceDLPDictionaries() *schema.Resource {
 				},
 			},
 			"idm_profile_match_accuracy": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
 				Description: "List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"adp_idm_profile": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Optional:    true,
+							MaxItems:    1,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:        schema.TypeInt,
-										Computed:    true,
-										Description: "Identifier that uniquely identifies an entity",
+										Type:     schema.TypeInt,
+										Computed: true,
+										Optional: true,
 									},
 									"extensions": {
 										Type:     schema.TypeMap,
+										Computed: true,
 										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -197,16 +200,16 @@ func resourceDLPDictionaries() *schema.Resource {
 								},
 							},
 						},
+						"match_accuracy": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The IDM template match accuracy.",
+							ValidateFunc: validation.StringInSlice([]string{
+								"LOW", "MEDIUM", "HEAVY",
+							}, false),
+						},
 					},
 				},
-			},
-			"match_accuracy": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The IDM template match accuracy.",
-				ValidateFunc: validation.StringInSlice([]string{
-					"LOW", "MEDIUM", "HEAVY",
-				}, false),
 			},
 			"proximity": {
 				Type:        schema.TypeInt,
@@ -278,9 +281,9 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Need to fully flatten and expand this menu
-	// if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatch(resp)); err != nil {
-	// 	return err
-	// }
+	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracy(resp)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -346,59 +349,129 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 	if edmDetails != nil {
 		result.EDMMatchDetails = edmDetails
 	}
+
+	idmProfileMarch := expandIDMProfileMatchAccuracy(d)
+	if idmProfileMarch != nil {
+		result.IDMProfileMatchAccuracy = idmProfileMarch
+	}
 	return result
 }
 
 func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phrases {
 	var dlpPhraseItems []dlpdictionaries.Phrases
-	if dlpPhraseInterface, ok := d.GetOk("phrases"); ok {
-		dlpPhrase := dlpPhraseInterface.([]interface{})
-		dlpPhraseItems = make([]dlpdictionaries.Phrases, len(dlpPhrase))
-		for i, phrase := range dlpPhrase {
-			dlpItem := phrase.(map[string]interface{})
-			dlpPhraseItems[i] = dlpdictionaries.Phrases{
-				Action: dlpItem["action"].(string),
-				Phrase: dlpItem["phrase"].(string),
-			}
-		}
+	dlpPhraseInterface, ok := d.GetOk("phrases")
+	if !ok {
+		return dlpPhraseItems
 	}
-
+	dlpPhrases, ok := dlpPhraseInterface.(*schema.Set)
+	if !ok {
+		return dlpPhraseItems
+	}
+	for _, dlpItemObj := range dlpPhrases.List() {
+		dlpItem, ok := dlpItemObj.(map[string]interface{})
+		if !ok {
+			return dlpPhraseItems
+		}
+		dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
+			Action: dlpItem["action"].(string),
+			Phrase: dlpItem["phrase"].(string),
+		})
+	}
 	return dlpPhraseItems
 }
 
 func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Patterns {
 	var dlpPatternsItems []dlpdictionaries.Patterns
-	if dlpPatternsInterface, ok := d.GetOk("patterns"); ok {
-		dlpPattern := dlpPatternsInterface.([]interface{})
-		dlpPatternsItems = make([]dlpdictionaries.Patterns, len(dlpPattern))
-		for i, pattern := range dlpPattern {
-			dlpItem := pattern.(map[string]interface{})
-			dlpPatternsItems[i] = dlpdictionaries.Patterns{
-				Action:  dlpItem["action"].(string),
-				Pattern: dlpItem["pattern"].(string),
-			}
-		}
+	dlpPatternsInterface, ok := d.GetOk("patterns")
+	if !ok {
+		return dlpPatternsItems
 	}
-
+	dlpPatterns, ok := dlpPatternsInterface.(*schema.Set)
+	if !ok {
+		return dlpPatternsItems
+	}
+	for _, patternObj := range dlpPatterns.List() {
+		dlpItem, ok := patternObj.(map[string]interface{})
+		if !ok {
+			return dlpPatternsItems
+		}
+		dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
+			Action:  dlpItem["action"].(string),
+			Pattern: dlpItem["pattern"].(string),
+		})
+	}
 	return dlpPatternsItems
 }
 
 func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails {
 	var dlpEdmDetails []dlpdictionaries.EDMMatchDetails
-	if dlpEdmInterface, ok := d.GetOk("exact_data_match_details"); ok {
-		dlpEdmDetail := dlpEdmInterface.([]interface{})
-		dlpEdmDetails = make([]dlpdictionaries.EDMMatchDetails, len(dlpEdmDetail))
-		for i, pattern := range dlpEdmDetail {
-			dlpEdmItem := pattern.(map[string]interface{})
-			dlpEdmDetails[i] = dlpdictionaries.EDMMatchDetails{
-				DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
-				SchemaID:               dlpEdmItem["schema_id"].(int),
-				PrimaryField:           dlpEdmItem["primary_field"].(int),
-				SecondaryFields:        dlpEdmItem["secondary_fields"].([]int),
-				SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
+	dlpEdmInterface, ok := d.GetOk("exact_data_match_details")
+	if !ok {
+		return dlpEdmDetails
+	}
+	dlpEdmDetailSet, ok := dlpEdmInterface.(*schema.Set)
+	if !ok {
+		return dlpEdmDetails
+	}
+	for _, dlpEdmDetailObj := range dlpEdmDetailSet.List() {
+		dlpEdmItem, ok := dlpEdmDetailObj.(map[string]interface{})
+		if !ok {
+			return dlpEdmDetails
+		}
+		dlpEdmDetails = append(dlpEdmDetails, dlpdictionaries.EDMMatchDetails{
+			DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
+			SchemaID:               dlpEdmItem["schema_id"].(int),
+			PrimaryField:           dlpEdmItem["primary_field"].(int),
+			SecondaryFields:        dlpEdmItem["secondary_fields"].([]int),
+			SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
+		})
+	}
+	return dlpEdmDetails
+}
+
+func expandIDMProfileMatchAccuracy(d *schema.ResourceData) []dlpdictionaries.IDMProfileMatchAccuracy {
+	var idmProfileMatchAccuracies []dlpdictionaries.IDMProfileMatchAccuracy
+	dlpEdmInterface, ok := d.GetOk("idm_profile_match_accuracy")
+	if !ok {
+		return idmProfileMatchAccuracies
+	}
+	dlpEdmDetailSet, ok := dlpEdmInterface.(*schema.Set)
+	if !ok {
+		return idmProfileMatchAccuracies
+	}
+	for _, dlpEdmDetailObj := range dlpEdmDetailSet.List() {
+		dlpEdmItem, ok := dlpEdmDetailObj.(map[string]interface{})
+		if !ok {
+			return idmProfileMatchAccuracies
+		}
+		var profile *common.IDNameExtensions
+		profiles := expandIDMProfile(dlpEdmItem, "adp_idm_profile")
+		if len(profiles) > 0 {
+			profile = &profiles[0]
+		}
+		idmProfileMatchAccuracies = append(idmProfileMatchAccuracies, dlpdictionaries.IDMProfileMatchAccuracy{
+			MatchAccuracy: dlpEdmItem["match_accuracy"].(string),
+			AdpIdmProfile: profile,
+		})
+	}
+	return idmProfileMatchAccuracies
+}
+
+func expandIDMProfile(m map[string]interface{}, key string) []common.IDNameExtensions {
+	setInterface, ok := m[key]
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.IDNameExtensions
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				result = append(result, common.IDNameExtensions{
+					ID:         itemMap["id"].(int),
+					Extensions: itemMap["extensions"].(map[string]interface{}),
+				})
 			}
 		}
+		return result
 	}
-
-	return dlpEdmDetails
+	return []common.IDNameExtensions{}
 }

@@ -31,7 +31,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Computed: true,
 			},
 			"phrases": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -51,7 +51,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Computed: true,
 			},
 			"patterns": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -79,7 +79,7 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Computed: true,
 			},
 			"exact_data_match_details": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "Exact Data Match (EDM) related information for custom DLP dictionaries.",
 				Elem: &schema.Resource{
@@ -113,13 +113,13 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				},
 			},
 			"idm_profile_match_accuracy": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"adp_idm_profile": {
-							Type:        schema.TypeList,
+							Type:        schema.TypeSet,
 							Computed:    true,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
@@ -198,6 +198,9 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		if err := d.Set("exact_data_match_details", flattenEDMDetails(resp)); err != nil {
 			return err
 		}
+		if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracy(resp)); err != nil {
+			return err
+		}
 
 	} else {
 		return fmt.Errorf("couldn't find any dlp dictionary with name '%s' or id '%d'", name, id)
@@ -243,4 +246,16 @@ func flattenEDMDetails(edm *dlpdictionaries.DlpDictionary) []interface{} {
 	}
 
 	return edmDetails
+}
+
+func flattenIDMProfileMatchAccuracy(edm *dlpdictionaries.DlpDictionary) []interface{} {
+	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
+	for i, val := range edm.IDMProfileMatchAccuracy {
+		idmProfileMatchAccuracies[i] = map[string]interface{}{
+			"match_accuracy":  val.MatchAccuracy,
+			"adp_idm_profile": val.AdpIdmProfile,
+		}
+	}
+
+	return idmProfileMatchAccuracies
 }

@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -13,20 +15,20 @@ const (
 )
 
 type DlpDictionary struct {
-	ID                    int               `json:"id"`
-	Name                  string            `json:"name,omitempty"`
-	Description           string            `json:"description,omitempty"`
-	ConfidenceThreshold   string            `json:"confidenceThreshold,omitempty"`
-	CustomPhraseMatchType string            `json:"customPhraseMatchType,omitempty"`
-	NameL10nTag           bool              `json:"nameL10nTag"`
-	Custom                bool              `json:"custom"`
-	ThresholdType         string            `json:"thresholdType,omitempty"`
-	DictionaryType        string            `json:"dictionaryType,omitempty"`
-	Proximity             int               `json:"proximity,omitempty"`
-	Phrases               []Phrases         `json:"phrases"`
-	Patterns              []Patterns        `json:"patterns"`
-	EDMMatchDetails       []EDMMatchDetails `json:"exactDataMatchDetails"`
-	// IDMProfileMatchAccuracy []IDMProfileMatchAccuracy `json:"idmProfileMatchAccuracy"`
+	ID                      int                       `json:"id"`
+	Name                    string                    `json:"name,omitempty"`
+	Description             string                    `json:"description,omitempty"`
+	ConfidenceThreshold     string                    `json:"confidenceThreshold,omitempty"`
+	CustomPhraseMatchType   string                    `json:"customPhraseMatchType,omitempty"`
+	NameL10nTag             bool                      `json:"nameL10nTag"`
+	Custom                  bool                      `json:"custom"`
+	ThresholdType           string                    `json:"thresholdType,omitempty"`
+	DictionaryType          string                    `json:"dictionaryType,omitempty"`
+	Proximity               int                       `json:"proximity,omitempty"`
+	Phrases                 []Phrases                 `json:"phrases"`
+	Patterns                []Patterns                `json:"patterns"`
+	EDMMatchDetails         []EDMMatchDetails         `json:"exactDataMatchDetails"`
+	IDMProfileMatchAccuracy []IDMProfileMatchAccuracy `json:"idmProfileMatchAccuracy"`
 }
 
 type Phrases struct {
@@ -48,8 +50,8 @@ type EDMMatchDetails struct {
 }
 
 type IDMProfileMatchAccuracy struct {
-	AdpIdmProfile string `json:"adpIdmProfile,omitempty"`
-	MatchAccuracy string `json:"matchAccuracy,omitempty"`
+	AdpIdmProfile *common.IDNameExtensions `json:"adpIdmProfile,omitempty"`
+	MatchAccuracy string                   `json:"matchAccuracy,omitempty"`
 }
 
 func (service *Service) Get(dlpDictionariesID int) (*DlpDictionary, error) {
