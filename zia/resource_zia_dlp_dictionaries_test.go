@@ -32,11 +32,6 @@ func TestAccResourceDLPDictionaries_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dictionary_type", "PATTERNS_AND_PHRASES"),
 				),
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -45,18 +40,26 @@ func testAccDLPDictionariesBasic(rName, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_dlp_dictionaries" "test-dlp-dict"{
-    name = "test-dlp-dict-%s"
-    description = "test-dlp-dict-%s"
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "529de800-1025-4346-90be-57732e6fea73"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    patterns {
-        action = "PATTERN_COUNT_TYPE_UNIQUE"
-        pattern = "YourPattern"
-    }
-    dictionary_type = "PATTERNS_AND_PHRASES"
+	name = "test-dlp-dict-%s"
+	description = "test-dlp-dict-%s"
+	phrases {
+		action = "PHRASE_COUNT_TYPE_ALL"
+		phrase = "Test1"
+	}
+	phrases {
+		action = "PHRASE_COUNT_TYPE_UNIQUE"
+		phrase = "Test2"
+	}
+	custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+	patterns {
+		action = "PATTERN_COUNT_TYPE_ALL"
+		pattern = "Test1"
+	}
+	patterns {
+		action = "PATTERN_COUNT_TYPE_UNIQUE"
+		pattern = "Test2"
+	}
+	dictionary_type = "PATTERNS_AND_PHRASES"
 }
 	`, rName, rDesc)
 }

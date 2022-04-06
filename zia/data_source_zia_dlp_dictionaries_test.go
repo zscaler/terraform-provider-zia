@@ -12,7 +12,7 @@ import (
 func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	rDesc := acctest.RandString(15)
-	resourceName := "data.zia_dlp_dictionaries.test"
+	resourceName := "data.zia_dlp_dictionaries.test-dlp-dict"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -34,23 +34,31 @@ func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
 func testAccDataSourceDLPDictionariesBasic(rName, rDesc string) string {
 	return fmt.Sprintf(`
 
-resource "zia_dlp_dictionaries" "test"{
-    name = "test-dlp-dict-%s"
-    description = "test-dlp-dict-%s"
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "YourPhrase"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    patterns {
-        action = "PATTERN_COUNT_TYPE_UNIQUE"
-        pattern = "YourPattern"
-    }
-    dictionary_type = "PATTERNS_AND_PHRASES"
+resource "zia_dlp_dictionaries" "test-dlp-dict"{
+	name = "test-dlp-dict-%s"
+	description = "test-dlp-dict-%s"
+	phrases {
+		action = "PHRASE_COUNT_TYPE_ALL"
+		phrase = "Test1"
+	}
+	phrases {
+		action = "PHRASE_COUNT_TYPE_UNIQUE"
+		phrase = "Test2"
+	}
+	custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+	patterns {
+		action = "PATTERN_COUNT_TYPE_ALL"
+		pattern = "Test1"
+	}
+	patterns {
+		action = "PATTERN_COUNT_TYPE_UNIQUE"
+		pattern = "Test2"
+	}
+	dictionary_type = "PATTERNS_AND_PHRASES"
 }
 
-data "zia_dlp_dictionaries" "test" {
-	name = zia_dlp_dictionaries.test.name
+data "zia_dlp_dictionaries" "test-dlp-dict" {
+	name = zia_dlp_dictionaries.test-dlp-dict.name
 }
 	`, rName, rDesc)
 }

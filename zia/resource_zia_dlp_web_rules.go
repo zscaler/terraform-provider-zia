@@ -49,17 +49,20 @@ func resourceDlpWebRules() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The DLP policy rule name.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The description of the DLP policy rule.",
 			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -68,16 +71,41 @@ func resourceDlpWebRules() *schema.Resource {
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Computed:     true,
+				Default:      7,
 				ValidateFunc: validation.IntBetween(1, 7),
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
+			// "url_categories": {
+			// 	Type:        schema.TypeSet,
+			// 	Optional:    true,
+			// 	Description: "The list of URL categories to which the DLP policy rule must be applied.",
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:     schema.TypeInt,
+			// 				Computed: true,
+			// 				Optional: true,
+			// 			},
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Computed: true,
+			// 				Optional: true,
+			// 			},
+			// 			"extensions": {
+			// 				Type:     schema.TypeMap,
+			// 				Computed: true,
+			// 				Elem: &schema.Schema{
+			// 					Type: schema.TypeString,
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"cloud_applications": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -86,11 +114,10 @@ func resourceDlpWebRules() *schema.Resource {
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
 			},
 			"min_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 96000),
-				Description:  "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Description: "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
 				Type:        schema.TypeString,
@@ -124,20 +151,18 @@ func resourceDlpWebRules() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Computed:    true,
 							Optional:    true,
+							Computed:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -161,6 +186,7 @@ func resourceDlpWebRules() *schema.Resource {
 						"id": {
 							Type:        schema.TypeInt,
 							Optional:    true,
+							Computed:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
@@ -206,13 +232,11 @@ func resourceDlpWebRules() *schema.Resource {
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -229,20 +253,18 @@ func resourceDlpWebRules() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
-							Computed:    true,
 							Optional:    true,
+							Computed:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
