@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -39,4 +38,3 @@ data "zia_firewall_filtering_time_window" "off_hours"{
     name = "Off hours"
 }
 `
-*/

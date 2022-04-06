@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -43,4 +42,4 @@ data "zia_location_groups" "example3"{
 data "zia_location_groups" "example4"{
     name = "Server Traffic Group"
 }
-`*/
+`

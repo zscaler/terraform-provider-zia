@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -29,4 +28,3 @@ data "zia_admin_roles" "super_admin"{
     name = "Super Admin"
 }
 `
-*/

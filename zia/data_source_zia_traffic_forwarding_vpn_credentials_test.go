@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
+	rName := acctest.RandString(5)
 	rComment := acctest.RandString(5)
 	resourceName := "data.zia_traffic_forwarding_vpn_credentials.test-type-ip"
 	resourceName2 := "data.zia_traffic_forwarding_vpn_credentials.test-type-fqdn"
@@ -19,7 +20,7 @@ func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsBasic(rComment),
+				Config: testAccCheckTrafficForwardingVPNCredentialsBasic(rName, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceTrafficForwardingVPNCredentials(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comments", "test-type-ip-"+rComment),
@@ -27,14 +28,14 @@ func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "121.234.54.80"),
 					resource.TestCheckResourceAttr(resourceName2, "comments", "test-type-fqdn-"+rComment),
 					resource.TestCheckResourceAttr(resourceName2, "type", "UFQDN"),
-					resource.TestCheckResourceAttr(resourceName2, "fqdn", "sjc1000@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName2, "fqdn", rName+"@securitygeek.io"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTrafficForwardingVPNCredentialsBasic(rComment string) string {
+func testAccCheckTrafficForwardingVPNCredentialsBasic(rName, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "static_ip"{
@@ -61,7 +62,7 @@ data "zia_traffic_forwarding_vpn_credentials" "test-type-ip" {
 
 resource "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn"{
 	type = "UFQDN"
-	fqdn = "sjc1000@securitygeek.io"
+	fqdn = "%s@securitygeek.io"
 	comments = "test-type-fqdn-%s"
 	pre_shared_key = "newPassword123!"
 }
@@ -69,7 +70,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn"{
 data "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn" {
 	fqdn = zia_traffic_forwarding_vpn_credentials.test-type-fqdn.fqdn
 }
-	`, rComment, rComment)
+	`, rComment, rName, rComment)
 }
 
 func testAccDataSourceTrafficForwardingVPNCredentials(name string) resource.TestCheckFunc {

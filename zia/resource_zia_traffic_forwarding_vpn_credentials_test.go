@@ -14,6 +14,7 @@ import (
 
 func TestAccResourceTrafficForwardingVPNCredentials_basic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
+	rName := acctest.RandString(5)
 	rComment := acctest.RandString(5)
 	resourceName := "zia_traffic_forwarding_vpn_credentials.test-type-ip"
 	resourceName2 := "zia_traffic_forwarding_vpn_credentials.test-type-fqdn"
@@ -36,12 +37,12 @@ func TestAccResourceTrafficForwardingVPNCredentials_basic(t *testing.T) {
 
 			// Test VPN Credential Type UFQDN
 			{
-				Config: testAccCheckTrafficForwardingStaticIPTypeUFQDN(rComment),
+				Config: testAccCheckTrafficForwardingStaticIPTypeUFQDN(rName, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists("zia_traffic_forwarding_vpn_credentials.test-type-fqdn", &credentials),
 					resource.TestCheckResourceAttr(resourceName2, "comments", "test-type-fqdn-"+rComment),
 					resource.TestCheckResourceAttr(resourceName2, "type", "UFQDN"),
-					resource.TestCheckResourceAttr(resourceName2, "fqdn", "zs-sjc2022@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName2, "fqdn", rName+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName2, "pre_shared_key", "newPassword123!"),
 				),
 			},
@@ -70,16 +71,16 @@ resource "zia_traffic_forwarding_vpn_credentials" "test-type-ip"{
 	`, rComment)
 }
 
-func testAccCheckTrafficForwardingStaticIPTypeUFQDN(rComment string) string {
+func testAccCheckTrafficForwardingStaticIPTypeUFQDN(rName, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn"{
 	type = "UFQDN"
-	fqdn = "zs-sjc2022@securitygeek.io"
+	fqdn = "%s@securitygeek.io"
 	comments = "test-type-fqdn-%s"
 	pre_shared_key = "newPassword123!"
 }
-	`, rComment)
+	`, rName, rComment)
 }
 
 func testAccCheckTrafficForwardingVPNCredentialsExists(resource string, credentials *vpncredentials.VPNCredentials) resource.TestCheckFunc {
