@@ -411,3 +411,16 @@ func getCloudFirewallNwServicesTag() *schema.Schema {
 		Computed:     true,
 	}
 }
+
+func getDLPRuleFileTypes(desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "The list of file types to which the DLP policy rule must be applied.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateDLPRuleFileTypes(),
+		},
+		Optional: true,
+		Computed: true,
+	}
+}

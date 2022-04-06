@@ -39,7 +39,6 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "xff_forward_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ofw_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
 				),
 			},
 			{
@@ -56,7 +55,6 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "surrogate_ip", "true"),
 					resource.TestCheckResourceAttr(resourceName2, "xff_forward_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName2, "ofw_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName2, "ips_control", "true"),
 					resource.TestCheckResourceAttr(resourceName2, "ips_control", "true"),
 				),
 			},

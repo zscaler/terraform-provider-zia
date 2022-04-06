@@ -78,39 +78,6 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
-			// "url_categories": {
-			// 	Type:        schema.TypeSet,
-			// 	Optional:    true,
-			// 	Description: "The list of URL categories to which the DLP policy rule must be applied.",
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:     schema.TypeInt,
-			// 				Computed: true,
-			// 				Optional: true,
-			// 			},
-			// 			"name": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 				Optional: true,
-			// 			},
-			// 			"extensions": {
-			// 				Type:     schema.TypeMap,
-			// 				Computed: true,
-			// 				Elem: &schema.Schema{
-			// 					Type: schema.TypeString,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
-			"file_types": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The list of file types to which the DLP policy rule must be applied.",
-			},
 			"cloud_applications": {
 				Type:        schema.TypeList,
 				Optional:    true,
@@ -119,10 +86,11 @@ func resourceDlpWebRules() *schema.Resource {
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
 			},
 			"min_size": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 96000),
+				Description:  "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
 				Type:        schema.TypeString,
@@ -142,6 +110,10 @@ func resourceDlpWebRules() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enables or disables the DLP policy rule.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ENABLED",
+					"DISABLED",
+				}, false),
 			},
 			"auditor": {
 				Type:        schema.TypeList,
@@ -153,16 +125,19 @@ func resourceDlpWebRules() *schema.Resource {
 						"id": {
 							Type:        schema.TypeInt,
 							Computed:    true,
+							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -225,16 +200,19 @@ func resourceDlpWebRules() *schema.Resource {
 						"id": {
 							Type:        schema.TypeInt,
 							Optional:    true,
+							Computed:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -251,17 +229,20 @@ func resourceDlpWebRules() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:        schema.TypeInt,
+							Computed:    true,
 							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Optional:    true,
 							Description: "Identifier that uniquely identifies an entity",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -296,6 +277,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"time_windows":    listIDsSchemaType("list of time interval during which rule must be enforced."),
 			"labels":          listIDsSchemaType("list of Labels that are applicable to the rule."),
 			"url_categories":  listIDsSchemaType("The list of URL categories to which the DLP policy rule must be applied."),
+			"file_types":      getDLPRuleFileTypes("The list of file types to which the DLP policy rule must be applied."),
 		},
 	}
 }

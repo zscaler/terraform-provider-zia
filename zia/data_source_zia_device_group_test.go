@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -64,4 +63,3 @@ data "zia_device_groups" "cloud_browser_isolation"{
 	name = "Cloud Browser Isolation"
 }
 `
-*/

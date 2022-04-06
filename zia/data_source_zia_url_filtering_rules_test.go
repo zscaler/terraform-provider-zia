@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -33,6 +32,7 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 					// resource.TestCheckResourceAttr(resourceID, "action", "ALLOW"),
 					// resource.TestCheckResourceAttr(resourceID, "state", "ENABLED"),
 				),
+				ExpectNonEmptyPlan: true,
 				// PreventPostDestroyRefresh: true,
 			},
 		},
@@ -69,4 +69,3 @@ func testAccDataSourceURLFilteringRules(name string) resource.TestCheckFunc {
 		return nil
 	}
 }
-*/

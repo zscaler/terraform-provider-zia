@@ -22,6 +22,10 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The DLP policy rule name.",
 			},
+			"order": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -464,6 +468,7 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("order", resp.Order)
+		_ = d.Set("rank", resp.Rank)
 		_ = d.Set("protocols", resp.Protocols)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("file_types", resp.FileTypes)

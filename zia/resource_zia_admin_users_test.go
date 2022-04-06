@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -38,6 +37,7 @@ func TestAccResourceAdminUsers_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_service_update_comm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "is_exec_mobile_app_enabled", "false"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -125,4 +125,3 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 
 	return nil
 }
-*/

@@ -1,14 +1,3 @@
-terraform {
-  required_providers {
-    zia = {
-      version = "1.0.0"
-      source  = "zscaler.com/zia/zia"
-    }
-  }
-}
-provider "zia" {}
-
-
 resource "zia_traffic_forwarding_gre_tunnel" "example" {
   source_ip = zia_traffic_forwarding_static_ip.example.ip_address
   comment   = "GRE Tunnel Created with Terraform"
