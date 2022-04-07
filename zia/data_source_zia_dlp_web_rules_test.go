@@ -32,7 +32,6 @@ func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "min_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "zscaler_incident_reciever", "true"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

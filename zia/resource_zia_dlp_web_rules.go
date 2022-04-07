@@ -96,10 +96,11 @@ func resourceDlpWebRules() *schema.Resource {
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
 			},
 			"min_size": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 96000),
+				Description:  "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
 				Type:        schema.TypeString,
