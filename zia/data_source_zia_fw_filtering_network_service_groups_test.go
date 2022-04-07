@@ -24,7 +24,6 @@ func TestAccDataSourceFWNetworkServiceGroups_Basic(t *testing.T) {
 					testAccDataSourceFWNetworkServiceGroups(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-svc-group-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-svc-group-"+rDesc),
-					// resource.TestCheckResourceAttr(resourceName, "services", "services"),
 				),
 			},
 		},

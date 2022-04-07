@@ -24,7 +24,6 @@ func TestAccDataSourceFWNetworkApplicationGroups_Basic(t *testing.T) {
 					testAccDataSourceFWNetworkApplicationGroups(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-app-group-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-app-group-"+rDesc),
-					// resource.TestCheckResourceAttr(resourceName, "network_applications", "network_applications"),
 				),
 			},
 		},

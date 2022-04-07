@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -33,7 +34,6 @@ func TestAccFirewallFilteringRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "order", "1"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -131,3 +131,4 @@ func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
 
 	return nil
 }
+*/

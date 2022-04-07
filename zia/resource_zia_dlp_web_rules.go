@@ -99,7 +99,7 @@ func resourceDlpWebRules() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(1, 96000),
+				ValidateFunc: validation.IntBetween(0, 96000),
 				Description:  "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
