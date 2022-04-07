@@ -99,16 +99,16 @@ func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
 }
 
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	lastModifiedByObj, ok := d.GetOk(key)
+	idNameExtObj, ok := d.GetOk(key)
 	if !ok {
 		return nil
 	}
-	lastMofiedBy, ok := lastModifiedByObj.(*schema.Set)
+	idNameExt, ok := idNameExtObj.(*schema.Set)
 	if !ok {
 		return nil
 	}
-	if len(lastMofiedBy.List()) > 0 {
-		lastModifiedByObj := lastMofiedBy.List()[0]
+	if len(idNameExt.List()) > 0 {
+		lastModifiedByObj := idNameExt.List()[0]
 		lastMofied, ok := lastModifiedByObj.(map[string]interface{})
 		if !ok {
 			return nil
@@ -196,13 +196,13 @@ func flattenIDExtensions(list []common.IDNameExtensions) []interface{} {
 	return flattenedList
 }
 
-func flattenIDExtensionsList(list *common.IDNameExtensions) []interface{} {
+func flattenIDExtensionsList(idNameExtension *common.IDNameExtensions) []interface{} {
 	flattenedList := make([]interface{}, 0)
-	if list != nil {
+	if idNameExtension != nil && (idNameExtension.ID != 0 || idNameExtension.Name != "") {
 		flattenedList = append(flattenedList, map[string]interface{}{
-			"id":         list.ID,
-			"name":       list.Name,
-			"extensions": list.Extensions,
+			"id":         idNameExtension.ID,
+			"name":       idNameExtension.Name,
+			"extensions": idNameExtension.Extensions,
 		})
 	}
 	return flattenedList
