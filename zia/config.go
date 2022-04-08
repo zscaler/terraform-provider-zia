@@ -8,6 +8,7 @@ import (
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/devicegroups"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_engines"
+	dlp_idmp_profile "github.com/willguibr/terraform-provider-zia/gozscaler/dlp_idm_profile"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_notification_templates"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
@@ -47,6 +48,7 @@ type Client struct {
 	dlp_notification_templates *dlp_notification_templates.Service
 	dlp_web_rules              *dlp_web_rules.Service
 	dlp_engines                *dlp_engines.Service
+	dlp_idmp_profile           *dlp_idmp_profile.Service
 	timewindow                 *timewindow.Service
 	urlcategories              *urlcategories.Service
 	urlfilteringpolicies       *urlfilteringpolicies.Service
@@ -88,6 +90,7 @@ func (c *Config) Client() (*Client, error) {
 		dlp_notification_templates: dlp_notification_templates.New(cli),
 		dlp_web_rules:              dlp_web_rules.New(cli),
 		dlp_engines:                dlp_engines.New(cli),
+		dlp_idmp_profile:           dlp_idmp_profile.New(cli),
 		timewindow:                 timewindow.New(cli),
 		urlcategories:              urlcategories.New(cli),
 		urlfilteringpolicies:       urlfilteringpolicies.New(cli),
