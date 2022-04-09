@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -11,6 +10,7 @@ import (
 )
 
 func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
+	rEmail := acctest.RandString(5)
 	rComments := acctest.RandString(5)
 	resourceName1 := "data.zia_admin_users.test-admin-loginname"
 	resourceName2 := "data.zia_admin_users.test-admin-username"
@@ -20,12 +20,12 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceAdminUsersBasic(rComments),
+				Config: testAccCheckDataSourceAdminUsersBasic(rEmail, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAdminUsersLoginName(resourceName1),
-					resource.TestCheckResourceAttr(resourceName1, "login_name", "test-admin-user@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName1, "login_name", "test-admin-"+rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName1, "username", "testAcc Tf Admin"),
-					resource.TestCheckResourceAttr(resourceName1, "email", "test-admin-user@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName1, "email", "test-admin-"+rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName1, "comments", "test-admin-user-"+rComments),
 					resource.TestCheckResourceAttr(resourceName1, "is_password_login_allowed", "true"),
 					resource.TestCheckResourceAttr(resourceName1, "is_security_report_comm_enabled", "true"),
@@ -34,12 +34,12 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckDataSourceAdminUsersBasic(rComments),
+				Config: testAccCheckDataSourceAdminUsersBasic(rEmail, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAdminUsersUsername(resourceName2),
-					resource.TestCheckResourceAttr(resourceName2, "login_name", "test-admin-user@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName2, "login_name", "test-admin-"+rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName2, "username", "testAcc Tf Admin"),
-					resource.TestCheckResourceAttr(resourceName2, "email", "test-admin-user@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName2, "email", "test-admin-"+rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName2, "comments", "test-admin-user-"+rComments),
 					resource.TestCheckResourceAttr(resourceName2, "is_password_login_allowed", "true"),
 					resource.TestCheckResourceAttr(resourceName2, "is_security_report_comm_enabled", "true"),
@@ -51,17 +51,17 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSourceAdminUsersBasic(rComments string) string {
+func testAccCheckDataSourceAdminUsersBasic(rEmail, rComments string) string {
 	return fmt.Sprintf(`
 
 data "zia_admin_roles" "super_admin" {
 	name = "Super Admin"
 }
 
-resource "zia_admin_users" "test-admin-user" {
-	login_name                      = "test-admin-user@securitygeek.io"
+resource "zia_admin_users" "test-admin-account" {
+	login_name                      = "test-admin-%s@securitygeek.io"
 	username                        = "testAcc Tf Admin"
-	email                           = "test-admin-user@securitygeek.io"
+	email                           = "test-admin-%s@securitygeek.io"
 	comments                        = "test-admin-user-%s"
 	password                        = "yty4kuq_dew!eux3AGD"
 	is_password_login_allowed       = true
@@ -77,15 +77,15 @@ resource "zia_admin_users" "test-admin-user" {
 }
 
 data "zia_admin_users" "test-admin-loginname" {
-	login_name = zia_admin_users.test-admin-user.login_name
-	depends_on = [ zia_admin_users.test-admin-user ]
+	login_name = zia_admin_users.test-admin-account.login_name
+	depends_on = [ zia_admin_users.test-admin-account ]
 }
 
 data "zia_admin_users" "test-admin-username" {
-	username = zia_admin_users.test-admin-user.username
-	depends_on = [ zia_admin_users.test-admin-user ]
+	username = zia_admin_users.test-admin-account.username
+	depends_on = [ zia_admin_users.test-admin-account ]
 }
-	`, rComments)
+	`, rEmail, rEmail, rComments)
 }
 
 func testAccDataSourceAdminUsersLoginName(login_name string) resource.TestCheckFunc {
@@ -109,4 +109,3 @@ func testAccDataSourceAdminUsersUsername(username string) resource.TestCheckFunc
 		return nil
 	}
 }
-*/

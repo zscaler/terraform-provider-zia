@@ -14,8 +14,8 @@ import (
 
 func TestAccResourceAdminUsers_basic(t *testing.T) {
 	var admins adminuserrolemgmt.AdminUsers
-	rComments := acctest.RandString(5)
 	rEmail := acctest.RandString(5)
+	rComments := acctest.RandString(5)
 	rPassword := acctest.RandString(20)
 	resourceName := "zia_admin_users.test-admin-account"
 
