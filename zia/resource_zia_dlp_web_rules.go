@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
 )
 
@@ -176,8 +175,11 @@ func resourceDlpWebRules() *schema.Resource {
 
 func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-
 	req := expandDlpWebRules(d)
+	errValidation := validateDlpWebRules(req)
+	if errValidation != nil {
+		return errValidation
+	}
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
 	resp, _, err := zClient.dlp_web_rules.Create(&req)
@@ -290,35 +292,6 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenIDExtensionListIDs(idNameExtensions *common.IDNameExtensions) []interface{} {
-	if idNameExtensions == nil || idNameExtensions.ID == 0 && idNameExtensions.Name == "" {
-		return nil
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"id": []int{idNameExtensions.ID},
-		},
-	}
-}
-
-func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-	if list == nil {
-		return nil
-	}
-	ids := []int{}
-	for _, item := range list {
-		if item.ID == 0 && item.Name == "" {
-			continue
-		}
-		ids = append(ids, item.ID)
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"id": ids,
-		},
-	}
-}
-
 func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -328,7 +301,10 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating web dlp rule ID: %v\n", id)
 	req := expandDlpWebRules(d)
-
+	errValidation := validateDlpWebRules(req)
+	if errValidation != nil {
+		return errValidation
+	}
 	if _, _, err := zClient.dlp_web_rules.Update(id, &req); err != nil {
 		return err
 	}
@@ -353,6 +329,28 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
+	fileTypes := []string{"JPEG", "PNG", "TIFF", "BITMAP"}
+	if !dlp.OcrEnabled {
+		// dlp.FileTypes must be a subset of fileTypes
+		for _, t1 := range dlp.FileTypes {
+			found := false
+			for _, t2 := range fileTypes {
+				if t1 == t2 {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("web dlp rule file types must be a subset of %v when OcrEnabled is disabled", fileTypes)
+			}
+		}
+	} else if len(dlp.FileTypes) > 0 {
+		return fmt.Errorf("web dlp rule file types must not be set when OcrEnabled is enabled")
+	}
+	return nil
+}
+
 func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 	result := dlp_web_rules.WebDLPRules{
@@ -368,6 +366,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		WithoutContentInspection: d.Get("without_content_inspection").(bool),
 		OcrEnabled:               d.Get("ocr_enabled").(bool),
 		ZscalerIncidentReciever:  d.Get("zscaler_incident_reciever").(bool),
+		MinSize:                  d.Get("min_size").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),

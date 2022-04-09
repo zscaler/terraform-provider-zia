@@ -208,6 +208,35 @@ func flattenIDExtensionsList(idNameExtension *common.IDNameExtensions) []interfa
 	return flattenedList
 }
 
+func flattenIDExtensionListIDs(idNameExtensions *common.IDNameExtensions) []interface{} {
+	if idNameExtensions == nil || idNameExtensions.ID == 0 && idNameExtensions.Name == "" {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id": []int{idNameExtensions.ID},
+		},
+	}
+}
+
+func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
+	if list == nil {
+		return nil
+	}
+	ids := []int{}
+	for _, item := range list {
+		if item.ID == 0 && item.Name == "" {
+			continue
+		}
+		ids = append(ids, item.ID)
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id": ids,
+		},
+	}
+}
+
 func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{} {
 	lastModified := make([]interface{}, 0)
 	if lastModifiedBy != nil {
