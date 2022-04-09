@@ -14,7 +14,7 @@ import (
 
 func TestAccResourceAdminUsers_basic(t *testing.T) {
 	var admins adminuserrolemgmt.AdminUsers
-	rEmail := acctest.RandString(5)
+	rEmail := acctest.RandomWithPrefix("tf-acc-user")
 	rComments := acctest.RandString(5)
 	rPassword := acctest.RandString(20)
 	resourceName := "zia_admin_users.test-admin-account"
@@ -28,9 +28,9 @@ func TestAccResourceAdminUsers_basic(t *testing.T) {
 				Config: testAccCheckResourceAdminUsersBasic(rEmail, rComments, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists("zia_admin_users.test-admin-account", &admins),
-					resource.TestCheckResourceAttr(resourceName, "login_name", "test-admin-"+rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName, "login_name", rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName, "username", "testAcc Tf Admin"),
-					resource.TestCheckResourceAttr(resourceName, "email", "test-admin-"+rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceName, "email", rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceName, "comments", "test-admin-account-"+rComments),
 					resource.TestCheckResourceAttr(resourceName, "password", "yty4kuq_dew!eux3AGD-"+rPassword),
 					resource.TestCheckResourceAttr(resourceName, "is_password_login_allowed", "true"),
@@ -52,9 +52,9 @@ data "zia_admin_roles" "super_admin" {
 }
 
 resource "zia_admin_users" "test-admin-account" {
-	login_name                      = "test-admin-%s@securitygeek.io"
+	login_name                      = "%s@securitygeek.io"
 	username                        = "testAcc Tf Admin"
-	email                           = "test-admin-%s@securitygeek.io"
+	email                           = "%s@securitygeek.io"
 	comments                        = "test-admin-account-%s"
 	password                        = "yty4kuq_dew!eux3AGD-%s"
 	is_password_login_allowed       = true

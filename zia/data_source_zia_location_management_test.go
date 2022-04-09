@@ -12,6 +12,7 @@ import (
 func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	rDesc := acctest.RandString(15)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	resourceName := "data.zia_location_management.test-sjc2022"
 
 	resource.Test(t, resource.TestCase{
@@ -19,7 +20,7 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceLocationManagementBasic(rName, rDesc),
+				Config: testAccCheckDataSourceLocationManagementBasic(rIP, rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceLocationManagement(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-sjc2022-"+rName),
@@ -32,19 +33,18 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "xff_forward_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ofw_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckDataSourceLocationManagementBasic(rName, rDesc string) string {
+func testAccCheckDataSourceLocationManagementBasic(rIP, rName, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test-sjc2022"{
 	comment = "Test SJC2022 - Static IP"
-	ip_address =  "121.234.54.90"
+	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
 	latitude = -36.848461
@@ -83,7 +83,7 @@ resource "zia_location_management" "test-sjc2022"{
 data "zia_location_management" "test-sjc2022" {
 	name = zia_location_management.test-sjc2022.name
 }
-	`, rName, rDesc)
+	`, rIP, rName, rDesc)
 }
 
 func testAccDataSourceLocationManagement(name string) resource.TestCheckFunc {

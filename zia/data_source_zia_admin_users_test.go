@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -109,3 +110,4 @@ func testAccDataSourceAdminUsersUsername(username string) resource.TestCheckFunc
 		return nil
 	}
 }
+*/

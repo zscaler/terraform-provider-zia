@@ -27,7 +27,6 @@ func TestAccDataSourceFirewallFilteringRule_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

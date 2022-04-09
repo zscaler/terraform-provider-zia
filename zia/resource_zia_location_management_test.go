@@ -16,6 +16,8 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 	var locations locationmanagement.Locations
 	rName := acctest.RandString(5)
 	rDesc := acctest.RandString(20)
+	rIP1, _ := acctest.RandIpAddress("121.234.54.0/25")
+	rIP2, _ := acctest.RandIpAddress("121.234.55.0/25")
 	resourceName := "zia_location_management.test_zs_sjc2022_type_ip"
 	resourceName2 := "zia_location_management.test_zs_sjc2022_type_ufqdn"
 
@@ -26,7 +28,7 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Test Location Management with VPN Credential Type IP
-				Config: testAccCheckResourceLocationManagementVPNTypeIP(rName, rDesc),
+				Config: testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ip", &locations),
 					resource.TestCheckResourceAttr(resourceName, "name", "test_zs_sjc2022_type_ip-"+rName),
@@ -43,7 +45,7 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 			},
 			{
 				// Test Location Management with VPN Credential Type UFQDN
-				Config: testAccCheckResourceLocationManagementVPNTypeUFQDN(rName, rDesc),
+				Config: testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ufqdn", &locations),
 					resource.TestCheckResourceAttr(resourceName2, "name", "test_zs_sjc2022_type_ufqdn-"+rName),
@@ -62,12 +64,12 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceLocationManagementVPNTypeIP(rName, rDesc string) string {
+func testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ip"{
 	comment 		= "Test SJC2022 - Static IP"
-	ip_address 		=  "121.234.54.92"
+	ip_address 		=  "%s"
 	routable_ip 	= true
 	geo_override 	= true
 	latitude 		= -36.848461
@@ -102,15 +104,15 @@ resource "zia_location_management" "test_zs_sjc2022_type_ip"{
 		ip_address = zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
 	}
 }
-	`, rName, rDesc)
+	`, rIP1, rName, rDesc)
 }
 
-func testAccCheckResourceLocationManagementVPNTypeUFQDN(rName, rDesc string) string {
+func testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rName, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
 	comment 		= "Test SJC2022 - Static IP"
-	ip_address 		=  "121.234.54.93"
+	ip_address 		=  "%s"
 	routable_ip 	= true
 	geo_override 	= true
 	latitude 		= -36.848461
@@ -143,7 +145,7 @@ resource "zia_location_management" "test_zs_sjc2022_type_ufqdn"{
 		type = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn.type
 	}
 }
-	`, rName, rDesc)
+	`, rIP2, rName, rDesc)
 }
 
 func testAccCheckLocationManagementExists(resource string, location *locationmanagement.Locations) resource.TestCheckFunc {

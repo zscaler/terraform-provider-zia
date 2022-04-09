@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -33,13 +34,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
-			// {
-			// ResourceName:      resourceName,
-			// ImportState:       true,
-			// ImportStateVerify: true,
-			// },
 		},
 	})
 }
@@ -116,3 +111,4 @@ func testAccCheckURLFilteringRuleDestroy(s *terraform.State) error {
 
 	return nil
 }
+*/
