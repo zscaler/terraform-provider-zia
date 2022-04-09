@@ -14,8 +14,8 @@ import (
 
 func TestAccFirewallFilteringRule_basic(t *testing.T) {
 	var rules filteringrules.FirewallFilteringRules
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
+	rName := "test-fw-rule-" + acctest.RandString(5)
+	rDesc := "test-fw-rule-" + acctest.RandString(20)
 	resourceName := "zia_firewall_filtering_rule.test-fw-rule"
 
 	resource.Test(t, resource.TestCase{
@@ -27,8 +27,8 @@ func TestAccFirewallFilteringRule_basic(t *testing.T) {
 				Config: testAccFirewallFilteringRuleBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists("zia_firewall_filtering_rule.test-fw-rule", &rules),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-rule-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-rule-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", rDesc),
 					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "order", "1"),
@@ -55,11 +55,16 @@ data "zia_firewall_filtering_time_window" "work_hours" {
 	name = "Work hours"
 }
 resource "zia_firewall_filtering_rule" "test-fw-rule" {
-	name = "test-fw-rule-%s"
-	description = "test-fw-rule-%s"
+	name = "%s"
+	description = "%s"
 	action = "ALLOW"
 	state = "ENABLED"
 	order = 1
+	src_ips=[]
+	dest_addresses=[]
+	dest_ip_categories=[]
+	dest_countries=[]
+	nw_applications=[]
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
 	}
@@ -72,6 +77,37 @@ resource "zia_firewall_filtering_rule" "test-fw-rule" {
 	time_windows {
 		id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
 	}
+	locations {
+		id = []
+	}
+	location_groups {
+		id = []
+	}
+	users {
+		id = []
+	}
+	labels {
+		id = []
+	}
+	src_ip_groups {
+		id = []
+	}
+	dest_ip_groups {
+		id = []
+	}
+	app_service_groups {
+		id = []
+	}
+	app_services {
+		id = []
+	}
+	nw_application_groups {
+		id = []
+	}
+	nw_service_groups {
+		id = []
+	}
+
 }
 	`, rName, rDesc)
 }

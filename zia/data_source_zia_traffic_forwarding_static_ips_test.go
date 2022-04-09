@@ -11,6 +11,7 @@ import (
 
 func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
 	rComment := acctest.RandString(5)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	resourceName := "data.zia_traffic_forwarding_static_ip.test-static-ip"
 
 	resource.Test(t, resource.TestCase{
@@ -18,11 +19,11 @@ func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingStaticIPBasic(rComment),
+				Config: testAccCheckTrafficForwardingStaticIPBasic(rIP, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceTrafficForwardingStatic(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test-static-ip-"+rComment),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "121.234.54.80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceName, "routable_ip", "true"),
 					resource.TestCheckResourceAttr(resourceName, "geo_override", "true"),
 				),
@@ -31,11 +32,11 @@ func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficForwardingStaticIPBasic(rComment string) string {
+func testAccCheckTrafficForwardingStaticIPBasic(rIP, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test-static-ip"{
-	ip_address =  "121.234.54.80"
+	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
 	latitude = -36.848461
@@ -46,7 +47,7 @@ resource "zia_traffic_forwarding_static_ip" "test-static-ip"{
 data "zia_traffic_forwarding_static_ip" "test-static-ip" {
 	ip_address = zia_traffic_forwarding_static_ip.test-static-ip.ip_address
 }
-	`, rComment)
+	`, rIP, rComment)
 }
 
 func testAccDataSourceTrafficForwardingStatic(name string) resource.TestCheckFunc {
