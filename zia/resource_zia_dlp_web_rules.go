@@ -158,8 +158,11 @@ func resourceDlpWebRules() *schema.Resource {
 			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
 			"users":                 listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"excluded_users":        listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"groups":                listIDsSchemaTypeCustom(8, "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
+			"excluded_groups":       listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"departments":           listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
+			"excluded_departments":  listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"dlp_engines":           listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
 			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
 			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
@@ -274,6 +277,15 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return err
 	}
+	if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
+		return err
+	}
+	if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
+		return err
+	}
+	if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -371,6 +383,9 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
 		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                   expandIDNameExtensionsSet(d, "labels"),
+		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
+		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
+		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
 	}
 	return result
 }

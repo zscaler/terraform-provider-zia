@@ -436,6 +436,69 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
+			"excluded_groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The name-ID pairs of the groups that are excluded from the DLP policy rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"excluded_departments": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The name-ID pairs of the departments that are excluded from the DLP policy rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"excluded_users": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The name-ID pairs of the users that are excluded from the DLP policy rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -536,6 +599,15 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		if err := d.Set("labels", flattenIDExtensions(resp.Labels)); err != nil {
+			return err
+		}
+		if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
+			return err
+		}
+		if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
+			return err
+		}
+		if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
 			return err
 		}
 

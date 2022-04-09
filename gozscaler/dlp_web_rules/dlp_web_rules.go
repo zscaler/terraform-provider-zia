@@ -45,6 +45,9 @@ type WebDLPRules struct {
 	DLPEngines               []common.IDNameExtensions `json:"dlpEngines,omitempty"`
 	TimeWindows              []common.IDNameExtensions `json:"timeWindows,omitempty"`
 	Labels                   []common.IDNameExtensions `json:"labels,omitempty"`
+	ExcludedGroups           []common.IDNameExtensions `json:"excludedGroups,omitempty"`
+	ExcludedDepartments      []common.IDNameExtensions `json:"excludedDepartments,omitempty"`
+	ExcludedUsers            []common.IDNameExtensions `json:"excludedUsers,omitempty"`
 }
 
 func (service *Service) Get(ruleID int) (*WebDLPRules, error) {
