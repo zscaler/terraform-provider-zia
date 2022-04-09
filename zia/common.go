@@ -78,26 +78,6 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
-func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
-	setInterface, ok := d.GetOk(key)
-	if ok {
-		set := setInterface.(*schema.Set)
-		var result []common.UserGroups
-		for _, item := range set.List() {
-			itemMap, _ := item.(map[string]interface{})
-			if itemMap != nil {
-				for _, id := range itemMap["id"].([]interface{}) {
-					result = append(result, common.UserGroups{
-						ID: id.(int),
-					})
-				}
-			}
-		}
-		return result
-	}
-	return []common.UserGroups{}
-}
-
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
 	idNameExtObj, ok := d.GetOk(key)
 	if !ok {
@@ -120,6 +100,27 @@ func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameEx
 		}
 	}
 	return nil
+}
+
+func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
+	setInterface, ok := d.GetOk(key)
+	if !ok {
+		return []common.UserGroups{}
+	}
+	set := setInterface.(*schema.Set)
+	var result []common.UserGroups
+	for _, groupObj := range set.List() {
+		group, ok := groupObj.(map[string]interface{})
+		if ok {
+			result = append(result, common.UserGroups{
+				ID:       group["id"].(int),
+				Name:     group["name"].(string),
+				IdpID:    group["idp_id"].(int),
+				Comments: group["comments"].(string),
+			})
+		}
+	}
+	return result
 }
 
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
@@ -149,18 +150,6 @@ func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
 }
 
 func flattenIDs(list []common.IDNameExtensions) []interface{} {
-	result := make([]interface{}, 1)
-	mapIds := make(map[string]interface{})
-	ids := make([]int, len(list))
-	for i, item := range list {
-		ids[i] = item.ID
-	}
-	mapIds["id"] = ids
-	result[0] = mapIds
-	return result
-}
-
-func flattenUserGroupSet(list []common.UserGroups) []interface{} {
 	result := make([]interface{}, 1)
 	mapIds := make(map[string]interface{})
 	ids := make([]int, len(list))
@@ -261,15 +250,43 @@ func flattenCreatedBy(createdBy *common.IDNameExtensions) []interface{} {
 	return created
 }
 
+func flattenUserGroupSet(list []common.UserGroups) []interface{} {
+	var result []interface{}
+	for _, group := range list {
+		obj := map[string]interface{}{
+			"id": group.ID,
+		}
+		if group.Name != "" {
+			obj["name"] = group.Name
+		}
+		if group.IdpID != 0 {
+			obj["idp_id"] = group.IdpID
+		}
+		if group.Comments != "" {
+			obj["comments"] = group.Comments
+		}
+		result = append(result, obj)
+	}
+	return result
+}
+
 func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
 	department := make([]interface{}, 0)
 	if userDepartment != nil {
-		department = append(department, map[string]interface{}{
-			"name":     userDepartment.Name,
-			"idp_id":   userDepartment.IdpID,
-			"comments": userDepartment.Comments,
-			"deleted":  userDepartment.Deleted,
-		})
+		obj := map[string]interface{}{
+			"id":      userDepartment.ID,
+			"deleted": userDepartment.Deleted,
+		}
+		if userDepartment.Name != "" {
+			obj["name"] = userDepartment.Name
+		}
+		if userDepartment.IdpID != 0 {
+			obj["idp_id"] = userDepartment.IdpID
+		}
+		if userDepartment.Comments != "" {
+			obj["comments"] = userDepartment.Comments
+		}
+		department = append(department, obj)
 	}
 	return department
 }
