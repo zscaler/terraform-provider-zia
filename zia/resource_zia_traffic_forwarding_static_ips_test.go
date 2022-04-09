@@ -14,6 +14,7 @@ import (
 
 func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	var static staticips.StaticIP
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	rComment := acctest.RandString(5)
 	resourceName := "zia_traffic_forwarding_static_ip.test-static-ip"
 
@@ -23,11 +24,11 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingStaticIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckResourceTrafficForwardingStaticIPBasic(rComment),
+				Config: testAccCheckResourceTrafficForwardingStaticIPBasic(rIP, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists("zia_traffic_forwarding_static_ip.test-static-ip", &static),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test-static-ip-"+rComment),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "121.234.54.81"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceName, "routable_ip", "true"),
 					resource.TestCheckResourceAttr(resourceName, "geo_override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "latitude", "-36.848461"),
@@ -38,18 +39,18 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceTrafficForwardingStaticIPBasic(rComment string) string {
+func testAccCheckResourceTrafficForwardingStaticIPBasic(rIP, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test-static-ip"{
-	ip_address =  "121.234.54.81"
+	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
 	latitude = -36.848461
 	longitude = 174.763336
 	comment = "test-static-ip-%s"
 }
-	`, rComment)
+	`, rIP, rComment)
 }
 
 func testAccCheckTrafficForwardingStaticIPExists(resource string, static *staticips.StaticIP) resource.TestCheckFunc {

@@ -12,6 +12,7 @@ import (
 func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 	rName := acctest.RandString(5)
 	rComment := acctest.RandString(5)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	resourceName := "data.zia_traffic_forwarding_vpn_credentials.test-type-ip"
 	resourceName2 := "data.zia_traffic_forwarding_vpn_credentials.test-type-fqdn"
 
@@ -20,12 +21,12 @@ func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsBasic(rName, rComment),
+				Config: testAccCheckTrafficForwardingVPNCredentialsBasic(rIP, rName, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceTrafficForwardingVPNCredentials(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comments", "test-type-ip-"+rComment),
 					resource.TestCheckResourceAttr(resourceName, "type", "IP"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "121.234.54.80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceName2, "comments", "test-type-fqdn-"+rComment),
 					resource.TestCheckResourceAttr(resourceName2, "type", "UFQDN"),
 					resource.TestCheckResourceAttr(resourceName2, "fqdn", rName+"@securitygeek.io"),
@@ -35,11 +36,11 @@ func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficForwardingVPNCredentialsBasic(rName, rComment string) string {
+func testAccCheckTrafficForwardingVPNCredentialsBasic(rIP, rName, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "static_ip"{
-	ip_address =  "121.234.54.80"
+	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
 	latitude = -36.848461
@@ -56,7 +57,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "test-type-ip"{
 
 data "zia_traffic_forwarding_vpn_credentials" "test-type-ip" {
 	type = "IP"
-	ip_address = "121.234.54.80"
+	ip_address = zia_traffic_forwarding_vpn_credentials.test-type-ip.ip_address
 	depends_on = [zia_traffic_forwarding_vpn_credentials.test-type-ip]
 }
 
@@ -70,7 +71,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn"{
 data "zia_traffic_forwarding_vpn_credentials" "test-type-fqdn" {
 	fqdn = zia_traffic_forwarding_vpn_credentials.test-type-fqdn.fqdn
 }
-	`, rComment, rName, rComment)
+	`, rIP, rComment, rName, rComment)
 }
 
 func testAccDataSourceTrafficForwardingVPNCredentials(name string) resource.TestCheckFunc {

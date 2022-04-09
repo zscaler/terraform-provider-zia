@@ -16,6 +16,7 @@ func TestAccResourceTrafficForwardingVPNCredentials_basic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
 	rName := acctest.RandString(5)
 	rComment := acctest.RandString(5)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	resourceName := "zia_traffic_forwarding_vpn_credentials.test-type-ip"
 	resourceName2 := "zia_traffic_forwarding_vpn_credentials.test-type-fqdn"
 
@@ -25,12 +26,12 @@ func TestAccResourceTrafficForwardingVPNCredentials_basic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingVPNCredentialsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsTypeIP(rComment),
+				Config: testAccCheckTrafficForwardingVPNCredentialsTypeIP(rIP, rComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists("zia_traffic_forwarding_vpn_credentials.test-type-ip", &credentials),
 					resource.TestCheckResourceAttr(resourceName, "comments", "test-type-ip-"+rComment),
 					resource.TestCheckResourceAttr(resourceName, "type", "IP"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "121.234.54.80"),
+					resource.TestCheckResourceAttr(resourceName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceName, "pre_shared_key", "newPassword123!"),
 				),
 			},
@@ -50,11 +51,11 @@ func TestAccResourceTrafficForwardingVPNCredentials_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckTrafficForwardingVPNCredentialsTypeIP(rComment string) string {
+func testAccCheckTrafficForwardingVPNCredentialsTypeIP(rIP, rComment string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "static_ip"{
-	ip_address =  "121.234.54.80"
+	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
 	latitude = -36.848461
@@ -68,7 +69,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "test-type-ip"{
 	pre_shared_key = "newPassword123!"
 	depends_on = [zia_traffic_forwarding_static_ip.static_ip]
 }
-	`, rComment)
+	`, rIP, rComment)
 }
 
 func testAccCheckTrafficForwardingStaticIPTypeUFQDN(rName, rComment string) string {
