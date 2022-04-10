@@ -14,9 +14,9 @@ import (
 
 func TestAccResourceLocationManagement_basic(t *testing.T) {
 	var locations locationmanagement.Locations
-	rName1 := acctest.RandString(5)
-	rName2 := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
+	rName1 := acctest.RandomWithPrefix("test-acc")
+	rName2 := acctest.RandomWithPrefix("test-acc")
+	rDesc := acctest.RandomWithPrefix("test-acc")
 	rIP1, _ := acctest.RandIpAddress("121.234.54.0/25")
 	rIP2, _ := acctest.RandIpAddress("121.234.55.0/25")
 	rEmail := acctest.RandomWithPrefix("tf-acc-vpn")
@@ -70,7 +70,7 @@ func testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName1, rDesc string)
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ip"{
-	comment 		= "Test SJC2022 - Static IP"
+	comment 		= "%s"
 	ip_address 		=  "%s"
 	routable_ip 	= true
 	geo_override 	= true
@@ -79,7 +79,7 @@ resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ip"{
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "test_zs_sjc2022_type_ip"{
-	comments    	= "Test SJC2022 - VPN Credentials"
+	comments    	= "%s"
 	type        	= "IP"
 	ip_address  	=  zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
 	pre_shared_key 	= "newPassword123!"
@@ -106,15 +106,15 @@ resource "zia_location_management" "test_zs_sjc2022_type_ip"{
 		ip_address = zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
 	}
 }
-	`, rIP1, rName1, rDesc)
+	`, rDesc, rIP1, rDesc, rName1, rDesc)
 }
 
 func testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rEmail, rName2, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
-	comment 		= "Test SJC2022 - Static IP"
-	ip_address 		=  "%s"
+	comment 		= "%s"
+	ip_address 		= "%s"
 	routable_ip 	= true
 	geo_override 	= true
 	latitude 		= -36.848461
@@ -122,7 +122,7 @@ resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "test_zs_sjc2022_type_ufqdn"{
-	comments    	= "Test SJC2022 - VPN Credentials"
+	comments    	= "%s"
 	type        	= "UFQDN"
 	fqdn  			=  "%s@securitygeek.io"
 	pre_shared_key 	= "newPassword123!"
@@ -147,7 +147,7 @@ resource "zia_location_management" "test_zs_sjc2022_type_ufqdn"{
 		type = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn.type
 	}
 }
-	`, rIP2, rEmail, rName2, rDesc)
+	`, rDesc, rIP2, rDesc, rEmail, rName2, rDesc)
 }
 
 func testAccCheckLocationManagementExists(resource string, location *locationmanagement.Locations) resource.TestCheckFunc {

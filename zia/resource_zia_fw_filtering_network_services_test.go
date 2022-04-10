@@ -30,6 +30,10 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-svc-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-svc-"+rDesc),
 					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "src_tcp_ports.0.start", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "src_tcp_ports.1.start", "5001"),
+					resource.TestCheckResourceAttr(resourceName, "dest_tcp_ports.0.start", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "dest_tcp_ports.1.start", "5001"),
 				),
 			},
 		},
@@ -49,20 +53,12 @@ resource "zia_firewall_filtering_network_service" "test-fw-nw-svc" {
 	src_tcp_ports {
 		start = 5001
 	}
-	src_tcp_ports {
-		start = 5002
-		end = 5005
-	}
-	dest_tcp_ports {
-		start = 5000
-	}
-		dest_tcp_ports {
-		start = 5001
-	}
-	dest_tcp_ports {
-		start = 5003
-		end = 5005
-	}
+    dest_tcp_ports {
+        start = 5000
+    }
+    dest_tcp_ports {
+        start = 5001
+    }
 }
 	`, rName, rDesc)
 }
