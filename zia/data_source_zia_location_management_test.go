@@ -14,13 +14,15 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 	rDesc := acctest.RandString(15)
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	resourceName := "data.zia_location_management.test-sjc2022"
+	rComment := acctest.RandomWithPrefix("test-acc")
+	resourceName1 := acctest.RandomWithPrefix("test-acc")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceLocationManagementBasic(rIP, rName, rDesc),
+				Config: testAccCheckDataSourceLocationManagementBasic(rComment, rIP, rName, rDesc, resourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceLocationManagement(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-sjc2022-"+rName),
@@ -39,11 +41,11 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckDataSourceLocationManagementBasic(rIP, rName, rDesc string) string {
+func testAccCheckDataSourceLocationManagementBasic(rComment, rIP, rName, rDesc, resourceName1 string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test-sjc2022"{
-	comment = "Test SJC2022 - Static IP"
+	comment = "%s"
 	ip_address =  "%s"
 	routable_ip = true
 	geo_override = true
@@ -52,7 +54,7 @@ resource "zia_traffic_forwarding_static_ip" "test-sjc2022"{
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "test-sjc2022"{
-	comments    = "Test SJC2022 - VPN Credentials"
+	comments    = "%s"
 	type        = "IP"
 	ip_address  =  zia_traffic_forwarding_static_ip.test-sjc2022.ip_address
 	pre_shared_key = "newPassword123!"
@@ -83,7 +85,7 @@ resource "zia_location_management" "test-sjc2022"{
 data "zia_location_management" "test-sjc2022" {
 	name = zia_location_management.test-sjc2022.name
 }
-	`, rIP, rName, rDesc)
+	`, rComment, rIP, rComment, rName, rDesc)
 }
 
 func testAccDataSourceLocationManagement(name string) resource.TestCheckFunc {

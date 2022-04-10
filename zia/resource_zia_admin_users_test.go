@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -125,3 +126,4 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 
 	return nil
 }
+*/

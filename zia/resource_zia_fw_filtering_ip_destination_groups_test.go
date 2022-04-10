@@ -14,9 +14,18 @@ import (
 
 func TestAccResourceFWIPDestinationGroups_basic(t *testing.T) {
 	var groups ipdestinationgroups.IPDestinationGroups
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
-	resourceName := "zia_firewall_filtering_destination_groups.test-fw-dst-group"
+	rName1 := acctest.RandString(5)
+	rDesc1 := acctest.RandString(20)
+	rName2 := acctest.RandString(5)
+	rDesc2 := acctest.RandString(20)
+	rName3 := acctest.RandString(5)
+	rDesc3 := acctest.RandString(20)
+	rName4 := acctest.RandString(5)
+	rDesc4 := acctest.RandString(20)
+	resourceName1 := "zia_firewall_filtering_destination_groups.test-fw-dst-fqdn-group"
+	resourceName2 := "zia_firewall_filtering_destination_groups.test-fw-dst-ip-group"
+	resourceName3 := "zia_firewall_filtering_destination_groups.test-fw-dst-domain-group"
+	resourceName4 := "zia_firewall_filtering_destination_groups.test-fw-dst-other-group"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,28 +33,96 @@ func TestAccResourceFWIPDestinationGroups_basic(t *testing.T) {
 		CheckDestroy: testAccCheckFWIPDestinationGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceFWIPDestinationGroupsBasic(rName, rDesc),
+				Config: testAccResourceFWIPDestinationGroupsDstFQDNBasic(rName1, rDesc1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWIPDestinationGroupsExists("zia_firewall_filtering_destination_groups.test-fw-dst-group", &groups),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-dst-group-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-dst-group-"+rDesc),
-					resource.TestCheckResourceAttr(resourceName, "type", "DSTN_FQDN"),
+					testAccCheckFWIPDestinationGroupsExists("zia_firewall_filtering_destination_groups.test-fw-dst-fqdn-group", &groups),
+					resource.TestCheckResourceAttr(resourceName1, "name", "test-fw-dst-fqdn-group-"+rName1),
+					resource.TestCheckResourceAttr(resourceName1, "description", "test-fw-dst-fqdn-group-"+rDesc1),
+					resource.TestCheckResourceAttr(resourceName1, "type", "DSTN_FQDN"),
+				),
+			},
+			// Test IP Destination IP Group
+			{
+				Config: testAccResourceFWIPDestinationGroupsDstIPBasic(rName2, rDesc2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFWIPDestinationGroupsExists("zia_firewall_filtering_destination_groups.test-fw-dst-ip-group", &groups),
+					resource.TestCheckResourceAttr(resourceName2, "name", "test-fw-dst-ip-group-"+rName2),
+					resource.TestCheckResourceAttr(resourceName2, "description", "test-fw-dst-ip-group-"+rDesc2),
+					resource.TestCheckResourceAttr(resourceName2, "type", "DSTN_IP"),
+				),
+			},
+			// Test IP Destination Domain Group
+			{
+				Config: testAccResourceFWIPDestinationGroupsDstDomainBasic(rName3, rDesc3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFWIPDestinationGroupsExists("zia_firewall_filtering_destination_groups.test-fw-dst-domain-group", &groups),
+					resource.TestCheckResourceAttr(resourceName3, "name", "test-fw-dst-domain-group-"+rName3),
+					resource.TestCheckResourceAttr(resourceName3, "description", "test-fw-dst-domain-group-"+rDesc3),
+					resource.TestCheckResourceAttr(resourceName3, "type", "DSTN_DOMAIN"),
+				),
+			},
+			// Test IP Destination Other Group
+			{
+				Config: testAccResourceFWIPDestinationGroupsDstOtherBasic(rName4, rDesc4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFWIPDestinationGroupsExists("zia_firewall_filtering_destination_groups.test-fw-dst-other-group", &groups),
+					resource.TestCheckResourceAttr(resourceName4, "name", "test-fw-dst-other-group-"+rName4),
+					resource.TestCheckResourceAttr(resourceName4, "description", "test-fw-dst-other-group-"+rDesc4),
+					resource.TestCheckResourceAttr(resourceName4, "type", "DSTN_OTHER"),
 				),
 			},
 		},
 	})
 }
 
-func testAccResourceFWIPDestinationGroupsBasic(rName, rDesc string) string {
+func testAccResourceFWIPDestinationGroupsDstFQDNBasic(rName1, rDesc1 string) string {
 	return fmt.Sprintf(`
 
-resource "zia_firewall_filtering_destination_groups" "test-fw-dst-group" {
-	name        = "test-fw-dst-group-%s"
-	description = "test-fw-dst-group-%s"
+resource "zia_firewall_filtering_destination_groups" "test-fw-dst-fqdn-group" {
+	name        = "test-fw-dst-fqdn-group-%s"
+	description = "test-fw-dst-fqdn-group-%s"
 	type        = "DSTN_FQDN"
 	addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]
   }
-	`, rName, rDesc)
+	`, rName1, rDesc1)
+}
+
+func testAccResourceFWIPDestinationGroupsDstIPBasic(rName2, rDesc2 string) string {
+	return fmt.Sprintf(`
+
+resource "zia_firewall_filtering_destination_groups" "test-fw-dst-ip-group" {
+	name        = "test-fw-dst-ip-group-%s"
+	description = "test-fw-dst-ip-group-%s"
+	type        = "DSTN_IP"
+	addresses = [ "192.168.100.1", "192.168.100.2", "192.168.100.3" ]
+  }
+	`, rName2, rDesc2)
+}
+
+func testAccResourceFWIPDestinationGroupsDstDomainBasic(rName3, rDesc3 string) string {
+	return fmt.Sprintf(`
+
+resource "zia_firewall_filtering_destination_groups" "test-fw-dst-domain-group" {
+	name        = "test-fw-dst-domain-group-%s"
+	description = "test-fw-dst-domain-group-%s"
+	type        = "DSTN_DOMAIN"
+	addresses 	= [ ".terraformtest1.com", ".terraformtest2.com", ".terraformtest3.com" ]
+  }
+	`, rName3, rDesc3)
+}
+
+func testAccResourceFWIPDestinationGroupsDstOtherBasic(rName4, rDesc4 string) string {
+	return fmt.Sprintf(`
+
+resource "zia_firewall_filtering_destination_groups" "test-fw-dst-other-group" {
+	name        	= "test-fw-dst-other-group-%s"
+	description 	= "test-fw-dst-other-group-%s"
+	type        	= "DSTN_OTHER"
+	ip_categories 	= [ "CUSTOM_01", "CUSTOM_03" ]
+	countries 		= [ "COUNTRY_US", "COUNTRY_CA" ]
+
+  }
+	`, rName4, rDesc4)
 }
 
 func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinationgroups.IPDestinationGroups) resource.TestCheckFunc {
