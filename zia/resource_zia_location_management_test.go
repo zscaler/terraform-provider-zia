@@ -14,10 +14,12 @@ import (
 
 func TestAccResourceLocationManagement_basic(t *testing.T) {
 	var locations locationmanagement.Locations
-	rName := acctest.RandString(5)
+	rName1 := acctest.RandString(5)
+	rName2 := acctest.RandString(5)
 	rDesc := acctest.RandString(20)
 	rIP1, _ := acctest.RandIpAddress("121.234.54.0/25")
 	rIP2, _ := acctest.RandIpAddress("121.234.55.0/25")
+	rEmail := acctest.RandomWithPrefix("tf-acc-vpn")
 	resourceName := "zia_location_management.test_zs_sjc2022_type_ip"
 	resourceName2 := "zia_location_management.test_zs_sjc2022_type_ufqdn"
 
@@ -28,10 +30,10 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Test Location Management with VPN Credential Type IP
-				Config: testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName, rDesc),
+				Config: testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName1, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ip", &locations),
-					resource.TestCheckResourceAttr(resourceName, "name", "test_zs_sjc2022_type_ip-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "name", "test_zs_sjc2022_type_ip-"+rName1),
 					resource.TestCheckResourceAttr(resourceName, "description", "test_zs_sjc2022_type_ip-"+rDesc),
 					resource.TestCheckResourceAttr(resourceName, "country", "UNITED_STATES"),
 					resource.TestCheckResourceAttr(resourceName, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
@@ -45,10 +47,10 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 			},
 			{
 				// Test Location Management with VPN Credential Type UFQDN
-				Config: testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rName, rDesc),
+				Config: testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rEmail, rName2, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists("zia_location_management.test_zs_sjc2022_type_ufqdn", &locations),
-					resource.TestCheckResourceAttr(resourceName2, "name", "test_zs_sjc2022_type_ufqdn-"+rName),
+					resource.TestCheckResourceAttr(resourceName2, "name", "test_zs_sjc2022_type_ufqdn-"+rName2),
 					resource.TestCheckResourceAttr(resourceName2, "description", "test_zs_sjc2022_type_ufqdn-"+rDesc),
 					resource.TestCheckResourceAttr(resourceName2, "country", "UNITED_STATES"),
 					resource.TestCheckResourceAttr(resourceName2, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
@@ -64,7 +66,7 @@ func TestAccResourceLocationManagement_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName, rDesc string) string {
+func testAccCheckResourceLocationManagementVPNTypeIP(rIP1, rName1, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ip"{
@@ -104,10 +106,10 @@ resource "zia_location_management" "test_zs_sjc2022_type_ip"{
 		ip_address = zia_traffic_forwarding_static_ip.test_zs_sjc2022_type_ip.ip_address
 	}
 }
-	`, rIP1, rName, rDesc)
+	`, rIP1, rName1, rDesc)
 }
 
-func testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rName, rDesc string) string {
+func testAccCheckResourceLocationManagementVPNTypeUFQDN(rIP2, rEmail, rName2, rDesc string) string {
 	return fmt.Sprintf(`
 
 resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
@@ -122,7 +124,7 @@ resource "zia_traffic_forwarding_static_ip" "test_zs_sjc2022_type_ufqdn"{
 resource "zia_traffic_forwarding_vpn_credentials" "test_zs_sjc2022_type_ufqdn"{
 	comments    	= "Test SJC2022 - VPN Credentials"
 	type        	= "UFQDN"
-	fqdn  			=  "test_zs_sjc2022_type_ufqdn@securitygeek.io"
+	fqdn  			=  "%s@securitygeek.io"
 	pre_shared_key 	= "newPassword123!"
 }
 
@@ -145,7 +147,7 @@ resource "zia_location_management" "test_zs_sjc2022_type_ufqdn"{
 		type = zia_traffic_forwarding_vpn_credentials.test_zs_sjc2022_type_ufqdn.type
 	}
 }
-	`, rIP2, rName, rDesc)
+	`, rIP2, rEmail, rName2, rDesc)
 }
 
 func testAccCheckLocationManagementExists(resource string, location *locationmanagement.Locations) resource.TestCheckFunc {

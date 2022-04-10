@@ -50,9 +50,19 @@ resource "zia_dlp_web_rules" "test-dlp-rule" {
 	protocols = [ "HTTPS_RULE", "HTTP_RULE" ]
 	without_content_inspection = false
 	match_only = false
-	ocr_enabled = true
+	ocr_enabled 				= true
+	file_types                  = ["JPEG", "PNG", "TIFF", "BITMAP"]
 	min_size = 0
 	zscaler_incident_reciever = true
+	users {
+		id = [ 29309057, 29309058 ]
+	}
+	 groups {
+		id = [ 26231231 ]
+	}
+	departments {
+		id = [ 25684245 ]
+	}
 }
 
 data "zia_dlp_web_rules" "test-dlp-rule" {
