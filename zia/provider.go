@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func Provider() *schema.Provider {
@@ -30,7 +31,16 @@ func Provider() *schema.Provider {
 			"zia_cloud": {
 				Type:        schema.TypeString,
 				DefaultFunc: envDefaultFunc("ZIA_CLOUD"),
-				Required:    true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"zscaler",
+					"zscalerone",
+					"zscalertwo",
+					"zscalerthree",
+					"zscloud",
+					"zscalerbeta",
+					"zscalergov",
+				}, false),
+				Required: true,
 			},
 		},
 
