@@ -105,30 +105,15 @@ func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinatio
 
 func testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, description, dst_type string) string {
 	return fmt.Sprintf(`
-// ip destination group resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWIPDestinationGroupsResourceHCL(generatedName, description, dst_type),
-
-		// data source variables
-		resourcetype.FWFilteringDestinationGroup,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FWIPDestinationGroupsResourceHCL(generatedName, description, dst_type string) string {
-	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "%s"
 	description = "%s"
 	type        = "%s"
 	addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]
+  }
+
+data "%s" "%s" {
+	id = "${%s.id}"
   }
 `,
 		// resource variables
@@ -137,5 +122,10 @@ resource "%s" "%s" {
 		variable.FWDSTGroupName,
 		description,
 		dst_type,
+
+		// data source variables
+		resourcetype.FWFilteringDestinationGroup,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

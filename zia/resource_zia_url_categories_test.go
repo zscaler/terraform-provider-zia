@@ -23,23 +23,25 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.ConfiguredName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CategoryDescription, variable.ConfiguredName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", variable.ConfiguredName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.CategoryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
 			},
 		},
@@ -90,42 +92,32 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 	}
 }
 
-func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, description, configured_name string, custom_category bool) string {
-	return fmt.Sprintf(`
-// rule label resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		URLCategoriesResourceHCL(generatedName, configured_name, description, custom_category),
-
-		// data source variables
-		resourcetype.URLCategories,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func URLCategoriesResourceHCL(generatedName, configured_name, description string, custom_category bool) string {
+func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName string, custom_category bool) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	super_category 		= "USER_DEFINED"
-	configured_name 	= "%s"
-	description 		= "%s"
+	configured_name 	= "tf-acc-test-%s"
+	description 		= "tf-acc-test-%s"
 	custom_category     = "%s"
 	keywords            = ["microsoft"]
 	db_categorized_urls = [".creditkarma.com", ".youku.com"]
 	type                = "URL_CATEGORY"
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.URLCategories,
 		generatedName,
-		variable.ConfiguredName,
-		description,
+		generatedName,
+		generatedName,
 		strconv.FormatBool(custom_category),
+
+		// data source variables
+		resourcetype.URLCategories,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

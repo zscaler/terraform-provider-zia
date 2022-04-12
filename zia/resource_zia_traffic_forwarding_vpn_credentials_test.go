@@ -1,23 +1,24 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
 	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
 	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringVPNCredentials)
+	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
+	rSharedKey := acctest.RandString(20)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,25 +26,24 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingVPNCredentialsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, variable.VPNCredentialComments, variable.VPNCredentialTypeUFQDN, variable.VPNCredentialFQDN),
+				// creation vpn credential type ufqdn
+				Config: testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", variable.VPNCredentialComments),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.VPNCredentialTypeUFQDN),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", variable.VPNCredentialFQDN),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", variable.VPNCredentialPreSharedKey),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "UFQDN"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
 
-			// Update test
+			// update pre-shared-key and comments vpn credential type ufqdn
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, variable.VPNCredentialComments, variable.VPNCredentialTypeUFQDN, variable.VPNCredentialFQDN),
+				Config: testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", variable.VPNCredentialComments),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.VPNCredentialTypeUFQDN),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", variable.VPNCredentialFQDN),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", variable.VPNCredentialPreSharedKey),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
 		},
@@ -54,7 +54,7 @@ func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) erro
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.TrafficFilteringStaticIP {
+		if rs.Type != resourcetype.TrafficFilteringVPNCredentials {
 			continue
 		}
 
@@ -106,17 +106,25 @@ func testAccCheckTrafficForwardingVPNCredentialsExists(resource string, rule *vp
 	}
 }
 
-func testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, comments, typeUFQDN, fqdn string) string {
+func testAccCheckTrafficForwardingVPNCredentialsConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKey string) string {
 	return fmt.Sprintf(`
-// network application group resource
-%s
+resource "%s" "%s" {
+	comments = "tf-acc-test-%s"
+    type = "UFQDN"
+    fqdn = "%s@securitygeek.io"
+    pre_shared_key = "%s"
+}
 
 data "%s" "%s" {
-  id = "${%s.id}"
-}
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
-		TrafficForwardingVPNCredentialsResourceHCL(generatedName, comments, typeUFQDN, fqdn),
+		resourcetype.TrafficFilteringVPNCredentials,
+		generatedName,
+		generatedName,
+		rEmail,
+		rSharedKey,
 
 		// data source variables
 		resourcetype.TrafficFilteringVPNCredentials,
@@ -124,22 +132,3 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
-
-func TrafficForwardingVPNCredentialsResourceHCL(generatedName, comments, typeUFQDN, fqdn string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-	comments = "%s"
-    type = "%s"
-    fqdn = "%s"
-    pre_shared_key = "Password@123!"
-}
-`,
-		// resource variables
-		resourcetype.TrafficFilteringVPNCredentials,
-		generatedName,
-		variable.VPNCredentialComments,
-		typeUFQDN,
-		fqdn,
-	)
-}
-*/

@@ -10,9 +10,7 @@ const (
 
 // Custom URL Categories resource/datasource
 const (
-	CategoryDescription = "this is an acceptance test"
-	ConfiguredName      = "this is an acceptance test"
-	CustomCategory      = true
+	CustomCategory = true
 )
 
 // Firewall Filtering Rule resource/datasource
@@ -57,9 +55,9 @@ const (
 
 // Traffic Forwarding Static IP resource/datasource
 const (
-	StaticIPComment  = "this is an acceptance test"
-	StaticIPAddress  = "118.189.211.221"
-	StaticRoutableIP = true
+	StaticIPComment   = "this is an acceptance test"
+	StaticRoutableIP  = true
+	StaticGeoOverride = true
 )
 
 // Traffic Forwarding VPN Credentials resource/datasource

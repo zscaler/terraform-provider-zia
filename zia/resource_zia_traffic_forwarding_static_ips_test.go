@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
@@ -17,6 +18,7 @@ import (
 func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	var static staticips.StaticIP
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,23 +26,24 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingStaticIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, variable.StaticIPAddress, variable.StaticRoutableIP),
+				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", variable.StaticIPComment),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", variable.StaticIPAddress),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
 				),
 			},
 
-			// Update test
+			// Update static ip address information
 			{
-				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, variable.StaticIPAddress, variable.StaticRoutableIP),
+				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", variable.StaticIPComment),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", variable.StaticIPAddress),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
 				),
 			},
 		},
@@ -103,35 +106,20 @@ func testAccCheckTrafficForwardingStaticIPExists(resource string, rule *staticip
 	}
 }
 
-func testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, address string, routableIP bool) string {
-	return fmt.Sprintf(`
-// network application group resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		TrafficForwardingStaticIPResourceHCL(generatedName, address, routableIP),
-
-		// data source variables
-		resourcetype.TrafficFilteringStaticIP,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func TrafficForwardingStaticIPResourceHCL(generatedName, address string, routableIP bool) string {
+func testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, address string, routableIP, geoOverride bool) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	comment = "%s"
     ip_address =  "%s"
-    routable_ip = "%s"
-    geo_override = true
-    latitude = -36.848461
+	latitude = -36.848461
     longitude = 174.763336
+    routable_ip = "%s"
+    geo_override = "%s"
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.TrafficFilteringStaticIP,
@@ -139,5 +127,11 @@ resource "%s" "%s" {
 		variable.StaticIPComment,
 		address,
 		strconv.FormatBool(routableIP),
+		strconv.FormatBool(geoOverride),
+
+		// data source variables
+		resourcetype.TrafficFilteringStaticIP,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

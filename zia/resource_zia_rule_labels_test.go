@@ -103,34 +103,24 @@ func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels)
 
 func testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
-// rule label resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		RuleLabelsResourceHCL(generatedName, description),
-
-		// data source variables
-		resourcetype.RuleLabels,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func RuleLabelsResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "%s"
     description = "%s"
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.RuleLabels,
 		generatedName,
 		variable.RuleLabelName,
 		description,
+
+		// data source variables
+		resourcetype.RuleLabels,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

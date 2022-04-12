@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
 	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
@@ -12,6 +13,7 @@ import (
 
 func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -19,12 +21,13 @@ func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingStaticIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, variable.StaticIPAddress, variable.StaticRoutableIP),
+				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "comment", resourceTypeAndName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "ip_address", resourceTypeAndName, "ip_address"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
 				),
 			},
 		},
