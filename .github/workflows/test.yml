@@ -67,7 +67,7 @@ jobs:
 
       - name: Go Mod Tidy
         run: go mod tidy
-        
+
       - name: make testacc
         run: make testacc
         env:
@@ -75,4 +75,4 @@ jobs:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
           ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
           ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
-          ZIA_BASE_URL: ${{ secrets.ZIA_BASE_URL }}
+          ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
