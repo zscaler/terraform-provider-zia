@@ -70,6 +70,16 @@ func resourceFirewallFilteringRules() *schema.Resource {
 					"DISABLED",
 				}, false),
 			},
+			"state": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ENABLED",
+					"DISABLED",
+				}, false),
+			},
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
