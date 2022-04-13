@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"testing"
@@ -29,10 +30,11 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "comments", resourceTypeAndName, fmt.Sprintf(rComments+"tf-acc-test")),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "password", resourceTypeAndName, fmt.Sprintf(rPassword+"Super@Secret007")),
-					// resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "department.#", "1"),
 				),
 			},
 		},
 	})
 }
+*/
