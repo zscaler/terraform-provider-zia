@@ -100,3 +100,4 @@ jobs:
         go build ./cli/ziaActivator.go
         mv ziaActivator /usr/local/bin
         ziaActivator
+        
