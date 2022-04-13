@@ -257,7 +257,11 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("protocols", resp.Protocols)
-	_ = d.Set("url_categories", resp.URLCategories)
+	if len(resp.URLCategories) == 0 {
+		_ = d.Set("url_categories", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories", resp.URLCategories)
+	}
 	_ = d.Set("state", resp.State)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
