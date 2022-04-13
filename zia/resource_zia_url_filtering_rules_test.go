@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -32,6 +31,9 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
 
@@ -44,6 +46,9 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
 		},
@@ -114,13 +119,13 @@ resource "%s" "%s" {
 	action = "%s"
     state = "%s"
     order = 2
-    url_categories = ["ANY"]
+	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
+	name = "${%s.name}"
   }
 `,
 		// resource variables
@@ -137,4 +142,3 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
-*/

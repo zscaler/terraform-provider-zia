@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -37,4 +36,3 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 		},
 	})
 }
-*/
