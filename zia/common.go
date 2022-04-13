@@ -78,37 +78,17 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
-func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
-	setInterface, ok := d.GetOk(key)
-	if ok {
-		set := setInterface.(*schema.Set)
-		var result []common.UserGroups
-		for _, item := range set.List() {
-			itemMap, _ := item.(map[string]interface{})
-			if itemMap != nil {
-				for _, id := range itemMap["id"].([]interface{}) {
-					result = append(result, common.UserGroups{
-						ID: id.(int),
-					})
-				}
-			}
-		}
-		return result
-	}
-	return []common.UserGroups{}
-}
-
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	lastModifiedByObj, ok := d.GetOk(key)
+	idNameExtObj, ok := d.GetOk(key)
 	if !ok {
 		return nil
 	}
-	lastMofiedBy, ok := lastModifiedByObj.(*schema.Set)
+	idNameExt, ok := idNameExtObj.(*schema.Set)
 	if !ok {
 		return nil
 	}
-	if len(lastMofiedBy.List()) > 0 {
-		lastModifiedByObj := lastMofiedBy.List()[0]
+	if len(idNameExt.List()) > 0 {
+		lastModifiedByObj := idNameExt.List()[0]
 		lastMofied, ok := lastModifiedByObj.(map[string]interface{})
 		if !ok {
 			return nil
@@ -120,6 +100,27 @@ func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameEx
 		}
 	}
 	return nil
+}
+
+func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
+	setInterface, ok := d.GetOk(key)
+	if !ok {
+		return []common.UserGroups{}
+	}
+	set := setInterface.(*schema.Set)
+	var result []common.UserGroups
+	for _, groupObj := range set.List() {
+		group, ok := groupObj.(map[string]interface{})
+		if ok {
+			result = append(result, common.UserGroups{
+				ID:       group["id"].(int),
+				Name:     group["name"].(string),
+				IdpID:    group["idp_id"].(int),
+				Comments: group["comments"].(string),
+			})
+		}
+	}
+	return result
 }
 
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
@@ -160,18 +161,6 @@ func flattenIDs(list []common.IDNameExtensions) []interface{} {
 	return result
 }
 
-func flattenUserGroupSet(list []common.UserGroups) []interface{} {
-	result := make([]interface{}, 1)
-	mapIds := make(map[string]interface{})
-	ids := make([]int, len(list))
-	for i, item := range list {
-		ids[i] = item.ID
-	}
-	mapIds["id"] = ids
-	result[0] = mapIds
-	return result
-}
-
 func flattenIDNameExtensions(list []common.IDNameExtensions) []interface{} {
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
@@ -196,16 +185,45 @@ func flattenIDExtensions(list []common.IDNameExtensions) []interface{} {
 	return flattenedList
 }
 
-func flattenIDExtensionsList(list *common.IDNameExtensions) []interface{} {
+func flattenIDExtensionsList(idNameExtension *common.IDNameExtensions) []interface{} {
 	flattenedList := make([]interface{}, 0)
-	if list != nil {
+	if idNameExtension != nil && (idNameExtension.ID != 0 || idNameExtension.Name != "") {
 		flattenedList = append(flattenedList, map[string]interface{}{
-			"id":         list.ID,
-			"name":       list.Name,
-			"extensions": list.Extensions,
+			"id":         idNameExtension.ID,
+			"name":       idNameExtension.Name,
+			"extensions": idNameExtension.Extensions,
 		})
 	}
 	return flattenedList
+}
+
+func flattenIDExtensionListIDs(idNameExtensions *common.IDNameExtensions) []interface{} {
+	if idNameExtensions == nil || idNameExtensions.ID == 0 && idNameExtensions.Name == "" {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id": []int{idNameExtensions.ID},
+		},
+	}
+}
+
+func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
+	if list == nil {
+		return nil
+	}
+	ids := []int{}
+	for _, item := range list {
+		if item.ID == 0 && item.Name == "" {
+			continue
+		}
+		ids = append(ids, item.ID)
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id": ids,
+		},
+	}
 }
 
 func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{} {
@@ -232,15 +250,43 @@ func flattenCreatedBy(createdBy *common.IDNameExtensions) []interface{} {
 	return created
 }
 
+func flattenUserGroupSet(list []common.UserGroups) []interface{} {
+	var result []interface{}
+	for _, group := range list {
+		obj := map[string]interface{}{
+			"id": group.ID,
+		}
+		if group.Name != "" {
+			obj["name"] = group.Name
+		}
+		if group.IdpID != 0 {
+			obj["idp_id"] = group.IdpID
+		}
+		if group.Comments != "" {
+			obj["comments"] = group.Comments
+		}
+		result = append(result, obj)
+	}
+	return result
+}
+
 func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
 	department := make([]interface{}, 0)
 	if userDepartment != nil {
-		department = append(department, map[string]interface{}{
-			"name":     userDepartment.Name,
-			"idp_id":   userDepartment.IdpID,
-			"comments": userDepartment.Comments,
-			"deleted":  userDepartment.Deleted,
-		})
+		obj := map[string]interface{}{
+			"id":      userDepartment.ID,
+			"deleted": userDepartment.Deleted,
+		}
+		if userDepartment.Name != "" {
+			obj["name"] = userDepartment.Name
+		}
+		if userDepartment.IdpID != 0 {
+			obj["idp_id"] = userDepartment.IdpID
+		}
+		if userDepartment.Comments != "" {
+			obj["comments"] = userDepartment.Comments
+		}
+		department = append(department, obj)
 	}
 	return department
 }
@@ -340,7 +386,7 @@ func getURLRequestMethods() *schema.Schema {
 			ValidateFunc: validateURLFilteringRequestMethods(),
 		},
 		Optional: true,
-		Computed: true,
+		// Computed: true,
 	}
 }
 
@@ -353,7 +399,7 @@ func getURLProtocols() *schema.Schema {
 			ValidateFunc: validateURLFilteringProtocols(),
 		},
 		Optional: true,
-		Computed: true,
+		// Computed: true,
 	}
 }
 
@@ -409,5 +455,18 @@ func getCloudFirewallNwServicesTag() *schema.Schema {
 		ValidateFunc: validateCloudFirewallNwServicesTag(),
 		Optional:     true,
 		Computed:     true,
+	}
+}
+
+func getDLPRuleFileTypes(desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "The list of file types to which the DLP policy rule must be applied.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateDLPRuleFileTypes(),
+		},
+		Optional: true,
+		Computed: true,
 	}
 }

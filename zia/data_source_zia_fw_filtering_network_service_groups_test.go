@@ -23,7 +23,7 @@ func TestAccDataSourceFWNetworkServiceGroups_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "services", resourceTypeAndName, "services"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "services.#", "2"),
 				),
 			},
 		},

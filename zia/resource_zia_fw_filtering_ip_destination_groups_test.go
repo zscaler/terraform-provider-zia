@@ -30,6 +30,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWDSTGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
 				),
 			},
 
@@ -41,6 +42,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWDSTGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
 				),
 			},
 		},

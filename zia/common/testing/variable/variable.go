@@ -51,6 +51,7 @@ const (
 const (
 	FWNetworkServicesName        = "this is an acceptance test"
 	FWNetworkServicesDescription = "this is an acceptance test"
+	FWNetworkServicesType        = "CUSTOM"
 )
 
 // Traffic Forwarding Static IP resource/datasource
@@ -70,6 +71,28 @@ const (
 	VPNCredentialIPAddress    = "118.189.211.221"
 )
 
+// Traffic Forwarding Location Management
+const (
+	LocName         = "this is an acceptance test"
+	LocDesc         = "this is an acceptance test"
+	LocAuthRequired = true
+	LocSurrogateIP  = true
+	LocXFF          = true
+	LocOFW          = true
+	LocIPS          = true
+)
+
+// DLP Dictionaries resource/datasource
+const (
+	DLPWebRuleName           = "this is an acceptance test"
+	DLPWebRuleDesc           = "this is an acceptance test"
+	DLPRuleResourceAction    = "ALLOW"
+	DLPRuleResourceState     = "ENABLED"
+	DLPRuleContentInspection = false
+	DLPMatchOnly             = false
+	DLPOCREnabled            = true
+)
+
 // DLP Dictionaries resource/datasource
 const (
 	DLPDictionaryResourceName = "this is an acceptance test"
@@ -82,6 +105,11 @@ const (
 	AdminUserName      = "Test Acc"
 	AdminUserEmail     = "testAcc@securitygeek.io"
 	AdminUserPassword  = "Password@123!"
+)
+
+// User Management
+const (
+	UserName = "testAcc TF User"
 )
 
 // Rule Labels

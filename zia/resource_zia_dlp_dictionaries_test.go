@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -30,6 +29,8 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
 				),
 			},
 
@@ -40,6 +41,8 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
 				),
 			},
 		},
@@ -104,15 +107,39 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 
 func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
-// dlp dictionary resource
-%s
+resource "%s" "%s" {
+    name = "%s"
+	description = "%s"
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "Test1"
+    }
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "Test2"
+    }
+    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "Test1"
+    }
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "Test2"
+    }
+    dictionary_type = "PATTERNS_AND_PHRASES"
+}
 
 data "%s" "%s" {
-  id = "${%s.id}"
+	id = "${%s.id}"
 }
+
 `,
 		// resource variables
-		DLPDictionariesResourceHCL(generatedName, description),
+		resourcetype.DLPDictionaries,
+		generatedName,
+		variable.DLPDictionaryResourceName,
+		description,
 
 		// data source variables
 		resourcetype.DLPDictionaries,
@@ -120,29 +147,3 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
-
-func DLPDictionariesResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-    name = "%s"
-    description = "%s"
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "YourPhrase"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    patterns {
-        action = "PATTERN_COUNT_TYPE_UNIQUE"
-        pattern = "YourPattern"
-    }
-    dictionary_type = "PATTERNS_AND_PHRASES"
-}
-`,
-		// resource variables
-		resourcetype.DLPDictionaries,
-		generatedName,
-		variable.DLPDictionaryResourceName,
-		description,
-	)
-}
-*/

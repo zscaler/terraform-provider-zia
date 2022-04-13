@@ -18,11 +18,14 @@ func TestAccDataSourceFWNetworkServices_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckFWNetworkServicesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
+				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "type", resourceTypeAndName, "type"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "src_tcp_ports.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "dest_tcp_ports.#", "3"),
 				),
 			},
 		},

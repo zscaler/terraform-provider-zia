@@ -50,16 +50,19 @@ func resourceDlpWebRules() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The DLP policy rule name.",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The description of the DLP policy rule.",
 			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -77,210 +80,106 @@ func resourceDlpWebRules() *schema.Resource {
 				Required:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
-			// "url_categories": {
-			// 	Type:        schema.TypeSet,
-			// 	Optional:    true,
-			// 	Description: "The list of URL categories to which the DLP policy rule must be applied.",
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:     schema.TypeInt,
-			// 				Computed: true,
-			// 				Optional: true,
-			// 			},
-			// 			"name": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 				Optional: true,
-			// 			},
-			// 			"extensions": {
-			// 				Type:     schema.TypeMap,
-			// 				Computed: true,
-			// 				Elem: &schema.Schema{
-			// 					Type: schema.TypeString,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"file_types": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of file types to which the DLP policy rule must be applied.",
 			},
 			"cloud_applications": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
 			},
 			"min_size": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 96000),
+				Description:  "The minimum file size (in KB) used for evaluation of the DLP policy rule.",
 			},
 			"action": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The action taken when traffic matches the DLP policy rule criteria.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ANY",
+					"NONE",
+					"BLOCK",
+					"ALLOW",
+					"ICAP_RESPONSE",
+				}, false),
 			},
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enables or disables the DLP policy rule.",
-			},
-			"auditor": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "The auditor to which the DLP policy rule must be applied.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"ENABLED",
+					"DISABLED",
+				}, false),
 			},
 			"external_auditor_email": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The email address of an external auditor to whom DLP email notifications are sent.",
-			},
-			"notification_template": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "The template used for DLP notification emails.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"match_only": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "The match only criteria for DLP engines.",
-			},
-			"last_modified_time": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Timestamp when the DLP policy rule was last modified.",
-			},
-			"last_modified_by": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "The admin that modified the DLP policy rule last.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"icap_server": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				Description: "The DLP server, using ICAP, to which the transaction content is forwarded.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"without_content_inspection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
 			},
 			"ocr_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Enables or disables image file scanning.",
 			},
 			"zscaler_incident_reciever": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
-			"locations":       listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
-			"location_groups": listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
-			"users":           listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"groups":          listIDsSchemaTypeCustom(8, "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
-			"departments":     listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
-			"dlp_engines":     listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
-			"time_windows":    listIDsSchemaType("list of time interval during which rule must be enforced."),
-			"labels":          listIDsSchemaType("list of Labels that are applicable to the rule."),
-			"url_categories":  listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
+			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
+			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
+			"users":                 listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"excluded_users":        listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"groups":                listIDsSchemaTypeCustom(8, "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
+			"excluded_groups":       listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"departments":           listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
+			"excluded_departments":  listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"dlp_engines":           listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
+			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
+			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
+			"url_categories":        listIDsSchemaType("The list of URL categories to which the DLP policy rule must be applied."),
+			"auditor":               listIDsSchemaTypeCustom(1, "The auditor to which the DLP policy rule must be applied."),
+			"notification_template": listIDsSchemaTypeCustom(1, "The template used for DLP notification emails."),
+			"icap_server":           listIDsSchemaTypeCustom(1, "The DLP server, using ICAP, to which the transaction content is forwarded."),
 		},
 	}
 }
 
 func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-
 	req := expandDlpWebRules(d)
+	errValidation := validateDlpWebRules(req)
+	if errValidation != nil {
+		return errValidation
+	}
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
 	resp, _, err := zClient.dlp_web_rules.Create(&req)
@@ -328,61 +227,65 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("min_size", resp.MinSize)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("match_only", resp.MatchOnly)
-	_ = d.Set("last_modified_time", resp.LastModifiedTime)
 	_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 	_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 	_ = d.Set("ocr_enabled", resp.OcrEnabled)
 	_ = d.Set("zscaler_incident_reciever", resp.ZscalerIncidentReciever)
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return err
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return err
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return err
 	}
 
-	if err := d.Set("url_categories", flattenIDs(resp.URLCategories)); err != nil {
+	if err := d.Set("url_categories", flattenIDExtensionsListIDs(resp.URLCategories)); err != nil {
 		return err
 	}
 
-	if err := d.Set("dlp_engines", flattenIDs(resp.DLPEngines)); err != nil {
+	if err := d.Set("dlp_engines", flattenIDExtensionsListIDs(resp.DLPEngines)); err != nil {
 		return err
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return err
 	}
 
-	if err := d.Set("auditor", flattenIDExtensionsList(resp.Auditor)); err != nil {
+	if err := d.Set("auditor", flattenIDExtensionListIDs(resp.Auditor)); err != nil {
 		return err
 	}
 
-	if err := d.Set("notification_template", flattenIDExtensionsList(resp.NotificationTemplate)); err != nil {
+	if err := d.Set("notification_template", flattenIDExtensionListIDs(resp.NotificationTemplate)); err != nil {
 		return err
 	}
 
-	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
+	if err := d.Set("icap_server", flattenIDExtensionListIDs(resp.IcapServer)); err != nil {
 		return err
 	}
 
-	if err := d.Set("icap_server", flattenIDExtensionsList(resp.IcapServer)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return err
 	}
-
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
+		return err
+	}
+	if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
+		return err
+	}
+	if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
 		return err
 	}
 
@@ -398,7 +301,10 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating web dlp rule ID: %v\n", id)
 	req := expandDlpWebRules(d)
-
+	errValidation := validateDlpWebRules(req)
+	if errValidation != nil {
+		return errValidation
+	}
 	if _, _, err := zClient.dlp_web_rules.Update(id, &req); err != nil {
 		return err
 	}
@@ -423,6 +329,28 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
+	fileTypes := []string{"JPEG", "PNG", "TIFF", "BITMAP"}
+	if dlp.OcrEnabled {
+		// dlp.FileTypes must be a subset of fileTypes
+		for _, t1 := range dlp.FileTypes {
+			found := false
+			for _, t2 := range fileTypes {
+				if t1 == t2 {
+					found = true
+					break
+				}
+			}
+			if !found {
+				return fmt.Errorf("web dlp rule file types must be a subset of %v when OcrEnabled is disabled", fileTypes)
+			}
+		}
+	} else if len(dlp.FileTypes) > 0 {
+		return fmt.Errorf("web dlp rule file types must not be set when OcrEnabled is enabled")
+	}
+	return nil
+}
+
 func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 	result := dlp_web_rules.WebDLPRules{
@@ -438,13 +366,12 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		WithoutContentInspection: d.Get("without_content_inspection").(bool),
 		OcrEnabled:               d.Get("ocr_enabled").(bool),
 		ZscalerIncidentReciever:  d.Get("zscaler_incident_reciever").(bool),
-		LastModifiedTime:         d.Get("last_modified_time").(int),
+		MinSize:                  d.Get("min_size").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
 		Auditor:                  expandIDNameExtensions(d, "auditor"),
 		NotificationTemplate:     expandIDNameExtensions(d, "notification_template"),
-		LastModifiedBy:           expandIDNameExtensions(d, "last_modified_by"),
 		IcapServer:               expandIDNameExtensions(d, "icap_server"),
 		Locations:                expandIDNameExtensionsSet(d, "locations"),
 		LocationGroups:           expandIDNameExtensionsSet(d, "location_groups"),
@@ -455,6 +382,9 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
 		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                   expandIDNameExtensionsSet(d, "labels"),
+		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
+		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
+		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
 	}
 	return result
 }

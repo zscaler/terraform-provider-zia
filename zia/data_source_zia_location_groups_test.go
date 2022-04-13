@@ -1,45 +1,47 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceLocationGroup_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckDataSourceLocationGroupConfig_basic),
+				Config: testAccCheckDataSourceLocationGroupConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.zia_location_groups.example1", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_location_groups.example2", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_location_groups.example3", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_location_groups.example4", "name"),
+					testAccDataSourceLocationGroupCheck("data.zia_location_groups.corp_user"),
+					testAccDataSourceLocationGroupCheck("data.zia_location_groups.guest_wifi"),
+					testAccDataSourceLocationGroupCheck("data.zia_location_groups.iot_traffic"),
+					testAccDataSourceLocationGroupCheck("data.zia_location_groups.server_traffic"),
 				),
 			},
 		},
 	})
 }
 
-const testAccCheckDataSourceLocationGroupConfig_basic = `
-data "zia_location_groups" "example1"{
+func testAccDataSourceLocationGroupCheck(name string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(name, "id"),
+		resource.TestCheckResourceAttrSet(name, "name"),
+	)
+}
+
+var testAccCheckDataSourceLocationGroupConfig_basic = `
+data "zia_location_groups" "corp_user"{
     name = "Corporate User Traffic Group"
 }
-data "zia_location_groups" "example2"{
+data "zia_location_groups" "guest_wifi"{
     name = "Guest Wifi Group"
 }
-data "zia_location_groups" "example3"{
+data "zia_location_groups" "iot_traffic"{
     name = "IoT Traffic Group"
 }
-data "zia_location_groups" "example4"{
+data "zia_location_groups" "server_traffic"{
     name = "Server Traffic Group"
 }
 `

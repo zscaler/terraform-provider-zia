@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
@@ -18,6 +19,8 @@ import (
 func TestAccResourceAdminUsersBasic(t *testing.T) {
 	var admins adminuserrolemgmt.AdminUsers
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminUsers)
+	rEmail := acctest.RandomWithPrefix("tf-acc-test")
+	rPassword := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,25 +28,29 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 		CheckDestroy: testAccCheckAdminUsersDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", variable.AdminUserLoginName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", variable.AdminUserEmail),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", variable.AdminUserPassword),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope.#", "1"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, variable.AdminUserLoginName, variable.AdminUserName, variable.AdminUserEmail),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", variable.AdminUserLoginName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", variable.AdminUserEmail),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", variable.AdminUserPassword),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", rPassword+("Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope.#", "1"),
 				),
 			},
 		},
@@ -106,45 +113,44 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 	}
 }
 
-func testAccCheckAdminUsersConfigure(resourceTypeAndName, loginname, adminusername, email, password string) string {
-	return fmt.Sprintf(`
-// admin user resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		AdminUsersResourceHCL(loginname, adminusername, email, password),
-
-		// data source variables
-		resourcetype.AdminUsers,
-		loginname,
-		resourceTypeAndName,
-	)
-}
-
-func AdminUsersResourceHCL(loginname, adminusername, email, password string) string {
+func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	login_name                      = "%s"
-	username                       = "%s"
-	email                           = "%s"
-	password                        = "%s"
+	login_name                      = "%s@securitygeek.io"
+	email                           = "%s@securitygeek.io"
+	username                        = "%s"
+	password                        = "%sSuper@Secret007"
 	comments                        = "Administrator Group"
 	is_password_login_allowed       = true
 	is_security_report_comm_enabled = true
 	is_service_update_comm_enabled  = true
 	is_product_update_comm_enabled  = true
+	role {
+		id = 11521
+	}
+	admin_scope {
+		type = "ORGANIZATION"
+	}
+}
+
+// data "%s" "%s" {
+	// 	id = "${%s.id}"
+	//   }
+
+
 `,
 		// resource variables
 		resourcetype.AdminUsers,
-		variable.AdminUserLoginName,
-		loginname,
-		adminusername,
-		email,
-		password,
+		generatedName,
+		rEmail,
+		rEmail,
+		variable.AdminUserName,
+		rPassword,
+
+		// data source variables
+		resourcetype.AdminUsers,
+		rEmail,
+		resourceTypeAndName,
 	)
 }
 */

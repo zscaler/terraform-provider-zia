@@ -29,6 +29,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWSRCGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
 			},
 
@@ -39,6 +40,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWSRCGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
 			},
 		},
@@ -103,35 +105,26 @@ func testAccCheckFWIPSourceGroupsExists(resource string, rule *ipsourcegroups.IP
 
 func testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
-// ip source group resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWIPSourceGroupsResourceHCL(generatedName, description),
-
-		// data source variables
-		resourcetype.FWFilteringSourceGroup,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FWIPSourceGroupsResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "%s"
 	description = "%s"
     ip_addresses = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
   }
+
+  data "%s" "%s" {
+	id = "${%s.id}"
+  }
+
 `,
 		// resource variables
 		resourcetype.FWFilteringSourceGroup,
 		generatedName,
 		variable.FWSRCGroupName,
 		description,
+
+		// data source variables
+		resourcetype.FWFilteringSourceGroup,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

@@ -29,6 +29,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
 			},
 
@@ -39,6 +40,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
 			},
 		},
@@ -103,25 +105,6 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 
 func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
-// network application group resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWNetworkApplicationGroupsResourceHCL(generatedName, description),
-
-		// data source variables
-		resourcetype.FWFilteringNetworkAppGroups,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FWNetworkApplicationGroupsResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "%s"
     description = "%s"
@@ -139,11 +122,20 @@ resource "%s" "%s" {
             "ONEDRIVE"
     ]
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+}
 `,
 		// resource variables
 		resourcetype.FWFilteringNetworkAppGroups,
 		generatedName,
 		variable.FWAppGroupName,
 		description,
+
+		// data source variables
+		resourcetype.FWFilteringNetworkAppGroups,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

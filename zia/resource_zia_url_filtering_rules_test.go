@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -107,25 +108,6 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 
 func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
-// url filtering rule resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		URLFilteringRulesResourceHCL(generatedName, description, action, state),
-
-		// data source variables
-		resourcetype.URLFilteringRules,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func URLFilteringRulesResourceHCL(generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "%s"
     description = "%s"
@@ -136,6 +118,10 @@ resource "%s" "%s" {
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.URLFilteringRules,
@@ -144,5 +130,11 @@ resource "%s" "%s" {
 		description,
 		action,
 		state,
+
+		// data source variables
+		resourcetype.URLFilteringRules,
+		generatedName,
+		resourceTypeAndName,
 	)
 }
+*/

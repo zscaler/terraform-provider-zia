@@ -23,7 +23,7 @@ func TestAccDataSourceFWIPSourceGroups_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "ip_addresses", resourceTypeAndName, "ip_addresses"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "ip_addresses.#", "3"),
 				),
 			},
 		},

@@ -97,3 +97,11 @@ var supportedCloudFirewallNwServicesTag = []string{
 func validateCloudFirewallNwServicesTag() schema.SchemaValidateFunc {
 	return validation.StringInSlice(supportedCloudFirewallNwServicesTag, false)
 }
+
+func validateDLPRuleFileTypes() schema.SchemaValidateFunc {
+	return validation.StringInSlice(supportedDLPRuleFileTypes, false)
+}
+
+var supportedDLPRuleFileTypes = []string{
+	"ANY", "NONE", "JAVASCRIPT", "FLASH", "AVA_APPLET", "ZIP", "GZIP", "TAR", "BZIP2", "RAR", "STUFFIT", "ISO", "CAB", "P7Z", "ADE", "DB2", "SQL", "PYTHON", "POWERSHELL", "VISUAL_BASIC_SCRIPT", "BASH_SCRIPTS", "SHELL_SCRAP", "BITMAP", "PHOTOSHOP", "WINDOWS_META_FORMAT", "GIF", "JPEG", "PNG", "TIFF", "WINDOWS_SCRIPT_FILES", "MS_POWERPOINT", "MS_WORD", "MS_EXCEL", "MS_RTF", "MS_MDB", "MS_MSG", "ALL_OUTBOUND", "ENCRYPT", "PDF_DOCUMENT", "COMPILED_HTML_HELP", "TXT", "FORM_DATA_POST", "CSV", "STL", "CERT", "GO_FILES", "RUBY_FILES", "PERL_FILES", "MATLAB_FILES", "INCLUDE_FILES", "JAVA_FILES", "MAKE_FILES", "YAML_FILES", "VISUAL_BASIC_FILES", "C_FILES", "XAML", "BASIC_SOURCE_CODE",
+}

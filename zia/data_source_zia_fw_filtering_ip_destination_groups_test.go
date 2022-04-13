@@ -24,7 +24,7 @@ func TestAccDataSourceFWIPDestinationGroups_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "type", resourceTypeAndName, "type"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "addresses", resourceTypeAndName, "addresses"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "addresses.#", "3"),
 				),
 			},
 		},

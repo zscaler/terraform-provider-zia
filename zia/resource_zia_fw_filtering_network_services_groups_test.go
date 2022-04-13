@@ -29,7 +29,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "services", variable.FWNetworkServicesGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
 			},
 
@@ -40,7 +40,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "services", variable.FWNetworkServicesGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
 			},
 		},
@@ -105,25 +105,6 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 
 func testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
-// network application group resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWNetworkServiceGroupsResourceHCL(generatedName, description),
-
-		// data source variables
-		resourcetype.FWFilteringNetworkServiceGroups,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FWNetworkServiceGroupsResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_network_service" "example1" {
 	name = "ICMP_ANY"
@@ -143,11 +124,20 @@ resource "%s" "%s" {
         ]
     }
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.FWFilteringNetworkServiceGroups,
 		generatedName,
 		variable.FWNetworkServicesGroupName,
 		description,
+
+		// data source variables
+		resourcetype.FWFilteringNetworkServiceGroups,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

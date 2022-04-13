@@ -58,39 +58,6 @@ func resourceUserManagement() *schema.Resource {
 				Required:    true,
 				Description: "User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization.",
 			},
-			"department": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Department name",
-						},
-						"idp_id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identity provider (IdP) ID",
-						},
-						"comments": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "Additional information about this department",
-						},
-						"deleted": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-					},
-				},
-			},
 			"comments": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -108,7 +75,73 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
-			"groups": listIDsSchemaTypeCustom(8, "List of Groups a user belongs to. Groups are used in policies."),
+			"groups": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "List of Groups a user belongs to. Groups are used in policies.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Group name",
+						},
+						"idp_id": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+							Description: "Identity provider (IdP) ID",
+						},
+						"comments": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Additional information about this group",
+						},
+					},
+				},
+			},
+			"department": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Department name",
+						},
+						"idp_id": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+							Description: "Identity provider (IdP) ID",
+						},
+						"comments": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Computed:    true,
+							Description: "Additional information about this department",
+						},
+						"deleted": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -153,7 +186,6 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("email", resp.Email)
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
-	_ = d.Set("password", resp.Password)
 
 	if err := d.Set("groups", flattenUserGroupSet(resp.Groups)); err != nil {
 		return err

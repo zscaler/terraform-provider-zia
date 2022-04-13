@@ -106,25 +106,6 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 
 func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
-// firewall filtering rule resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FirewallFilteringRuleResourceHCL(generatedName, description, action, state),
-
-		// data source variables
-		resourcetype.FirewallFilteringRules,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FirewallFilteringRuleResourceHCL(generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
 }
@@ -157,6 +138,11 @@ resource "%s" "%s" {
         id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
     }
 }
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
+
 `,
 		// resource variables
 		resourcetype.FirewallFilteringRules,
@@ -165,5 +151,10 @@ resource "%s" "%s" {
 		description,
 		action,
 		state,
+
+		// data source variables
+		resourcetype.FirewallFilteringRules,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

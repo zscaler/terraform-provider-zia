@@ -24,21 +24,27 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFWNetworkServicesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
+				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_tcp_ports.#", "3"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
+				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_tcp_ports.#", "3"),
 				),
 			},
 		},
@@ -101,30 +107,12 @@ func testAccCheckFWNetworkServicesExists(resource string, rule *networkservices.
 	}
 }
 
-func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, description string) string {
-	return fmt.Sprintf(`
-// network services resource
-%s
-
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWNetworkServicesResourceHCL(generatedName, description),
-
-		// data source variables
-		resourcetype.FWFilteringNetworkServices,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
-
-func FWNetworkServicesResourceHCL(generatedName, description string) string {
+func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, description, svc_type string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "%s"
 	description = "%s"
+	type 		= "%s"
 	src_tcp_ports {
 	  start = 5000
 	}
@@ -138,14 +126,17 @@ resource "%s" "%s" {
 	dest_tcp_ports {
 	  start = 5000
 	}
-	  dest_tcp_ports {
+	dest_tcp_ports {
 	  start = 5001
 	}
 	dest_tcp_ports {
 	  start = 5003
 	  end = 5005
 	}
-	type = "CUSTOM"
+  }
+
+data "%s" "%s" {
+	id = "${%s.id}"
   }
 `,
 		// resource variables
@@ -153,5 +144,11 @@ resource "%s" "%s" {
 		generatedName,
 		variable.FWNetworkServicesName,
 		description,
+		svc_type,
+
+		// data source variables
+		resourcetype.FWFilteringNetworkServices,
+		generatedName,
+		resourceTypeAndName,
 	)
 }

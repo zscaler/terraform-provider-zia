@@ -28,7 +28,7 @@ func resourceAdminUsers() *schema.Resource {
 					// assume if the passed value is an int
 					d.Set("admin_id", id)
 				} else {
-					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByName(id)
+					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						d.Set("admin_id", resp.ID)
@@ -62,12 +62,14 @@ func resourceAdminUsers() *schema.Resource {
 			"role": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "Role of the admin. This is not required for an auditor.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -95,12 +97,14 @@ func resourceAdminUsers() *schema.Resource {
 			"admin_scope": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								"ORGANIZATION",
 								"DEPARTMENT",
@@ -115,16 +119,17 @@ func resourceAdminUsers() *schema.Resource {
 			"is_non_editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"is_auditor": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"password": {
 				Type:         schema.TypeString,
@@ -136,32 +141,32 @@ func resourceAdminUsers() *schema.Resource {
 			"is_password_login_allowed": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"is_security_report_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"is_service_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"is_product_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"is_password_expired": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"is_exec_mobile_app_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 		},
 	}
@@ -230,7 +235,6 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("disabled", resp.Disabled)
 	_ = d.Set("is_auditor", resp.IsAuditor)
 	_ = d.Set("is_password_login_allowed", resp.IsPasswordLoginAllowed)
-	_ = d.Set("pwd_last_modified_time", resp.PasswordLastModifiedTime)
 	_ = d.Set("is_security_report_comm_enabled", resp.IsSecurityReportCommEnabled)
 	_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 	_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)

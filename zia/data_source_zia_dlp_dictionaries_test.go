@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"testing"
 
@@ -24,9 +23,10 @@ func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "phrases.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "patterns.#", "2"),
 				),
 			},
 		},
 	})
 }
-*/
