@@ -1,40 +1,34 @@
 terraform {
-  required_providers {
-    zia = {
-      version = "2.0.1"
-      source  = "zscaler.com/zia/zia"
+    required_providers {
+        zia = {
+            version = "1.0.0"
+            source = "zscaler.com/zia/zia"
+        }
     }
-  }
 }
 
 provider "zia" {}
 
 resource "zia_user_management" "john_ashcroft" {
-  name     = "John Ashcroft"
-  email    = "john.ashcroft@securitygeek.io"
-  password = "P@ssw0rd123*"
-
-  groups {
-    id = data.zia_group_management.normal_internet.id
-    #idp_id = ""
+ name = "John Ashcroft"
+ email = "john.ashcroft@securitygeek.io"
+ password = "P@ssw0rd123*"
+ groups {
+  id = [ data.zia_group_management.normal_internet.id,
+         data.zia_group_management.devops.id ]
   }
-  groups {
-    id = data.zia_group_management.devops.id
-    #idp_id = ""
-  }
-
-  department {
-    id = data.zia_department_management.engineering.id
+ department {
+  id = data.zia_department_management.engineering.id
   }
 
 }
 
 data "zia_group_management" "normal_internet" {
-  name = "Normal_Internet"
+ name = "Normal_Internet"
 }
 
 data "zia_group_management" "devops" {
-  name = "DevOps"
+ name = "DevOps"
 }
 
 // data "zia_group_management" "engineering" {
@@ -42,7 +36,7 @@ data "zia_group_management" "devops" {
 // }
 
 data "zia_department_management" "engineering" {
-  name = "Engineering"
+ name = "Engineering"
 }
 
 // data.zia_group_management.engineering.id

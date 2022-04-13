@@ -13,25 +13,20 @@ func dataSourceDepartmentManagement() *schema.Resource {
 		Read: dataSourceDepartmentManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "Department ID",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Department name",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"idp_id": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "Identity provider (IdP) ID",
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"comments": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "dditional information about this department",
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"deleted": {
 				Type:     schema.TypeBool,

@@ -217,6 +217,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		}
 		resp = res
 	}
+
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
@@ -226,6 +227,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		}
 		resp = res
 	}
+
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)

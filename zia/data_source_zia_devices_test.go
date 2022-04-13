@@ -1,33 +1,36 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceDevices_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckDataSourceDevicesConfig_basic),
+				Config: testAccCheckDataSourceDevicesConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.zia_devices.device_model", "device_model"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_devices.os_type", "os_type"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_devices.os_version", "os_version"),
+					testAccDataSourceDevicesCheck("data.zia_devices.device_model"),
+					testAccDataSourceDevicesCheck("data.zia_devices.os_type"),
+					testAccDataSourceDevicesCheck("data.zia_devices.os_version"),
 				),
 			},
 		},
 	})
 }
 
-const testAccCheckDataSourceDevicesConfig_basic = `
+func testAccDataSourceDevicesCheck(name string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(name, "id"),
+		resource.TestCheckResourceAttrSet(name, "name"),
+	)
+}
+
+var testAccCheckDataSourceDevicesConfig_basic = `
 data "zia_devices" "device_model"{
     device_model = "VMware Virtual Platform"
 }

@@ -2,21 +2,20 @@ package variable
 
 // url filtering rules
 const (
-	URLFilteringRuleName        = "testAcc_url_filtering_rule"
-	URLFilteringRuleDescription = "testAcc_url_filtering_rule"
-	URLFilteringRuleAction      = "ALLOW"
-	URLFilteringRuleState       = "ENABLED"
+	URLFilteringRuleResourceName = "testAcc_url_filtering_rule"
+	URLFilteringRuleDescription  = "testAcc_url_filtering_rule"
+	URLFilteringRuleAction       = "ALLOW"
+	URLFilteringRuleState        = "ENABLED"
 )
 
 // Custom URL Categories resource/datasource
 const (
-	CategoryDescription = "this is an acceptance test"
-	ConfiguredName      = "this is an acceptance test"
-	CustomCategory      = true
+	CustomCategory = true
 )
 
 // Firewall Filtering Rule resource/datasource
 const (
+	FWRuleResourceName        = "this is an acceptance test"
 	FWRuleResourceDescription = "this is an acceptance test"
 	FWRuleResourceAction      = "ALLOW"
 	FWRuleResourceState       = "ENABLED"
@@ -50,14 +49,16 @@ const (
 
 // Firewall network services resource/datasource
 const (
+	FWNetworkServicesName        = "this is an acceptance test"
 	FWNetworkServicesDescription = "this is an acceptance test"
+	FWNetworkServicesType        = "CUSTOM"
 )
 
 // Traffic Forwarding Static IP resource/datasource
 const (
-	StaticIPComment  = "this is an acceptance test"
-	StaticIPAddress  = "118.189.211.221"
-	StaticRoutableIP = true
+	StaticIPComment   = "this is an acceptance test"
+	StaticRoutableIP  = true
+	StaticGeoOverride = true
 )
 
 // Traffic Forwarding VPN Credentials resource/datasource
@@ -70,45 +71,49 @@ const (
 	VPNCredentialIPAddress    = "118.189.211.221"
 )
 
-// Traffic Forwarding GRE Tunnels resource/datasource
+// Traffic Forwarding Location Management
 const (
-	TrafficFWGRETunnComment   = "this is an acceptance test"
-	TrafficFWGRECountryCode   = "US"
-	TrafficFWGREWithinCountry = true
-	TrafficFWGREUnnumbered    = true
-)
-
-// Location Management resource/datasource
-const (
-	LocationName         = "this is an acceptance test"
-	LocationDescription  = "this is an acceptance test"
-	LocationCountry      = "UNITED_STATES"
-	LocationTZ           = "UNITED_STATES_AMERICA_LOS_ANGELES"
-	LocationAuthRequired = true
+	LocName         = "this is an acceptance test"
+	LocDesc         = "this is an acceptance test"
+	LocAuthRequired = true
+	LocSurrogateIP  = true
+	LocXFF          = true
+	LocOFW          = true
+	LocIPS          = true
 )
 
 // DLP Dictionaries resource/datasource
 const (
-	DLPDictionaryDescription = "this is an acceptance test"
+	DLPWebRuleName           = "this is an acceptance test"
+	DLPWebRuleDesc           = "this is an acceptance test"
+	DLPRuleResourceAction    = "ALLOW"
+	DLPRuleResourceState     = "ENABLED"
+	DLPRuleContentInspection = false
+	DLPMatchOnly             = false
+	DLPOCREnabled            = true
 )
 
-// DLP Web Rule resource/datasource
+// DLP Dictionaries resource/datasource
 const (
-	DLPRuleResourceDescription = "this is an acceptance test"
-	DLPRuleResourceAction      = "ANY"
-	DLPRuleResourceState       = "ENABLED"
+	DLPDictionaryResourceName = "this is an acceptance test"
+	DLPDictionaryDescription  = "this is an acceptance test"
 )
 
 // Admin Users
 const (
-	AdminUserLoginName        = "asandler@securitygeek.io"
-	AdminUserName             = "Adam Sandler"
-	AdminUserEmail            = "asandler@securitygeek.io"
-	AdminUserPassword         = "Password@123!"
-	AdminPasswordLoginAllowed = true
+	AdminUserLoginName = "testAcc@securitygeek.io"
+	AdminUserName      = "Test Acc"
+	AdminUserEmail     = "testAcc@securitygeek.io"
+	AdminUserPassword  = "Password@123!"
+)
+
+// User Management
+const (
+	UserName = "testAcc TF User"
 )
 
 // Rule Labels
 const (
+	RuleLabelName        = "testAcc_rule_label"
 	RuleLabelDescription = "testAcc_rule_label"
 )

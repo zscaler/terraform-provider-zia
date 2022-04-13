@@ -32,7 +32,7 @@ func TestProvider(t *testing.T) {
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ = Provider()
+	_ = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
@@ -50,7 +50,7 @@ func testAccPreCheck(t *testing.T) {
 		t.Fatal("ZIA_API_KEY must be set for acceptance tests.")
 	}
 	if v := os.Getenv("ZIA_CLOUD"); v == "" {
-		t.Fatal("ZIA_CLOUD must be set for acceptance tests.")
+		t.Fatal("zia_cloud must be set for acceptance tests.")
 	}
 }
 
@@ -63,7 +63,7 @@ func accPreCheck() error {
 	api_key := os.Getenv("ZIA_API_KEY")
 	zia_cloud := os.Getenv("ZIA_CLOUD")
 	if username == "" && (username == "" || password == "" || api_key == "" || zia_cloud == "") {
-		return errors.New("either ZIA_USERNAME or ZIA_PASSWORD, ZIA_API_KEY and ZIA_CLOUD must be set for acceptance tests")
+		return errors.New("either ZIA_USERNAME or ZIA_PASSWORD, ZIA_API_KEY and zia_cloud must be set for acceptance tests")
 	}
 	return nil
 }

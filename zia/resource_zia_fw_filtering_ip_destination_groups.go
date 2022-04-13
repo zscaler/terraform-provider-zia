@@ -63,8 +63,6 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"DSTN_IP",
 					"DSTN_FQDN",
-					"DSTN_DOMAIN",
-					"DSTN_OTHER",
 				}, false),
 			},
 			"addresses": {

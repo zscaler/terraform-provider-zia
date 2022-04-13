@@ -1,83 +1,39 @@
 package zia
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(15)
-	resourceName := "data.zia_dlp_web_rules.test-dlp-rule"
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceDlpWebRulesBasic(rName, rDesc),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceDlpWebRules(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-dlp-rule-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-dlp-rule-"+rDesc),
-					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "without_content_inspection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "match_only", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ocr_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "min_size", "0"),
-					resource.TestCheckResourceAttr(resourceName, "zscaler_incident_reciever", "true"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "action", resourceTypeAndName, "action"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "cloud_applications.#", "4"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "file_types.#", "4"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckDataSourceDlpWebRulesBasic(rName, rDesc string) string {
-	return fmt.Sprintf(`
-
-resource "zia_dlp_web_rules" "test-dlp-rule" {
-	name = "test-dlp-rule-%s"
-	description = "test-dlp-rule-%s"
-	action = "ALLOW"
-	state = "ENABLED"
-	order = 1
-	rank = 7
-	protocols = [ "HTTPS_RULE", "HTTP_RULE" ]
-	without_content_inspection = false
-	match_only = false
-	ocr_enabled 				= true
-	file_types                  = ["JPEG", "PNG", "TIFF", "BITMAP"]
-	min_size = 0
-	zscaler_incident_reciever = true
-	users {
-		id = [ 29309057, 29309058 ]
-	}
-	 groups {
-		id = [ 26231231 ]
-	}
-	departments {
-		id = [ 25684245 ]
-	}
-}
-
-data "zia_dlp_web_rules" "test-dlp-rule" {
-	name = zia_dlp_web_rules.test-dlp-rule.name
-}
-	`, rName, rDesc)
-}
-
-func testAccDataSourceDlpWebRules(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no data source called %s", name)
-		}
-
-		return nil
-	}
 }

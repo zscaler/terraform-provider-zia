@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/dlpdictionaries"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccResourceDLPDictionaries_basic(t *testing.T) {
+func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 	var dictionary dlpdictionaries.DlpDictionary
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
-	resourceName := "zia_dlp_dictionaries.test-dlp-dict"
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,79 +24,36 @@ func TestAccResourceDLPDictionaries_basic(t *testing.T) {
 		CheckDestroy: testAccCheckDLPDictionariesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDLPDictionariesBasic(rName, rDesc),
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDLPDictionariesExists("zia_dlp_dictionaries.test-dlp-dict", &dictionary),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-dlp-dict-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-dlp-dict-"+rDesc),
-					resource.TestCheckResourceAttr(resourceName, "dictionary_type", "PATTERNS_AND_PHRASES"),
+					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
+				),
+			},
+
+			// Update test
+			{
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDLPDictionariesBasic(rName, rDesc string) string {
-	return fmt.Sprintf(`
-
-resource "zia_dlp_dictionaries" "test-dlp-dict"{
-	name = "test-dlp-dict-%s"
-	description = "test-dlp-dict-%s"
-	phrases {
-		action = "PHRASE_COUNT_TYPE_ALL"
-		phrase = "Test1"
-	}
-	phrases {
-		action = "PHRASE_COUNT_TYPE_UNIQUE"
-		phrase = "Test2"
-	}
-	custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-	patterns {
-		action = "PATTERN_COUNT_TYPE_ALL"
-		pattern = "Test1"
-	}
-	patterns {
-		action = "PATTERN_COUNT_TYPE_UNIQUE"
-		pattern = "Test2"
-	}
-	dictionary_type = "PATTERNS_AND_PHRASES"
-}
-	`, rName, rDesc)
-}
-
-func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionaries.DlpDictionary) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		rs, ok := state.RootModule().Resources[resource]
-		if !ok {
-			return fmt.Errorf("didn't find resource: %s", resource)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no record ID is set")
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		apiClient := testAccProvider.Meta().(*Client)
-		receivedDictionary, err := apiClient.dlpdictionaries.Get(id)
-
-		if err != nil {
-			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
-		}
-		*dictionary = *receivedDictionary
-
-		return nil
-	}
-}
-
 func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "zia_dlp_dictionaries" {
+		if rs.Type != resourcetype.DLPDictionaries {
 			continue
 		}
 
@@ -118,4 +75,75 @@ func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionaries.DlpDictionary) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		rs, ok := state.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("didn't find resource: %s", resource)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no record ID is set")
+		}
+
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
+
+		apiClient := testAccProvider.Meta().(*Client)
+		receivedRule, err := apiClient.dlpdictionaries.Get(id)
+
+		if err != nil {
+			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
+		}
+		*dictionary = *receivedRule
+
+		return nil
+	}
+}
+
+func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, description string) string {
+	return fmt.Sprintf(`
+resource "%s" "%s" {
+    name = "%s"
+	description = "%s"
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "Test1"
+    }
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "Test2"
+    }
+    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "Test1"
+    }
+    patterns {
+        action = "PATTERN_COUNT_TYPE_UNIQUE"
+        pattern = "Test2"
+    }
+    dictionary_type = "PATTERNS_AND_PHRASES"
+}
+
+data "%s" "%s" {
+	id = "${%s.id}"
+}
+
+`,
+		// resource variables
+		resourcetype.DLPDictionaries,
+		generatedName,
+		variable.DLPDictionaryResourceName,
+		description,
+
+		// data source variables
+		resourcetype.DLPDictionaries,
+		generatedName,
+		resourceTypeAndName,
+	)
 }

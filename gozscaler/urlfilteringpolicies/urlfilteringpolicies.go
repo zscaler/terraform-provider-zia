@@ -51,32 +51,32 @@ type URLFilteringRule struct {
 }
 
 func (service *Service) Get(ruleID int) (*URLFilteringRule, error) {
-	var rule URLFilteringRule
-	err := service.Client.Read(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, ruleID), &rule)
+	var urlFilteringPolicies URLFilteringRule
+	err := service.Client.Read(fmt.Sprintf("%s/%d", urlFilteringPoliciesEndpoint, ruleID), &urlFilteringPolicies)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Returning url filtering rules from Get: %d", rule.ID)
-	return &rule, nil
+	log.Printf("Returning url filtering rules from Get: %d", urlFilteringPolicies.ID)
+	return &urlFilteringPolicies, nil
 }
 
-func (service *Service) GetByName(ruleName string) (*URLFilteringRule, error) {
-	var rules []URLFilteringRule
-	err := service.Client.Read(urlFilteringPoliciesEndpoint, &rules)
+func (service *Service) GetByName(urlFilteringPolicyName string) (*URLFilteringRule, error) {
+	var urlFilteringPolicies []URLFilteringRule
+	err := service.Client.Read(urlFilteringPoliciesEndpoint, &urlFilteringPolicies)
 	if err != nil {
 		return nil, err
 	}
-	for _, rule := range rules {
-		if strings.EqualFold(rule.Name, ruleName) {
-			return &rule, nil
+	for _, urlFilteringPolicy := range urlFilteringPolicies {
+		if strings.EqualFold(urlFilteringPolicy.Name, urlFilteringPolicyName) {
+			return &urlFilteringPolicy, nil
 		}
 	}
-	return nil, fmt.Errorf("no url filtering rule found with name: %s", ruleName)
+	return nil, fmt.Errorf("no url filtering rule found with name: %s", urlFilteringPolicyName)
 }
 
-func (service *Service) Create(rule *URLFilteringRule) (*URLFilteringRule, error) {
-	resp, err := service.Client.Create(urlFilteringPoliciesEndpoint, *rule)
+func (service *Service) Create(ruleID *URLFilteringRule) (*URLFilteringRule, error) {
+	resp, err := service.Client.Create(urlFilteringPoliciesEndpoint, *ruleID)
 	if err != nil {
 		return nil, err
 	}

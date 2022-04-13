@@ -1,65 +1,59 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceDeviceGroups_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckDataSourceDeviceGroupsConfig_basic),
+				Config: testAccCheckDataSourceDeviceGroupsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.ios", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.android", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.windows", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.mac", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.linux", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.no_client_connector", "name"),
-					resource.TestCheckResourceAttrSet(
-						"data.zia_device_groups.cloud_browser_isolation", "name"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.ios"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.android"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.windows"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.mac"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.linux"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.no_client_connector"),
+					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.cloud_browser_isolation"),
 				),
 			},
 		},
 	})
 }
 
-const testAccCheckDataSourceDeviceGroupsConfig_basic = `
+func testAccDataSourceDeviceGroupsCheck(name string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(name, "id"),
+		resource.TestCheckResourceAttrSet(name, "name"),
+	)
+}
+
+var testAccCheckDataSourceDeviceGroupsConfig_basic = `
 data "zia_device_groups" "ios"{
     name = "IOS"
 }
 data "zia_device_groups" "android"{
-	    name = "Android"
+    name = "Android"
 }
-
 data "zia_device_groups" "windows"{
-	name = "Windows"
+    name = "Windows"
 }
-
 data "zia_device_groups" "mac"{
-	name = "Mac"
+    name = "Mac"
 }
-
 data "zia_device_groups" "linux"{
-	name = "Linux"
+    name = "Linux"
 }
-
 data "zia_device_groups" "no_client_connector"{
-	name = "No Client Connector"
+    name = "No Client Connector"
 }
-
 data "zia_device_groups" "cloud_browser_isolation"{
-	name = "Cloud Browser Isolation"
+    name = "Cloud Browser Isolation"
 }
 `

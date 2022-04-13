@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
-	var groups networkservices.NetworkServiceGroups
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
-	resourceName := "zia_firewall_filtering_network_service_groups.test-fw-nw-svc-group"
+	var services networkservices.NetworkServiceGroups
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,40 +24,55 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFWNetworkServiceGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckResourceFWNetworkServiceGroupsBasic(rName, rDesc),
+				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWNetworkServiceGroupsExists("zia_firewall_filtering_network_service_groups.test-fw-nw-svc-group", &groups),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-svc-group-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-svc-group-"+rDesc),
-					// resource.TestCheckResourceAttr(resourceName, "services", "services"),
+					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
+				),
+			},
+
+			// Update test
+			{
+				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckResourceFWNetworkServiceGroupsBasic(rName, rDesc string) string {
-	return fmt.Sprintf(`
+func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "zia_firewall_filtering_network_service" "icmp_any" {
-	name = "ICMP_ANY"
-}
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != resourcetype.FWFilteringNetworkAppGroups {
+			continue
+		}
 
-data "zia_firewall_filtering_network_service" "dns" {
-	name = "DNS"
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-resource "zia_firewall_filtering_network_service_groups" "test-fw-nw-svc-group"{
-	name = "test-fw-nw-svc-group-%s"
-	description = "test-fw-nw-svc-group-%s"
-	services {
-		id = [
-			data.zia_firewall_filtering_network_service.icmp_any.id,
-			data.zia_firewall_filtering_network_service.dns.id,
-		]
+		rule, err := apiClient.networkservices.GetNetworkServiceGroups(id)
+
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("network services group with id %d exists and wasn't destroyed", id)
+		}
 	}
-}
-	`, rName, rDesc)
+
+	return nil
 }
 
 func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkservices.NetworkServiceGroups) resource.TestCheckFunc {
@@ -88,30 +103,41 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 	}
 }
 
-func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
+	return fmt.Sprintf(`
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "zia_firewall_filtering_network_service_groups" {
-			continue
-		}
+data "zia_firewall_filtering_network_service" "example1" {
+	name = "ICMP_ANY"
+  }
 
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
+data "zia_firewall_filtering_network_service" "example2" {
+	name = "TCP_ANY"
+  }
 
-		rule, err := apiClient.networkservices.GetNetworkServiceGroups(id)
+resource "%s" "%s" {
+    name = "%s"
+    description = "%s"
+    services {
+        id = [
+            data.zia_firewall_filtering_network_service.example1.id,
+            data.zia_firewall_filtering_network_service.example2.id,
+        ]
+    }
+}
 
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
+`,
+		// resource variables
+		resourcetype.FWFilteringNetworkServiceGroups,
+		generatedName,
+		variable.FWNetworkServicesGroupName,
+		description,
 
-		if rule != nil {
-			return fmt.Errorf("network services group with id %d exists and wasn't destroyed", id)
-		}
-	}
-
-	return nil
+		// data source variables
+		resourcetype.FWFilteringNetworkServiceGroups,
+		generatedName,
+		resourceTypeAndName,
+	)
 }

@@ -1,100 +1,43 @@
 package zia
 
 import (
-	"fmt"
+	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(15)
-	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
-	resourceName := "data.zia_location_management.test-sjc2022"
-	rComment := acctest.RandomWithPrefix("test-acc")
-	resourceName1 := acctest.RandomWithPrefix("test-acc")
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringLocManagement)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLocationManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceLocationManagementBasic(rComment, rIP, rName, rDesc, resourceName1),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, variable.LocName, variable.LocDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceLocationManagement(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-sjc2022-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-sjc2022-"+rDesc),
-					resource.TestCheckResourceAttr(resourceName, "country", "UNITED_STATES"),
-					resource.TestCheckResourceAttr(resourceName, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
-					resource.TestCheckResourceAttr(resourceName, "display_time_unit", "HOUR"),
-					resource.TestCheckResourceAttr(resourceName, "auth_required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "surrogate_ip", "true"),
-					resource.TestCheckResourceAttr(resourceName, "xff_forward_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ofw_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ips_control", "true"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "country", resourceTypeAndName, "country"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "tz", resourceTypeAndName, "tz"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "profile", resourceTypeAndName, "profile"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "idle_time_in_minutes", resourceTypeAndName, "idle_time_in_minutes"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "display_time_unit", resourceTypeAndName, "display_time_unit"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "auth_required", strconv.FormatBool(variable.LocAuthRequired)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "surrogate_ip", strconv.FormatBool(variable.LocSurrogateIP)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "xff_forward_enabled", strconv.FormatBool(variable.LocXFF)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ofw_enabled", strconv.FormatBool(variable.LocOFW)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "ips_control", strconv.FormatBool(variable.LocIPS)),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "ip_addresses.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "vpn_credentials.#", "1"),
 				),
 			},
 		},
 	})
-}
-
-func testAccCheckDataSourceLocationManagementBasic(rComment, rIP, rName, rDesc, resourceName1 string) string {
-	return fmt.Sprintf(`
-
-resource "zia_traffic_forwarding_static_ip" "test-sjc2022"{
-	comment = "%s"
-	ip_address =  "%s"
-	routable_ip = true
-	geo_override = true
-	latitude = -36.848461
-	longitude = 174.763336
-}
-
-resource "zia_traffic_forwarding_vpn_credentials" "test-sjc2022"{
-	comments    = "%s"
-	type        = "IP"
-	ip_address  =  zia_traffic_forwarding_static_ip.test-sjc2022.ip_address
-	pre_shared_key = "newPassword123!"
-	depends_on = [ zia_traffic_forwarding_static_ip.test-sjc2022 ]
-}
-
-resource "zia_location_management" "test-sjc2022"{
-	name = "test-sjc2022-%s"
-	description = "test-sjc2022-%s"
-	country = "UNITED_STATES"
-	tz = "UNITED_STATES_AMERICA_LOS_ANGELES"
-	auth_required = true
-	idle_time_in_minutes = 720
-	display_time_unit = "HOUR"
-	surrogate_ip = true
-	xff_forward_enabled = true
-	ofw_enabled = true
-	ips_control = true
-	ip_addresses = [ zia_traffic_forwarding_static_ip.test-sjc2022.ip_address ]
-	depends_on = [ zia_traffic_forwarding_static_ip.test-sjc2022, zia_traffic_forwarding_vpn_credentials.test-sjc2022 ]
-	vpn_credentials {
-		id = zia_traffic_forwarding_vpn_credentials.test-sjc2022.vpn_credental_id
-		type = zia_traffic_forwarding_vpn_credentials.test-sjc2022.type
-		ip_address = zia_traffic_forwarding_static_ip.test-sjc2022.ip_address
-	}
-}
-
-data "zia_location_management" "test-sjc2022" {
-	name = zia_location_management.test-sjc2022.name
-}
-	`, rComment, rIP, rComment, rName, rDesc)
-}
-
-func testAccDataSourceLocationManagement(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no data source called %s", name)
-		}
-
-		return nil
-	}
 }

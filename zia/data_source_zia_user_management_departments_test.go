@@ -1,30 +1,55 @@
 package zia
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceDepartmentManagement_Basic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories,
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccCheckDataSourceDeptMgmtConfig_basic),
+				Config: testAccCheckDataSourceDeptMgmtConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.zia_department_management.engineering", "name"),
+					testAccDataSourceDeptManagementCheck("data.zia_department_management.engineering"),
+					testAccDataSourceDeptManagementCheck("data.zia_department_management.executives"),
+					testAccDataSourceDeptManagementCheck("data.zia_department_management.finance"),
+					testAccDataSourceDeptManagementCheck("data.zia_department_management.marketing"),
+					testAccDataSourceDeptManagementCheck("data.zia_department_management.sales"),
 				),
 			},
 		},
 	})
 }
 
-const testAccCheckDataSourceDeptMgmtConfig_basic = `
+func testAccDataSourceDeptManagementCheck(name string) resource.TestCheckFunc {
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(name, "id"),
+		resource.TestCheckResourceAttrSet(name, "name"),
+	)
+}
+
+var testAccCheckDataSourceDeptMgmtConfig_basic = `
 data "zia_department_management" "engineering"{
     name = "Engineering"
+}
+
+data "zia_department_management" "executives"{
+    name = "Executive"
+}
+
+data "zia_department_management" "finance"{
+    name = "Finance"
+}
+
+data "zia_department_management" "marketing"{
+    name = "Marketing"
+}
+
+data "zia_department_management" "sales"{
+    name = "Sales"
 }
 `

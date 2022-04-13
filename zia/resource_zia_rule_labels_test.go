@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/rule_labels"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceRuleLabelsBasic(t *testing.T) {
 	var labels rule_labels.RuleLabels
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
-	resourceName := "zia_rule_labels.test-rule-label"
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,60 +24,32 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 		CheckDestroy: testAccCheckRuleLabelsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceRuleLabelsBasic(rName, rDesc),
+				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleLabelsExists(resourceName, &labels),
-					resource.TestCheckResourceAttr(resourceName, "name", "test-rule-label-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-rule-label-"+rDesc),
+					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
+				),
+			},
+
+			// Update test
+			{
+				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
 		},
 	})
 }
 
-func testAccResourceRuleLabelsBasic(rName, rDesc string) string {
-	return fmt.Sprintf(`
-
-resource "zia_rule_labels" "test-rule-label" {
-	name = "test-rule-label-%s"
-	description = "test-rule-label-%s"
-}
-	`, rName, rDesc)
-}
-
-func testAccCheckRuleLabelsExists(resource string, label *rule_labels.RuleLabels) resource.TestCheckFunc {
-	return func(state *terraform.State) error {
-		rs, ok := state.RootModule().Resources[resource]
-		if !ok {
-			return fmt.Errorf("didn't find resource: %s", resource)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no record ID is set")
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		apiClient := testAccProvider.Meta().(*Client)
-		receivedLabel, err := apiClient.rule_labels.Get(id)
-
-		if err != nil {
-			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
-		}
-		*label = *receivedLabel
-
-		return nil
-	}
-}
-
 func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "zia_rule_labels" {
+		if rs.Type != resourcetype.RuleLabels {
 			continue
 		}
 
@@ -99,4 +71,56 @@ func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		rs, ok := state.RootModule().Resources[resource]
+		if !ok {
+			return fmt.Errorf("didn't find resource: %s", resource)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no record ID is set")
+		}
+
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
+
+		apiClient := testAccProvider.Meta().(*Client)
+		receivedRule, err := apiClient.rule_labels.Get(id)
+
+		if err != nil {
+			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
+		}
+		*rule = *receivedRule
+
+		return nil
+	}
+}
+
+func testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, description string) string {
+	return fmt.Sprintf(`
+resource "%s" "%s" {
+    name = "%s"
+    description = "%s"
+}
+
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
+`,
+		// resource variables
+		resourcetype.RuleLabels,
+		generatedName,
+		variable.RuleLabelName,
+		description,
+
+		// data source variables
+		resourcetype.RuleLabels,
+		generatedName,
+		resourceTypeAndName,
+	)
 }

@@ -2,19 +2,20 @@ package zia
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/urlcategories"
+	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceURLCategoriesBasic(t *testing.T) {
 	var categories urlcategories.URLCategory
-	rName := acctest.RandString(5)
-	rDesc := acctest.RandString(20)
-	resourceName := "zia_url_categories.test-url-category"
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLCategories)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,30 +23,51 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLCategoriesBasic(rName, rDesc),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckURLCategoriesExists("zia_url_categories.test-url-category", &categories),
-					resource.TestCheckResourceAttr(resourceName, "configured_name", "test-url-category-"+rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-url-category-"+rDesc),
-					resource.TestCheckResourceAttr(resourceName, "custom_category", "true"),
+					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
+				),
+			},
+
+			// Update test
+			{
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckURLCategoriesBasic(rName, rDesc string) string {
-	return fmt.Sprintf(`
-resource "zia_url_categories" "test-url-category" {
-	super_category 		= "USER_DEFINED"
-	configured_name 	= "test-url-category-%s"
-	description 		= "test-url-category-%s"
-	custom_category     = "true"
-	keywords            = ["microsoft"]
-	db_categorized_urls = [".creditkarma.com", ".youku.com"]
-	type                = "URL_CATEGORY"
-}
-`, rName, rDesc)
+func testAccCheckURLCategoriesDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != resourcetype.URLCategories {
+			continue
+		}
+
+		rule, err := apiClient.urlcategories.Get(rs.Primary.ID)
+
+		if err == nil {
+			return fmt.Errorf("id %s already exists", rs.Primary.ID)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("url category with id %s exists and wasn't destroyed", rs.Primary.ID)
+		}
+	}
+
+	return nil
 }
 
 func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCategory) resource.TestCheckFunc {
@@ -70,24 +92,32 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 	}
 }
 
-func testAccCheckURLCategoriesDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName string, custom_category bool) string {
+	return fmt.Sprintf(`
+resource "%s" "%s" {
+	super_category 		= "USER_DEFINED"
+	configured_name 	= "tf-acc-test-%s"
+	description 		= "tf-acc-test-%s"
+	custom_category     = "%s"
+	keywords            = ["microsoft"]
+	db_categorized_urls = [".creditkarma.com", ".youku.com"]
+	type                = "URL_CATEGORY"
+}
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "zia_url_categories" {
-			continue
-		}
+data "%s" "%s" {
+	id = "${%s.id}"
+  }
+`,
+		// resource variables
+		resourcetype.URLCategories,
+		generatedName,
+		generatedName,
+		generatedName,
+		strconv.FormatBool(custom_category),
 
-		rule, err := apiClient.urlcategories.Get(rs.Primary.ID)
-
-		if err == nil {
-			return fmt.Errorf("id %s already exists", rs.Primary.ID)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("url category with id %s exists and wasn't destroyed", rs.Primary.ID)
-		}
-	}
-
-	return nil
+		// data source variables
+		resourcetype.URLCategories,
+		generatedName,
+		resourceTypeAndName,
+	)
 }

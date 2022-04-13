@@ -31,7 +31,7 @@ func dataSourceDLPNotificationTemplates() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"plain_text_message": {
+			"plain_test_message": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
