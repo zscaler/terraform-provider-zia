@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"testing"
 
@@ -26,9 +25,11 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "action", resourceTypeAndName, "action"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "url_categories.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
 		},
 	})
 }
-*/
