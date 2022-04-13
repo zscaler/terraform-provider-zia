@@ -22,6 +22,10 @@ func dataSourceURLCategories() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"val": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"keywords": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -202,6 +206,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	if resp != nil {
 		d.SetId(fmt.Sprintf(resp.ID))
 		_ = d.Set("configured_name", resp.ConfiguredName)
+		_ = d.Set("val", resp.Val)
 		_ = d.Set("keywords", resp.Keywords)
 		_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
 		_ = d.Set("urls", resp.Urls)

@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 	var services networkservices.NetworkServices
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServices)
+	rName := acctest.RandString(5)
+	rDesc := acctest.RandString(20)
+	resourceName := "zia_firewall_filtering_network_service.test-fw-nw-svc"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,53 +24,43 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFWNetworkServicesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
+				Config: testAccCheckFWNetworkServicesBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
-				),
-			},
-
-			// Update test
-			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
+					testAccCheckFWNetworkServicesExists("zia_firewall_filtering_network_service.test-fw-nw-svc", &services),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-fw-nw-svc-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test-fw-nw-svc-"+rDesc),
+					resource.TestCheckResourceAttr(resourceName, "type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resourceName, "src_tcp_ports.0.start", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "src_tcp_ports.1.start", "5001"),
+					resource.TestCheckResourceAttr(resourceName, "dest_tcp_ports.0.start", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "dest_tcp_ports.1.start", "5001"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFWNetworkServicesDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccCheckFWNetworkServicesBasic(rName, rDesc string) string {
+	return fmt.Sprintf(`
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.FWFilteringNetworkServices {
-			continue
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		rule, err := apiClient.networkservices.Get(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("network services group with id %d exists and wasn't destroyed", id)
-		}
+resource "zia_firewall_filtering_network_service" "test-fw-nw-svc" {
+	name        = "test-fw-nw-svc-%s"
+	description = "test-fw-nw-svc-%s"
+	type = "CUSTOM"
+	src_tcp_ports {
+		start = 5000
 	}
-
-	return nil
+	src_tcp_ports {
+		start = 5001
+	}
+    dest_tcp_ports {
+        start = 5000
+    }
+    dest_tcp_ports {
+        start = 5001
+    }
+}
+	`, rName, rDesc)
 }
 
 func testAccCheckFWNetworkServicesExists(resource string, rule *networkservices.NetworkServices) resource.TestCheckFunc {
@@ -101,57 +91,30 @@ func testAccCheckFWNetworkServicesExists(resource string, rule *networkservices.
 	}
 }
 
-func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, description string) string {
-	return fmt.Sprintf(`
-// network services resource
-%s
+func testAccCheckFWNetworkServicesDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FWNetworkServicesResourceHCL(generatedName, description),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "zia_firewall_filtering_network_service" {
+			continue
+		}
 
-		// data source variables
-		resourcetype.FWFilteringNetworkServices,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func FWNetworkServicesResourceHCL(generatedName, description string) string {
-	return fmt.Sprintf(`
-resource "%s" "%s" {
-	name        = "%s"
-	description = "%s"
-	src_tcp_ports {
-	  start = 5000
+		rule, err := apiClient.networkservices.Get(id)
+
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if rule != nil {
+			return fmt.Errorf("network services with id %d exists and wasn't destroyed", id)
+		}
 	}
-	src_tcp_ports {
-	  start = 5001
-	}
-	src_tcp_ports {
-	  start = 5002
-	  end = 5005
-	}
-	dest_tcp_ports {
-	  start = 5000
-	}
-	  dest_tcp_ports {
-	  start = 5001
-	}
-	dest_tcp_ports {
-	  start = 5003
-	  end = 5005
-	}
-	type = "CUSTOM"
-  }
-`,
-		// resource variables
-		resourcetype.FWFilteringNetworkServices,
-		generatedName,
-		generatedName,
-		description,
-	)
+
+	return nil
 }

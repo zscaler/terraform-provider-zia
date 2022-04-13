@@ -220,7 +220,17 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	loginName, _ := d.Get("login_name").(string)
 	if resp == nil && loginName != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
-		res, err := zClient.adminuserrolemgmt.GetAdminUsersByName(loginName)
+		res, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(loginName)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	userName, _ := d.Get("username").(string)
+	if resp == nil && userName != "" {
+		log.Printf("[INFO] Getting data for admin username: %s\n", userName)
+		res, err := zClient.adminuserrolemgmt.GetAdminByUsername(userName)
 		if err != nil {
 			return err
 		}

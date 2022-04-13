@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/willguibr/terraform-provider-zia/gozscaler/common"
 )
 
 const (
@@ -38,17 +40,18 @@ type Patterns struct {
 	Action  string `json:"action,omitempty"`
 	Pattern string `json:"pattern,omitempty"`
 }
+
 type EDMMatchDetails struct {
 	DictionaryEdmMappingID int    `json:"dictionaryEdmMappingId,omitempty"`
 	SchemaID               int    `json:"schemaId,omitempty"`
 	PrimaryField           int    `json:"primaryField,omitempty"`
-	SecondaryFields        int    `json:"secondaryFields,omitempty"`
+	SecondaryFields        []int  `json:"secondaryFields,omitempty"`
 	SecondaryFieldMatchOn  string `json:"secondaryFieldMatchOn,omitempty"`
 }
 
 type IDMProfileMatchAccuracy struct {
-	AdpIdmProfile string `json:"adpIdmProfile,omitempty"`
-	MatchAccuracy string `json:"matchAccuracy,omitempty"`
+	AdpIdmProfile *common.IDNameExtensions `json:"adpIdmProfile,omitempty"`
+	MatchAccuracy string                   `json:"matchAccuracy,omitempty"`
 }
 
 func (service *Service) Get(dlpDictionariesID int) (*DlpDictionary, error) {

@@ -6,17 +6,17 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
 )
 
-func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
+func TestAccFirewallFilteringRule_basic(t *testing.T) {
 	var rules filteringrules.FirewallFilteringRules
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
+	rName := "test-fw-rule-" + acctest.RandString(5)
+	rDesc := "test-fw-rule-" + acctest.RandString(20)
+	resourceName := "zia_firewall_filtering_rule.test-fw-rule"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,67 +24,101 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFirewallFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccFirewallFilteringRuleBasic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
-				),
-			},
-
-			// Update test
-			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					testAccCheckFirewallFilteringRuleExists("zia_firewall_filtering_rule.test-fw-rule", &rules),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", rDesc),
+					resource.TestCheckResourceAttr(resourceName, "action", "ALLOW"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "order", "1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
-	apiClient := testAccProvider.Meta().(*Client)
+func testAccFirewallFilteringRuleBasic(rName, rDesc string) string {
+	return fmt.Sprintf(`
+data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
+	name = "ZSCALER_PROXY_NW_SERVICES"
+}
+data "zia_department_management" "engineering" {
+	name = "Engineering"
+}
+data "zia_group_management" "normal_internet" {
+	name = "Normal_Internet"
+}
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.FirewallFilteringRules {
-			continue
-		}
-
-		id, err := strconv.Atoi(rs.Primary.ID)
-		if err != nil {
-			log.Println("Failed in conversion with error:", err)
-			return err
-		}
-
-		rule, err := apiClient.filteringrules.Get(id)
-
-		if err == nil {
-			return fmt.Errorf("id %d already exists", id)
-		}
-
-		if rule != nil {
-			return fmt.Errorf("firewall filtering rule with id %d exists and wasn't destroyed", id)
-		}
+data "zia_firewall_filtering_time_window" "work_hours" {
+	name = "Work hours"
+}
+resource "zia_firewall_filtering_rule" "test-fw-rule" {
+	name = "%s"
+	description = "%s"
+	action = "ALLOW"
+	state = "ENABLED"
+	order = 1
+	src_ips=[]
+	dest_addresses=[]
+	dest_ip_categories=[]
+	dest_countries=[]
+	nw_applications=[]
+	nw_services {
+		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
+	}
+	departments {
+		id = [ data.zia_department_management.engineering.id ]
+	}
+	groups {
+		id = [ data.zia_group_management.normal_internet.id ]
+	}
+	time_windows {
+		id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
+	}
+	locations {
+		id = []
+	}
+	location_groups {
+		id = []
+	}
+	users {
+		id = []
+	}
+	labels {
+		id = []
+	}
+	src_ip_groups {
+		id = []
+	}
+	dest_ip_groups {
+		id = []
+	}
+	app_service_groups {
+		id = []
+	}
+	app_services {
+		id = []
+	}
+	nw_application_groups {
+		id = []
+	}
+	nw_service_groups {
+		id = []
 	}
 
-	return nil
+}
+	`, rName, rDesc)
 }
 
 func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrules.FirewallFilteringRules) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
-			return fmt.Errorf("didn't find resource: %s", resource)
+			return fmt.Errorf("firewall rule not found: %s", resource)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no record ID is set")
+			return fmt.Errorf("no firewall rule ID is set")
 		}
 
 		id, err := strconv.Atoi(rs.Primary.ID)
@@ -105,66 +139,30 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 	}
 }
 
-func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
-// firewall filtering rule resource
-%s
+func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
+	apiClient := testAccProvider.Meta().(*Client)
 
-data "%s" "%s" {
-  id = "${%s.id}"
-}
-`,
-		// resource variables
-		FirewallFilteringRuleResourceHCL(generatedName, description, action, state),
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "zia_firewall_filtering_rule" {
+			continue
+		}
 
-		// data source variables
-		resourcetype.FirewallFilteringRules,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+		id, err := strconv.Atoi(rs.Primary.ID)
+		if err != nil {
+			log.Println("Failed in conversion with error:", err)
+			return err
+		}
 
-func FirewallFilteringRuleResourceHCL(generatedName, description, action, state string) string {
-	return fmt.Sprintf(`
-data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
-	name = "ZSCALER_PROXY_NW_SERVICES"
-}
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-data "zia_group_management" "normal_internet" {
-    name = "Normal_Internet"
-}
+		foundRule, err := apiClient.filteringrules.Get(id)
 
-data "zia_firewall_filtering_time_window" "work_hours" {
-    name = "Work hours"
-}
-resource "%s" "%s" {
-    name = "%s"
-    description = "%s"
-    action = "%s"
-    state = "%s"
-    order = 1
-    nw_services {
-        id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
-    }
-    departments {
-        id = [ data.zia_department_management.engineering.id ]
-    }
-    groups {
-        id = [ data.zia_group_management.normal_internet.id ]
-    }
-    time_windows {
-        id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
-    }
-}
-`,
-		// resource variables
-		resourcetype.FirewallFilteringRules,
-		generatedName,
-		generatedName,
-		description,
-		action,
-		state,
-	)
+		if err == nil {
+			return fmt.Errorf("id %d already exists", id)
+		}
+
+		if foundRule != nil {
+			return fmt.Errorf("firewall filtering rule with id %d exists and wasn't destroyed", id)
+		}
+	}
+
+	return nil
 }
