@@ -251,12 +251,16 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenAdminUsersScopesLite(resp *adminuserrolemgmt.AdminUsers) []interface{} {
-	scope := make([]interface{}, 1)
+func flattenAdminUsersScopesLite(resp *adminuserrolemgmt.AdminUsers) []map[string]interface{} {
+	scope := make([]map[string]interface{}, 1)
 	scope[0] = map[string]interface{}{
-		"type":                        resp.AdminScopeType,
-		"scope_group_member_entities": flattenIDs(resp.AdminScopeGroupMemberEntities),
-		"scope_entities":              flattenIDs(resp.AdminScopeEntities),
+		"type": resp.AdminScopeType,
+	}
+	if len(resp.AdminScopeGroupMemberEntities) > 0 {
+		scope[0]["scope_group_member_entities"] = flattenIDs(resp.AdminScopeGroupMemberEntities)
+	}
+	if len(resp.AdminScopeEntities) > 0 {
+		scope[0]["scope_entities"] = flattenIDs(resp.AdminScopeEntities)
 	}
 	return scope
 }

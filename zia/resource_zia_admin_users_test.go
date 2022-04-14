@@ -129,12 +129,6 @@ resource "%s" "%s" {
 	}
 	admin_scope {
 		type = "ORGANIZATION"
-		scope_group_member_entities {
-			id = []
-		}
-		scope_entities {
-			id = []
-		}
 	}
 }
 
