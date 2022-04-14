@@ -13,7 +13,7 @@ func dataSourceURLFilteringRules() *schema.Resource {
 		Read: dataSourceURLFilteringRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},

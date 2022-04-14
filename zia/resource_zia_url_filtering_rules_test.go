@@ -27,7 +27,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.URLFilteringRuleResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
@@ -42,8 +42,8 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.URLFilteringRuleResourceName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
@@ -131,7 +131,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.URLFilteringRules,
 		generatedName,
-		variable.URLFilteringRuleResourceName,
+		generatedName,
 		description,
 		action,
 		state,
