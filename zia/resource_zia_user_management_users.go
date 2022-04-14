@@ -83,7 +83,6 @@ func resourceUserManagement() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
-							Computed: true,
 							Optional: true,
 						},
 						"name": {
