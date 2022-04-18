@@ -19,6 +19,7 @@ const (
 	FWRuleResourceDescription = "this is an acceptance test"
 	FWRuleResourceAction      = "ALLOW"
 	FWRuleResourceState       = "ENABLED"
+	FWRuleEnableLogging       = false
 )
 
 // Firewall Filtering IP Destination Group resource/datasource
