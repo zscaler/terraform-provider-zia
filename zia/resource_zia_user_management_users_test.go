@@ -21,17 +21,17 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 	rComments := acctest.RandomWithPrefix("tf-acc-test")
 
 	rPassword := acctest.RandString(10)
-
+	name := "testAcc TF User " + generatedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckUserManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, rEmail, rPassword, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "testAcc TF User"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
@@ -42,10 +42,10 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, rEmail, rPassword, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "testAcc TF User"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
@@ -113,15 +113,18 @@ func testAccCheckUserManagementExists(resource string, users *usermanagement.Use
 	}
 }
 
-func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, rEmail, rPassword, rComments string) string {
+func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name 		= "testAcc TF User"
+	name 		= "%s"
 	email 		= "%s@securitygeek.io"
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {
-		id = [ 26348357, 24392492 ]
+		id = 26348357
+	}
+	groups {
+		id = 24392492
 	}
 	department {
 		id = 25684245
@@ -135,6 +138,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.Users,
 		generatedName,
+		name,
 		rEmail,
 		rPassword,
 		rComments,
