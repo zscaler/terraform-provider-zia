@@ -49,7 +49,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
 				),
 			},
@@ -145,7 +145,7 @@ data "%s" "%s" {
 
 		// data source variables
 		resourcetype.Users,
-		rEmail,
+		generatedName,
 		resourceTypeAndName,
 	)
 }

@@ -138,32 +138,9 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
 			return err
 		}
-		// if err := d.Set("groups", flattenGroups(resp.Groups)); err != nil {
-		// 	return err
-		// }
-
-		// if err := d.Set("department", flattenDepartment(*resp.Department)); err != nil {
-		// 	return err
-		// }
 	} else {
 		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
 	}
 
 	return nil
 }
-
-/*
-func flattenDepartment(department *common.Department) []interface{} {
-	departments := make([]interface{}, 0)
-	if department != nil {
-		departments = append(departments, map[string]interface{}{
-			"id":       department.ID,
-			"name":     department.Name,
-			"idp_id":   department.IdpID,
-			"comments": department.Comments,
-			"deleted":  department.Deleted,
-		})
-	}
-	return departments
-}
-*/

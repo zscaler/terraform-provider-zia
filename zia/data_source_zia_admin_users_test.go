@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"testing"
 
@@ -24,10 +23,10 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "login_name", resourceTypeAndName, rEmail+"@securitygeek.io"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "login_name", resourceTypeAndName, "login_name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, "email"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "username", resourceTypeAndName, "username"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "password", resourceTypeAndName, rPassword+("Super@Secret007")),
+					// resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "password", resourceTypeAndName, rPassword+("Super@Secret007")),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "role.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "admin_scope.#", "1"),
 				),
@@ -35,4 +34,3 @@ func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
 		},
 	})
 }
-*/

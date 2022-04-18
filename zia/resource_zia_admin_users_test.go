@@ -132,9 +132,9 @@ resource "%s" "%s" {
 	}
 }
 
-// data "%s" "%s" {
-	// 	id = "${%s.id}"
-	//   }
+data "%s" "%s" {
+	id = "${%s.id}"
+}
 
 
 `,
@@ -148,7 +148,7 @@ resource "%s" "%s" {
 
 		// data source variables
 		resourcetype.AdminUsers,
-		rEmail,
+		generatedName,
 		resourceTypeAndName,
 	)
 }

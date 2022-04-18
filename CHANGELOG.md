@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.0.1 (April 17, 2022)
+
+### Bug Fixes
+
+Several schema type, expand and flattening function fixes were implemented to prevent undesired plan refresh updates and further provider optimization.
+
+- ``zia_dlp_dictionaries`` - [PR#61](https://github.com/willguibr/terraform-provider-zia/pull/61) 🔧
+- ``zia_dlp_web_rules`` - [PR#62](https://github.com/willguibr/terraform-provider-zia/pull/62) 🔧
+- ``zia_firewall_filtering_rule`` - Added schema validation ``order`` parameter to ensure value is at least 1. [PR#63](https://github.com/willguibr/terraform-provider-zia/pull/63) 🔧
+- ``zia_url_filtering_rules`` - [PR#66](https://github.com/willguibr/terraform-provider-zia/pull/66) 🔧
+- ``zia_admin_users`` - [PR#67](https://github.com/willguibr/terraform-provider-zia/pull/67) 🔧
+- ``zia_user_management`` - [PR#67](https://github.com/willguibr/terraform-provider-zia/pull/67) 🔧
+
+### Enhancements
+
+1. Updated ZIA API client to validate the corresponding Zscaler cloud name. The previous environment variable ``ZIA_BASE_URL`` was replaced with ``ZIA_CLOUD``. [PR#58](https://github.com/willguibr/terraform-provider-zia/pull/58)
+
+2. The provider now validates the proper Zscaler cloud name. [PR#58](https://github.com/willguibr/terraform-provider-zia/pull/58) For instructions on how to find your Zscaler cloud name, refer to the following help article [Here](https://help.zscaler.com/zia/getting-started-zia-api#RetrieveAPIKey)
+
+3. Added and fixed multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome
+
+4. Updated GitHub Actions CI to include both build and acceptance test workflow
+
 ## 2.0.0 (February 9, 2022)
 
 ## New Resources and DataSources
@@ -40,18 +63,18 @@ UPDATES:
 
 - The provider now supports the ability to import resources via its `name` and/or `id` property to support easier migration of existing ZIA resources via `terraform import` command.
 The  following resources are supported:
-    - resource_zia_admin_users - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47)] :rocket:
-    - resource_zia_dlp_dictionaries - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_firewall_filtering_rules - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_fw_filtering_ip_destination_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_fw_filtering_ip_source_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_fw_filtering_network_application_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_fw_filtering_network_services_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_fw_filtering_network_services - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_location_management - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_url_categories - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_url_filtering_rules - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
-    - resource_zia_user_management_users - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_admin_users - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47)] :rocket:
+  - resource_zia_dlp_dictionaries - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_firewall_filtering_rules - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_fw_filtering_ip_destination_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_fw_filtering_ip_source_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_fw_filtering_network_application_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_fw_filtering_network_services_groups - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_fw_filtering_network_services - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_location_management - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_url_categories - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_url_filtering_rules - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
+  - resource_zia_user_management_users - [PR#47](https://github.com/willguibr/terraform-provider-zia/pull/47) :rocket:
 
 ## 1.0.2 (November 29, 2021)
 
