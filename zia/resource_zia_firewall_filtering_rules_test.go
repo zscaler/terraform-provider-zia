@@ -24,24 +24,37 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 		CheckDestroy: testAccCheckFirewallFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWRuleResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
 		},
@@ -104,7 +117,7 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 	}
 }
 
-func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
+func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string, enableLogging bool) string {
 	return fmt.Sprintf(`
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
@@ -120,11 +133,12 @@ data "zia_firewall_filtering_time_window" "work_hours" {
     name = "Work hours"
 }
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
     description = "%s"
     action = "%s"
     state = "%s"
     order = 1
+	enable_full_logging = "%s"
     nw_services {
         id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
     }
@@ -147,10 +161,11 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.FirewallFilteringRules,
 		generatedName,
-		variable.FWRuleResourceName,
+		generatedName,
 		description,
 		action,
 		state,
+		strconv.FormatBool(enableLogging),
 
 		// data source variables
 		resourcetype.FirewallFilteringRules,
