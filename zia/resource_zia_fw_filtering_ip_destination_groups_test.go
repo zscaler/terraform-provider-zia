@@ -27,7 +27,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWDSTGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -39,7 +39,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWDSTGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -108,7 +108,7 @@ func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinatio
 func testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, description, dst_type string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name        = "%s"
+	name        = "tf-acc-test-%s"
 	description = "%s"
 	type        = "%s"
 	addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]
@@ -121,7 +121,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringDestinationGroup,
 		generatedName,
-		variable.FWDSTGroupName,
+		generatedName,
 		description,
 		dst_type,
 

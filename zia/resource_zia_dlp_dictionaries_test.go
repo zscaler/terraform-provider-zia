@@ -27,7 +27,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -39,7 +39,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.DLPDictionaryResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -108,7 +108,7 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
 	description = "%s"
     phrases {
         action = "PHRASE_COUNT_TYPE_ALL"
@@ -138,7 +138,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.DLPDictionaries,
 		generatedName,
-		variable.DLPDictionaryResourceName,
+		generatedName,
 		description,
 
 		// data source variables

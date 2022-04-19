@@ -64,12 +64,8 @@ const (
 
 // Traffic Forwarding VPN Credentials resource/datasource
 const (
-	VPNCredentialComments     = "this is an acceptance test"
-	VPNCredentialTypeUFQDN    = "UFQDN"
-	VPNCredentialFQDN         = "test@securitygeek.io"
-	VPNCredentialPreSharedKey = "Password@123!"
-	VPNCredentialTypeIP       = "IP"
-	VPNCredentialIPAddress    = "118.189.211.221"
+	VPNCredentialTypeUFQDN = "UFQDN"
+	VPNCredentialTypeIP    = "IP"
 )
 
 // Traffic Forwarding Location Management

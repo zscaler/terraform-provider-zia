@@ -27,7 +27,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -37,7 +37,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.RuleLabelName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -104,7 +104,7 @@ func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels)
 func testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
     description = "%s"
 }
 
@@ -115,7 +115,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.RuleLabels,
 		generatedName,
-		variable.RuleLabelName,
+		generatedName,
 		description,
 
 		// data source variables
