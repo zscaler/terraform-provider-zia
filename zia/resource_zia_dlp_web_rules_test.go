@@ -27,7 +27,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWRuleResourceName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
@@ -45,6 +45,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
@@ -120,7 +121,7 @@ func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, descri
 	return fmt.Sprintf(`
 
 resource "%s" "%s" {
-	name 						= "%s"
+	name 						= "tf-acc-test-%s"
 	description 				= "%s"
     action 						= "%s"
     state 						= "%s"
@@ -144,7 +145,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.DLPWebRules,
 		generatedName,
-		variable.DLPWebRuleName,
+		generatedName,
 		description,
 		action,
 		state,

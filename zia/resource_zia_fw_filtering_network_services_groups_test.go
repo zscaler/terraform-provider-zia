@@ -27,7 +27,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
@@ -38,7 +38,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
@@ -115,7 +115,7 @@ data "zia_firewall_filtering_network_service" "example2" {
   }
 
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
     description = "%s"
     services {
         id = [
@@ -132,7 +132,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkServiceGroups,
 		generatedName,
-		variable.FWNetworkServicesGroupName,
+		generatedName,
 		description,
 
 		// data source variables

@@ -27,7 +27,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -38,7 +38,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWAppGroupName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -106,7 +106,7 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
     description = "%s"
     network_applications = [
             "YAMMER",
@@ -130,7 +130,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkAppGroups,
 		generatedName,
-		variable.FWAppGroupName,
+		generatedName,
 		description,
 
 		// data source variables

@@ -27,7 +27,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -40,7 +40,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.FWNetworkServicesName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -110,7 +110,7 @@ func testAccCheckFWNetworkServicesExists(resource string, rule *networkservices.
 func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, description, svc_type string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name        = "%s"
+	name        = "tf-acc-test-%s"
 	description = "%s"
 	type 		= "%s"
 	src_tcp_ports {
@@ -142,7 +142,7 @@ data "%s" "%s" {
 		// resource variables
 		resourcetype.FWFilteringNetworkServices,
 		generatedName,
-		variable.FWNetworkServicesName,
+		generatedName,
 		description,
 		svc_type,
 

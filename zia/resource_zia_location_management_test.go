@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement"
@@ -18,17 +19,25 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 	var locations locationmanagement.Locations
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringLocManagement)
 
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
+	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
+
+	rSharedKey := acctest.RandString(20)
+	vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringVPNCredentials)
+	vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, rSharedKey)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckLocationManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, variable.LocName, variable.LocDesc),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.LocName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.LocDesc),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "country", "UNITED_STATES"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "profile", "CORPORATE"),
@@ -39,17 +48,17 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ofw_enabled", strconv.FormatBool(variable.LocOFW)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ips_control", strconv.FormatBool(variable.LocIPS)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, variable.LocName, variable.LocDesc),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", variable.LocName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.LocDesc),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "country", "UNITED_STATES"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "tz", "UNITED_STATES_AMERICA_LOS_ANGELES"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "profile", "CORPORATE"),
@@ -60,7 +69,7 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ofw_enabled", strconv.FormatBool(variable.LocOFW)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ips_control", strconv.FormatBool(variable.LocIPS)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
 				),
 			},
 		},
@@ -123,45 +132,66 @@ func testAccCheckLocationManagementExists(resource string, rule *locationmanagem
 	}
 }
 
-func testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, name, description string) string {
+func testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
 	return fmt.Sprintf(`
 
+// static ip resource
+%s
 
-resource "%s" "%s" {
-	name 					= "%s"
-	description 			= "%s"
-	country 				= "UNITED_STATES"
-	tz 						= "UNITED_STATES_AMERICA_LOS_ANGELES"
-	auth_required 			= "true"
-	idle_time_in_minutes 	= 720
-	display_time_unit 		= "HOUR"
-	surrogate_ip 			= true
-	xff_forward_enabled 	= true
-	ofw_enabled 			= true
-	ips_control 			= true
-	profile					= "CORPORATE"
-	ip_addresses			= [ "121.234.56.100" ]
-	vpn_credentials {
-		id 			= 44073590
-		type 		= "IP"
-		ip_address 	= "121.234.56.100"
-	}
-}
+// location management resource
+%s
 
 data "%s" "%s" {
-	id = "${%s.id}"
-  }
+  id = "${%s.id}"
+}
 `,
-
 		// resource variables
-		resourcetype.TrafficFilteringLocManagement,
-		generatedName,
-		name,
-		description,
+		staticIPResourceHCL,
+		// vpnCredentialResourceHCL,
+		getLocationManagementHCL(generatedName, staticIPTypeAndName, vpnCredentialTypeAndName, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled),
 
 		// data source variables
 		resourcetype.TrafficFilteringLocManagement,
 		generatedName,
 		resourceTypeAndName,
+	)
+}
+
+func getLocationManagementHCL(generatedName, staticIPTypeAndName, vpnCredentialTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
+	return fmt.Sprintf(`
+
+
+resource "%s" "%s" {
+	name 					= "tf-acc-test-%s"
+	description 			= "tf-acc-test-%s"
+	country 				= "UNITED_STATES"
+	tz 						= "UNITED_STATES_AMERICA_LOS_ANGELES"
+	auth_required 			= "%s"
+	surrogate_ip 			= "%s"
+	xff_forward_enabled 	= "%s"
+	ofw_enabled 			= "%s"
+	ips_control 			= "%s"
+	idle_time_in_minutes 	= 720
+	display_time_unit 		= "HOUR"
+	profile					= "CORPORATE"
+	ip_addresses			= [ "${%s.ip_address}"]
+	depends_on = [ %s ]
+}
+`,
+
+		// resource variables
+		resourcetype.TrafficFilteringLocManagement,
+		generatedName,
+		generatedName,
+		generatedName,
+		strconv.FormatBool(authRequired),
+		strconv.FormatBool(surrogateIP),
+		strconv.FormatBool(xffEnabled),
+		strconv.FormatBool(ofwEnabled),
+		strconv.FormatBool(ipsEnabled),
+		staticIPTypeAndName,
+		// vpnCredentialTypeAndName,
+		// vpnCredentialTypeAndName,
+		staticIPTypeAndName,
 	)
 }
