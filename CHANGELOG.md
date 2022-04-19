@@ -23,6 +23,8 @@ Several schema type, expand and flattening function fixes were implemented to pr
 
 4. Updated GitHub Actions CI to include both build and acceptance test workflow
 
+5. Added new optimized acceptance tests - [PR#71](https://github.com/willguibr/terraform-provider-zia/pull/71) 🔧
+
 ## 2.0.0 (February 9, 2022)
 
 ## New Resources and DataSources
