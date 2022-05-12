@@ -1,12 +1,20 @@
+[![CI](https://github.com/zscaler/terraform-provider-zia/actions/workflows/ci.yml/badge.svg)](https://github.com/zscaler/terraform-provider-zia/actions/workflows/ci.yml)
+[![Release](https://github.com/zscaler/terraform-provider-zia/actions/workflows/release.yml/badge.svg)](https://github.com/zscaler/terraform-provider-zia/actions/workflows/release.yml)
+
+<a href="https://terraform.io">
+    <img src="https://raw.githubusercontent.com/hashicorp/terraform-website/master/public/img/logo-text.svg" alt="Terraform logo" title="Terraform" height="50" />
+</a>
+
+<a href="https://www.zscaler.com/">
+    <img src="https://www.zscaler.com/themes/custom/zscaler/logo.svg" alt="Zscaler logo" title="Zscaler" height="50" />
+</a>
+
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 =========================================================================
-
-⚠️  **Attention:** This provider is not affiliated with, nor supported by Zscaler in any way.
 
 - Website: <https://www.terraform.io>
 - Documentation: <https://help.zscaler.com/zia>
 - Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
-<img src="https://github.com/hashicorp/terraform-website/blob/master/content/source/assets/images/logo-terraform-main.svg" width="600px">
 
 Requirements
 ------------
@@ -168,9 +176,9 @@ make testacc
 License
 =========
 
-MIT License
+=======
 
-Copyright (c) 2021 [William Guilherme](https://github.com/willguibr)
+Copyright (c) 2021 [Zscaler BD Solutions Architect team](https://github.com/zscaler)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
