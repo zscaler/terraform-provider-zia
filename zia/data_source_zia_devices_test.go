@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -41,3 +42,4 @@ data "zia_devices" "os_version"{
     os_version = "Microsoft Windows 10 Pro;64 bit"
 }
 `
+*/

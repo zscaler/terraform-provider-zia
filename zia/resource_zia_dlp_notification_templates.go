@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_notification_templates"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_notification_templates"
 )
 
 func resourceDLPNotificationTemplates() *schema.Resource {

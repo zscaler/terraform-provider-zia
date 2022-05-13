@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/willguibr/terraform-provider-zia/gozscaler/activation"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/zia"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/activation"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
+	"github.com/zscaler/terraform-provider-zia/zia"
 )
 
 func getEnvVarOrFail(k string) string {

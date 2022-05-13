@@ -143,7 +143,7 @@ Visit [here](https://github.com/
 Issues
 =========
 
-Please feel free to open an issue using [Github Issues](https://github.com/willguibr/terraform-provider-zia/issues) if you run into any problems using this zia Terraform provider.
+Please feel free to open an issue using [Github Issues](https://github.com/zscaler/terraform-provider-zia/issues) if you run into any problems using this zia Terraform provider.
 
 Developing the Provider
 ---------------------------

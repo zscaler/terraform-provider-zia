@@ -1,4 +1,4 @@
-module github.com/willguibr/terraform-provider-zia
+module github.com/zscaler/terraform-provider-zia
 
 go 1.18
 
