@@ -39,6 +39,6 @@ func main() {
 		log.Printf("[INFO] Activation succeded: %#v\n", resp)
 	}
 	log.Printf("[INFO] Destroying session: %#v\n", resp)
-	cli.Logout()
+	_ = cli.Logout()
 	os.Exit(0)
 }

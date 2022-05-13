@@ -26,12 +26,12 @@ func resourceAdminUsers() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("admin_id", id)
+					_ = d.Set("admin_id", id)
 				} else {
 					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("admin_id", resp.ID)
+						_ = d.Set("admin_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

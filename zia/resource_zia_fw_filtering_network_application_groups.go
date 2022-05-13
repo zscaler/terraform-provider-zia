@@ -25,12 +25,12 @@ func resourceFWNetworkApplicationGroups() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("app_id", id)
+					_ = d.Set("app_id", id)
 				} else {
 					resp, err := zClient.networkapplications.GetNetworkApplicationGroupsByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("app_id", resp.ID)
+						_ = d.Set("app_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

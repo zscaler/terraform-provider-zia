@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	locationsEndpoint    = "/locations"
-	subLocationsEndpoint = "/sublocations"
+	locationsEndpoint = "/locations"
+	// subLocationsEndpoint = "/sublocations"
 )
 
 // Gets locations only, not sub-locations. When a location matches the given search parameter criteria only its parent location is included in the result set, not its sub-locations.

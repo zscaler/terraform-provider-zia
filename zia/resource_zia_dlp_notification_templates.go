@@ -24,12 +24,12 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("template_id", id)
+					_ = d.Set("template_id", id)
 				} else {
 					resp, err := zClient.dlp_notification_templates.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("template_id", resp.ID)
+						_ = d.Set("template_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

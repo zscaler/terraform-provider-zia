@@ -25,12 +25,12 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("rule_id", id)
+					_ = d.Set("rule_id", id)
 				} else {
 					resp, err := zClient.filteringrules.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("rule_id", resp.ID)
+						_ = d.Set("rule_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

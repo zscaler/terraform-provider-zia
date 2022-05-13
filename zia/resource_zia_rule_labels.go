@@ -25,12 +25,12 @@ func resourceRuleLabels() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("rule_label_id", id)
+					_ = d.Set("rule_label_id", id)
 				} else {
 					resp, err := zClient.rule_labels.GetRuleLabelByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("rule_label_id", resp.ID)
+						_ = d.Set("rule_label_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
