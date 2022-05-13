@@ -118,7 +118,7 @@ resource "%s" "%s" {
     description = "%s"
 	action = "%s"
     state = "%s"
-    order = 2
+    order = 1
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]

@@ -114,6 +114,11 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 
 func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword string) string {
 	return fmt.Sprintf(`
+
+data "zia_admin_roles" "super_admin"{
+	name = "Super Admin"
+}
+
 resource "%s" "%s" {
 	login_name                      = "%s@bd-hashicorp.com"
 	email                           = "%s@bd-hashicorp.com"
@@ -125,7 +130,7 @@ resource "%s" "%s" {
 	is_service_update_comm_enabled  = true
 	is_product_update_comm_enabled  = true
 	role {
-		id = 11521
+		id = data.zia_admin_roles.super_admin.id
 	}
 	admin_scope {
 		type = "ORGANIZATION"
@@ -135,8 +140,6 @@ resource "%s" "%s" {
 data "%s" "%s" {
 	id = "${%s.id}"
 }
-
-
 `,
 		// resource variables
 		resourcetype.AdminUsers,

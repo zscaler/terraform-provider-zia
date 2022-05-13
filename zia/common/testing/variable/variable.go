@@ -87,7 +87,7 @@ const (
 	DLPRuleResourceState     = "ENABLED"
 	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
-	DLPOCREnabled            = true
+	DLPOCREnabled            = false
 )
 
 // DLP Dictionaries resource/datasource

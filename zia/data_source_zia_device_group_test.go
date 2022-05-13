@@ -20,7 +20,6 @@ func TestAccDataSourceDeviceGroups_Basic(t *testing.T) {
 					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.mac"),
 					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.linux"),
 					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.no_client_connector"),
-					testAccDataSourceDeviceGroupsCheck("data.zia_device_groups.cloud_browser_isolation"),
 				),
 			},
 		},
@@ -52,8 +51,5 @@ data "zia_device_groups" "linux"{
 }
 data "zia_device_groups" "no_client_connector"{
     name = "No Client Connector"
-}
-data "zia_device_groups" "cloud_browser_isolation"{
-    name = "Cloud Browser Isolation"
 }
 `

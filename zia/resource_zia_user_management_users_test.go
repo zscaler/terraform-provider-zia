@@ -115,20 +115,34 @@ func testAccCheckUserManagementExists(resource string, users *usermanagement.Use
 
 func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments string) string {
 	return fmt.Sprintf(`
+
+data "zia_group_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_group_management" "sales" {
+	name = "Sales"
+}
+
+data "zia_department_management" "finance" {
+	name = "Finance"
+}
+
 resource "%s" "%s" {
 	name 		= "%s"
 	email 		= "%s@bd-hashicorp.com"
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {
-		id = 26348357
+		id = data.zia_group_management.marketing.id
 	}
 	groups {
-		id = 24392492
+		id = data.zia_group_management.sales.id
 	}
 	department {
-		id = 25684245
+		id = data.zia_department_management.finance.id
 	}
+	depends_on = [ data.zia_group_management.marketing, data.zia_group_management.sales, data.zia_department_management.finance ]
 }
 
 data "%s" "%s" {
