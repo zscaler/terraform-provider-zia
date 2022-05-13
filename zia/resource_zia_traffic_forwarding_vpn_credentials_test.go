@@ -37,7 +37,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "UFQDN"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@bd-hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
@@ -157,7 +157,7 @@ func getTrafficForwardingVPNCredentialsUFQDN_HCL(generatedName, rEmail, rSharedK
 resource "%s" "%s" {
 	comments = "tf-acc-test-%s"
     type = "UFQDN"
-    fqdn = "%s@securitygeek.io"
+    fqdn = "%s@bd-hashicorp.com"
     pre_shared_key = "%s"
 }
 `,

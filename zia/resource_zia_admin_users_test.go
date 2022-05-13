@@ -30,8 +30,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -44,8 +44,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", rPassword+("Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -115,8 +115,8 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	login_name                      = "%s@securitygeek.io"
-	email                           = "%s@securitygeek.io"
+	login_name                      = "%s@bd-hashicorp.com"
+	email                           = "%s@bd-hashicorp.com"
 	username                        = "%s"
 	password                        = "%sSuper@Secret007"
 	comments                        = "Administrator Group"
