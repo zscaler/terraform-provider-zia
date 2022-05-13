@@ -11,7 +11,7 @@ terraform {
 provider "zia" {}
 
 data "zia_admin_users" "john_ashcroft" {
-  login_name = "john.smith@securitygeek.io"
+  login_name = "john.smith@bd-hashicorp.com"
 }
 
 output "zia_admin_users_john_ashcroft"{

@@ -22,24 +22,24 @@ import (
 )
 
 const (
-	maxIdleConnections    int = 40
-	requestTimeout        int = 60
-	jSessionIDTimeout         = 30 // minutes
-	jSessionTimeoutOffset     = 5 * time.Minute
-	contentTypeJSON           = "application/json"
-	cookieName                = "JSESSIONID"
-	MaxNumOfRetries           = 100
-	RetryWaitMaxSeconds       = 20
-	RetryWaitMinSeconds       = 5
+	maxIdleConnections int = 40
+	requestTimeout     int = 60
+	// jSessionIDTimeout         = 30 // minutes
+	jSessionTimeoutOffset = 5 * time.Minute
+	contentTypeJSON       = "application/json"
+	cookieName            = "JSESSIONID"
+	MaxNumOfRetries       = 100
+	RetryWaitMaxSeconds   = 20
+	RetryWaitMinSeconds   = 5
 	// API types
-	ziaAPIVersion   = "api/v1"
-	defaultProtocol = "https://"
-	ziaAPIAuthURL   = "/authenticatedSession"
-	loggerPrefix    = "zia-logger: "
+	ziaAPIVersion = "api/v1"
+	ziaAPIAuthURL = "/authenticatedSession"
+	loggerPrefix  = "zia-logger: "
 )
 
 // Client ...
 type Client struct {
+	sync.Mutex
 	userName         string
 	password         string
 	apiKey           string
@@ -49,7 +49,6 @@ type Client struct {
 	URL              string
 	HTTPClient       *http.Client
 	Logger           *log.Logger
-	sync.Mutex
 }
 
 // Session ...
@@ -111,7 +110,7 @@ func NewClientZIA(username, password, apiKey, ziaCloud string) (*Client, error) 
 		URL:        url,
 		Logger:     logger,
 	}
-	cli.refreshSession()
+	_ = cli.refreshSession()
 	return &cli, nil
 }
 

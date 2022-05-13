@@ -87,7 +87,7 @@ const (
 	DLPRuleResourceState     = "ENABLED"
 	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
-	DLPOCREnabled            = true
+	DLPOCREnabled            = false
 )
 
 // DLP Dictionaries resource/datasource
@@ -98,9 +98,9 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "testAcc@securitygeek.io"
+	AdminUserLoginName = "testAcc@bd-hashicorp.com"
 	AdminUserName      = "Test Acc"
-	AdminUserEmail     = "testAcc@securitygeek.io"
+	AdminUserEmail     = "testAcc@bd-hashicorp.com"
 	AdminUserPassword  = "Password@123!"
 )
 

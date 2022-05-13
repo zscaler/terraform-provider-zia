@@ -1,7 +1,7 @@
 package locationgroups
 
 import (
-	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
 )
 
 type Service struct {

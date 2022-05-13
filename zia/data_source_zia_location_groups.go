@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
 )
 
 func dataSourceLocationGroup() *schema.Resource {

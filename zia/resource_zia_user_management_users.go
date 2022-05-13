@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/usermanagement"
 )
 
 func resourceUserManagement() *schema.Resource {
@@ -25,12 +25,12 @@ func resourceUserManagement() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("user_id", id)
+					_ = d.Set("user_id", id)
 				} else {
 					resp, err := zClient.usermanagement.GetUserByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("user_id", resp.ID)
+						_ = d.Set("user_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

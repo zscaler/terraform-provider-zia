@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_web_rules"
 )
 
 func dataSourceDlpWebRules() *schema.Resource {

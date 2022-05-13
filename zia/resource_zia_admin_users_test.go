@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/adminuserrolemgmt"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/adminuserrolemgmt"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceAdminUsersBasic(t *testing.T) {
@@ -30,8 +30,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -44,8 +44,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@securitygeek.io")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", rPassword+("Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -114,9 +114,14 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 
 func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword string) string {
 	return fmt.Sprintf(`
+
+data "zia_admin_roles" "super_admin"{
+	name = "Super Admin"
+}
+
 resource "%s" "%s" {
-	login_name                      = "%s@securitygeek.io"
-	email                           = "%s@securitygeek.io"
+	login_name                      = "%s@bd-hashicorp.com"
+	email                           = "%s@bd-hashicorp.com"
 	username                        = "%s"
 	password                        = "%sSuper@Secret007"
 	comments                        = "Administrator Group"
@@ -125,7 +130,7 @@ resource "%s" "%s" {
 	is_service_update_comm_enabled  = true
 	is_product_update_comm_enabled  = true
 	role {
-		id = 11521
+		id = data.zia_admin_roles.super_admin.id
 	}
 	admin_scope {
 		type = "ORGANIZATION"
@@ -135,8 +140,6 @@ resource "%s" "%s" {
 data "%s" "%s" {
 	id = "${%s.id}"
 }
-
-
 `,
 		// resource variables
 		resourcetype.AdminUsers,

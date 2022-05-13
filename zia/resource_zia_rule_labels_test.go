@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/rule_labels"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/rule_labels"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceRuleLabelsBasic(t *testing.T) {

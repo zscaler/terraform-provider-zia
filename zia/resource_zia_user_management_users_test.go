@@ -9,9 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/usermanagement"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/usermanagement"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
 )
 
 func TestAccResourceUserManagementBasic(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
@@ -46,7 +46,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
@@ -115,20 +115,34 @@ func testAccCheckUserManagementExists(resource string, users *usermanagement.Use
 
 func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments string) string {
 	return fmt.Sprintf(`
+
+data "zia_group_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_group_management" "sales" {
+	name = "Sales"
+}
+
+data "zia_department_management" "finance" {
+	name = "Finance"
+}
+
 resource "%s" "%s" {
 	name 		= "%s"
-	email 		= "%s@securitygeek.io"
+	email 		= "%s@bd-hashicorp.com"
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {
-		id = 26348357
+		id = data.zia_group_management.marketing.id
 	}
 	groups {
-		id = 24392492
+		id = data.zia_group_management.sales.id
 	}
 	department {
-		id = 25684245
+		id = data.zia_department_management.finance.id
 	}
+	depends_on = [ data.zia_group_management.marketing, data.zia_group_management.sales, data.zia_department_management.finance ]
 }
 
 data "%s" "%s" {

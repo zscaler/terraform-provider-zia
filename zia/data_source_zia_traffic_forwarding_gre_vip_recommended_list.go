@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
 )
 
 func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {

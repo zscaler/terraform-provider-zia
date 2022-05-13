@@ -8,10 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_web_rules"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceDlpWebRulesBasic(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "cloud_applications.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
@@ -50,7 +50,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "cloud_applications.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
@@ -131,8 +131,8 @@ resource "%s" "%s" {
 	cloud_applications 			= ["ZENDESK", "LUCKY_ORANGE", "MICROSOFT_POWERAPPS", "MICROSOFTLIVEMEETING"]
 	without_content_inspection 	= false
 	match_only 					= false
-	ocr_enabled 				= true
-	file_types                  = ["JPEG", "PNG", "TIFF", "BITMAP"]
+	ocr_enabled 				= false
+	file_types                  = []
 	min_size 					= 20
 	zscaler_incident_reciever 	= true
 }

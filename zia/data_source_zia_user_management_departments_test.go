@@ -38,7 +38,7 @@ data "zia_department_management" "engineering"{
 }
 
 data "zia_department_management" "executives"{
-    name = "Executive"
+    name = "Executives"
 }
 
 data "zia_department_management" "finance"{

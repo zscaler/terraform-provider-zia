@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/client"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/dlp_web_rules"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_web_rules"
 )
 
 func resourceDlpWebRules() *schema.Resource {
@@ -25,12 +25,12 @@ func resourceDlpWebRules() *schema.Resource {
 				_, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					// assume if the passed value is an int
-					d.Set("rule_id", id)
+					_ = d.Set("rule_id", id)
 				} else {
 					resp, err := zClient.dlp_web_rules.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						d.Set("rule_id", resp.ID)
+						_ = d.Set("rule_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -79,13 +79,6 @@ func resourceDlpWebRules() *schema.Resource {
 				Type:        schema.TypeInt,
 				Required:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
-			},
-			"file_types": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The list of file types to which the DLP policy rule must be applied.",
 			},
 			"cloud_applications": {
 				Type:        schema.TypeSet,
@@ -154,6 +147,7 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
+			"file_types":            getDLPRuleFileTypes("The list of file types to which the DLP policy rule must be applied."),
 			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
 			"users":                 listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),

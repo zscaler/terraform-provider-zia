@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {

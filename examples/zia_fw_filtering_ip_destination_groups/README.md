@@ -3,7 +3,7 @@
 This example will show you how to use Terraform to create IP destination groups for use in a Cloud Firewall rule in the ZIA portal.
 This example codifies [this API](https://help.zscaler.com/zia/api#/Firewall%20Policies/IpDestinationGroupResource_addDestinationIpGroup).
 
-To run, configure your ZIA provider as described [Here](https://github.com/willguibr/terraform-provider-zia/blob/master/docs/index.html.markdown)
+To run, configure your ZIA provider as described [Here](https://github.com/zscaler/terraform-provider-zia/blob/master/docs/index.html.markdown)
 
 ## Run the example
 

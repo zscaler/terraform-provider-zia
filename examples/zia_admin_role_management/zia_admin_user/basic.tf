@@ -1,19 +1,7 @@
-terraform {
-  required_providers {
-    zia = {
-      version = "1.0.0"
-      source  = "zscaler.com/zia/zia"
-    }
-  }
-}
-
-provider "zia" {}
-
-
 resource "zia_admin_users" "example" {
-  login_name = "john.smith@securitygeek.io"
+  login_name = "john.smith@bd-hashicorp.com"
   user_name  = "John Smith Test"
-  email      = "john.smith@securitygeek.io"
+  email      = "john.smith@bd-hashicorp.com"
   password   = "AeQ9E5w8B$"
   role {
     id = data.zia_admin_roles.super_admin.id
@@ -21,7 +9,7 @@ resource "zia_admin_users" "example" {
   // admin_scope {
   //   scope_entities {
   //   id = [ data.zia_department_management.engineering.id,
-  //          data.zia_department_management.executive.id 
+  //          data.zia_department_management.executive.id
   //   ]
   // }
   //   type = "DEPARTMENT"
@@ -37,18 +25,8 @@ data "zia_admin_roles" "super_admin"{
     name = "Super Admin"
 }
 
-/*
-data "zia_department_management" "engineering" {
- name = "Engineering"
-}
-
-data "zia_department_management" "executive" {
- name = "Executive"
-}
-*/
-
 data "zia_admin_users" "john_smith" {
-  login_name = "john.smith@securitygeek.io"
+  login_name = "john.smith@bd-hashicorp.com"
 }
 
 output "zia_admin_users_john_smith"{

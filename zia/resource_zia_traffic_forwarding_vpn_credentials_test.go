@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/willguibr/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
-	"github.com/willguibr/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/method"
-	"github.com/willguibr/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
+	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
 )
 
 func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
@@ -37,7 +37,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "UFQDN"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@securitygeek.io"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@bd-hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
@@ -157,7 +157,7 @@ func getTrafficForwardingVPNCredentialsUFQDN_HCL(generatedName, rEmail, rSharedK
 resource "%s" "%s" {
 	comments = "tf-acc-test-%s"
     type = "UFQDN"
-    fqdn = "%s@securitygeek.io"
+    fqdn = "%s@bd-hashicorp.com"
     pre_shared_key = "%s"
 }
 `,
