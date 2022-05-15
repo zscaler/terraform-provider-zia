@@ -48,7 +48,11 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  # If you want to manually examine the release before its live, uncomment this line:
-  # draft: true
+  # Visit your project's GitHub Releases page to publish this release.
+  github:
+    owner: zscaler
+    name: terraform-provider-zia
+  draft: true
+  discussion_category_name: Annoucements
 changelog:
   skip: true
