@@ -1,6 +1,6 @@
 ---
 page_title: "ZIA Activator Overview"
-subcategory: "Activator"
+subcategory: "Activation"
 ---
 
 # Commit Overview
