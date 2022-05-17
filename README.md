@@ -126,8 +126,8 @@ that you want to use the provider in.
 terraform {
   required_providers {
     zia = {
-      source  = "zscaler.com/zia/zia"
-      version = "1.0.0"
+      source  = "zscaler/zia"
+      version = "2.0.2"
     }
   }
 }
