@@ -32,6 +32,11 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The description of the DLP policy rule.",
 			},
+			"access_control": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The access privilege for this DLP policy rule based on the admin's state.",
+			},
 			"protocols": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -533,6 +538,7 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("order", resp.Order)
 		_ = d.Set("rank", resp.Rank)
+		_ = d.Set("access_control", resp.AccessControl)
 		_ = d.Set("protocols", resp.Protocols)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("file_types", resp.FileTypes)

@@ -10,6 +10,8 @@ description: |-
 
 The **zia_firewall_filtering_destination_groups** resource allows the creation and management of ZIA Cloud Firewall IP destination groups in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule.
 
+## Example Usage
+
 ```hcl
 # IP Destination Group of Type DSTN_FQDN
 resource "zia_firewall_filtering_destination_groups" "dstn_fqdn" {

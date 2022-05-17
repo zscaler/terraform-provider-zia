@@ -14,6 +14,7 @@ func dataSourceDLPNotificationTemplates() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -23,22 +24,22 @@ func dataSourceDLPNotificationTemplates() *schema.Resource {
 			},
 			"subject": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"attach_content": {
 				Type:     schema.TypeBool,
-				Optional: true,
 				Computed: true,
 			},
 			"plain_test_message": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"html_message": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
+			},
+			"tls_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 		},
@@ -76,6 +77,7 @@ func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{
 		_ = d.Set("attach_content", resp.AttachContent)
 		_ = d.Set("plain_text_message", resp.PlainTextMessage)
 		_ = d.Set("html_message", resp.HtmlMessage)
+		_ = d.Set("tls_enabled", resp.TLSEnabled)
 
 	} else {
 		return fmt.Errorf("couldn't find any dlp notification template with name '%s' or id '%d'", name, id)

@@ -49,7 +49,7 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"subject": {
 				Type:     schema.TypeString,
@@ -61,10 +61,14 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 			},
 			"plain_text_message": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"html_message": {
 				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tls_enabled": {
+				Type:     schema.TypeBool,
 				Optional: true,
 			},
 		},
@@ -116,6 +120,7 @@ func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{})
 	_ = d.Set("attach_content", resp.AttachContent)
 	_ = d.Set("plain_text_message", resp.PlainTextMessage)
 	_ = d.Set("html_message", resp.HtmlMessage)
+	_ = d.Set("tls_enabled", resp.TLSEnabled)
 
 	return nil
 }
@@ -164,6 +169,7 @@ func expandDLPNotificationTemplates(d *schema.ResourceData) dlp_notification_tem
 		AttachContent:    d.Get("attach_content").(bool),
 		PlainTextMessage: d.Get("plain_text_message").(string),
 		HtmlMessage:      d.Get("html_message").(string),
+		TLSEnabled:       d.Get("tls_enabled").(bool),
 	}
 	return result
 }

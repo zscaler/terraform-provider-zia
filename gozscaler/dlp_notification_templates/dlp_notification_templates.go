@@ -19,6 +19,7 @@ type DlpNotificationTemplates struct {
 	AttachContent    bool   `json:"attachContent,omitempty"`
 	PlainTextMessage string `json:"plainTextMessage,omitempty"`
 	HtmlMessage      string `json:"htmlMessage,omitempty"`
+	TLSEnabled       bool   `json:"tlsEnabled,omitempty"`
 }
 
 func (service *Service) Get(dlpTemplateID int) (*DlpNotificationTemplates, error) {

@@ -10,6 +10,8 @@ description: |-
 
 The **zia_dlp_dictionaries** resource allows the creation and management of ZIA DLP dictionaries in the Zscaler Internet Access cloud or via the API.
 
+## Example Usage
+
 ```hcl
 resource "zia_dlp_dictionaries" "example"{
     name = "Your Dictionary Name"
