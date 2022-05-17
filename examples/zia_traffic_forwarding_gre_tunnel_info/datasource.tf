@@ -22,4 +22,4 @@ output "zia_traffic_forwarding_gre_tunnel_info_example3" {
   value = data.zia_traffic_forwarding_gre_tunnel_info.example3
 }
 
-:warning: `ip_address` is the public IP address associated with the GRE Tunnel
+# :warning: `ip_address` is the public IP address associated with the GRE Tunnel

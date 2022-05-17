@@ -10,7 +10,6 @@ resource "zia_dlp_dictionaries" "example"{
         action = "PATTERN_COUNT_TYPE_UNIQUE"
         pattern = "YourPattern"
     }
-    name_l10n_tag = false
     dictionary_type = "PATTERNS_AND_PHRASES"
 }
 
