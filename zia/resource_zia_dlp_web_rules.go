@@ -59,6 +59,17 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The description of the DLP policy rule.",
 			},
+			"access_control": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The access privilege for this DLP policy rule based on the admin's state.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NONE",
+					"READ_ONLY",
+					"READ_WRITE",
+				}, false),
+			},
 			"protocols": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -213,6 +224,7 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
+	_ = d.Set("access_control", resp.AccessControl)
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("file_types", resp.FileTypes)
@@ -352,6 +364,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Name:                     d.Get("name").(string),
 		Order:                    d.Get("order").(int),
 		Rank:                     d.Get("rank").(int),
+		AccessControl:            d.Get("access_control").(string),
 		Description:              d.Get("description").(string),
 		Action:                   d.Get("action").(string),
 		State:                    d.Get("state").(string),

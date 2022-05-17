@@ -10,6 +10,8 @@ description: |-
 
 The **zia_firewall_filtering_ip_source_groups** resource allows the creation and management of ZIA Cloud Firewall IP source groups in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule.
 
+## Example Usage
+
 ```hcl
 # Add an IP address or addresses to a new IP Source Group
 resource "zia_firewall_filtering_ip_source_groups" "example" {

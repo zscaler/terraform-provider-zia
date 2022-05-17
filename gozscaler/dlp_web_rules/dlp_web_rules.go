@@ -17,6 +17,7 @@ const (
 type WebDLPRules struct {
 	ID                       int                       `json:"id,omitempty"`
 	Order                    int                       `json:"order,omitempty"`
+	AccessControl            string                    `json:"accessControl,omitempty"`
 	Protocols                []string                  `json:"protocols,omitempty"`
 	Rank                     int                       `json:"rank,omitempty"`
 	Name                     string                    `json:"name,omitempty"`

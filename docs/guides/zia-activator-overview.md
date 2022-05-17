@@ -3,7 +3,7 @@ page_title: "ZIA Activator Overview"
 subcategory: "Activation"
 ---
 
-# Commit Overview
+# Activation Overview
 
 As of right now, Terraform does not provide native support for commits or post-activation configuration, so configuration and policy activations are handled out-of-band.
 
