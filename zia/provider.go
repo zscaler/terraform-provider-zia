@@ -92,6 +92,7 @@ func Provider() *schema.Provider {
 			"zia_location_management":                           dataSourceLocationManagement(),
 			"zia_location_groups":                               dataSourceLocationGroup(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
+			"zia_dlp_engines":                                   dataSourceDLPEngines(),
 			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
 			"zia_dlp_web_rules":                                 dataSourceDlpWebRules(),
 			"zia_device_groups":                                 dataSourceDeviceGroups(),
