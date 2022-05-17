@@ -59,10 +59,13 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
+				ForceNew:    true,
 				Description: "Destination IP group type (i.e., the group can contain destination IP addresses or FQDNs)",
 				ValidateFunc: validation.StringInSlice([]string{
 					"DSTN_IP",
 					"DSTN_FQDN",
+					"DSTN_DOMAIN",
+					"DSTN_OTHER",
 				}, false),
 			},
 			"addresses": {

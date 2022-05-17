@@ -55,7 +55,7 @@ func resourceFWIPSourceGroups() *schema.Resource {
 			"ip_addresses": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Required: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
