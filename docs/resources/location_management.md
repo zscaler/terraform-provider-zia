@@ -1,8 +1,7 @@
 ---
 subcategory: "Location Management"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): location_management"
-sidebar_current: "docs-resource-zia-location_management"
+layout: "zscaler"
+page_title: "ZIA: location_management"
 description: |-
   Creates and manages ZIA locations and sub-locations.
 ---

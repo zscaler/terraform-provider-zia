@@ -1,8 +1,7 @@
 ---
-subcategory: "Admin Users"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): admin_users"
-sidebar_current: "docs-resource-zia-admin-users"
+subcategory: "Admin & Role Management"
+layout: "zscaler"
+page_title: "ZIA: admin_users"
 description: |-
   Creates and manages ZIA administrator users.
 ---

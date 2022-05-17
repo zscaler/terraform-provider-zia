@@ -1,8 +1,7 @@
 ---
 subcategory: "URL Filtering Rule"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): url_filtering_rules"
-sidebar_current: "docs-datasource-zia-url-filtering-rules"
+layout: "zscaler"
+page_title: "ZIA: url_filtering_rules"
 description: |-
     Gets a list of all of URL Filtering Policy rules.
 ---

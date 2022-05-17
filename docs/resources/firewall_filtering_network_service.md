@@ -1,8 +1,7 @@
 ---
-subcategory: "Firewall Filtering - Network Services"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_network_service"
-sidebar_current: "docs-resource-zia-firewall-filtering-network-service"
+subcategory: "Firewall Policies"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_network_service"
 description: |-
       Creates and manages a ZIA Cloud firewall network service.
 ---

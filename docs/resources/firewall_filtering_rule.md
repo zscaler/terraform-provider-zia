@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_rule"
-sidebar_current: "docs-resource-zia-firewall-filtering-rule"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_rule"
 description: |-
   Creates and manages ZIA Cloud firewall filtering rule.
 ---

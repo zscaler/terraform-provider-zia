@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): gre_internal_ip_range_list"
-sidebar_current: "docs-datasource-zia-gre-internal-ip-range-list"
+layout: "zscaler"
+page_title: "ZIA: gre_internal_ip_range_list"
 description: |-
   Gets the next available GRE tunnel internal IP address ranges.
 

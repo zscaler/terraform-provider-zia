@@ -1,8 +1,7 @@
 ---
-subcategory: "Department"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): department_management"
-sidebar_current: "docs-datasource-zia-department-management"
+subcategory: "User Management"
+layout: "zscaler"
+page_title: "ZIA: department_management"
 description: |-
   Gets a list of user departments details.
 

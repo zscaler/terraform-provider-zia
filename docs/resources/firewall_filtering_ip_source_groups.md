@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_ip_source_groups"
-sidebar_current: "docs-resource-zia-firewall-filtering-ip-source-groups"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_ip_source_groups"
 description: |-
   Creates and manages ZIA Cloud firewall IP source groups.
 ---

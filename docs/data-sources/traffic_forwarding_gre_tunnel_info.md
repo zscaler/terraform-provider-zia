@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): traffic_forwarding_gre_tunnel_info"
-sidebar_current: "docs-datasource-zia-traffic_forwarding_gre_tunnel_info"
+layout: "zscaler"
+page_title: "ZIA: traffic_forwarding_gre_tunnel_info"
 description: |-
   Gets a list of IP addresses with GRE tunnel details.
 ---

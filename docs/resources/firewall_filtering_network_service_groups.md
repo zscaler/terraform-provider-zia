@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_network_service_groups"
-sidebar_current: "docs-resource-zia-firewall-filtering-network-service-groups"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_network_service_groups"
 description: |-
   Creates and manages ZIA Cloud firewall Network Service Groups.
 ---

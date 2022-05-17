@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_network_service"
-sidebar_current: "docs-datasource-zia-firewall-filtering-network-service"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_network_service"
 description: |-
     Get information about firewall rule network services.
 

@@ -1,13 +1,12 @@
 ---
-subcategory: "Admin Roles"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): admin_roles"
-sidebar_current: "docs-datasource-zia-admin-roles"
+subcategory: "Admin & Role Management"
+layout: "zscaler"
+page_title: "ZIA: admin_roles"
 description: |-
   Get information about ZIA administrator roles.
 ---
 
-# # Data Source: zia_admin_roles
+# Data Source: zia_admin_roles
 
 Use the **zia_admin_roles** data source to get information about an admin role created in the Zscaler Internet Access cloud or via the API. This data source can then be associated with a ZIA administrator account.
 

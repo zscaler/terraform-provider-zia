@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): traffic_forwarding_public_node_vips"
-sidebar_current: "docs-datasource-zia-traffic_forwarding_public_node_vips"
+layout: "zscaler"
+page_title: "ZIA: traffic_forwarding_public_node_vips"
 description: |-
     Gets a paginated list of the virtual IP addresses (VIPs) available in the Zscaler cloud
 ---

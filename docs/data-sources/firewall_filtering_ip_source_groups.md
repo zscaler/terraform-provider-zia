@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_destination_groups"
-sidebar_current: "docs-datasource-zia-firewall-filtering-ip-source-groups"
+layout: "zscaler"
+page_title: "ZIA: firewall_filtering_destination_groups"
 description: |-
   Get information about IP Source groups.
 ---

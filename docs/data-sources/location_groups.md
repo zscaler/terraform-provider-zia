@@ -1,8 +1,7 @@
 ---
-subcategory: "Location Group"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): location_groups"
-sidebar_current: "docs-datasource-zia-location-groups"
+subcategory: "Location Management"
+layout: "zscaler"
+page_title: "ZIA: location_groups"
 description: |-
   Get information about Location Groups.
 

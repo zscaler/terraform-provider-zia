@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): traffic_forwarding_vpn_credentials"
-sidebar_current: "docs-datasource-zia-traffic-forwarding-vpn-credentials"
+layout: "zscaler"
+page_title: "ZIA: traffic_forwarding_vpn_credentials"
 description: |-
     Gets VPN credentials that can be associated to locations.
 ---

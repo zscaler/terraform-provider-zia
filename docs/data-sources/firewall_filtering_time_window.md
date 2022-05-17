@@ -1,8 +1,7 @@
 ---
 subcategory: "Firewall Policies"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): firewall_filtering_time_window"
-sidebar_current: "docs-datasource-zia-firewall-filtering-time-window"
+layout: "zscaler"
+page_title: "ZIA): firewall_filtering_time_window"
 description: |-
   Get information about firewall rule time window.
 

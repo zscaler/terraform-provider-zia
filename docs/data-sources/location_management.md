@@ -1,8 +1,7 @@
 ---
 subcategory: "Location Management"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): location_management"
-sidebar_current: "docs-datasource-zia-location-management"
+layout: "zscaler"
+page_title: "ZIA: location_management"
 description: |-
   Get information about Location.
 

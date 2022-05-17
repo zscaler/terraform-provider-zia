@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): gre_vip_recommended_list"
-sidebar_current: "docs-datasource-zia-gre-vip-recommended-list"
+layout: "zscaler"
+page_title: "ZIA: gre_vip_recommended_list"
 description: |-
     Gets a list of recommended GRE tunnel virtual IP addresses (VIPs), based on source IP address or latitude/longitude coordinates.
 

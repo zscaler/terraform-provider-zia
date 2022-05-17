@@ -1,8 +1,7 @@
 ---
 subcategory: "Data Loss Prevention"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): dlp_dictionaries"
-sidebar_current: "docs-resource-zia-dlp-dictionaries"
+layout: "zscaler"
+page_title: "ZIA: dlp_dictionaries"
 description: |-
   Creates and manages ZIA DLP dictionaries.
 ---

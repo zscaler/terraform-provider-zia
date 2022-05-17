@@ -1,8 +1,7 @@
 ---
 subcategory: "URL Categories"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): url_categories"
-sidebar_current: "docs-datasource-zia-url-categories"
+layout: "zscaler"
+page_title: "ZIA: url_categories"
 description: |-
     Gets information about all or custom URL categories. By default, the response includes keywords.
 ---

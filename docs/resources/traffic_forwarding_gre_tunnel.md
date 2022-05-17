@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): zia_traffic_forwarding_gre_tunnel"
-sidebar_current: "docs-resource-zia-traffic-forwarding-gre_tunnel"
+layout: "zscaler"
+page_title: "ZIA: zia_traffic_forwarding_gre_tunnel"
 description: |-
   Creates and manages GRE tunnel configuration.
 ---

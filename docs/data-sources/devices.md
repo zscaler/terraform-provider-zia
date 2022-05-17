@@ -1,8 +1,7 @@
 ---
-subcategory: "Device"
+subcategory: "Device Groups"
 layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): devices"
-sidebar_current: "docs-datasource-zia-devices"
+page_title: "ZIA: devices"
 description: |-
   Get information about ZIA devices.
 ---

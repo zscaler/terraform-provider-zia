@@ -1,9 +1,7 @@
 ---
 subcategory: "User Management"
-layout: "zia"
+layout: "zscaler"
 page_title: "ZIA: user_management"
-page_title: "Zscaler Internet Access (ZIA):  user_management"
-sidebar_current: "docs-resource-zia-user-management"
 description: |-
   Creates and manages ZIA local user accounts.
 

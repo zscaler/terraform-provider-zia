@@ -1,8 +1,7 @@
 ---
 subcategory: "Rule Labels"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): rule_labels"
-sidebar_current: "docs-datasource-zia-rule-labels"
+layout: "zscaler"
+page_title: "ZIA: rule_labels"
 description: |-
   Get information about rule labels details.
 

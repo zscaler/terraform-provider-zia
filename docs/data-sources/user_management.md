@@ -1,8 +1,7 @@
 ---
 subcategory: "User Management"
-layout: "zia"
+layout: "zscaler"
 page_title: "ZIA: user_management"
-sidebar_current: "docs-datasource-zia-user-management"
 description: |-
     Gets a list of all users and allows user filtering by name, department, or group
 

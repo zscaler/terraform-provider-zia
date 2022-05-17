@@ -1,12 +1,10 @@
 ---
 subcategory: "Rule Labels"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): rule_labels"
-sidebar_current: "docs-resource-zia-rule-labels"
+layout: "zscaler"
+page_title: "ZIA: rule_labels"
 description: |-
   Creates and manages ZIA rule labels.
 ---
-
 
 # Resource: zia_rule_labels
 

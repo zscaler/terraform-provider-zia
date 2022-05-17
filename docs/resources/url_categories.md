@@ -1,9 +1,7 @@
 ---
 subcategory: "URL Categories"
-layout: "zia"
+layout: "zscaler"
 page_title: "ZIA: url_categories"
-page_title: "Zscaler Internet Access (ZIA):  url_categories"
-sidebar_current: "docs-resource-zia-url-categories"
 description: |-
       Creates and manages a new custom URL category. If keywords are included within the request, they will be added to the new category.
 ---

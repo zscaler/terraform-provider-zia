@@ -1,11 +1,9 @@
 ---
-subcategory: "User Management Group"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): group_management"
-sidebar_current: "docs-datasource-zia-group-management"
+subcategory: "User Management"
+layout: "zscaler"
+page_title: "ZIA: group_management"
 description: |-
   Gets a list of user user group.
-
 ---
 
 # zia_group_management (Data Source)

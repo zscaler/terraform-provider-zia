@@ -1,8 +1,7 @@
 ---
 subcategory: "Traffic Forwarding"
-layout: "zia"
-page_title: "Zscaler Internet Access (ZIA): traffic_forwarding_static_ip"
-sidebar_current: "docs-datasource-zia-traffic-forwarding-static-ip"
+layout: "zscaler"
+page_title: "ZIA: traffic_forwarding_static_ip"
 description: |-
     Gets static IP address for the specified ID
 ---
