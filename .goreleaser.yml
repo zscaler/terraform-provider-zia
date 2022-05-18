@@ -58,7 +58,7 @@ release:
   github:
     owner: zscaler
     name: terraform-provider-zia
-  # draft: true
+  draft: true
   discussion_category_name: Annoucements
 changelog:
   skip: true
