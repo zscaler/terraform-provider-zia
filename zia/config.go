@@ -7,6 +7,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/gozscaler/adminuserrolemgmt"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/devicegroups"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_engines"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_notification_templates"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_web_rules"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/dlpdictionaries"
@@ -42,7 +43,6 @@ type Client struct {
 	ipsourcegroups             *ipsourcegroups.Service
 	networkapplications        *networkapplications.Service
 	networkservices            *networkservices.Service
-	dlpdictionaries            *dlpdictionaries.Service
 	timewindow                 *timewindow.Service
 	urlcategories              *urlcategories.Service
 	urlfilteringpolicies       *urlfilteringpolicies.Service
@@ -57,6 +57,8 @@ type Client struct {
 	locationgroups             *locationgroups.Service
 	activation                 *activation.Service
 	devicegroups               *devicegroups.Service
+	dlpdictionaries            *dlpdictionaries.Service
+	dlp_engines                *dlp_engines.Service
 	dlp_notification_templates *dlp_notification_templates.Service
 	dlp_web_rules              *dlp_web_rules.Service
 	rule_labels                *rule_labels.Service
@@ -82,7 +84,6 @@ func (c *Config) Client() (*Client, error) {
 		ipsourcegroups:             ipsourcegroups.New(cli),
 		networkapplications:        networkapplications.New(cli),
 		networkservices:            networkservices.New(cli),
-		dlpdictionaries:            dlpdictionaries.New(cli),
 		timewindow:                 timewindow.New(cli),
 		urlcategories:              urlcategories.New(cli),
 		urlfilteringpolicies:       urlfilteringpolicies.New(cli),
@@ -97,6 +98,8 @@ func (c *Config) Client() (*Client, error) {
 		locationgroups:             locationgroups.New(cli),
 		activation:                 activation.New(cli),
 		devicegroups:               devicegroups.New(cli),
+		dlpdictionaries:            dlpdictionaries.New(cli),
+		dlp_engines:                dlp_engines.New(cli),
 		dlp_notification_templates: dlp_notification_templates.New(cli),
 		dlp_web_rules:              dlp_web_rules.New(cli),
 		rule_labels:                rule_labels.New(cli),
