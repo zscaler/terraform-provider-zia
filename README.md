@@ -12,9 +12,9 @@
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 =========================================================================
 
-- Website: <https://www.terraform.io>
+- Website: [https://www.terraform.io](https://registry.terraform.io/providers/zscaler/zia/latest)
 - Documentation: <https://help.zscaler.com/zia>
-- Mailing list: [Google Groups](http://groups.google.com/group/terraform-tool)
+- Zscaler Community: [Zscaler Community](https://community.zscaler.com/)
 
 Requirements
 ------------
