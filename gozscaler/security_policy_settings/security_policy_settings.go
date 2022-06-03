@@ -1,10 +1,5 @@
 package security_policy_settings
 
-import (
-	"fmt"
-	"log"
-)
-
 const (
 	securityEndpoint                      = "/security"
 	securityAdvancedEndpoint              = "/security/advanced"
@@ -17,32 +12,72 @@ var AddRemoveURLFromList []string = []string{
 	"REMOVE_FROM_LIST",
 }
 
-type WhiteListUrls struct {
-	WhiteListUrls map[string]interface{} `json:"whitelistUrls"`
+type ListUrls struct {
+	White []string `json:"whitelistUrls,omitempty"`
+	Black []string `json:"blacklistUrls,omitempty"`
 }
 
-type BlackListUrls struct {
-	BlackListUrls map[string]interface{} `json:"blacklistUrls"`
+func (service *Service) GetListUrls() (*ListUrls, error) {
+	whitelist, err := service.GetWhiteListUrls()
+	if err != nil {
+		return nil, err
+	}
+	blacklist, err := service.GetBlackListUrls()
+	if err != nil {
+		return nil, err
+	}
+	return &ListUrls{
+		White: whitelist.White,
+		Black: blacklist.Black,
+	}, nil
 }
 
-func (service *Service) GetWhiteListUrls() (*WhiteListUrls, error) {
-	var whitelist WhiteListUrls
-	err := service.Client.Read(fmt.Sprintf(securityEndpoint), &whitelist)
+func (service *Service) UpdateListUrls(listUrls ListUrls) (*ListUrls, error) {
+	whitelist, err := service.UpdateWhiteListUrls(ListUrls{White: listUrls.White})
+	if err != nil {
+		return nil, err
+	}
+	blacklist, err := service.UpdateBlackListUrls(ListUrls{Black: listUrls.Black})
+	if err != nil {
+		return nil, err
+	}
+	return &ListUrls{
+		White: whitelist.White,
+		Black: blacklist.Black,
+	}, nil
+}
+
+func (service *Service) UpdateWhiteListUrls(list ListUrls) (*ListUrls, error) {
+	_, err := service.Client.UpdateWithPut(securityEndpoint, list)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("[INFO] got whitelisturls:%#v", whitelist)
+	return &list, nil
+}
+
+func (service *Service) UpdateBlackListUrls(list ListUrls) (*ListUrls, error) {
+	_, err := service.Client.UpdateWithPut(securityAdvancedEndpoint, list)
+	if err != nil {
+		return nil, err
+	}
+	return &list, nil
+}
+
+func (service *Service) GetWhiteListUrls() (*ListUrls, error) {
+	var whitelist ListUrls
+	err := service.Client.Read(securityEndpoint, &whitelist)
+	if err != nil {
+		return nil, err
+	}
 	return &whitelist, nil
 }
 
-func (service *Service) GetBlackListUrls() (*BlackListUrls, error) {
-	var blacklist BlackListUrls
-	err := service.Client.Read(fmt.Sprintf(securityAdvancedEndpoint), &blacklist)
+func (service *Service) GetBlackListUrls() (*ListUrls, error) {
+	var blacklist ListUrls
+	err := service.Client.Read(securityAdvancedEndpoint, &blacklist)
 	if err != nil {
 		return nil, err
 	}
-
-	log.Printf("[INFO] got blacklisturls:%#v", blacklist)
 	return &blacklist, nil
 }
