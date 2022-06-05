@@ -16,6 +16,7 @@ func resourceAuthSettingsUrls() *schema.Resource {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Optional: true,
+				MaxItems: 25000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
