@@ -9,13 +9,12 @@ const (
 	exemptedUrlsEndpoint = "/authSettings/exemptedUrls"
 )
 
-var AddRemoveURLFromList []string = []string{
-	"ADD_TO_LIST",
-	"REMOVE_FROM_LIST",
-}
-
 type ExemptedUrls struct {
 	URLs []string `json:"urls"`
+}
+
+type QueryParameters struct {
+	ID string
 }
 
 func (service *Service) Get() (*ExemptedUrls, error) {
