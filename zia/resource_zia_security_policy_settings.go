@@ -15,17 +15,21 @@ func resourceSecurityPolicySettings() *schema.Resource {
 		Delete: resourceSecurityPolicySettingsDelete,
 		Schema: map[string]*schema.Schema{
 			"whitelist_urls": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				MaxItems:    255,
+				Description: "Allowlist URLs whose contents will not be scanned. Allows up to 255 URLs.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
 			"blacklist_urls": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				MaxItems:    25000,
+				Description: "URLs on the denylist for your organization. Allow up to 25000 URLs.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

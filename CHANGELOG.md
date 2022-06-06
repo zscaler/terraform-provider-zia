@@ -1,5 +1,43 @@
 # Changelog
 
+## 2.1.0 (Unreleased)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+## New Features
+
+- `zia_auth_settings_urls` Added new resource to support adding and removing URLs to ZIA exemption list.
+- `zia_security_policy_settings` Added new resource to support adding and removing URLs to and from the Advanced Threat Protection policy’s denylist and allow lists.
+
+# 2.0.3 (May, 18 2022)
+
+## Notes
+
+- Supported Terraform version: **v1.x**
+
+## Announcement
+
+The Terraform Provider for Zscaler Internet Access (ZIA) is now officially hosted under Zscaler's GitHub account and published in the Terraform Registry. For more details, visit the Zscaler Community Article [Here](https://community.zscaler.com/t/zpa-and-zia-terraform-providers-now-verified/16675)
+Administrators who used previous versions of the provider, and followed instructions to install the binary as a custom provider, must update their provider block as such:
+
+```hcl
+terraform {
+  required_providers {
+    zia = {
+      source = "zscaler/zia"
+      version = "2.0.3"
+    }
+  }
+}
+provider "zia" {}
+
+```
+
+## New Data Sources
+
+- ``zia_dlp_engines`` - [PR#91](https://github.com/zscaler/terraform-provider-zia/pull/91) 🔧
 ## 2.0.1 (April 17, 2022)
 
 ### Bug Fixes
