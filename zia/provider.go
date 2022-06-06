@@ -64,7 +64,7 @@ func Provider() *schema.Provider {
 			"zia_user_management":                               resourceUserManagement(),
 			"zia_activation_status":                             resourceActivationStatus(),
 			"zia_rule_labels":                                   resourceRuleLabels(),
-			"zia_auth_settings_urls":                            resourceAuthSettingsUrls(),
+			"zia_security_settings":                             resourceSecurityPolicySettings(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -100,7 +100,7 @@ func Provider() *schema.Provider {
 			"zia_devices":                                       dataSourceDevices(),
 			"zia_rule_labels":                                   dataSourceRuleLabels(),
 			"zia_activation_status":                             dataSourceActivationStatus(),
-			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
+			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
 		},
 
 		ConfigureFunc: ziaConfigure,
