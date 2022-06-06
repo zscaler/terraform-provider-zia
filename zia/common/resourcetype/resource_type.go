@@ -18,4 +18,5 @@ const (
 	AdminUsers                      = "zia_admin_users"
 	Users                           = "zia_user_management"
 	RuleLabels                      = "zia_rule_labels"
+	AuthSettingsURLs                = "zia_auth_settings_urls"
 )

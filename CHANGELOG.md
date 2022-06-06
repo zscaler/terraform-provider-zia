@@ -9,7 +9,6 @@
 ## New Features
 
 - `zia_auth_settings_urls` Added new resource to support adding and removing URLs to ZIA exemption list.
-- `zia_security_policy_settings` Added new resource to support adding and removing URLs to and from the Advanced Threat Protection policy’s denylist and allow lists.
 
 # 2.0.3 (May, 18 2022)
 
@@ -38,6 +37,7 @@ provider "zia" {}
 ## New Data Sources
 
 - ``zia_dlp_engines`` - [PR#91](https://github.com/zscaler/terraform-provider-zia/pull/91) 🔧
+
 ## 2.0.1 (April 17, 2022)
 
 ### Bug Fixes
