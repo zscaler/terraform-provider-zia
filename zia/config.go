@@ -20,6 +20,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/gozscaler/locationmanagement"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/rule_labels"
+	"github.com/zscaler/terraform-provider-zia/gozscaler/security_policy_settings"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/gretunnelinfo"
 	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
@@ -62,6 +63,7 @@ type Client struct {
 	dlp_notification_templates *dlp_notification_templates.Service
 	dlp_web_rules              *dlp_web_rules.Service
 	rule_labels                *rule_labels.Service
+	security_policy_settings   *security_policy_settings.Service
 }
 
 type Config struct {
@@ -103,6 +105,7 @@ func (c *Config) Client() (*Client, error) {
 		dlp_notification_templates: dlp_notification_templates.New(cli),
 		dlp_web_rules:              dlp_web_rules.New(cli),
 		rule_labels:                rule_labels.New(cli),
+		security_policy_settings:   security_policy_settings.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
