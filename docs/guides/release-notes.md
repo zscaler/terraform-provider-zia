@@ -26,6 +26,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 - `zia_auth_settings_urls` Added new resource to support adding and removing URLs to ZIA exemption list.
 - `zia_security_policy_settings` Added new resource to support adding and removing whitelisted and blacklisted URLs to the Advanced Threat Protection feature in ZIA.
+  - Important: [API](https://community.zscaler.com/tags/api) limits apply based on the type of URLs being added. The ZIA API today allows: for 25K URL into the denylist and 255 into the allowlist. Refer to the [API](https://community.zscaler.com/tags/api) documentation [Here](https://help.zscaler.com/zia/api)
 
 ## 2.1.0
 
