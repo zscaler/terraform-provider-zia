@@ -1,9 +1,8 @@
 package security_policy_settings
 
 const (
-	securityEndpoint                      = "/security"
-	securityAdvancedEndpoint              = "/security/advanced"
-	securityAdvancedBlackListUrlsEndpoint = "/advanced/blacklistUrls"
+	securityEndpoint         = "/security"
+	securityAdvancedEndpoint = "/security/advanced"
 )
 
 // TODO: because there isn't an endpoint to get all Urls, we need to have all action types here

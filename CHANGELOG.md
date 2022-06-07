@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.1 (June, 7 2022)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+- Fix: Fixed provider file to include resource and datasource hooks.
+
+## New Features
+
+- `zia_auth_settings_urls` Added new resource to support adding and removing URLs to ZIA exemption list.
+- `zia_security_policy_settings` Added new resource to support adding and removing whitelisted and blacklisted URLs to the Advanced Threat Protection feature in ZIA.
+
 ## 2.1.0 (June, 7 2022)
 
 ### Notes

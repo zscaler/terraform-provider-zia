@@ -92,14 +92,14 @@ jobs:
         mv ziaActivator /usr/local/bin
         ziaActivator
 
-  # golangci:
-  #   name: lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: golangci-lint
-  #       uses: golangci/golangci-lint-action@v3
-  #       with:
-  #         version: v1.45
-  #         args: --timeout=60m
-  #         only-new-issues: true
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: v1.45
+          args: --timeout=60m
+          only-new-issues: true
