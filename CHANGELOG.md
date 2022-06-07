@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0 (Unreleased)
+## 2.1.0 (June, 7 2022)
 
 ### Notes
 
@@ -9,6 +9,7 @@
 ## New Features
 
 - `zia_auth_settings_urls` Added new resource to support adding and removing URLs to ZIA exemption list.
+- `zia_security_policy_settings` Added new resource to support adding and removing whitelisted and blacklisted URLs to the Advanced Threat Protection feature in ZIA.
 
 # 2.0.3 (May, 18 2022)
 
