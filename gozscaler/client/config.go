@@ -243,6 +243,7 @@ func getHTTPClient() *http.Client {
 	retryableClient.CheckRetry = checkRetry
 	retryableClient.HTTPClient.Timeout = time.Duration(requestTimeout) * time.Second
 	retryableClient.HTTPClient.Transport = &http.Transport{
+		Proxy:               http.ProxyFromEnvironment,
 		MaxIdleConnsPerHost: maxIdleConnections,
 	}
 	retryableClient.HTTPClient.Transport = logging.NewTransport("gozscaler-zia", retryableClient.HTTPClient.Transport)
