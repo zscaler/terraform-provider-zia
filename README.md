@@ -136,8 +136,8 @@ terraform {
 Examples
 --------
 
-Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/examples) for the complete list of examples.
-Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/docs) for the complete documentation of all resources.
+- Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/examples) for the complete list of examples.
+- Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/docs) for the complete documentation of all resources.
 
 Issues
 =========
