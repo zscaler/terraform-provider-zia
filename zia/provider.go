@@ -1,15 +1,17 @@
 package zia
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func Provider() *schema.Provider {
-	return &schema.Provider{
+	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:        schema.TypeString,
@@ -105,17 +107,28 @@ func Provider() *schema.Provider {
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
 		},
 
-		ConfigureFunc: ziaConfigure,
+		//ConfigureFunc: ziaConfigure,
 	}
+	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+		terraformVersion := p.TerraformVersion
+		if terraformVersion == "" {
+			// Terraform 0.12 introduced this field to the protocol
+			// We can therefore assume that if it's missing it's 0.10 or 0.11
+			terraformVersion = "0.11+compatible"
+		}
+		return ziaConfigure(d, terraformVersion)
+	}
+	return p
 }
 
-func ziaConfigure(d *schema.ResourceData) (interface{}, error) {
+func ziaConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
 	log.Printf("[INFO] Initializing ZIA client")
 	config := Config{
 		Username:   d.Get("username").(string),
 		Password:   d.Get("password").(string),
 		APIKey:     d.Get("api_key").(string),
 		ZIABaseURL: d.Get("zia_cloud").(string),
+		UserAgent:  fmt.Sprintf("(%s %s) Terraform/%s", runtime.GOOS, runtime.GOARCH, terraformVersion),
 	}
 
 	return config.Client()
