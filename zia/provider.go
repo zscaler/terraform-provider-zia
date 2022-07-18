@@ -106,8 +106,6 @@ func Provider() *schema.Provider {
 			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
 		},
-
-		//ConfigureFunc: ziaConfigure,
 	}
 	p.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
 		terraformVersion := p.TerraformVersion
