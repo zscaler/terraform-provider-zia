@@ -49,6 +49,7 @@ type Client struct {
 	URL              string
 	HTTPClient       *http.Client
 	Logger           *log.Logger
+	UserAgent        string
 }
 
 // Session ...
@@ -95,7 +96,7 @@ func obfuscateAPIKey(apiKey, timeStamp string) (string, error) {
 }
 
 // NewClientZIA NewClient Returns a Client from credentials passed as parameters
-func NewClientZIA(username, password, apiKey, ziaCloud string) (*Client, error) {
+func NewClientZIA(username, password, apiKey, ziaCloud, userAgent string) (*Client, error) {
 	httpClient := getHTTPClient()
 	var logger *log.Logger
 	if loggerEnv := os.Getenv("ZSCALER_SDK_LOG"); loggerEnv == "true" {
@@ -109,13 +110,14 @@ func NewClientZIA(username, password, apiKey, ziaCloud string) (*Client, error) 
 		HTTPClient: httpClient,
 		URL:        url,
 		Logger:     logger,
+		UserAgent:  userAgent,
 	}
 	_ = cli.refreshSession()
 	return &cli, nil
 }
 
 // MakeAuthRequestZIA ...
-func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Client) (*Session, error) {
+func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Client, userAgent string) (*Session, error) {
 	if credentials == nil {
 		return nil, fmt.Errorf("empty credentials")
 	}
@@ -124,7 +126,15 @@ func MakeAuthRequestZIA(credentials *Credentials, url string, client *http.Clien
 	if err != nil {
 		return nil, err
 	}
-	resp, err := client.Post(url+ziaAPIAuthURL, contentTypeJSON, bytes.NewReader(data))
+	req, err := http.NewRequest("POST", url+ziaAPIAuthURL, bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentTypeJSON)
+	if userAgent != "" {
+		req.Header.Add("User-Agent", userAgent)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +191,7 @@ func (c *Client) refreshSession() error {
 		APIKey:    obfuscatedKey,
 		TimeStamp: timeStamp,
 	}
-	session, err := MakeAuthRequestZIA(&credentialData, c.URL, c.HTTPClient)
+	session, err := MakeAuthRequestZIA(&credentialData, c.URL, c.HTTPClient, c.UserAgent)
 	if err != nil {
 		return err
 	}

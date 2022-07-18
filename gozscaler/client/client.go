@@ -31,6 +31,9 @@ func (c *Client) Request(endpoint, method string, data []byte, contentType strin
 	}
 
 	req.Header.Set("Content-Type", contentType)
+	if c.UserAgent != "" {
+		req.Header.Add("User-Agent", c.UserAgent)
+	}
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
