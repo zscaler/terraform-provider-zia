@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.2 (June, 19 2022)
+
+### Notes
+
+- Release date: **(July 19 2022)**
+- Supported Terraform version: **v1.x**
+
+### Ehancements
+
+- [PR #110](https://github.com/zscaler/terraform-provider-zia/pull/110) Added Terraform UserAgent for Backend API tracking
+
+### Fixes
+
+- [PR #111](https://github.com/zscaler/terraform-provider-zia/pull/111) Updated Import GPG key in goreleaser to [paultyng/ghaction-import-gpg](https://github.com/paultyng/ghaction-import-gpg)
+- [PR #111](https://github.com/zscaler/terraform-provider-zia/pull/111) Updated golangci-lint to use golang 18
+
 ## 2.1.1 (June, 7 2022)
 
 ### Notes
