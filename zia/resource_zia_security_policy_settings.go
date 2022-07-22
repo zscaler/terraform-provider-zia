@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/security_policy_settings"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/security_policy_settings"
 )
 
 func resourceSecurityPolicySettings() *schema.Resource {

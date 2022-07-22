@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
 )
 
 func dataSourceAdminRoles() *schema.Resource {

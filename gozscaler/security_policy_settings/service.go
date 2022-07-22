@@ -1,7 +1,7 @@
 package security_policy_settings
 
 import (
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
 )
 
 type Service struct {
