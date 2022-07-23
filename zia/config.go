@@ -3,34 +3,34 @@ package zia
 import (
 	"log"
 
-	"github.com/zscaler/terraform-provider-zia/gozscaler/activation"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/adminuserrolemgmt"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/devicegroups"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_engines"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_notification_templates"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_web_rules"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlpdictionaries"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/filteringrules"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/ipdestinationgroups"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/ipsourcegroups"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/networkapplications"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/timewindow"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/locationmanagement"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/locationmanagement/locationgroups"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/rule_labels"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/security_policy_settings"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/greinternalipranges"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/gretunnelinfo"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/gretunnels"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/virtualipaddresslist"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/urlcategories"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/urlfilteringpolicies"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/user_authentication_settings"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/usermanagement"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/activation"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/devicegroups"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipsourcegroups"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/timewindow"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement/locationgroups"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/security_policy_settings"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/greinternalipranges"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnelinfo"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/urlcategories"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/user_authentication_settings"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
 )
 
 func init() {
@@ -77,7 +77,7 @@ type Config struct {
 }
 
 func (c *Config) Client() (*Client, error) {
-	cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
+	cli, err := client.NewClient(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
 	if err != nil {
 		return nil, err
 	}

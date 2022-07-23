@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
 )
 
 func dataSourceDLPEngines() *schema.Resource {

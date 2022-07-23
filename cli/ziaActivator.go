@@ -6,9 +6,9 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/zscaler/terraform-provider-zia/gozscaler/activation"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
 	"github.com/zscaler/terraform-provider-zia/zia"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/activation"
 )
 
 func getEnvVarOrFail(k string) string {
@@ -28,7 +28,7 @@ func main() {
 		ZIABaseURL: getEnvVarOrFail("ZIA_CLOUD"),
 		UserAgent:  fmt.Sprintf("(%s %s) cli/ziaActivator", runtime.GOOS, runtime.GOARCH),
 	}
-	cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
+	cli, err := client.NewClient(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed Initializing ZIA client: %v\n", err)
 	}

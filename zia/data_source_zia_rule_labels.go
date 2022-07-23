@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
 )
 
 func dataSourceRuleLabels() *schema.Resource {

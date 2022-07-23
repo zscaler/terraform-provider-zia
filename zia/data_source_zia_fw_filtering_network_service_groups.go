@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
 )
 
 func dataSourceFWNetworkServiceGroups() *schema.Resource {

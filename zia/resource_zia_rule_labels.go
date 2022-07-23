@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/rule_labels"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
 )
 
 func resourceRuleLabels() *schema.Resource {

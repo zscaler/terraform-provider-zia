@@ -9,10 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
 	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/staticips"
 )
 
 func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
