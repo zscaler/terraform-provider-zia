@@ -63,3 +63,17 @@ The following arguments are supported:
 * `ip_address` - (Optional) IP Address for the VON credentials. The parameter becomes required if `type = IP`
 
 !> **WARNING:** The `pre_shared_key` parameter is ommitted from the output for security reasons.
+
+## Import
+
+Static IP resources can be imported by using `<STATIC IP ID>` or `<IP ADDRESS>`as the import ID.
+
+```shell
+terraform import zia_traffic_forwarding_static_ip.example <static_ip_id>
+```
+
+or
+
+```shell
+terraform import zpa_app_connector_group.example <ip_address>
+```

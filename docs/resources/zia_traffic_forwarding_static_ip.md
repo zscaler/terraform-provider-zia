@@ -44,3 +44,17 @@ The following arguments are supported:
 
 * `managed_by` (Set of Object)
   * `id` - (Optional)
+
+## Import
+
+Static IP resources can be imported by using `<STATIC IP ID>` or `<IP ADDRESS>`as the import ID.
+
+```shell
+terraform import zia_traffic_forwarding_static_ip.example <static_ip_id>
+```
+
+or
+
+```shell
+terraform import zpa_app_connector_group.example <ip_address>
+```
