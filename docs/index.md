@@ -60,7 +60,7 @@ provider "zia" {
 
 ### Environment variables
 
-You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `zia_cloud` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
+You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_CLOUD` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
 
 ```hcl
 provider "zia" {}
