@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/staticips"
 )
 
 func dataSourceTrafficForwardingStaticIP() *schema.Resource {

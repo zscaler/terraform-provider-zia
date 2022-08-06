@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/vpncredentials"
 )
 
 func resourceTrafficForwardingVPNCredentials() *schema.Resource {
@@ -31,11 +31,6 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 					if err == nil {
 						d.SetId(strconv.Itoa(fqdn.ID))
 						_ = d.Set("vpn_credental_id", fqdn.ID)
-					}
-					ipAddress, err := zClient.vpncredentials.GetByIP(id)
-					if err == nil {
-						d.SetId(strconv.Itoa(ipAddress.ID))
-						_ = d.Set("vpn_credental_id", ipAddress.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}

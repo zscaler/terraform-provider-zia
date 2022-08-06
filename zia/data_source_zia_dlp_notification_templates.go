@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_notification_templates"
 )
 
 func dataSourceDLPNotificationTemplates() *schema.Resource {

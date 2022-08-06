@@ -7,9 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/adminuserrolemgmt"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/client"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/common"
+	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
 )
 
 func resourceAdminUsers() *schema.Resource {

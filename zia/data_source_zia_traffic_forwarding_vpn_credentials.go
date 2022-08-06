@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/gozscaler/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/vpncredentials"
 )
 
 func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
@@ -112,16 +112,6 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 		resp = res
 	}
-
-	ipAddress, _ := d.Get("ip_address").(string)
-	if resp == nil && ipAddress != "" {
-		log.Printf("[INFO] Getting data for vpn credential ip: %s\n", ipAddress)
-		res, err := zClient.vpncredentials.GetByIP(ipAddress)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
 	vpnType, _ := d.Get("type").(string)
 	if resp == nil && vpnType != "" {
 		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
@@ -148,7 +138,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s', ip address '%s' or id '%d'", fqdn, ipAddress, id)
+		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)
 	}
 
 	return nil

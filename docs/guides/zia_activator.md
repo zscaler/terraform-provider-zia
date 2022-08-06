@@ -12,8 +12,8 @@ import (
  "log"
  "os"
 
- "github.com/zscaler/terraform-provider-zia/gozscaler/activation"
- "github.com/zscaler/terraform-provider-zia/gozscaler/client"
+ "github.com/zscaler/zscaler-sdk-go/zia/services/activation"
+ client "github.com/zscaler/zscaler-sdk-go/zia"
  "github.com/zscaler/terraform-provider-zia/zia"
 )
 
