@@ -138,7 +138,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s', ip address '%s' or id '%d'", fqdn, ipAddress, id)
+		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)
 	}
 
 	return nil
