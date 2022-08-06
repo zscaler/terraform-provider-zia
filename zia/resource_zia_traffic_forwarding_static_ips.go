@@ -13,11 +13,31 @@ import (
 
 func resourceTrafficForwardingStaticIP() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceTrafficForwardingStaticIPCreate,
-		Read:     resourceTrafficForwardingStaticIPRead,
-		Update:   resourceTrafficForwardingStaticIPUpdate,
-		Delete:   resourceTrafficForwardingStaticIPDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceTrafficForwardingStaticIPCreate,
+		Read:   resourceTrafficForwardingStaticIPRead,
+		Update: resourceTrafficForwardingStaticIPUpdate,
+		Delete: resourceTrafficForwardingStaticIPDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					_ = d.Set("static_ip_id", id)
+				} else {
+					resp, err := zClient.staticips.GetByIPAddress(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						_ = d.Set("static_ip_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"static_ip_id": {

@@ -102,6 +102,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 		resp = res
 	}
+
 	fqdn, _ := d.Get("fqdn").(string)
 	if resp == nil && fqdn != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", fqdn)
@@ -112,6 +113,15 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		resp = res
 	}
 
+	ipAddress, _ := d.Get("ip_address").(string)
+	if resp == nil && ipAddress != "" {
+		log.Printf("[INFO] Getting data for vpn credential ip: %s\n", ipAddress)
+		res, err := zClient.vpncredentials.GetByIP(ipAddress)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
 	vpnType, _ := d.Get("type").(string)
 	if resp == nil && vpnType != "" {
 		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
@@ -138,7 +148,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)
+		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s', ip address '%s' or id '%d'", fqdn, ipAddress, id)
 	}
 
 	return nil
