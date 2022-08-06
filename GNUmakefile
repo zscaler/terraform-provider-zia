@@ -1,6 +1,5 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep "zia/")
-WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=zia
 TF_PLUGIN_DIR=~/.terraform.d/plugins
 ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
@@ -37,12 +36,12 @@ build13: fmtcheck
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.2.0
 
 test: fmtcheck
-	go test -i $(TEST) || exit 1
+	go test $(TEST) || exit 1
 	echo $(TEST) | \
 		xargs -t -n4 go test $(TESTARGS) -timeout=600s -parallel=4
 
 testacc: fmtcheck
-	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 600m
+	TF_ACC=true go test $(TEST) -v $(TESTARGS) -timeout 600m
 
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"
@@ -58,6 +57,7 @@ imports:
 	goimports -w $(GOFMT_FILES)
 
 fmt:
+	@echo "formatting the code with $(GOFMT)..."
 	gofmt -w $(GOFMT_FILES)
 
 fmtcheck:
@@ -82,33 +82,14 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-website:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+tools:
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.3.1
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
-website-test:
-ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
-	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
-	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
-endif
-	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
-
-
-ziaActivator: GOOS=$(shell go env GOOS)
-ziaActivator: GOARCH=$(shell go env GOARCH)
-ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-ziaActivator: DESTINATION=C:\Windows\System32
-else
-ziaActivator: DESTINATION=/usr/local/bin
-endif
-ziaActivator:
-	@echo "==> Installing ziaActivator cli"
-	@mkdir -p $(DESTINATION)
-	@rm -f $(DESTINATION)/ziaActivator
-	@go build -o $(DESTINATION)/ziaActivator  ./cli/ziaActivator.go
-
+tools-update:
+	@go install mvdan.cc/gofumpt@v0.3.1
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@go install honnef.co/go/tools/cmd/staticcheck@v0.3.2
 
 .PHONY: build test testacc vet fmt fmtcheck errcheck tools vendor-status test-compile website-lint website website-test

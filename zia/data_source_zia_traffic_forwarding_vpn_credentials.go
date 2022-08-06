@@ -112,16 +112,6 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		}
 		resp = res
 	}
-
-	ipAddress, _ := d.Get("ip_address").(string)
-	if resp == nil && ipAddress != "" {
-		log.Printf("[INFO] Getting data for vpn credential ip: %s\n", ipAddress)
-		res, err := zClient.vpncredentials.GetByIP(ipAddress)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
 	vpnType, _ := d.Get("type").(string)
 	if resp == nil && vpnType != "" {
 		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
