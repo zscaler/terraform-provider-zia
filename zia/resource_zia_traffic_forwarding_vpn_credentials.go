@@ -13,12 +13,36 @@ import (
 
 func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceTrafficForwardingVPNCredentialsCreate,
-		Read:     resourceTrafficForwardingVPNCredentialsRead,
-		Update:   resourceTrafficForwardingVPNCredentialsUpdate,
-		Delete:   resourceTrafficForwardingVPNCredentialsDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceTrafficForwardingVPNCredentialsCreate,
+		Read:   resourceTrafficForwardingVPNCredentialsRead,
+		Update: resourceTrafficForwardingVPNCredentialsUpdate,
+		Delete: resourceTrafficForwardingVPNCredentialsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
 
+				id := d.Id()
+				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					// assume if the passed value is an int
+					_ = d.Set("vpn_credental_id", id)
+				} else {
+					fqdn, err := zClient.vpncredentials.GetByFQDN(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(fqdn.ID))
+						_ = d.Set("vpn_credental_id", fqdn.ID)
+					}
+					ipAddress, err := zClient.vpncredentials.GetByIP(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(ipAddress.ID))
+						_ = d.Set("vpn_credental_id", ipAddress.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"vpn_credental_id": {
 				Type:     schema.TypeInt,

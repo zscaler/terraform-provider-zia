@@ -74,6 +74,21 @@ func (service *Service) GetByFQDN(vpnCredentialName string) (*VPNCredentials, er
 	return nil, fmt.Errorf("no vpn credentials found with fqdn: %s", vpnCredentialName)
 }
 
+func (service *Service) GetByIP(vpnCredentialIP string) (*VPNCredentials, error) {
+	var vpnCredentials []VPNCredentials
+
+	err := service.Client.Read(vpnCredentialsEndpoint, &vpnCredentials)
+	if err != nil {
+		return nil, err
+	}
+	for _, vpnCredential := range vpnCredentials {
+		if strings.EqualFold(vpnCredential.IPAddress, vpnCredentialIP) {
+			return &vpnCredential, nil
+		}
+	}
+	return nil, fmt.Errorf("no vpn credentials found with ip: %s", vpnCredentialIP)
+}
+
 func (service *Service) Create(vpnCredentials *VPNCredentials) (*VPNCredentials, *http.Response, error) {
 	resp, err := service.Client.Create(vpnCredentialsEndpoint, *vpnCredentials)
 	if err != nil {
