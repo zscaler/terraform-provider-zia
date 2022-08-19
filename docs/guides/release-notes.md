@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.1.2``
+``Last updated: v2.2.0``
 
 ---
+
+## 2.2.0
+
+### Notes
+
+- Release date: **(August 19 2022)**
+- Supported Terraform version: **v1.x**
+
+- [PR #113](https://github.com/zscaler/terraform-provider-zia/pull/113) Integrated newly created Zscaler GO SDK. Models are now centralized in the repository [zscaler-sdk-go](https://github.com/zscaler/zscaler-sdk-go)
+
+### Fixes
+
+- Terraform import failing for zia_traffic_forwarding_static_ip resource. Search by IP criteria was not implemented.
 
 ## 2.1.2
 

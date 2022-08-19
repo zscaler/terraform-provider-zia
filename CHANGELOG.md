@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.2.0 (August, 19 2022)
+
+### Notes
+
+- Release date: **(August 19 2022)**
+- Supported Terraform version: **v1.x**
+
+### Ehancements
+
+- [PR #113](https://github.com/zscaler/terraform-provider-zia/pull/113) Integrated newly created Zscaler GO SDK. Models are now centralized in the repository [zscaler-sdk-go](https://github.com/zscaler/zscaler-sdk-go)
+
+### Fixes
+
+- Terraform import failing for zia_traffic_forwarding_static_ip resource. Search by IP criteria was not implemented.
+
 ## 2.1.2 (June, 19 2022)
 
 ### Notes
