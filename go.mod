@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.21.0
-	github.com/zscaler/zscaler-sdk-go v0.0.5
+	github.com/zscaler/zscaler-sdk-go v0.0.8
 )
 
 require (
