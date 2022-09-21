@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.2.0``
+``Last updated: v2.2.1``
 
 ---
+
+## 2.2.1 (September, 21 2022)
+
+### Notes
+
+- Release date: **(September, 21 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #127](https://github.com/zscaler/terraform-provider-zia/pull/127) Updated provider to [zscaler-sdk-go v0.0.10](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v0.0.10)
+- [PR #127](https://github.com/zscaler/terraform-provider-zia/pull/127) zia_user_management group attribute to hold a list of group IDs as a typeList instead of typeSet.
 
 ## 2.2.0
 
