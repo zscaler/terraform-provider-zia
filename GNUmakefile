@@ -8,7 +8,7 @@ ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
 default: build
 
 dep: # Download required dependencies
-    go mod tidy
+	go mod tidy
 
 build: fmtcheck
 	go install
