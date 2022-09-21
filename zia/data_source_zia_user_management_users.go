@@ -132,10 +132,11 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
 
-		if err := d.Set("groups", flattenUserGroupSet(resp.Groups)); err != nil {
+		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
 			return err
 		}
-		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
+
+		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
 			return err
 		}
 	} else {
