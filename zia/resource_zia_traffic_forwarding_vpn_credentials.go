@@ -24,7 +24,6 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					// assume if the passed value is an int
 					_ = d.Set("vpn_credental_id", idInt)
 				} else {
 					fqdn, err := zClient.vpncredentials.GetByFQDN(id)
