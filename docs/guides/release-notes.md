@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.2.1``
+``Last updated: v2.2.2``
 
 ---
+
+## 2.2.2 (September, 25 2022)
+
+### Notes
+
+- Release date: **(September, 25 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #130](https://github.com/zscaler/terraform-provider-zia/pull/130) Fix Import Resource By ID
 
 ## 2.2.1 (September, 21 2022)
 
