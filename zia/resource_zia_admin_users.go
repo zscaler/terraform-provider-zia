@@ -23,10 +23,9 @@ func resourceAdminUsers() *schema.Resource {
 				zClient := m.(*Client)
 
 				id := d.Id()
-				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					// assume if the passed value is an int
-					_ = d.Set("admin_id", id)
+					_ = d.Set("admin_id", idInt)
 				} else {
 					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
 					if err == nil {
