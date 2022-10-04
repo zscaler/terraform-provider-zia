@@ -216,10 +216,6 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		// Department:    expandIDNameExtensionsSet(d, "department"),
 		Groups: expandIDNameExtensionsSet(d, "groups"),
 	}
-	// groups := expandUserGroups(d, "groups")
-	// if groups != nil {
-	// 	result.Groups = groups
-	// }
 
 	department := expandUserDepartment(d)
 	if department != nil {
