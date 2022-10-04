@@ -22,10 +22,9 @@ func resourceUserManagement() *schema.Resource {
 				zClient := m.(*Client)
 
 				id := d.Id()
-				_, parseIDErr := strconv.ParseInt(id, 10, 64)
+				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					// assume if the passed value is an int
-					_ = d.Set("user_id", id)
+					_ = d.Set("user_id", idInt)
 				} else {
 					resp, err := zClient.usermanagement.GetUserByName(id)
 					if err == nil {
@@ -75,37 +74,7 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
-			"groups": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Description: "List of Groups a user belongs to. Groups are used in policies.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							Description: "Group name",
-						},
-						"idp_id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Computed:    true,
-							Description: "Identity provider (IdP) ID",
-						},
-						"comments": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							Description: "Additional information about this group",
-						},
-					},
-				},
-			},
+			"groups": listIDsSchemaTypeCustom(8, "list of groups for which rule must be applied"),
 			"department": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -187,7 +156,7 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 
-	if err := d.Set("groups", flattenUserGroupSet(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
 	}
 
@@ -244,11 +213,13 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
+		// Department:    expandIDNameExtensionsSet(d, "department"),
+		Groups: expandIDNameExtensionsSet(d, "groups"),
 	}
-	groups := expandUserGroups(d, "groups")
-	if groups != nil {
-		result.Groups = groups
-	}
+	// groups := expandUserGroups(d, "groups")
+	// if groups != nil {
+	// 	result.Groups = groups
+	// }
 
 	department := expandUserDepartment(d)
 	if department != nil {
