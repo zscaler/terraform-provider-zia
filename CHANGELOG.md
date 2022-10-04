@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.2.2 (September, 25 2022)
+
+### Notes
+
+- Release date: **(September, 25 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #130](https://github.com/zscaler/terraform-provider-zia/pull/130) Fix Import Resource By ID
+
+## 2.2.1 (September, 21 2022)
+
+### Notes
+
+- Release date: **(September, 21 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #127](https://github.com/zscaler/terraform-provider-zia/pull/127) Updated provider to zscaler-go-sdk v0.0.10
+- [PR #127](https://github.com/zscaler/terraform-provider-zia/pull/127) zia_user_management group attribute to hold a list of group IDs as a typeList instead of typeSet.
+
 ## 2.2.0 (August, 19 2022)
 
 ### Notes
