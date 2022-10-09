@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -176,13 +177,24 @@ func resourceFirewallFilteringRules() *schema.Resource {
 		},
 	}
 }
+func validatRule(req filteringrules.FirewallFilteringRules) error {
+	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
+		return errors.New("predefined rule cannot be deleted")
+	}
+	if req.Name == "Default Firewall Filtering Rule" {
+		return errors.New("default rule cannot be deleted")
+	}
+	return nil
+}
 
 func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
-
+	if err := validatRule(req); err != nil {
+		return err
+	}
 	resp, err := zClient.filteringrules.Create(&req)
 	if err != nil {
 		return err
@@ -305,7 +317,9 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
-
+	if err := validatRule(req); err != nil {
+		return err
+	}
 	if _, err := zClient.filteringrules.Update(id, &req); err != nil {
 		return err
 	}

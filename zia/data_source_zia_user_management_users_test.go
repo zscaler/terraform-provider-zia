@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -34,3 +35,4 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 		},
 	})
 }
+*/
