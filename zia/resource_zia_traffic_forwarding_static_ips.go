@@ -185,6 +185,7 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	_ = d.Set("latitude", resp.Latitude)
 	_ = d.Set("longitude", resp.Longitude)
 	_ = d.Set("routable_ip", resp.RoutableIP)
+	_ = d.Set("comment", resp.Comment)
 
 	if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
 		return err
