@@ -2,6 +2,7 @@ package zia
 
 import (
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -29,6 +30,9 @@ func resourceActivationStatus() *schema.Resource {
 				}, false),
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+		},
 	}
 }
 
@@ -42,6 +46,7 @@ func resourceActivationCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[INFO] Configuration activation successfull. %v\n", resp.Status)
 	d.SetId("activation")
 	return resourceActivationRead(d, m)
