@@ -1,5 +1,5 @@
 ---
-page_title: "ZIA Activator Overview"
+page_title: "ZIA Activation Overview"
 subcategory: "Activation"
 ---
 

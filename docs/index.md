@@ -18,7 +18,7 @@ Use the navigation on the left to read about the available resources.
 terraform {
     required_providers {
         zia = {
-            version = "2.0.2"
+            version = "2.2.3"
             source = "zscaler/zia"
         }
     }
