@@ -114,3 +114,8 @@ const (
 	RuleLabelName        = "testAcc_rule_label"
 	RuleLabelDescription = "testAcc_rule_label"
 )
+
+// Activation
+const (
+	Status = "ACTIVE"
+)
