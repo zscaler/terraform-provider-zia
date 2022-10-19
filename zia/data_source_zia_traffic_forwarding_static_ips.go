@@ -82,8 +82,9 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 				},
 			},
 			"comment": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Additional information about this static IP address",
 			},
 		},
 	}
