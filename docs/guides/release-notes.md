@@ -12,9 +12,28 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.2.2``
+``Last updated: v2.2.3``
 
 ---
+
+## 2.2.3 (October, 20 2022)
+
+### Notes
+
+- Release date: **(October, 20 2022)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #137](https://github.com/zscaler/terraform-provider-zia/pull/137) Added Customizable Timeouts to zia_activation_status resource.
+- [PR #138](https://github.com/zscaler/terraform-provider-zia/pull/138) Added acceptance test to ``zia_activation_status`` data source.
+
+### Fixes
+
+- [PR #134](https://github.com/zscaler/terraform-provider-zia/pull/134) Update to zscaler-sdk-go v0.1.1
+- [PR #135](https://github.com/zscaler/terraform-provider-zia/pull/135) Update to zscaler-sdk-go v0.1.2
+- [PR #135](https://github.com/zscaler/terraform-provider-zia/pull/135) Added missing parameter ``comment`` to ``zia_traffic_forwarding_static_ips``
+- [PR #136](https://github.com/zscaler/terraform-provider-zia/pull/136) Updated Documentation for zia_activation_status resource and data source.
 
 ## 2.2.2 (September, 25 2022)
 
