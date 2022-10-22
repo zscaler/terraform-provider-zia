@@ -1,5 +1,6 @@
 [![CI](https://github.com/zscaler/terraform-provider-zia/actions/workflows/ci.yml/badge.svg)](https://github.com/zscaler/terraform-provider-zia/actions/workflows/ci.yml)
 [![Release](https://github.com/zscaler/terraform-provider-zia/actions/workflows/release.yml/badge.svg)](https://github.com/zscaler/terraform-provider-zia/actions/workflows/release.yml)
+[![Zscaler Community](https://img.shields.io/badge/zscaler-community-blue)](https://community.zscaler.com/)
 
 <a href="https://terraform.io">
     <img src="https://raw.githubusercontent.com/hashicorp/terraform-website/master/public/img/logo-text.svg" alt="Terraform logo" title="Terraform" height="50" />
