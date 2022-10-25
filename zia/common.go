@@ -21,9 +21,9 @@ func listIDsSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
 		ids.MaxItems = maxItems
 	}
 	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Computed:    true,
+		Type:     schema.TypeSet,
+		Optional: true,
+		// Computed:    true,
 		MaxItems:    1,
 		Description: desc,
 		Elem: &schema.Resource{
