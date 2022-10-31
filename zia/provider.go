@@ -7,10 +7,10 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zclconf/go-cty/cty"
 )
 
 func Provider() *schema.Provider {
@@ -122,7 +122,7 @@ func Provider() *schema.Provider {
 			return nil, diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "failed configuring the provided",
+					Summary:       "failed configuring the provider",
 					Detail:        fmt.Sprintf("error:%v", err),
 					AttributePath: cty.Path{},
 				},
