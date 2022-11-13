@@ -1,7 +1,11 @@
 package zia
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
 
 func SetToStringSlice(d *schema.Set) []string {
@@ -48,4 +52,28 @@ func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool
 	obj, isSet := d.GetOk(key)
 	val, isStr := obj.(string)
 	return val, isSet && isStr && val != ""
+}
+
+// avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
+func DetachRuleIDNameExtensions(client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
+	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
+	rules, err := client.filteringrules.GetAll()
+	if err != nil {
+		log.Printf("[error] Error while getting filtering rule")
+		return err
+	}
+	ids := []common.IDNameExtensions{}
+	for _, rule := range rules {
+		for _, destGroup := range getResources(&rule) {
+			if destGroup.ID != id {
+				ids = append(ids, destGroup)
+			}
+		}
+		setResources(&rule, ids)
+		_, err = client.filteringrules.Update(rule.ID, &rule)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

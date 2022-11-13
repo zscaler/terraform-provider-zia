@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipdestinationgroups"
 )
 
@@ -160,7 +162,20 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 		log.Printf("[ERROR] ip destination groups ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting zia ip destination groups ID: %v\n", (d.Id()))
-
+	err := DetachRuleIDNameExtensions(
+		zClient,
+		id,
+		"DestIpGroups",
+		func(r *filteringrules.FirewallFilteringRules) []common.IDNameExtensions {
+			return r.DestIpGroups
+		},
+		func(r *filteringrules.FirewallFilteringRules, ids []common.IDNameExtensions) {
+			r.DestIpGroups = ids
+		},
+	)
+	if err != nil {
+		return err
+	}
 	if _, err := zClient.ipdestinationgroups.Delete(id); err != nil {
 		return err
 	}
