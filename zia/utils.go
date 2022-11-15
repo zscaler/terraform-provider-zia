@@ -2,6 +2,7 @@ package zia
 
 import (
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
@@ -62,17 +63,27 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 		log.Printf("[error] Error while getting filtering rule")
 		return err
 	}
-	ids := []common.IDNameExtensions{}
+
 	for _, rule := range rules {
+		ids := []common.IDNameExtensions{}
+		shouldUpdate := false
 		for _, destGroup := range getResources(&rule) {
 			if destGroup.ID != id {
 				ids = append(ids, destGroup)
+			} else {
+				shouldUpdate = true
 			}
 		}
-		setResources(&rule, ids)
-		_, err = client.filteringrules.Update(rule.ID, &rule)
-		if err != nil {
-			return err
+		if shouldUpdate {
+			setResources(&rule, ids)
+			time.Sleep(time.Second * 5)
+			_, err = client.filteringrules.Get(rule.ID)
+			if err == nil {
+				_, err = client.filteringrules.Update(rule.ID, &rule)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
