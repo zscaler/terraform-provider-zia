@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipsourcegroups"
 )
 
@@ -136,7 +138,20 @@ func resourceFWIPSourceGroupsDelete(d *schema.ResourceData, m interface{}) error
 		log.Printf("[ERROR] ip source groups ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting zia ip source groups ID: %v\n", (d.Id()))
-
+	err := DetachRuleIDNameExtensions(
+		zClient,
+		id,
+		"FWIPSourceGroups",
+		func(r *filteringrules.FirewallFilteringRules) []common.IDNameExtensions {
+			return r.SrcIpGroups
+		},
+		func(r *filteringrules.FirewallFilteringRules, ids []common.IDNameExtensions) {
+			r.SrcIpGroups = ids
+		},
+	)
+	if err != nil {
+		return err
+	}
 	if _, err := zClient.ipsourcegroups.Delete(id); err != nil {
 		return err
 	}

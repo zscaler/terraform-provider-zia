@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkapplications"
 )
 
@@ -135,7 +137,20 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 		log.Printf("[ERROR] network application groups ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting network application groups ID: %v\n", (d.Id()))
-
+	err := DetachRuleIDNameExtensions(
+		zClient,
+		id,
+		"NwApplicationGroups",
+		func(r *filteringrules.FirewallFilteringRules) []common.IDNameExtensions {
+			return r.NwApplicationGroups
+		},
+		func(r *filteringrules.FirewallFilteringRules, ids []common.IDNameExtensions) {
+			r.NwApplicationGroups = ids
+		},
+	)
+	if err != nil {
+		return err
+	}
 	if _, err := zClient.networkapplications.Delete(id); err != nil {
 		return err
 	}
