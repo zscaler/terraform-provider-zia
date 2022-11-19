@@ -251,6 +251,7 @@ func resourceLocationManagement() *schema.Resource {
 					"SERVER",
 					"GUESTWIFI",
 					"IOT",
+					"WORKLOAD",
 				}, false),
 			},
 			"description": {
