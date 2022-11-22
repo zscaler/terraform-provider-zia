@@ -144,7 +144,12 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 	}
 	log.Printf("[INFO] Updating zia ip destination groups ID: %v\n", id)
 	req := expandIPDestinationGroups(d)
-
+	if _, err := zClient.ipdestinationgroups.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.ipdestinationgroups.Update(id, &req); err != nil {
 		return err
 	}

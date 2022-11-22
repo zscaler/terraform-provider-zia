@@ -268,6 +268,12 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	req := expandAdminUsers(d)
 	log.Printf("[INFO] Updating admin users ID: %v\n", req.ID)
+	if _, err := zClient.adminuserrolemgmt.Get(req.ID); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, err := zClient.adminuserrolemgmt.UpdateAdminUser(req.ID, req); err != nil {
 		return err
 	}

@@ -177,7 +177,12 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Updating users ID: %v\n", id)
 	req := expandUsers(d)
-
+	if _, err := zClient.usermanagement.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.usermanagement.Update(id, &req); err != nil {
 		return err
 	}

@@ -134,7 +134,12 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 
 	log.Printf("[INFO] Updating dlp notification template ID: %v\n", id)
 	req := expandDLPNotificationTemplates(d)
-
+	if _, err := zClient.dlp_notification_templates.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.dlp_notification_templates.Update(id, &req); err != nil {
 		return err
 	}

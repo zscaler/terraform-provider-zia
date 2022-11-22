@@ -399,6 +399,12 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	if err := checkSurrogateIPDependencies(req); err != nil {
 		return err
 	}
+	if _, err := zClient.locationmanagement.GetLocation(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 
 	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {
 		return err

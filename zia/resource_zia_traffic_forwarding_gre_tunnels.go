@@ -283,6 +283,12 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	if err != nil {
 		return err
 	}
+	if _, err := zClient.gretunnels.GetGreTunnels(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
 		return err
 	}

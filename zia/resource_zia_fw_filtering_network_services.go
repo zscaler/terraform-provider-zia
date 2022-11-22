@@ -151,7 +151,12 @@ func resourceNetworkServicesUpdate(d *schema.ResourceData, m interface{}) error 
 	}
 	log.Printf("[INFO] Updating network service ID: %v\n", id)
 	req := expandNetworkServices(d)
-
+	if _, err := zClient.networkservices.Get(req.ID); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.networkservices.Update(id, &req); err != nil {
 		return err
 	}

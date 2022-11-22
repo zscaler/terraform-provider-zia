@@ -147,7 +147,12 @@ func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Updating network service groups ID: %v\n", id)
 	req := expandNetworkServiceGroups(d)
-
+	if _, err := zClient.networkservices.GetNetworkServiceGroups(req.ID); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.networkservices.UpdateNetworkServiceGroups(id, &req); err != nil {
 		return err
 	}

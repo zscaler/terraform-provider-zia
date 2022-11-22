@@ -310,6 +310,12 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	if errValidation != nil {
 		return errValidation
 	}
+	if _, err := zClient.dlp_web_rules.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.dlp_web_rules.Update(id, &req); err != nil {
 		return err
 	}

@@ -297,7 +297,12 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 
 	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
 	req := expandDLPDictionaries(d)
-
+	if _, err := zClient.dlpdictionaries.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
 	}

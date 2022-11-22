@@ -151,7 +151,12 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 	}
 	log.Printf("[INFO] Updating vpn credentials ID: %v\n", id)
 	req := expandVPNCredentials(d)
-
+	if _, err := zClient.vpncredentials.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.vpncredentials.Update(id, &req); err != nil {
 		return err
 	}
