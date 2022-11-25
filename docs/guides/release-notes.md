@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.2.3``
+``Last updated: v2.3.0``
 
 ---
+
+## 2.3.0 (November, 25 2022)
+
+### Notes
+
+- Release date: **(November, 25 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #147](https://github.com/zscaler/terraform-provider-zia/pull/147) Fixed Read/Update/Delete functions to allow automatic recreation of resources, that have been manually deleted via the UI.
+- [PR #147](https://github.com/zscaler/terraform-provider-zia/pull/147) Removed ``deprecated`` helper from ``zia_location_management`` resource.
 
 ## 2.2.3 (October, 20 2022)
 
