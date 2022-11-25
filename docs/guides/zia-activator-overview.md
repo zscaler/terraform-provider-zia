@@ -1,5 +1,7 @@
 ---
-page_title: "ZIA Activation Overview"
+subcategory: "Activation"
+layout: "zscaler"
+page_title: "ZIA Config Activation"
 subcategory: "Activation"
 ---
 

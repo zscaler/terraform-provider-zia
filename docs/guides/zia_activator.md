@@ -1,6 +1,10 @@
 ---
+subcategory: "Activation"
+layout: "zscaler"
 page_title: "ZIA Config Activation"
 subcategory: "Activation"
+description: |-
+  "Activates configuration changes".
 ---
 
 #
