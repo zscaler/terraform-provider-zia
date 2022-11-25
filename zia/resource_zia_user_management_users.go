@@ -8,6 +8,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
 )
 
@@ -199,7 +201,20 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 	}
 
 	log.Printf("[INFO] Deleting user ID: %v\n", id)
-
+	err := DetachRuleIDNameExtensions(
+		zClient,
+		id,
+		"Users",
+		func(r *filteringrules.FirewallFilteringRules) []common.IDNameExtensions {
+			return r.Users
+		},
+		func(r *filteringrules.FirewallFilteringRules, ids []common.IDNameExtensions) {
+			r.Users = ids
+		},
+	)
+	if err != nil {
+		return err
+	}
 	if _, err := zClient.usermanagement.Delete(id); err != nil {
 		return err
 	}
