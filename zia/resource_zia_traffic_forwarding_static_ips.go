@@ -211,7 +211,12 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 
 	log.Printf("[INFO] Updating static ip ID: %v\n", id)
 	req := expandTrafficForwardingStaticIP(d)
-
+	if _, err := zClient.staticips.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.staticips.Update(id, &req); err != nil {
 		return err
 	}

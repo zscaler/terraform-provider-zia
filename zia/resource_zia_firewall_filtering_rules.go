@@ -320,6 +320,12 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	if err := validatRule(req); err != nil {
 		return err
 	}
+	if _, err := zClient.filteringrules.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, err := zClient.filteringrules.Update(id, &req); err != nil {
 		return err
 	}

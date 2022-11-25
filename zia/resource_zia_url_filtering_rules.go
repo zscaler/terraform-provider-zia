@@ -344,6 +344,12 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		}
 		req.Order = 1
 	}
+	if _, err := zClient.urlfilteringpolicies.Get(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.urlfilteringpolicies.Update(id, &req); err != nil {
 		return err
 	}

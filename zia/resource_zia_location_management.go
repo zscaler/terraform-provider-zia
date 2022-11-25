@@ -135,14 +135,12 @@ func resourceLocationManagement() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enable SSL Inspection. Set to true in order to apply your SSL Inspection policy to HTTPS traffic in the location and inspect HTTPS transactions for data leakage, malicious content, and viruses.",
-				Deprecated:  "This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future. Enable SSL Inspection. Set to true in order to apply your SSL Inspection policy to HTTPS traffic in the location and inspect HTTPS transactions for data leakage, malicious content, and viruses. To learn more, see Deploying SSL Inspection",
 			},
 			"zapp_ssl_scan_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
 				Description: "Enable Zscaler App SSL Setting. When set to true, the Zscaler App SSL Scan Setting will take effect, irrespective of the SSL policy that is configured for the location.",
-				Deprecated:  "This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future. Enable Zscaler App SSL Setting. When set to true, the Zscaler App SSL Scan Setting will take effect, irrespective of the SSL policy that is configured for the location. To learn more, see Configuring SSL Inspection for Zscaler App",
 			},
 			"xff_forward_enabled": {
 				Type:        schema.TypeBool,
@@ -401,6 +399,12 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	req := expandLocationManagement(d)
 	if err := checkSurrogateIPDependencies(req); err != nil {
 		return err
+	}
+	if _, err := zClient.locationmanagement.GetLocation(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
 	}
 
 	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {

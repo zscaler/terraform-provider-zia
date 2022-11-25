@@ -121,7 +121,12 @@ func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interfac
 	}
 	log.Printf("[INFO] Updating network application groups ID: %v\n", id)
 	req := expandNetworkApplicationGroups(d)
-
+	if _, err := zClient.networkapplications.GetNetworkApplicationGroups(id); err != nil {
+		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
+		}
+	}
 	if _, _, err := zClient.networkapplications.Update(id, &req); err != nil {
 		return err
 	}
