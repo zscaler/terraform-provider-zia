@@ -423,7 +423,7 @@ func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails 
 			return dlpEdmDetails
 		}
 		dlpEdmDetails = append(dlpEdmDetails, dlpdictionaries.EDMMatchDetails{
-			DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
+			DictionaryEdmMappingID: dlpEdmItem["dictionary_edm_mapping_id"].(int),
 			SchemaID:               dlpEdmItem["schema_id"].(int),
 			PrimaryField:           dlpEdmItem["primary_field"].(int),
 			SecondaryFields:        dlpEdmItem["secondary_fields"].([]int),
