@@ -159,14 +159,7 @@ func resourceIntermediateCACertificateRead(d *schema.ResourceData, m interface{}
 	_ = d.Set("region", resp.Region)
 	_ = d.Set("status", resp.Status)
 	_ = d.Set("default_certificate", resp.DefaultCertificate)
-	_ = d.Set("cert_start_date", resp.CertStartDate)
-	_ = d.Set("cert_exp_date", resp.CertExpDate)
 	_ = d.Set("current_state", resp.CurrentState)
-	_ = d.Set("public_key", resp.PublicKey)
-	_ = d.Set("key_generation_time", resp.KeyGenerationTime)
-	_ = d.Set("hsm_attestation_verified_time", resp.HSMAttestationVerifiedTime)
-	_ = d.Set("csr_file_name", resp.CSRFileName)
-	_ = d.Set("csr_generation_time", resp.CSRGenerationTime)
 
 	return nil
 }
@@ -212,19 +205,12 @@ func resourceIntermediateCACertificateDelete(d *schema.ResourceData, m interface
 
 func expandIntermediateCACertificate(d *schema.ResourceData) intermediatecacertificates.IntermediateCACertificate {
 	return intermediatecacertificates.IntermediateCACertificate{
-		Name:                       d.Get("name").(string),
-		Description:                d.Get("description").(string),
-		Type:                       d.Get("type").(string),
-		Region:                     d.Get("region").(string),
-		Status:                     d.Get("status").(string),
-		DefaultCertificate:         d.Get("default_certificate").(bool),
-		CertStartDate:              d.Get("cert_start_date").(int),
-		CertExpDate:                d.Get("cert_exp_date").(int),
-		CurrentState:               d.Get("current_state").(string),
-		PublicKey:                  d.Get("public_key").(string),
-		KeyGenerationTime:          d.Get("key_generation_time").(int),
-		HSMAttestationVerifiedTime: d.Get("hsm_attestation_verified_time").(int),
-		CSRFileName:                d.Get("csr_file_name").(string),
-		CSRGenerationTime:          d.Get("csr_generation_time").(int),
+		Name:               d.Get("name").(string),
+		Description:        d.Get("description").(string),
+		Type:               d.Get("type").(string),
+		Region:             d.Get("region").(string),
+		Status:             d.Get("status").(string),
+		DefaultCertificate: d.Get("default_certificate").(bool),
+		CurrentState:       d.Get("current_state").(string),
 	}
 }
