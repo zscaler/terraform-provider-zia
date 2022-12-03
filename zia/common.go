@@ -57,6 +57,14 @@ func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.ID
 	}
 	return []common.IDNameExtensions{}
 }
+func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common.IDNameExtensions {
+	l := expandIDNameExtensionsSet(d, key)
+	if len(l) > 0 {
+		r := l[0]
+		return &r
+	}
+	return nil
+}
 
 func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNameExtensions {
 	setInterface, ok := d.GetOk(key)
