@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.3.1 (December, 3 2022)
+
+### Notes
+
+- Release date: **(December, 3 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #150](https://github.com/zscaler/terraform-provider-zia/pull/150) Fixed DLP Web rule resource panic due to incorrect assignment
+- [PR #150](https://github.com/zscaler/terraform-provider-zia/pull/150) Fixed DLP Notification Template resource panic due to incorrect assignment
+- [PR #151](https://github.com/zscaler/terraform-provider-zia/pull/151) Fixed DLP Dictionary panic due to incorrect assignment
+
 ## 2.3.0 (November, 25 2022)
 
 ### Notes
