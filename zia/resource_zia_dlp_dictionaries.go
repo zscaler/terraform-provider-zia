@@ -136,11 +136,13 @@ func resourceDLPDictionaries() *schema.Resource {
 						"dictionary_edm_mapping_id": {
 							Type:        schema.TypeInt,
 							Computed:    true,
+							Optional:    true,
 							Description: "The unique identifier for the EDM mapping",
 						},
 						"schema_id": {
 							Type:        schema.TypeInt,
 							Computed:    true,
+							Optional:    true,
 							Description: "The unique identifier for the EDM template (or schema).",
 						},
 						"primary_field": {
@@ -151,6 +153,7 @@ func resourceDLPDictionaries() *schema.Resource {
 						"secondary_fields": {
 							Type:     schema.TypeList,
 							Computed: true,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
 						},
 						"secondary_field_match_on": {
@@ -422,11 +425,19 @@ func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails 
 		if !ok {
 			return dlpEdmDetails
 		}
+		secFields := []int{}
+		for _, i := range dlpEdmItem["secondary_fields"].([]interface{}) {
+			value, ok := i.(int)
+			if !ok {
+				continue
+			}
+			secFields = append(secFields, value)
+		}
 		dlpEdmDetails = append(dlpEdmDetails, dlpdictionaries.EDMMatchDetails{
-			DictionaryEdmMappingID: dlpEdmItem["dictionaryEdmMappingId"].(int),
+			DictionaryEdmMappingID: dlpEdmItem["dictionary_edm_mapping_id"].(int),
 			SchemaID:               dlpEdmItem["schema_id"].(int),
 			PrimaryField:           dlpEdmItem["primary_field"].(int),
-			SecondaryFields:        dlpEdmItem["secondary_fields"].([]int),
+			SecondaryFields:        secFields,
 			SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
 		})
 	}
