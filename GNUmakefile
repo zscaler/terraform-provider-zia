@@ -73,6 +73,19 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
+ziaActivator: GOOS=$(shell go env GOOS)
+ziaActivator: GOARCH=$(shell go env GOARCH)
+ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
+ziaActivator: DESTINATION=C:\Windows\System32
+else
+ziaActivator: DESTINATION=/usr/local/bin
+endif
+ziaActivator:
+	@echo "==> Installing ziaActivator cli $(DESTINATION)"
+	@mkdir -p $(DESTINATION)
+	@rm -f $(DESTINATION)/ziaActivator
+	@go build -o $(DESTINATION)/ziaActivator  ./cli/ziaActivator.go
+
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
