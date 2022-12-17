@@ -8,9 +8,9 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement"
 )
 
-func dataSourceLocationManagement() *schema.Resource {
+func dataSourceLocationManagementSubLocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationManagementRead,
+		Read: dataSourceLocationManagementSubLocationRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -128,30 +128,6 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"other_sub_location": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"other_6_sublocation": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ipv6_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ipv6_dns64_prefix": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			// "ssl_scan_enabled": {
-			// 	Type:     schema.TypeBool,
-			// 	Computed: true,
-			// },
-			// "zapp_ssl_scan_enabled": {
-			// 	Type:     schema.TypeBool,
-			// 	Computed: true,
-			// },
 			"xff_forward_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -220,24 +196,14 @@ func dataSourceLocationManagement() *schema.Resource {
 	}
 }
 
-func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
+func dataSourceLocationManagementSubLocationRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *locationmanagement.Locations
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.locationmanagement.GetLocation(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationmanagement.GetLocationByName(name)
+		log.Printf("[INFO] Getting data for sub-location id: %d\n", id)
+		res, err := zClient.locationmanagement.GetSublocations(id)
 		if err != nil {
 			return err
 		}
@@ -256,11 +222,9 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("ports", resp.Ports)
 		_ = d.Set("auth_required", resp.AuthRequired)
 		_ = d.Set("other_sub_location", resp.OtherSubLocation)
-		_ = d.Set("other_6_sublocation", resp.Other6SubLocation)
+		_ = d.Set("other_6_subLocation", resp.Other6SubLocation)
 		_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
 		_ = d.Set("ipv6_dns64_prefix", resp.IPv6Dns64Prefix)
-		// _ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
-		// _ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 		_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
 		_ = d.Set("surrogate_ip", resp.SurrogateIP)
 		_ = d.Set("idle_time_in_minutes", resp.IdleTimeInMinutes)
@@ -283,51 +247,8 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any location with name '%s'", name)
+		return fmt.Errorf("couldn't find any sub location with name '%d'", id)
 	}
 
 	return nil
-}
-
-func flattenLocationVPNCredentials(vpnCredential []locationmanagement.VPNCredentials) []interface{} {
-	vpnCredentials := make([]interface{}, len(vpnCredential))
-	for i, vpnCredential := range vpnCredential {
-		vpnCredentials[i] = map[string]interface{}{
-			"id":             vpnCredential.ID,
-			"type":           vpnCredential.Type,
-			"fqdn":           vpnCredential.FQDN,
-			"pre_shared_key": vpnCredential.PreSharedKey,
-			"comments":       vpnCredential.Comments,
-			"managed_by":     flattenLocationManagedBy(vpnCredential),
-			"location":       flattenVPNCredentialLocation(vpnCredential),
-		}
-	}
-
-	return vpnCredentials
-}
-
-func flattenLocationManagedBy(managedBy locationmanagement.VPNCredentials) []interface{} {
-	managed := make([]interface{}, len(managedBy.ManagedBy))
-	for i, val := range managedBy.ManagedBy {
-		managed[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return managed
-}
-
-func flattenVPNCredentialLocation(location locationmanagement.VPNCredentials) []interface{} {
-	locations := make([]interface{}, len(location.Location))
-	for i, val := range location.Location {
-		locations[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
-		}
-	}
-
-	return locations
 }
