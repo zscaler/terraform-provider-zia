@@ -160,6 +160,26 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.",
 			},
+			"other_sub_location": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"other_6_sublocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"ipv6_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"ipv6_dns64_prefix": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"idle_time_in_minutes": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -346,9 +366,13 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("ports", resp.Ports)
 	_ = d.Set("auth_required", resp.AuthRequired)
+	_ = d.Set("other_sub_location", resp.OtherSubLocation)
+	_ = d.Set("other_6_sublocation", resp.Other6SubLocation)
+	_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
+	_ = d.Set("ipv6_dns64_prefix", resp.IPv6Dns64Prefix)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
-	_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
-	_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
+	// _ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
+	// _ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
 	_ = d.Set("surrogate_ip", resp.SurrogateIP)
 	_ = d.Set("idle_time_in_minutes", resp.IdleTimeInMinutes)
 	_ = d.Set("display_time_unit", resp.DisplayTimeUnit)
