@@ -55,16 +55,19 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 25000,
 			},
 			"keywords": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2048,
 			},
 			"keywords_retaining_parent_category": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2048,
 			},
 			"db_categorized_urls": {
 				Type:     schema.TypeSet,
@@ -75,10 +78,6 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-			},
-			"super_category": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"scopes": {
 				Type:     schema.TypeSet,
@@ -158,6 +157,29 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"ip_ranges": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2000,
+			},
+			"ip_ranges_retaining_parent_category": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2000,
+			},
+			"custom_ip_ranges_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"ip_ranges_retaining_parent_category_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"super_category": getSuperCategories(),
 		},
 	}
 }
@@ -213,6 +235,10 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
 	_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
+	_ = d.Set("ip_ranges", resp.IPRanges)
+	_ = d.Set("ip_ranges_retaining_parent_category", resp.IPRangesRetainingParentCategory)
+	_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
+	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 
 	if err := d.Set("scopes", flattenScopesLite(resp)); err != nil {
 		return err
@@ -280,21 +306,25 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 	id, _ := getStringFromResourceData(d, "url_category_id")
 	result := urlcategories.URLCategory{
-		ID:                               id,
-		ConfiguredName:                   d.Get("configured_name").(string),
-		Keywords:                         SetToStringList(d, "keywords"),
-		KeywordsRetainingParentCategory:  SetToStringList(d, "keywords_retaining_parent_category"),
-		Urls:                             SetToStringList(d, "urls"),
-		DBCategorizedUrls:                SetToStringList(d, "db_categorized_urls"),
-		CustomCategory:                   d.Get("custom_category").(bool),
-		SuperCategory:                    d.Get("super_category").(string),
-		Editable:                         d.Get("editable").(bool),
-		Description:                      d.Get("description").(string),
-		Type:                             d.Get("type").(string),
-		CustomUrlsCount:                  d.Get("custom_urls_count").(int),
-		UrlsRetainingParentCategoryCount: d.Get("urls_retaining_parent_category_count").(int),
-		Scopes:                           expandURLCategoryScopes(d),
-		URLKeywordCounts:                 expandURLKeywordCounts(d),
+		ID:                                   id,
+		ConfiguredName:                       d.Get("configured_name").(string),
+		Keywords:                             SetToStringList(d, "keywords"),
+		KeywordsRetainingParentCategory:      SetToStringList(d, "keywords_retaining_parent_category"),
+		Urls:                                 SetToStringList(d, "urls"),
+		DBCategorizedUrls:                    SetToStringList(d, "db_categorized_urls"),
+		IPRanges:                             SetToStringList(d, "ip_ranges"),
+		IPRangesRetainingParentCategory:      SetToStringList(d, "ip_ranges_retaining_parent_category"),
+		CustomIpRangesCount:                  d.Get("custom_ip_ranges_count").(int),
+		IPRangesRetainingParentCategoryCount: d.Get("ip_ranges_retaining_parent_category_count").(int),
+		CustomCategory:                       d.Get("custom_category").(bool),
+		SuperCategory:                        d.Get("super_category").(string),
+		Editable:                             d.Get("editable").(bool),
+		Description:                          d.Get("description").(string),
+		Type:                                 d.Get("type").(string),
+		CustomUrlsCount:                      d.Get("custom_urls_count").(int),
+		UrlsRetainingParentCategoryCount:     d.Get("urls_retaining_parent_category_count").(int),
+		Scopes:                               expandURLCategoryScopes(d),
+		URLKeywordCounts:                     expandURLKeywordCounts(d),
 	}
 	return result
 }
