@@ -387,6 +387,15 @@ func getURLCategories() *schema.Schema {
 	}
 }
 
+func getSuperCategories() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Description:  "Super Category of the URL category. This field is required when creating custom URL categories.",
+		ValidateFunc: validateURLSuperCategories(),
+	}
+}
+
 func getURLRequestMethods() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,

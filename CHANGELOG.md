@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.4.0 (January, 3 2023)
+
+### Notes
+
+- Release date: **(January, 3 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #162](https://github.com/zscaler/terraform-provider-zia/pull/162) Added missing URL Category resource parameters
+
 ## 2.3.1 (December, 3 2022)
 
 ### Notes

@@ -157,6 +157,24 @@ func dataSourceURLCategories() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"ip_ranges": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ip_ranges_retaining_parent_category": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"custom_ip_ranges_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"ip_ranges_retaining_parent_category_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
