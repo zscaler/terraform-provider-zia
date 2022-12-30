@@ -20,6 +20,7 @@ resource "zia_url_filtering_rules" "block_streaming" {
     action              = "BLOCK"
     order               = 2
     url_categories      = ["ANY"]
+    device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     protocols           = ["ANY_RULE"]
     request_methods     = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
@@ -44,11 +45,12 @@ The following arguments are supported:
 * `size_quota` - (Optional) Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `description` - (Optional) Additional information about the rule
 * `validity_start_time` - (Optional) If enforceTimeValidity is set to true, the URL Filtering rule will be valid starting on this date and time.
-* `validity_end_time` - (Optional) If enforceTimeValidity is set to true, the URL Filtering rule will cease to be valid on this end date and time.
-* `validity_time_zone_id` - (Optional) If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.
+* `validity_end_time` - (Optional) If `enforceTimeValidity` is set to true, the URL Filtering rule will cease to be valid on this end date and time.
+* `validity_time_zone_id` - (Optional) If `enforceTimeValidity` is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.
 * `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
 * `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `ANY`, `NONE`, `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
+* `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 * `cipa_rule` - (Optional) If set to true, the CIPA Compliance rule is enabled
 * `url_categories` - (Optional) List of URL categories for which rule must be applied
 

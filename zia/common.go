@@ -396,6 +396,19 @@ func getSuperCategories() *schema.Schema {
 	}
 }
 
+func getDeviceTrustLevels() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateDeviceTrustLevels(),
+		},
+		Optional: true,
+		ForceNew: true,
+	}
+}
+
 func getURLRequestMethods() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
