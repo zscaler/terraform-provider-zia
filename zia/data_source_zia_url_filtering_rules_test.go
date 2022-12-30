@@ -27,6 +27,7 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "url_categories.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "request_methods.#", "9"),
 				),
 			},

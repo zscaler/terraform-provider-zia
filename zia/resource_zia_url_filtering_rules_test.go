@@ -33,6 +33,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
@@ -48,6 +49,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
@@ -121,6 +123,7 @@ resource "%s" "%s" {
     order = 1
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
+	device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
 
