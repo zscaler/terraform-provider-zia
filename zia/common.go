@@ -405,6 +405,7 @@ func getDeviceTrustLevels() *schema.Schema {
 			ValidateFunc: validateDeviceTrustLevels(),
 		},
 		Optional: true,
+		ForceNew: true,
 	}
 }
 
