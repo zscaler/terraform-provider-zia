@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.3.1``
+``Last updated: v2.3.2``
 
 ---
+
+## 2.3.2 (December, 30 2022)
+
+### Notes
+
+- Release date: **(December, 30 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #164](https://github.com/zscaler/terraform-provider-zia/pull/164) Added missing URL Category resource parameters
+- [PR #165](https://github.com/zscaler/terraform-provider-zia/pull/162) Added missing URL Category to ``zia_url_filtering_rule``
 
 ## 2.3.1 (December, 3 2022)
 

@@ -189,20 +189,21 @@ func resourceURLFilteringRules() *schema.Resource {
 				Computed:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			"locations":       listIDsSchemaTypeCustom(8, "Name-ID pairs of locations for which rule must be applied"),
-			"groups":          listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which rule must be applied"),
-			"departments":     listIDsSchemaTypeCustom(8, "Name-ID pairs of departments for which rule must be applied"),
-			"users":           listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
-			"time_windows":    listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
-			"override_users":  listIDsSchemaType("list of override users"),
-			"override_groups": listIDsSchemaType("list of override groups"),
-			"device_groups":   listIDsSchemaType("list of device groups"),
-			"devices":         listIDsSchemaType("list of devices"),
-			"location_groups": listIDsSchemaTypeCustom(32, "list of locations groups"),
-			"labels":          listIDsSchemaType("list of labels"),
-			"url_categories":  getURLCategories(),
-			"request_methods": getURLRequestMethods(),
-			"protocols":       getURLProtocols(),
+			"locations":           listIDsSchemaTypeCustom(8, "Name-ID pairs of locations for which rule must be applied"),
+			"groups":              listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which rule must be applied"),
+			"departments":         listIDsSchemaTypeCustom(8, "Name-ID pairs of departments for which rule must be applied"),
+			"users":               listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
+			"time_windows":        listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
+			"override_users":      listIDsSchemaType("list of override users"),
+			"override_groups":     listIDsSchemaType("list of override groups"),
+			"device_groups":       listIDsSchemaType("list of device groups"),
+			"devices":             listIDsSchemaType("list of devices"),
+			"location_groups":     listIDsSchemaTypeCustom(32, "list of locations groups"),
+			"labels":              listIDsSchemaType("list of labels"),
+			"device_trust_levels": getDeviceTrustLevels(),
+			"url_categories":      getURLCategories(),
+			"request_methods":     getURLRequestMethods(),
+			"protocols":           getURLProtocols(),
 		},
 	}
 }
@@ -255,6 +256,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
+	_ = d.Set("description", resp.Description)
 	_ = d.Set("protocols", resp.Protocols)
 	if len(resp.URLCategories) == 0 {
 		_ = d.Set("url_categories", []string{"ANY"})
@@ -264,12 +266,12 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("state", resp.State)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
+	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("request_methods", resp.RequestMethods)
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
 	_ = d.Set("time_quota", resp.TimeQuota)
 	_ = d.Set("size_quota", resp.SizeQuota)
-	_ = d.Set("description", resp.Description)
 	_ = d.Set("validity_start_time", resp.ValidityStartTime)
 	_ = d.Set("validity_end_time", resp.ValidityEndTime)
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
@@ -386,6 +388,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		State:                  d.Get("state").(string),
 		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
 		Rank:                   d.Get("rank").(int),
+		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
 		RequestMethods:         SetToStringList(d, "request_methods"),
 		EndUserNotificationURL: d.Get("end_user_notification_url").(string),
 		BlockOverride:          d.Get("block_override").(bool),
