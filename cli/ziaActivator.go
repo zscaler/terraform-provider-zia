@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/zscaler/terraform-provider-zia/zia"
+	"github.com/zscaler/terraform-provider-zia/v2/zia"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/activation"
 )
