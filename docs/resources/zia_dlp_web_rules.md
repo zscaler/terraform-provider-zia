@@ -28,6 +28,7 @@ resource "zia_dlp_web_rules" "test" {
     file_types                  = []
     min_size                    = 20
     zscaler_incident_reciever   = true
+}
 ```
 
 ## Argument Reference
