@@ -121,7 +121,6 @@ resource "%s" "%s" {
     order = 1
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
-	device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
 
