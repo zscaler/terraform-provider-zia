@@ -18,7 +18,7 @@ import (
 func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	var static staticips.StaticIP
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
-	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
+	rIP, _ := acctest.RandIpAddress("121.234.54.0/24")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
