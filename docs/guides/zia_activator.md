@@ -18,7 +18,7 @@ import (
 
  "github.com/zscaler/zscaler-sdk-go/zia/services/activation"
  client "github.com/zscaler/zscaler-sdk-go/zia"
- "github.com/zscaler/terraform-provider-zia/zia"
+ "github.com/zscaler/terraform-provider-zia/v2/zia"
 )
 
 func getEnvVarOrFail(k string) string {

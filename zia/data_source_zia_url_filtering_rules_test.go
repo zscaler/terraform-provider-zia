@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
 func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
@@ -27,7 +27,6 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "url_categories.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "request_methods.#", "9"),
 				),
 			},

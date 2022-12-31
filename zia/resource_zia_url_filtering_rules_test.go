@@ -8,9 +8,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
@@ -33,7 +33,6 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
@@ -49,7 +48,6 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "device_trust_levels.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 				),
 			},
@@ -123,7 +121,6 @@ resource "%s" "%s" {
     order = 1
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
-	device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 }
 
