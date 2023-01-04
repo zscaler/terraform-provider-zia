@@ -195,7 +195,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"users":               listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
 			"time_windows":        listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
 			"override_users":      listIDsSchemaType("list of override users"),
-			"override_groups":     listIDsSchemaType("list of override groups"),
+			"override_groups":     listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which this rule can be overridden."),
 			"device_groups":       listIDsSchemaType("list of device groups"),
 			"devices":             listIDsSchemaType("list of devices"),
 			"location_groups":     listIDsSchemaTypeCustom(32, "list of locations groups"),
