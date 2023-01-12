@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.3.4``
+``Last updated: v2.3.5``
 
 ---
+
+## 2.3.5 (January, 12 2023)
+
+### Notes
+
+- Release date: **(January, 12 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #160](https://github.com/zscaler/terraform-provider-zia/pull/160) - Fixed Pagination Issues across all resources
 
 ## 2.3.4 (January, 4 2023)
 

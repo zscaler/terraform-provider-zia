@@ -9,7 +9,7 @@
 
 ### Fixes
 
-- [PR #160](https://github.com/zscaler/terraform-provider-zia/pull/160)
+- [PR #160](https://github.com/zscaler/terraform-provider-zia/pull/160) - Fixed Pagination Issues across all resources
 
 ## 2.3.4 (January, 4 2023)
 
