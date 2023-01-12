@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.3.5 (January, 12 2023)
+
+### Notes
+
+- Release date: **(January, 12 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #160](https://github.com/zscaler/terraform-provider-zia/pull/160)
+
 ## 2.3.4 (January, 4 2023)
 
 ### Notes
