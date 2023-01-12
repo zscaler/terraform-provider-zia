@@ -323,6 +323,11 @@ func dataSourceURLFilteringRules() *schema.Resource {
 					},
 				},
 			},
+			"device_trust_levels": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"validity_start_time": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -432,6 +437,7 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("ciparule", resp.Ciparule)
+		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err

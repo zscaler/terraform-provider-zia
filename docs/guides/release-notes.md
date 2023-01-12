@@ -12,9 +12,41 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.3.1``
+``Last updated: v2.3.4``
 
 ---
+
+## 2.3.4 (January, 4 2023)
+
+### Notes
+
+- Release date: **(January, 4 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #168](https://github.com/zscaler/terraform-provider-zia/pull/168) ``zia_firewall_filtering_rule`` Added the following new network applications to validation function
+  - ``VMWARE_HORIZON_VIEW``,``ADOBE_CREATIVE_CLOUD``, ``ZOOMINFO``, ``SERVICE_NOW``, ``MS_SSAS``, ``GOOGLE_DNS``, ``CLOUDFLARE_DNS``, ``ADGUARD``, ``QUAD9``, ``OPENDNS``, ``CLEANBROWSING``, ``COMCAST_DNS``, ``NEXTDNS``, ``POWERDNS``,``BLAHDNS``,``SECUREDNS``,``RUBYFISH``,``DOH_UNKNOWN``,``GOOGLE_KEEP``,``AMAZON_CHIME``,``WORKDAY``,``FIFA``,``ROBLOX``,``WANGWANG``,``S7COMM_PLUS``,``DOH``,``AGORA_IO``,``MS_DFSR``,``WS_DISCOVERY``,``STUN``,``FOLDINGATHOME``,``GE_PROCIFY``,``MOXA_ASPP``,``APP_CH``,``GLASSDOOR``,``TINDER``,``BAIDU_TIEBA``,``MIMEDIA``,``FILESANYWHERE``,``HOUSEPARTY``,``GBRIDGE``,``HAMACHI``,``HEXATECH``,``HOTSPOT_SHIELD``,``MEGAPROXY``,``OPERA_VPN``,``SPOTFLUX``,``TUNNELBEAR``,``ZENMATE``, ``OPENGW``, ``VPNOVERDNS``, ``HOXX_VPN``, ``VPN1_COM``, ``SPRINGTECH_VPN``, ``BARRACUDA_VPN``, ``HIDEMAN_VPN``, ``WINDSCRIBE``, ``BROWSEC_VPN``, ``EPIC_BROWSER_VPN``, ``SKYVPN``, ``KPN_TUNNEL``, ``ERSPAN``,``EVASIVE_PROTOCOL``, ``DOTDASH``, ``ADOBE_DOCUMENT_CLOUD``, ``FLIPKART_BOOKS``
+
+- [PR #165](https://github.com/zscaler/terraform-provider-zia/pull/162) ``zia_url_filtering_rules`` Added new URL Categories
+
+## 2.3.3 (January, 1 2023)
+
+### Notes
+
+- Release date: **(January, 1 2023)**
+- Supported Terraform version: **v1.x**
+## 2.3.2 (December, 30 2022)
+
+### Notes
+
+- Release date: **(December, 30 2022)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #164](https://github.com/zscaler/terraform-provider-zia/pull/164) Added missing URL Category resource parameters
+- [PR #165](https://github.com/zscaler/terraform-provider-zia/pull/162) Added missing new URL Category pre-validation to ``zia_url_filtering_rule`` The new categories are: `DYNAMIC_DNS` and `NEWLY_REVIVED_DOMAINS`
 
 ## 2.3.1 (December, 3 2022)
 

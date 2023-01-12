@@ -14,7 +14,9 @@ Use the **zia_admin_roles** data source to get information about an admin role c
 
 ```hcl
 # ZIA Admin Roles Data Source
-data "zia_auth_settings_urls" "example" {}
+data "zia_admin_roles" "example" {
+  name = "Super Admin"
+}
 ```
 
 ## Argument Reference

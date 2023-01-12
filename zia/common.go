@@ -387,6 +387,28 @@ func getURLCategories() *schema.Schema {
 	}
 }
 
+func getSuperCategories() *schema.Schema {
+	return &schema.Schema{
+		Type:         schema.TypeString,
+		Optional:     true,
+		Description:  "Super Category of the URL category. This field is required when creating custom URL categories.",
+		ValidateFunc: validateURLSuperCategories(),
+	}
+}
+
+func getDeviceTrustLevels() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation.",
+		Elem: &schema.Schema{
+			Type:         schema.TypeString,
+			ValidateFunc: validateDeviceTrustLevels(),
+		},
+		Optional: true,
+		ForceNew: true,
+	}
+}
+
 func getURLRequestMethods() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
