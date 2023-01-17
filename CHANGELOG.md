@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.3.6 (January, 13 2023)
+
+### Notes
+
+- Release date: **(January, 13 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #171](https://github.com/zscaler/terraform-provider-zia/pull/171) - Update to Zscaler-Go-SDK to fix bool parameter ``enable_full_logging`` in the ZIA Firewall Filtering resource.
+
 ## 2.3.5 (January, 12 2023)
 
 ### Notes
