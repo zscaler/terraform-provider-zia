@@ -74,7 +74,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"enable_full_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"action": {
 				Type:        schema.TypeString,
@@ -366,6 +366,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
 		DestCountries:       SetToStringList(d, "dest_countries"),
 		NwApplications:      SetToStringList(d, "nw_applications"),
+		EnableFullLogging:   d.Get("enable_full_logging").(bool),
 		DefaultRule:         d.Get("default_rule").(bool),
 		Predefined:          d.Get("predefined").(bool),
 		LastModifiedBy:      expandIDNameExtensions(d, "last_modified_by"),
