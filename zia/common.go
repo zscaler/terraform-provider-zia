@@ -383,7 +383,7 @@ func getURLCategories() *schema.Schema {
 			Type:         schema.TypeString,
 			ValidateFunc: validateURLFilteringCategories(),
 		},
-		Optional: true,
+		Required: true,
 	}
 }
 
@@ -426,6 +426,7 @@ func getURLProtocols() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "Supported Protocol criteria",
 		Required:    true,
+		MinItems:    1,
 		Elem: &schema.Schema{
 			Type:         schema.TypeString,
 			ValidateFunc: validateURLFilteringProtocols(),

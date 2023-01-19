@@ -66,8 +66,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+				Required:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
