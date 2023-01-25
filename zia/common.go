@@ -383,7 +383,7 @@ func getURLCategories() *schema.Schema {
 			Type:         schema.TypeString,
 			ValidateFunc: validateURLFilteringCategories(),
 		},
-		Required: true,
+		Optional: true,
 	}
 }
 
