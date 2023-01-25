@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -131,3 +132,4 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
+*/

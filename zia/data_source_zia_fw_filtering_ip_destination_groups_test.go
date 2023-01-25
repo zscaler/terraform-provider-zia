@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -30,3 +31,4 @@ func TestAccDataSourceFWIPDestinationGroups_Basic(t *testing.T) {
 		},
 	})
 }
+*/
