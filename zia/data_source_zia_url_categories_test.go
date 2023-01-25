@@ -25,6 +25,7 @@ func TestAccDataSourceURLCategories_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "keywords", resourceTypeAndName, "keywords"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

@@ -341,7 +341,7 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
-	fileTypes := []string{"JPEG", "PNG", "TIFF", "BITMAP"}
+	fileTypes := []string{"JPEG", "PNG", "TIFF", "BITMAP", ""}
 	if dlp.OcrEnabled {
 		// dlp.FileTypes must be a subset of fileTypes
 		for _, t1 := range dlp.FileTypes {
