@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.3.6 (January, 13 2023)
+## 2.3.6 (January, 25 2023)
 
 ### Notes
 
-- Release date: **(January, 13 2023)**
+- Release date: **(January, 25 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Fixes
