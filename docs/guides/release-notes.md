@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.3.5``
+``Last updated: v2.3.6``
 
 ---
+
+## 2.3.6 (January, 25 2023)
+
+### Notes
+
+- Release date: **(January, 25 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #171](https://github.com/zscaler/terraform-provider-zia/pull/171) - Update to Zscaler-Go-SDK to fix bool parameter ``enable_full_logging`` in the ZIA Firewall Filtering resource.
+- [PR #174](https://github.com/zscaler/terraform-provider-zia/pull/174) - Fix ``zia_web_rules`` file_types attribute to accept empty values. Also, added new supported file types to the validation fuction.
 
 ## 2.3.5 (January, 12 2023)
 
