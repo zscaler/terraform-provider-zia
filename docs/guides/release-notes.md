@@ -16,6 +16,20 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
+## 2.4.0 (January, 31 2023)
+
+### Notes
+
+- Release date: **(January, 31 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #176](https://github.com/zscaler/terraform-provider-zia/pull/176) Added the following ZIA data sources
+  - ``zia_dlp_icap_servers`` - Gets a the list of DLP servers using ICAP
+  - ``zia_dlp_incident_receiver_servers`` - Gets a list of DLP Incident Receivers
+  - ``zia_dlp_idm_profiles`` - Indexed Document Match (IDM) template (or profile) information.
+
 ## 2.3.6 (January, 25 2023)
 
 ### Notes

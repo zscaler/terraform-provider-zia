@@ -432,6 +432,16 @@ func dataSourceDlpWebRules() *schema.Resource {
 					},
 				},
 			},
+			"dlp_download_scan_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
+			},
+			"zcc_notifications_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
+			},
 			"ocr_enabled": {
 				Type:        schema.TypeBool,
 				Computed:    true,
