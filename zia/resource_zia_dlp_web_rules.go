@@ -58,25 +58,14 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The description of the DLP policy rule.",
 			},
-			"access_control": {
-				Type:        schema.TypeString,
+			"protocols": {
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				Description: "The access privilege for this DLP policy rule based on the admin's state.",
-				ValidateFunc: validation.StringInSlice([]string{
-					"NONE",
-					"READ_ONLY",
-					"READ_WRITE",
-				}, false),
-			},
-			"protocols": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Description: "The protocol criteria specified for the DLP policy rule.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-				Description: "The protocol criteria specified for the DLP policy rule.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -145,6 +134,18 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
 			},
+			"dlp_download_scan_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
+			},
+			"zcc_notifications_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
+			},
 			"ocr_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -161,11 +162,11 @@ func resourceDlpWebRules() *schema.Resource {
 			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
 			"users":                 listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"excluded_users":        listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"groups":                listIDsSchemaTypeCustom(8, "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
-			"excluded_groups":       listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"departments":           listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
-			"excluded_departments":  listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"excluded_departments":  listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"excluded_users":        listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"excluded_groups":       listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"dlp_engines":           listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
 			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
 			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
@@ -223,7 +224,6 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
-	_ = d.Set("access_control", resp.AccessControl)
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("file_types", resp.FileTypes)
@@ -235,6 +235,8 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 	_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 	_ = d.Set("ocr_enabled", resp.OcrEnabled)
+	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
+	_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
 	_ = d.Set("zscaler_incident_reciever", resp.ZscalerIncidentReciever)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
@@ -341,7 +343,7 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
-	fileTypes := []string{"JPEG", "PNG", "TIFF", "BITMAP", ""}
+	fileTypes := []string{"BITMAP", "PNG", "JPEG", "TIFF", "WINDOWS_META_FORMAT"}
 	if dlp.OcrEnabled {
 		// dlp.FileTypes must be a subset of fileTypes
 		for _, t1 := range dlp.FileTypes {
@@ -369,7 +371,6 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Name:                     d.Get("name").(string),
 		Order:                    d.Get("order").(int),
 		Rank:                     d.Get("rank").(int),
-		AccessControl:            d.Get("access_control").(string),
 		Description:              d.Get("description").(string),
 		Action:                   d.Get("action").(string),
 		State:                    d.Get("state").(string),
@@ -377,6 +378,8 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		MatchOnly:                d.Get("match_only").(bool),
 		WithoutContentInspection: d.Get("without_content_inspection").(bool),
 		OcrEnabled:               d.Get("ocr_enabled").(bool),
+		DLPDownloadScanEnabled:   d.Get("dlp_download_scan_enabled").(bool),
+		ZCCNotificationsEnabled:  d.Get("zcc_notifications_enabled").(bool),
 		ZscalerIncidentReciever:  d.Get("zscaler_incident_reciever").(bool),
 		MinSize:                  d.Get("min_size").(int),
 		Protocols:                SetToStringList(d, "protocols"),
