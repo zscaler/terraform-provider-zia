@@ -207,6 +207,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		resp, err := zClient.filteringrules.Create(&req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				time.Sleep(time.Second * time.Duration(req.Order+1))
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
@@ -349,6 +350,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		_, err := zClient.filteringrules.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				time.Sleep(time.Second * time.Duration(req.Order+1))
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
