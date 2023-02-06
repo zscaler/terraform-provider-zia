@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -195,6 +196,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	if err := validatRule(req); err != nil {
 		return err
 	}
+	time.Sleep(time.Second * 2 * time.Duration(req.Order+1))
 	resp, err := zClient.filteringrules.Create(&req)
 	if err != nil {
 		return err
@@ -326,6 +328,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 			return nil
 		}
 	}
+	time.Sleep(time.Second * 2 * time.Duration(req.Order+1))
 	if _, err := zClient.filteringrules.Update(id, &req); err != nil {
 		return err
 	}
