@@ -1,12 +1,15 @@
 package zia
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
@@ -19,6 +22,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 		Read:   resourceFirewallFilteringRulesRead,
 		Update: resourceFirewallFilteringRulesUpdate,
 		Delete: resourceFirewallFilteringRulesDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -196,16 +203,25 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	if err := validatRule(req); err != nil {
 		return err
 	}
-	time.Sleep(time.Second * 2 * time.Duration(req.Order+1))
-	resp, err := zClient.filteringrules.Create(&req)
-	if err != nil {
-		return err
-	}
-	log.Printf("[INFO] Created zia firewall filtering rule request. ID: %v\n", resp)
-	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("rule_id", resp.ID)
+	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		resp, err := zClient.filteringrules.Create(&req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				return resource.RetryableError(errors.New("expected resource to be created but was not"))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
+		}
+		log.Printf("[INFO] Created zia firewall filtering rule request. ID: %v\n", resp)
+		d.SetId(strconv.Itoa(resp.ID))
+		_ = d.Set("rule_id", resp.ID)
 
-	return resourceFirewallFilteringRulesRead(d, m)
+		err = resourceFirewallFilteringRulesRead(d, m)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		} else {
+			return nil
+		}
+	})
 }
 
 func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
@@ -328,12 +344,23 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 			return nil
 		}
 	}
-	time.Sleep(time.Second * 2 * time.Duration(req.Order+1))
-	if _, err := zClient.filteringrules.Update(id, &req); err != nil {
-		return err
-	}
 
-	return resourceFirewallFilteringRulesRead(d, m)
+	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+		_, err := zClient.filteringrules.Update(id, &req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
+		}
+
+		err = resourceFirewallFilteringRulesRead(d, m)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		} else {
+			return nil
+		}
+	})
 }
 
 func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
