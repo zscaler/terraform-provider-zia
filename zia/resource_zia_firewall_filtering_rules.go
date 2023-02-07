@@ -74,11 +74,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 7),
 				Description:  "Admin rank of the Firewall Filtering policy rule",
 			},
-			"access_control": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"enable_full_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -111,31 +106,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Additional information about the rule",
-			},
-			"last_modified_time": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
-			},
-			"last_modified_by": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"src_ips": {
 				Type:        schema.TypeSet,
@@ -187,6 +157,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 }
 func validatRule(req filteringrules.FirewallFilteringRules) error {
 	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
+		return errors.New("predefined rule cannot be deleted")
+	}
+	if req.Name == "Block All IPv6" {
 		return errors.New("predefined rule cannot be deleted")
 	}
 	if req.Name == "Default Firewall Filtering Rule" {
@@ -251,12 +224,10 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
-	_ = d.Set("access_control", resp.AccessControl)
 	_ = d.Set("enable_full_logging", resp.EnableFullLogging)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("state", resp.State)
 	_ = d.Set("description", resp.Description)
-	_ = d.Set("last_modified_time", resp.LastModifiedTime)
 	_ = d.Set("src_ips", resp.SrcIps)
 	_ = d.Set("dest_addresses", resp.DestAddresses)
 	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
@@ -286,10 +257,6 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	}
 
 	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
-		return err
-	}
-
-	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
 
@@ -392,7 +359,6 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		Action:              d.Get("action").(string),
 		State:               d.Get("state").(string),
 		Description:         d.Get("description").(string),
-		LastModifiedTime:    d.Get("last_modified_time").(int),
 		SrcIps:              SetToStringList(d, "src_ips"),
 		DestAddresses:       SetToStringList(d, "dest_addresses"),
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
@@ -401,7 +367,6 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),
 		DefaultRule:         d.Get("default_rule").(bool),
 		Predefined:          d.Get("predefined").(bool),
-		LastModifiedBy:      expandIDNameExtensions(d, "last_modified_by"),
 		Locations:           expandIDNameExtensionsSet(d, "locations"),
 		LocationsGroups:     expandIDNameExtensionsSet(d, "location_groups"),
 		Departments:         expandIDNameExtensionsSet(d, "departments"),
