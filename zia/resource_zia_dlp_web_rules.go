@@ -213,11 +213,23 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
+			reorder(req.Order, resp.ID, func() (int, error) {
+				list, err := zClient.dlp_web_rules.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.dlp_web_rules.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, err = zClient.dlp_web_rules.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
 }
-
 func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -352,6 +364,19 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
+			reorder(req.Order, req.ID, func() (int, error) {
+				list, err := zClient.dlp_web_rules.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.dlp_web_rules.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, err = zClient.dlp_web_rules.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
