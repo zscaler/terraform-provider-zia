@@ -1,10 +1,15 @@
 package zia
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
@@ -17,6 +22,10 @@ func resourceDlpWebRules() *schema.Resource {
 		Read:   resourceDlpWebRulesRead,
 		Update: resourceDlpWebRulesUpdate,
 		Delete: resourceDlpWebRulesDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
+		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -77,7 +86,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"order": {
 				Type:        schema.TypeInt,
 				Required:    true,
-				Description: "Order of execution of rule with respect to other URL Filtering rules",
+				Description: "The rule order of execution for the DLP policy rule with respect to other rules.",
 			},
 			"cloud_applications": {
 				Type:        schema.TypeSet,
@@ -187,15 +196,26 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
-	resp, _, err := zClient.dlp_web_rules.Create(&req)
-	if err != nil {
-		return err
-	}
-	log.Printf("[INFO] Created zia web dlp rule request. ID: %v\n", resp)
-	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("rule_id", resp.ID)
+	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		resp, err := zClient.dlp_web_rules.Create(&req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				time.Sleep(time.Second * time.Duration(req.Order+1))
+				return resource.RetryableError(errors.New("expected resource to be created but was not"))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
+		}
+		log.Printf("[INFO] Created zia web dlp rule request. ID: %v\n", resp)
+		d.SetId(strconv.Itoa(resp.ID))
+		_ = d.Set("rule_id", resp.ID)
 
-	return resourceDlpWebRulesRead(d, m)
+		err = resourceDlpWebRulesRead(d, m)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		} else {
+			return nil
+		}
+	})
 }
 
 func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
@@ -318,11 +338,23 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 			return nil
 		}
 	}
-	if _, _, err := zClient.dlp_web_rules.Update(id, &req); err != nil {
-		return err
-	}
+	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+		_, err := zClient.dlp_web_rules.Update(id, &req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				time.Sleep(time.Second * time.Duration(req.Order+1))
+				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
+			}
+			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
+		}
 
-	return resourceDlpWebRulesRead(d, m)
+		err = resourceDlpWebRulesRead(d, m)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		} else {
+			return nil
+		}
+	})
 }
 
 func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {

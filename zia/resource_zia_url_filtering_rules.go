@@ -127,36 +127,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
 			},
-			"last_modified_time": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "When the rule was last modified",
-			},
-			"last_modified_by": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "Who modified the rule last",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"enforce_time_validity": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -173,13 +143,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "Action taken when traffic matches rule criteria",
 				ValidateFunc: validation.StringInSlice([]string{
-					"ANY",
-					"NONE",
 					"BLOCK",
 					"CAUTION",
 					"ALLOW",
 					"ISOLATE",
-					"ICAP_RESPONSE",
 				}, false),
 			},
 			"ciparule": {
@@ -193,12 +160,12 @@ func resourceURLFilteringRules() *schema.Resource {
 			"departments":         listIDsSchemaTypeCustom(8, "Name-ID pairs of departments for which rule must be applied"),
 			"users":               listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
 			"time_windows":        listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
-			"override_users":      listIDsSchemaType("list of override users"),
+			"override_users":      listIDsSchemaType("Name-ID pairs of users for which this rule can be overridden."),
 			"override_groups":     listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which this rule can be overridden."),
-			"device_groups":       listIDsSchemaType("list of device groups"),
-			"devices":             listIDsSchemaType("list of devices"),
-			"location_groups":     listIDsSchemaTypeCustom(32, "list of locations groups"),
-			"labels":              listIDsSchemaType("list of labels"),
+			"device_groups":       listIDsSchemaType("This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":             listIDsSchemaType("Name-ID pairs of devices for which rule must be applied."),
+			"location_groups":     listIDsSchemaTypeCustom(32, "Name-ID pairs of the location groups to which the rule must be applied."),
+			"labels":              listIDsSchemaType("The URL Filtering rule's label."),
 			"device_trust_levels": getDeviceTrustLevels(),
 			"url_categories":      getURLCategories(),
 			"request_methods":     getURLRequestMethods(),
@@ -274,7 +241,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("validity_start_time", resp.ValidityStartTime)
 	_ = d.Set("validity_end_time", resp.ValidityEndTime)
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
-	_ = d.Set("last_modified_time", resp.LastModifiedTime)
 	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
@@ -312,10 +278,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
-		return err
-	}
-
-	if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
 
@@ -397,7 +359,6 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		ValidityStartTime:      d.Get("validity_start_time").(int),
 		ValidityEndTime:        d.Get("validity_end_time").(int),
 		ValidityTimeZoneID:     d.Get("validity_time_zone_id").(string),
-		LastModifiedTime:       d.Get("last_modified_time").(int),
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
@@ -437,10 +398,6 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	labels := expandIDNameExtensionsSet(d, "labels")
 	if labels != nil {
 		result.Labels = labels
-	}
-	lastModifiedBy := expandIDNameExtensions(d, "last_modified_by")
-	if lastModifiedBy != nil {
-		result.LastModifiedBy = lastModifiedBy
 	}
 	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
 	if deviceGroups != nil {
