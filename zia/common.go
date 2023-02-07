@@ -2,6 +2,7 @@ package zia
 
 import (
 	"log"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -500,4 +501,53 @@ func getDLPRuleFileTypes(desc string) *schema.Schema {
 		Optional: true,
 		Computed: true,
 	}
+}
+
+func sortOrders(ruleOrderMap map[int]int) RuleIDOrderPairList {
+	pl := make(RuleIDOrderPairList, len(ruleOrderMap))
+	i := 0
+	for k, v := range ruleOrderMap {
+		pl[i] = RuleIDOrderPair{k, v}
+		i++
+	}
+	sort.Sort(pl)
+	return pl
+}
+
+type RuleIDOrderPair struct {
+	ID    int
+	Order int
+}
+
+type RuleIDOrderPairList []RuleIDOrderPair
+
+func (p RuleIDOrderPairList) Len() int           { return len(p) }
+func (p RuleIDOrderPairList) Less(i, j int) bool { return p[i].Order < p[j].Order }
+func (p RuleIDOrderPairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func reorderAll(getCount func() (int, error), updateOrder func(id, order int) error) {
+	rules.Lock()
+	defer rules.Unlock()
+	count, _ := getCount()
+	// sort by order (ascending)
+	sorted := sortOrders(rules.orders)
+	log.Printf("[INFO] sorting filtering rule; sorted:%v", sorted)
+	for _, v := range sorted {
+		if v.Order <= count {
+
+			if err := updateOrder(v.ID, v.Order); err != nil {
+				log.Printf("[ERROR] couldn't reorder the rule, the order may not have taken place: %v\n", err)
+			}
+		}
+	}
+}
+
+func reorder(order, id int, getCount func() (int, error), updateOrder func(id, order int) error) {
+	defer reorderAll(getCount, updateOrder)
+	rules.Lock()
+	if len(rules.orders) == 0 {
+		rules.orders = map[int]int{}
+	}
+	rules.orders[id] = order
+	rules.Unlock()
 }

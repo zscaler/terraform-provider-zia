@@ -190,7 +190,12 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	}
 	if orderIsSet {
 		req.Order = orderObj.(int)
-		go reorder(req.Order, resp.ID, zClient)
+		go reorder(req.Order, resp.ID, func() (int, error) {
+			return zClient.urlfilteringpolicies.RulesCount(), nil
+		}, func(id, order int) error {
+			_, err := zClient.urlfilteringpolicies.Reorder(id, order)
+			return err
+		})
 	}
 	log.Printf("[INFO] Created zia url filtering rule request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -303,7 +308,12 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	if d.HasChange("order") {
 		_, orderIsSet := d.GetOk("order")
 		if orderIsSet {
-			go reorder(req.Order, req.ID, zClient)
+			go reorder(req.Order, id, func() (int, error) {
+				return zClient.urlfilteringpolicies.RulesCount(), nil
+			}, func(id, order int) error {
+				_, err := zClient.urlfilteringpolicies.Reorder(id, order)
+				return err
+			})
 		}
 		req.Order = 1
 	}
@@ -408,28 +418,4 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		result.Devices = devices
 	}
 	return result
-}
-
-func reorder(order, id int, zClient *Client) {
-	defer reorderAll(zClient)
-	rules.Lock()
-	rules.orders[id] = order
-	rules.Unlock()
-}
-
-// we keep calling reordering endpoint to reorder all rules after new rule was added
-// because the reorder endpoint shifts all order up to replac the new order.
-func reorderAll(zClient *Client) {
-	rules.Lock()
-	defer rules.Unlock()
-	count := zClient.urlfilteringpolicies.RulesCount()
-	for k, v := range rules.orders {
-		// the only valid order you can set is 0,count
-		if v <= count {
-			_, err := zClient.urlfilteringpolicies.Reorder(k, v)
-			if err != nil {
-				log.Printf("[ERROR] couldn't reorder the url filtering policy, the order may not have taken place: %v\n", err)
-			}
-		}
-	}
 }
