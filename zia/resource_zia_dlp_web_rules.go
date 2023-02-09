@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +16,8 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 )
+
+var dlpWebRulesLock sync.Mutex
 
 func resourceDlpWebRules() *schema.Resource {
 	return &schema.Resource{
@@ -197,7 +200,9 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		dlpWebRulesLock.Lock()
 		resp, err := zClient.dlp_web_rules.Create(&req)
+		dlpWebRulesLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order+1))
@@ -213,7 +218,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, resp.ID, func() (int, error) {
+			reorder(req.Order, resp.ID, "dlp_web_rules", func() (int, error) {
 				list, err := zClient.dlp_web_rules.GetAll()
 				return len(list), err
 
@@ -364,7 +369,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, func() (int, error) {
+			reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
 				list, err := zClient.dlp_web_rules.GetAll()
 				return len(list), err
 

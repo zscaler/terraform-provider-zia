@@ -3,6 +3,7 @@ package zia
 import (
 	"log"
 	"sort"
+	"sync"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -514,6 +515,15 @@ func sortOrders(ruleOrderMap map[int]int) RuleIDOrderPairList {
 	return pl
 }
 
+type listrules struct {
+	orders map[string]map[int]int
+	sync.Mutex
+}
+
+var rules = listrules{
+	orders: make(map[string]map[int]int),
+}
+
 type RuleIDOrderPair struct {
 	ID    int
 	Order int
@@ -521,16 +531,21 @@ type RuleIDOrderPair struct {
 
 type RuleIDOrderPairList []RuleIDOrderPair
 
-func (p RuleIDOrderPairList) Len() int           { return len(p) }
-func (p RuleIDOrderPairList) Less(i, j int) bool { return p[i].Order < p[j].Order }
-func (p RuleIDOrderPairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p RuleIDOrderPairList) Len() int { return len(p) }
+func (p RuleIDOrderPairList) Less(i, j int) bool {
+	if p[i].Order == p[j].Order {
+		return p[i].ID < p[j].ID
+	}
+	return p[i].Order < p[j].Order
+}
+func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-func reorderAll(getCount func() (int, error), updateOrder func(id, order int) error) {
+func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
 	rules.Lock()
 	defer rules.Unlock()
 	count, _ := getCount()
 	// sort by order (ascending)
-	sorted := sortOrders(rules.orders)
+	sorted := sortOrders(rules.orders[resourceType])
 	log.Printf("[INFO] sorting filtering rule; sorted:%v", sorted)
 	for _, v := range sorted {
 		if v.Order <= count {
@@ -542,12 +557,15 @@ func reorderAll(getCount func() (int, error), updateOrder func(id, order int) er
 	}
 }
 
-func reorder(order, id int, getCount func() (int, error), updateOrder func(id, order int) error) {
-	defer reorderAll(getCount, updateOrder)
+func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
 	rules.Lock()
 	if len(rules.orders) == 0 {
-		rules.orders = map[int]int{}
+		rules.orders = map[string]map[int]int{}
 	}
-	rules.orders[id] = order
+	if len(rules.orders[resourceType]) == 0 {
+		rules.orders[resourceType] = map[int]int{}
+	}
+	rules.orders[resourceType][id] = order
 	rules.Unlock()
+	reorderAll(resourceType, getCount, updateOrder)
 }

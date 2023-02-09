@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +16,8 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
+
+var firewallFilteringLock sync.Mutex
 
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -177,7 +180,9 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		return err
 	}
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		firewallFilteringLock.Lock()
 		resp, err := zClient.filteringrules.Create(&req)
+		firewallFilteringLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order))
@@ -194,7 +199,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, resp.ID, func() (int, error) {
+			reorder(req.Order, resp.ID, "firewall_filtering_rules", func() (int, error) {
 				list, err := zClient.filteringrules.GetAll()
 				return len(list), err
 
@@ -342,7 +347,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, func() (int, error) {
+			reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
 				list, err := zClient.filteringrules.GetAll()
 				return len(list), err
 

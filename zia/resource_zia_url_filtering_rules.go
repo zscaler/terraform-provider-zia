@@ -17,14 +17,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
-type listrules struct {
-	orders map[int]int
-	sync.Mutex
-}
-
-var rules = listrules{
-	orders: make(map[int]int),
-}
+var urlFilteringLock sync.Mutex
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -188,35 +181,14 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
-	// orderObj, orderIsSet := d.GetOk("order")
-	// if orderIsSet {
-	// 	// always set it to 1, and let the re-ordering happen after ( because having an invalid order will cause a bad request)
-	// 	req.Order = 1
-	// }
-	// resp, err := zClient.urlfilteringpolicies.Create(&req)
-	// if err != nil {
-	// 	return err
-	// }
-	// if orderIsSet {
-	// 	req.Order = orderObj.(int)
-	// 	go reorder(req.Order, resp.ID, func() (int, error) {
-	// 		return zClient.urlfilteringpolicies.RulesCount(), nil
-	// 	}, func(id, order int) error {
-	// 		_, err := zClient.urlfilteringpolicies.Reorder(id, order)
-	// 		return err
-	// 	})
-	// }
-	// log.Printf("[INFO] Created zia url filtering rule request. ID: %v\n", resp)
-	// d.SetId(strconv.Itoa(resp.ID))
-	// _ = d.Set("rule_id", resp.ID)
-
-	// return resourceURLFilteringRulesRead(d, m)
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		urlFilteringLock.Lock()
 		resp, err := zClient.urlfilteringpolicies.Create(&req)
+		urlFilteringLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order))
-				log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+				log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT:%s\n", req.Name, err)
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
@@ -229,7 +201,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, resp.ID, func() (int, error) {
+			reorder(req.Order, resp.ID, "url_filtering_rules", func() (int, error) {
 				list, err := zClient.urlfilteringpolicies.GetAll()
 				return len(list), err
 
@@ -271,6 +243,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
+	_ = d.Set("order", resp.Order)
 	_ = d.Set("protocols", resp.Protocols)
 	if len(resp.URLCategories) == 0 {
 		_ = d.Set("url_categories", []string{"ANY"})
@@ -348,7 +321,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
 	req := expandURLFilteringRules(d)
-	if _, err := zClient.filteringrules.Get(id); err != nil {
+	if _, err := zClient.urlfilteringpolicies.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
@@ -370,7 +343,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, func() (int, error) {
+			reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
 				list, err := zClient.urlfilteringpolicies.GetAll()
 				return len(list), err
 
@@ -387,31 +360,6 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		}
 	})
 }
-
-// if d.HasChange("order") {
-// 	_, orderIsSet := d.GetOk("order")
-// 	if orderIsSet {
-// 		go reorder(req.Order, id, func() (int, error) {
-// 			return zClient.urlfilteringpolicies.RulesCount(), nil
-// 		}, func(id, order int) error {
-// 			_, err := zClient.urlfilteringpolicies.Reorder(id, order)
-// 			return err
-// 		})
-// 	}
-// 	req.Order = 1
-// }
-// if _, err := zClient.urlfilteringpolicies.Get(id); err != nil {
-// 	if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
-// 		d.SetId("")
-// 		return nil
-// 	}
-// }
-// if _, _, err := zClient.urlfilteringpolicies.Update(id, &req); err != nil {
-// 	return err
-// }
-
-// return resourceURLFilteringRulesRead(d, m)
-// }
 
 func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
