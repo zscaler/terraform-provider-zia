@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -16,6 +16,8 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
+
+var firewallFilteringLock sync.Mutex
 
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -169,61 +171,6 @@ func validatRule(req filteringrules.FirewallFilteringRules) error {
 	return nil
 }
 
-func sortOrders(ruleOrderMap map[int]int) RuleIDOrderPairList {
-	pl := make(RuleIDOrderPairList, len(ruleOrderMap))
-	i := 0
-	for k, v := range ruleOrderMap {
-		pl[i] = RuleIDOrderPair{k, v}
-		i++
-	}
-	sort.Sort(pl)
-	return pl
-}
-
-type RuleIDOrderPair struct {
-	ID    int
-	Order int
-}
-
-type RuleIDOrderPairList []RuleIDOrderPair
-
-func (p RuleIDOrderPairList) Len() int           { return len(p) }
-func (p RuleIDOrderPairList) Less(i, j int) bool { return p[i].Order < p[j].Order }
-func (p RuleIDOrderPairList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-func reorderAllFilteringRules(zClient *Client) {
-	rules.Lock()
-	defer rules.Unlock()
-	list, _ := zClient.filteringrules.GetAll()
-	count := len(list)
-	// sort by order (ascending)
-	sorted := sortOrders(rules.orders)
-	log.Printf("[INFO] sorting filtering rule; sorted:%v", sorted)
-	for _, v := range sorted {
-		if v.Order <= count {
-			rule, err := zClient.filteringrules.Get(v.ID)
-			if err != nil {
-				continue
-			}
-			rule.Order = v.Order
-			_, err = zClient.filteringrules.Update(v.ID, rule)
-			if err != nil {
-				log.Printf("[ERROR] couldn't reorder the rule, the order may not have taken place: %v\n", err)
-			}
-		}
-	}
-}
-
-func reorderFilteringRules(order, id int, zClient *Client) {
-	defer reorderAllFilteringRules(zClient)
-	rules.Lock()
-	if len(rules.orders) == 0 {
-		rules.orders = map[int]int{}
-	}
-	rules.orders[id] = order
-	rules.Unlock()
-}
-
 func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -233,7 +180,9 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		return err
 	}
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		firewallFilteringLock.Lock()
 		resp, err := zClient.filteringrules.Create(&req)
+		firewallFilteringLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order))
@@ -250,7 +199,19 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorderFilteringRules(req.Order, resp.ID, zClient)
+			reorder(req.Order, resp.ID, "firewall_filtering_rules", func() (int, error) {
+				list, err := zClient.filteringrules.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.filteringrules.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, err = zClient.filteringrules.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
@@ -386,7 +347,19 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorderFilteringRules(req.Order, id, zClient)
+			reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
+				list, err := zClient.filteringrules.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.filteringrules.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, err = zClient.filteringrules.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
