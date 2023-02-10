@@ -17,6 +17,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
+/*
 type listrules struct {
 	orders map[int]int
 	sync.Mutex
@@ -25,6 +26,7 @@ type listrules struct {
 var rules = listrules{
 	orders: make(map[int]int),
 }
+*/
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
