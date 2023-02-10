@@ -426,12 +426,15 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
+/*
+
 func reorder(order, id int, zClient *Client) {
 	defer reorderAll(zClient)
 	rules.Lock()
 	rules.orders[id] = order
 	rules.Unlock()
 }
+
 
 // we keep calling reordering endpoint to reorder all rules after new rule was added
 // because the reorder endpoint shifts all order up to replac the new order.
@@ -449,3 +452,4 @@ func reorderAll(zClient *Client) {
 		}
 	}
 }
+*/
