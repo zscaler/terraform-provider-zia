@@ -37,8 +37,8 @@ func resourceURLFilteringRules() *schema.Resource {
 		Update: resourceURLFilteringRulesUpdate,
 		Delete: resourceURLFilteringRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(20 * time.Minute),
+			Update: schema.DefaultTimeout(20 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -341,7 +341,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		_, _, err := zClient.urlfilteringpolicies.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				time.Sleep(time.Second * time.Duration(req.Order))
+				time.Sleep(time.Second * time.Duration(req.Order+1))
 				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
