@@ -14,20 +14,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
-var firewallFilteringLock sync.Mutex
+/*
+type listrules struct {
+	orders map[int]int
+	sync.Mutex
+}
 
-func resourceFirewallFilteringRules() *schema.Resource {
+var rules = listrules{
+	orders: make(map[int]int),
+}
+*/
+
+var urlFilteringLock sync.Mutex
+
+func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFirewallFilteringRulesCreate,
-		Read:   resourceFirewallFilteringRulesRead,
-		Update: resourceFirewallFilteringRulesUpdate,
-		Delete: resourceFirewallFilteringRulesDelete,
+		Create: resourceURLFilteringRulesCreate,
+		Read:   resourceURLFilteringRulesRead,
+		Update: resourceURLFilteringRulesUpdate,
+		Delete: resourceURLFilteringRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -38,7 +49,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := zClient.filteringrules.GetByName(id)
+					resp, err := zClient.urlfilteringpolicies.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -52,164 +63,166 @@ func resourceFirewallFilteringRules() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "URL Filtering Rule ID",
 			},
 			"rule_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "URL Filtering Rule ID",
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the Firewall Filtering policy rule",
+				Description: "Rule Name",
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Rule order number of the Firewall Filtering policy rule",
-			},
-			"rank": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 7),
-				Description:  "Admin rank of the Firewall Filtering policy rule",
-			},
-			"enable_full_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"action": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
-				ValidateFunc: validation.StringInSlice([]string{
-					"ALLOW",
-					"BLOCK_DROP",
-					"BLOCK_RESET",
-					"BLOCK_ICMP",
-					"EVAL_NWAPP",
-				}, false),
+				Required:    true,
+				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
-				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
+				Type:     schema.TypeString,
+				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"ENABLED",
 					"DISABLED",
 				}, false),
 			},
-			"description": {
+			"rank": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      7,
+				ValidateFunc: validation.IntBetween(1, 7),
+				Description:  "Admin rank of the admin who creates this rule",
+			},
+			"end_user_notification_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Additional information about the rule",
+				Description: "URL of end user notification page to be displayed when the rule is matched. Not applicable if either 'overrideUsers' or 'overrideGroups' is specified.",
 			},
-			"src_ips": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "User-defined source IP addresses for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address.",
-			},
-			"dest_addresses": {
-				Type:     schema.TypeSet,
+			"block_override": {
+				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"dest_ip_categories": {
+			"time_quota": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(15, 600),
+				Description:  "Time quota in minutes, after which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
+			},
+			"size_quota": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntBetween(10, 100000),
+				Description:  "Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Description:  "Additional information about the URL Filtering rule",
+			},
+			"validity_start_time": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will be valid starting on this date and time.",
+			},
+			"validity_end_time": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will cease to be valid on this end date and time.",
+			},
+			"validity_time_zone_id": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
+			},
+			"enforce_time_validity": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enforce a set a validity time period for the URL Filtering rule.",
+			},
+			"user_agent_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"default_rule": {
+			"action": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Action taken when traffic matches rule criteria",
+				ValidateFunc: validation.StringInSlice([]string{
+					"BLOCK",
+					"CAUTION",
+					"ALLOW",
+					"ISOLATE",
+				}, false),
+			},
+			"ciparule": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
-				Description: "If set to true, the default rule is applied",
+				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			"predefined": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
-				Description: "If set to true, a predefined rule is applied",
-			},
-			"locations":             listIDsSchemaTypeCustom(8, "list of locations for which rule must be applied"),
-			"location_groups":       listIDsSchemaTypeCustom(32, "list of locations groups"),
-			"users":                 listIDsSchemaTypeCustom(4, "list of users for which rule must be applied"),
-			"groups":                listIDsSchemaTypeCustom(8, "list of groups for which rule must be applied"),
-			"departments":           listIDsSchemaType("list of departments for which rule must be applied"),
-			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
-			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
-			"src_ip_groups":         listIDsSchemaType("list of src ip groups"),
-			"dest_ip_groups":        listIDsSchemaType("list of dest ip groups"),
-			"app_service_groups":    listIDsSchemaType("list of app service groups"),
-			"app_services":          listIDsSchemaType("list of app services"),
-			"nw_application_groups": listIDsSchemaType("list of nw application groups"),
-			"nw_service_groups":     listIDsSchemaType("list of nw service groups"),
-			"nw_services":           listIDsSchemaTypeCustom(1024, "list of nw services"),
-			"dest_countries":        getCloudFirewallDstCountries(),
-			"nw_applications":       getCloudFirewallNwApplications(),
+			"locations":           listIDsSchemaTypeCustom(8, "Name-ID pairs of locations for which rule must be applied"),
+			"groups":              listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which rule must be applied"),
+			"departments":         listIDsSchemaTypeCustom(8, "Name-ID pairs of departments for which rule must be applied"),
+			"users":               listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
+			"time_windows":        listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
+			"override_users":      listIDsSchemaType("Name-ID pairs of users for which this rule can be overridden."),
+			"override_groups":     listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which this rule can be overridden."),
+			"device_groups":       listIDsSchemaType("This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":             listIDsSchemaType("Name-ID pairs of devices for which rule must be applied."),
+			"location_groups":     listIDsSchemaTypeCustom(32, "Name-ID pairs of the location groups to which the rule must be applied."),
+			"labels":              listIDsSchemaType("The URL Filtering rule's label."),
+			"device_trust_levels": getDeviceTrustLevels(),
+			"url_categories":      getURLCategories(),
+			"request_methods":     getURLRequestMethods(),
+			"protocols":           getURLProtocols(),
 		},
 	}
 }
-func validatRule(req filteringrules.FirewallFilteringRules) error {
-	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
-		return errors.New("predefined rule cannot be deleted")
-	}
-	if req.Name == "Block All IPv6" {
-		return errors.New("predefined rule cannot be deleted")
-	}
-	if req.Name == "Default Firewall Filtering Rule" {
-		return errors.New("default rule cannot be deleted")
-	}
-	return nil
-}
 
-func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
+func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	req := expandFirewallFilteringRules(d)
-	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
-	if err := validatRule(req); err != nil {
-		return err
-	}
+	req := expandURLFilteringRules(d)
+	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		firewallFilteringLock.Lock()
-		resp, err := zClient.filteringrules.Create(&req)
-		firewallFilteringLock.Unlock()
+		urlFilteringLock.Lock()
+		resp, err := zClient.urlfilteringpolicies.Create(&req)
+		urlFilteringLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				time.Sleep(time.Second * time.Duration(req.Order))
-				log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+				log.Printf("[INFO] Creating url filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+				time.Sleep(time.Second * time.Duration(req.Order+1))
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
 		}
-		log.Printf("[INFO] Created zia firewall filtering rule request. ID: %v\n", resp)
+		log.Printf("[INFO] Created url filtering rule request. ID: %v\n", resp)
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		err = resourceFirewallFilteringRulesRead(d, m)
+		err = resourceURLFilteringRulesRead(d, m)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-				list, err := zClient.filteringrules.GetAll()
+			reorder(req.Order, resp.ID, "url_filtering_rules", func() (int, error) {
+				list, err := zClient.urlfilteringpolicies.GetAll()
 				return len(list), err
 
 			}, func(id, order int) error {
-				rule, err := zClient.filteringrules.Get(id)
+				rule, err := zClient.urlfilteringpolicies.Get(id)
 				if err != nil {
 					return err
 				}
 				rule.Order = order
-				_, err = zClient.filteringrules.Update(id, rule)
+				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
 				return err
 			})
 			return nil
@@ -217,18 +230,18 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	})
 }
 
-func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
+func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no zia firewall filtering rule id is set")
+		return fmt.Errorf("no url filtering rule id is set")
 	}
-	resp, err := zClient.filteringrules.Get(id)
+	resp, err := zClient.urlfilteringpolicies.Get(id)
 
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
+			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -236,38 +249,42 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
-
+	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
-	_ = d.Set("order", resp.Order)
-	_ = d.Set("rank", resp.Rank)
-	_ = d.Set("enable_full_logging", resp.EnableFullLogging)
-	_ = d.Set("action", resp.Action)
-	_ = d.Set("state", resp.State)
 	_ = d.Set("description", resp.Description)
-	_ = d.Set("src_ips", resp.SrcIps)
-	_ = d.Set("dest_addresses", resp.DestAddresses)
-	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
-	_ = d.Set("dest_countries", resp.DestCountries)
-	_ = d.Set("nw_applications", resp.NwApplications)
-	_ = d.Set("default_rule", resp.DefaultRule)
-	_ = d.Set("predefined", resp.Predefined)
+	_ = d.Set("protocols", resp.Protocols)
+	if len(resp.URLCategories) == 0 {
+		_ = d.Set("url_categories", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories", resp.URLCategories)
+	}
+	_ = d.Set("state", resp.State)
+	_ = d.Set("user_agent_types", resp.UserAgentTypes)
+	_ = d.Set("rank", resp.Rank)
+	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+	_ = d.Set("request_methods", resp.RequestMethods)
+	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
+	_ = d.Set("block_override", resp.BlockOverride)
+	_ = d.Set("time_quota", resp.TimeQuota)
+	_ = d.Set("size_quota", resp.SizeQuota)
+	_ = d.Set("validity_start_time", resp.ValidityStartTime)
+	_ = d.Set("validity_end_time", resp.ValidityEndTime)
+	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
+	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
+	_ = d.Set("action", resp.Action)
+	_ = d.Set("ciparule", resp.Ciparule)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
+	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
 	}
 
 	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return err
-	}
-
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
 	}
 
@@ -279,85 +296,73 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
-	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
+	if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
 		return err
 	}
 
-	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
+	if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
 		return err
 	}
 
-	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
-		return err
-	}
-
-	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
-		return err
-	}
-
-	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
-		return err
-	}
-
-	if err := d.Set("app_services", flattenIDs(resp.AppServices)); err != nil {
+	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
 		return err
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
 		return err
 	}
-	if err := d.Set("app_service_groups", flattenIDs(resp.AppServiceGroups)); err != nil {
+
+	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
 		return err
 	}
 
+	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+		return err
+	}
 	return nil
 }
 
-func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] firewall filteringrule ID not set: %v\n", id)
+		log.Printf("[ERROR] url filtering rule ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
-	req := expandFirewallFilteringRules(d)
-	if err := validatRule(req); err != nil {
-		return err
-	}
-	if _, err := zClient.filteringrules.Get(id); err != nil {
+	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
+	req := expandURLFilteringRules(d)
+	if _, err := zClient.urlfilteringpolicies.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
-		_, err := zClient.filteringrules.Update(id, &req)
+		_, _, err := zClient.urlfilteringpolicies.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order))
-				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
+				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		err = resourceFirewallFilteringRulesRead(d, m)
+		err = resourceURLFilteringRulesRead(d, m)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-				list, err := zClient.filteringrules.GetAll()
+			reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
+				list, err := zClient.urlfilteringpolicies.GetAll()
 				return len(list), err
 
 			}, func(id, order int) error {
-				rule, err := zClient.filteringrules.Get(id)
+				rule, err := zClient.urlfilteringpolicies.Get(id)
 				if err != nil {
 					return err
 				}
 				rule.Order = order
-				_, err = zClient.filteringrules.Update(id, rule)
+				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
 				return err
 			})
 			return nil
@@ -365,55 +370,120 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	})
 }
 
-func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
+func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] firewall filtering rule not set: %v\n", id)
+		log.Printf("[ERROR] url filtering rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", (d.Id()))
 
-	if _, err := zClient.filteringrules.Delete(id); err != nil {
+	if _, err := zClient.urlfilteringpolicies.Delete(id); err != nil {
 		return err
 	}
+
 	d.SetId("")
-	log.Printf("[INFO] firewall filtering rule deleted")
+	log.Printf("[INFO] url filtering rule deleted")
 	return nil
 }
 
-func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
+func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFilteringRule {
 	id, _ := getIntFromResourceData(d, "rule_id")
-	result := filteringrules.FirewallFilteringRules{
-		ID:                  id,
-		Name:                d.Get("name").(string),
-		Order:               d.Get("order").(int),
-		Rank:                d.Get("rank").(int),
-		Action:              d.Get("action").(string),
-		State:               d.Get("state").(string),
-		Description:         d.Get("description").(string),
-		SrcIps:              SetToStringList(d, "src_ips"),
-		DestAddresses:       SetToStringList(d, "dest_addresses"),
-		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
-		DestCountries:       SetToStringList(d, "dest_countries"),
-		NwApplications:      SetToStringList(d, "nw_applications"),
-		EnableFullLogging:   d.Get("enable_full_logging").(bool),
-		DefaultRule:         d.Get("default_rule").(bool),
-		Predefined:          d.Get("predefined").(bool),
-		Locations:           expandIDNameExtensionsSet(d, "locations"),
-		LocationsGroups:     expandIDNameExtensionsSet(d, "location_groups"),
-		Departments:         expandIDNameExtensionsSet(d, "departments"),
-		Groups:              expandIDNameExtensionsSet(d, "groups"),
-		Users:               expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:         expandIDNameExtensionsSet(d, "time_windows"),
-		SrcIpGroups:         expandIDNameExtensionsSet(d, "src_ip_groups"),
-		DestIpGroups:        expandIDNameExtensionsSet(d, "dest_ip_groups"),
-		NwServices:          expandIDNameExtensionsSet(d, "nw_services"),
-		NwServiceGroups:     expandIDNameExtensionsSet(d, "nw_service_groups"),
-		NwApplicationGroups: expandIDNameExtensionsSet(d, "nw_application_groups"),
-		AppServices:         expandIDNameExtensionsSet(d, "app_services"),
-		AppServiceGroups:    expandIDNameExtensionsSet(d, "app_service_groups"),
-		Labels:              expandIDNameExtensionsSet(d, "labels"),
+	result := urlfilteringpolicies.URLFilteringRule{
+		ID:                     id,
+		Name:                   d.Get("name").(string),
+		Description:            d.Get("description").(string),
+		Order:                  d.Get("order").(int),
+		Protocols:              SetToStringList(d, "protocols"),
+		URLCategories:          SetToStringList(d, "url_categories"),
+		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
+		RequestMethods:         SetToStringList(d, "request_methods"),
+		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
+		State:                  d.Get("state").(string),
+		Rank:                   d.Get("rank").(int),
+		EndUserNotificationURL: d.Get("end_user_notification_url").(string),
+		BlockOverride:          d.Get("block_override").(bool),
+		TimeQuota:              d.Get("time_quota").(int),
+		SizeQuota:              d.Get("size_quota").(int),
+		ValidityStartTime:      d.Get("validity_start_time").(int),
+		ValidityEndTime:        d.Get("validity_end_time").(int),
+		ValidityTimeZoneID:     d.Get("validity_time_zone_id").(string),
+		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
+		Action:                 d.Get("action").(string),
+		Ciparule:               d.Get("ciparule").(bool),
+	}
+	locations := expandIDNameExtensionsSet(d, "locations")
+	if locations != nil {
+		result.Locations = locations
+	}
+	groups := expandIDNameExtensionsSet(d, "groups")
+	if groups != nil {
+		result.Groups = groups
+	}
+	departments := expandIDNameExtensionsSet(d, "departments")
+	if departments != nil {
+		result.Departments = departments
+	}
+	users := expandIDNameExtensionsSet(d, "users")
+	if users != nil {
+		result.Users = users
+	}
+	timeWindows := expandIDNameExtensionsSet(d, "time_windows")
+	if timeWindows != nil {
+		result.TimeWindows = timeWindows
+	}
+	overrideUsers := expandIDNameExtensionsSet(d, "override_users")
+	if overrideUsers != nil {
+		result.OverrideUsers = overrideUsers
+	}
+	overrideGroups := expandIDNameExtensionsSet(d, "override_groups")
+	if overrideGroups != nil {
+		result.OverrideGroups = overrideGroups
+	}
+	locationGroups := expandIDNameExtensionsSet(d, "location_groups")
+	if locationGroups != nil {
+		result.LocationGroups = locationGroups
+	}
+	labels := expandIDNameExtensionsSet(d, "labels")
+	if labels != nil {
+		result.Labels = labels
+	}
+	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
+	if deviceGroups != nil {
+		result.DeviceGroups = deviceGroups
+	}
+	devices := expandIDNameExtensionsSet(d, "devices")
+	if devices != nil {
+		result.Devices = devices
 	}
 	return result
 }
+
+/*
+
+func reorder(order, id int, zClient *Client) {
+	defer reorderAll(zClient)
+	rules.Lock()
+	rules.orders[id] = order
+	rules.Unlock()
+}
+
+
+// we keep calling reordering endpoint to reorder all rules after new rule was added
+// because the reorder endpoint shifts all order up to replac the new order.
+func reorderAll(zClient *Client) {
+	rules.Lock()
+	defer rules.Unlock()
+	count := zClient.urlfilteringpolicies.RulesCount()
+	for k, v := range rules.orders {
+		// the only valid order you can set is 0,count
+		if v <= count {
+			_, err := zClient.urlfilteringpolicies.Reorder(k, v)
+			if err != nil {
+				log.Printf("[ERROR] couldn't reorder the url filtering policy, the order may not have taken place: %v\n", err)
+			}
+		}
+	}
+}
+*/

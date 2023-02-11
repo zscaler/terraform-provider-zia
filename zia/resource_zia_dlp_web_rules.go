@@ -26,8 +26,8 @@ func resourceDlpWebRules() *schema.Resource {
 		Update: resourceDlpWebRulesUpdate,
 		Delete: resourceDlpWebRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -394,7 +394,7 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		log.Printf("[ERROR] web dlp rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting fweb dlp rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting dlp rule ID: %v\n", (d.Id()))
 
 	if _, err := zClient.dlp_web_rules.Delete(id); err != nil {
 		return err
