@@ -4,15 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
-	"log"
-	"strconv"
-	"strings"
-	"time"
 )
 
 /*
@@ -25,6 +27,8 @@ var rules = listrules{
 	orders: make(map[int]int),
 }
 */
+
+var urlFilteringLock sync.Mutex
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -189,15 +193,18 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		urlFilteringLock.Lock()
 		resp, err := zClient.urlfilteringpolicies.Create(&req)
+		urlFilteringLock.Unlock()
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				log.Printf("[INFO] Creating url filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
 				time.Sleep(time.Second * time.Duration(req.Order+1))
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
 		}
-		log.Printf("[INFO] Created url firewall filtering rule request. ID: %v\n", resp)
+		log.Printf("[INFO] Created url filtering rule request. ID: %v\n", resp)
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
@@ -205,6 +212,19 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
+			reorder(req.Order, resp.ID, "url_filtering_rules", func() (int, error) {
+				list, err := zClient.urlfilteringpolicies.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.urlfilteringpolicies.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
@@ -322,6 +342,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				time.Sleep(time.Second * time.Duration(req.Order+1))
+				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
@@ -331,6 +352,19 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
+			reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
+				list, err := zClient.urlfilteringpolicies.GetAll()
+				return len(list), err
+
+			}, func(id, order int) error {
+				rule, err := zClient.urlfilteringpolicies.Get(id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order
+				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+				return err
+			})
 			return nil
 		}
 	})
