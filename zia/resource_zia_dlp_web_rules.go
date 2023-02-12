@@ -404,6 +404,8 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
+// Need to improve validation and consider that fileTypes may be enabled or disabled
+// FileTypes are accepted either when ocr_enabled is true or false, just that different filetypes are supported
 func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
 	fileTypes := []string{"BITMAP", "PNG", "JPEG", "TIFF", "WINDOWS_META_FORMAT"}
 	if dlp.OcrEnabled {
