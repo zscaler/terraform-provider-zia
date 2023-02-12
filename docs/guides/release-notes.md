@@ -12,9 +12,25 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.4.1``
+``Last updated: v2.4.2``
 
 ---
+
+## 2.4.2 (February, 13 2023)
+
+### Notes
+
+- Release date: **(February, 13 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #180](https://github.com/zscaler/terraform-provider-zia/pull/180) Implemented customizable ``Timeouts`` for Create and Update functions to help with rule reorder across the following resources:
+  - ``zia_dlp_web_rules``
+  - ``zia_url_filtering_rules``
+  - ``zia_firewall_filtering_rule``
+
+- [PR #182](https://github.com/zscaler/terraform-provider-zia/pull/182) Implemented validation for ``ocr_enabled`` attribute validation for ``zia_dlp_web_rules``
 
 ## 2.4.1 (February, 10 2023)
 
