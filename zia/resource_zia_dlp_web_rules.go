@@ -422,8 +422,6 @@ func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
 				return fmt.Errorf("web dlp rule file types must be a subset of %v when OcrEnabled is disabled", fileTypes)
 			}
 		}
-	} else if len(dlp.FileTypes) > 0 {
-		return fmt.Errorf("web dlp rule file types must not be set when OcrEnabled is enabled")
 	}
 	return nil
 }

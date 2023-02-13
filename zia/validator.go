@@ -102,6 +102,14 @@ func validateCloudFirewallNwServicesTag() schema.SchemaValidateFunc {
 	return validation.StringInSlice(supportedCloudFirewallNwServicesTag, false)
 }
 
+func validateDeviceTrustLevels() schema.SchemaValidateFunc {
+	return validation.StringInSlice(supportedDeviceTrustLevels, false)
+}
+
+var supportedDeviceTrustLevels = []string{
+	"ANY", "UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
+}
+
 func validateDLPRuleFileTypes() schema.SchemaValidateFunc {
 	return validation.StringInSlice(supportedDLPRuleFileTypes, false)
 }
@@ -111,10 +119,31 @@ var supportedDLPRuleFileTypes = []string{
 	"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF",
 }
 
-func validateDeviceTrustLevels() schema.SchemaValidateFunc {
-	return validation.StringInSlice(supportedDeviceTrustLevels, false)
+// New Validation Function to Support OCR Boolean Status
+
+func validateDLPRuleFileTypesOCREnabled() schema.SchemaValidateFunc {
+	return validation.StringInSlice(supportedDLPRuleFileTypesOCREnabled, false)
 }
 
-var supportedDeviceTrustLevels = []string{
-	"ANY", "UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
+var supportedDLPRuleFileTypesOCREnabled = []string{
+	"CHEMDRAW_FILES", "BITMAP", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES", "POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES",
+	"JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD",
+	"MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR",
+	"JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL",
+	"TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP",
+	"MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP",
+	"VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC",
+	"VSDX", "TDS", "TIFF",
+}
+
+func validateDLPRuleFileTypesOCRDisabled() schema.SchemaValidateFunc {
+	return validation.StringInSlice(supportedDLPRuleFileTypesOCRDisabled, false)
+}
+
+var supportedDLPRuleFileTypesOCRDisabled = []string{
+	"CHEMDRAW_FILES", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES", "POSTSCRIPT", "OAB",
+	"BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI",
+	"TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX",
+	"INCLUDE_FILES", "RSP", "APPX", "INF", "SQL", "MM", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP",
+	"IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS",
 }
