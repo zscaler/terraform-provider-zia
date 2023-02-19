@@ -76,6 +76,15 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
+			"auth_methods": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Accepted authentication methods.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"BASIC",
+					"DIGEST",
+				}, false),
+			},
 			"groups": listIDsSchemaTypeCustom(8, "list of groups for which rule must be applied"),
 			"department": {
 				Type:     schema.TypeSet,
@@ -157,6 +166,7 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("email", resp.Email)
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
+	_ = d.Set("auth_methods", resp.AuthMethods)
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
@@ -233,6 +243,7 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
+		AuthMethods:   SetToStringList(d, "auth_methods"),
 		// Department:    expandIDNameExtensionsSet(d, "department"),
 		Groups: expandIDNameExtensionsSet(d, "groups"),
 	}

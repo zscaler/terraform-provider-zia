@@ -203,6 +203,12 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Firewall. When set to true, Firewall is enabled for the location.",
 			},
+			"basic_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Basic Authentication.",
+			},
 			"ips_control": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -358,6 +364,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("ofw_enabled", resp.OFWEnabled)
 	_ = d.Set("ips_control", resp.IPSControl)
 	_ = d.Set("aup_enabled", resp.AUPEnabled)
+	_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
 	_ = d.Set("caution_enabled", resp.CautionEnabled)
 	_ = d.Set("aup_block_internet_until_accepted", resp.AUPBlockInternetUntilAccepted)
 	_ = d.Set("aup_force_ssl_inspection", resp.AUPForceSSLInspection)
@@ -479,6 +486,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		OFWEnabled:                          d.Get("ofw_enabled").(bool),
 		IPSControl:                          d.Get("ips_control").(bool),
 		AUPEnabled:                          d.Get("aup_enabled").(bool),
+		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),
 		CautionEnabled:                      d.Get("caution_enabled").(bool),
 		AUPBlockInternetUntilAccepted:       d.Get("aup_block_internet_until_accepted").(bool),
 		AUPForceSSLInspection:               d.Get("aup_force_ssl_inspection").(bool),

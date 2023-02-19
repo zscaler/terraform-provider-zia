@@ -140,6 +140,10 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"basic_auth_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"surrogate_ip": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -251,6 +255,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("ofw_enabled", resp.OFWEnabled)
 		_ = d.Set("ips_control", resp.IPSControl)
 		_ = d.Set("aup_enabled", resp.AUPEnabled)
+		_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
 		_ = d.Set("caution_enabled", resp.CautionEnabled)
 		_ = d.Set("aup_block_internet_until_accepted", resp.AUPBlockInternetUntilAccepted)
 		_ = d.Set("aup_force_ssl_inspection", resp.AUPForceSSLInspection)
