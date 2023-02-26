@@ -551,7 +551,8 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 		case <-ticker.C:
 			rules.Lock()
 			count, _ := getCount()
-			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], count
+			size := len(rules.orders[resourceType])
+			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
 			// sort by order (ascending)
 			sorted := sortOrders(rules.orders[resourceType])
 			log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
