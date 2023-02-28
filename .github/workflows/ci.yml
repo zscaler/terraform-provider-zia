@@ -104,6 +104,7 @@ jobs:
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
         ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+        TF_CLI_ARGS_apply: -parallelism=1
 
         # Set whatever additional acceptance test env vars here. You can
         # optionally use data from your repository secrets using the

@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.5.0 (February, 27 2023)
+
+### Notes
+
+- Release date: **(February, 27 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #193](https://github.com/zscaler/terraform-provider-zia/pull/193) Added new following new datasources:
+  - ``zia_firewall_filtering_application_services`` The returned values are:
+    - ``SKYPEFORBUSINESS``, ``FILE_SHAREPT_ONEDRIVE``, ``EXCHANGEONLINE``, ``M365COMMON``, ``ZOOMMEETING``, ``WEBEXMEETING``, ``WEBEXTEAMS``, ``WEBEXCALLING``, ``RINGCENTRALMEETING``, ``GOTOMEETING``, ``GOTOMEETING_INROOM``, ``LOGMEINMEETING``, ``LOGMEINRESCUE``
+
+  - ``zia_firewall_filtering_application_services_group`` The returned values are:
+    - ``OFFICE365``, ``ZOOM``, ``WEBEX``, ``RINGCENTRAL``, ``LOGMEIN``
+
+### Fixes
+
+- [PR #194](https://github.com/zscaler/terraform-provider-zia/pull/194) Implemented custom reorder function to ensure rules across the following resources are placed in the correct order.
+  - ``zia_firewall_filtering_rule``
+  - ``zia_dlp_web_rules``
+  - ``zia_url_filtering_rules``
+
 ## 2.4.2 (February, 13 2023)
 
 ### Notes
