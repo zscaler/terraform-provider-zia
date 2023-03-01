@@ -65,10 +65,11 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							Description: "GRE cluster virtual IP address (VIP)",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							Description:  "GRE cluster virtual IP address (VIP)",
+							ValidateFunc: validation.IsIPAddress,
 						},
 						"private_service_edge": {
 							Type:        schema.TypeBool,
@@ -99,10 +100,11 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 							Description: "Unique identifer of the GRE virtual IP address (VIP)",
 						},
 						"virtual_ip": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Computed:    true,
-							Description: "GRE cluster virtual IP address (VIP)",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							Description:  "GRE cluster virtual IP address (VIP)",
+							ValidateFunc: validation.IsIPAddress,
 						},
 						"private_service_edge": {
 							Type:        schema.TypeBool,

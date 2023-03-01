@@ -8,7 +8,7 @@ data "zia_gre_internal_ip_range_list" "this"{
 }
 
 resource "zia_traffic_forwarding_static_ip" "this"{
-    ip_address =  "50.98.112.169"
+    ip_address =  "1.1.1.1"
     routable_ip = true
     comment = "Created with Terraform"
     geo_override = true
@@ -19,6 +19,7 @@ resource "zia_traffic_forwarding_static_ip" "this"{
 resource "zia_traffic_forwarding_gre_tunnel" "this" {
   source_ip      = zia_traffic_forwarding_static_ip.this.ip_address
   comment        = "GRE Tunnel Created with Terraform"
+  internal_ip_range = data.zia_gre_internal_ip_range_list.this.list[0].start_ip_address
   within_country = false
   country_code   = "CA"
   ip_unnumbered  = false

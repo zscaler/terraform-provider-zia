@@ -17,14 +17,14 @@ import (
 
 func TestAccResourceLocationManagementBasic(t *testing.T) {
 	var locations locationmanagement.Locations
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringLocManagement)
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingLocManagement)
 
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
-	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
 
 	rSharedKey := acctest.RandString(20)
-	vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringVPNCredentials)
+	vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, rSharedKey)
 
 	resource.Test(t, resource.TestCase{
@@ -80,7 +80,7 @@ func testAccCheckLocationManagementDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.TrafficFilteringLocManagement {
+		if rs.Type != resourcetype.TrafficForwardingLocManagement {
 			continue
 		}
 
@@ -151,7 +151,7 @@ data "%s" "%s" {
 		getLocationManagementHCL(generatedName, staticIPTypeAndName, vpnCredentialTypeAndName, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled),
 
 		// data source variables
-		resourcetype.TrafficFilteringLocManagement,
+		resourcetype.TrafficForwardingLocManagement,
 		generatedName,
 		resourceTypeAndName,
 	)
@@ -180,7 +180,7 @@ resource "%s" "%s" {
 `,
 
 		// resource variables
-		resourcetype.TrafficFilteringLocManagement,
+		resourcetype.TrafficForwardingLocManagement,
 		generatedName,
 		generatedName,
 		generatedName,
