@@ -4,6 +4,7 @@ import (
 	"log"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -516,7 +517,8 @@ func sortOrders(ruleOrderMap map[int]int) RuleIDOrderPairList {
 }
 
 type listrules struct {
-	orders map[string]map[int]int
+	orders  map[string]map[int]int
+	orderer map[string]int
 	sync.Mutex
 }
 
@@ -541,31 +543,58 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	rules.Lock()
-	defer rules.Unlock()
-	count, _ := getCount()
-	// sort by order (ascending)
-	sorted := sortOrders(rules.orders[resourceType])
-	log.Printf("[INFO] sorting filtering rule; sorted:%v", sorted)
-	for _, v := range sorted {
-		if v.Order <= count {
-
-			if err := updateOrder(v.ID, v.Order); err != nil {
-				log.Printf("[ERROR] couldn't reorder the rule, the order may not have taken place: %v\n", err)
+	ticker := time.NewTicker(time.Second * 30) // create a ticker that ticks every half minute
+	defer ticker.Stop()                        // stop the ticker when the loop ends
+	numResources := []int{0, 0, 0}
+	for {
+		select {
+		case <-ticker.C:
+			rules.Lock()
+			count, _ := getCount()
+			size := len(rules.orders[resourceType])
+			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
+			// sort by order (ascending)
+			sorted := sortOrders(rules.orders[resourceType])
+			log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
+			for _, v := range sorted {
+				if v.Order <= count {
+					if err := updateOrder(v.ID, v.Order); err != nil {
+						log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
+					}
+				}
 			}
+			rules.Unlock()
+			if numResources[0] == numResources[1] && numResources[1] == numResources[2] {
+				// No changes after a while, stop the ticker
+				return
+			}
+		default:
+			time.Sleep(time.Second * 5)
 		}
 	}
 }
 
 func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
 	rules.Lock()
+	shouldCallReorder := false
 	if len(rules.orders) == 0 {
 		rules.orders = map[string]map[int]int{}
+		rules.orderer = map[string]int{}
+	}
+	if _, ok := rules.orderer[resourceType]; ok {
+		shouldCallReorder = false
+	} else {
+		rules.orderer[resourceType] = id
+		shouldCallReorder = true
 	}
 	if len(rules.orders[resourceType]) == 0 {
 		rules.orders[resourceType] = map[int]int{}
 	}
 	rules.orders[resourceType][id] = order
 	rules.Unlock()
-	reorderAll(resourceType, getCount, updateOrder)
+	if shouldCallReorder {
+		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
+		// one resource will wait until all resources are done and reorder then return
+		reorderAll(resourceType, getCount, updateOrder)
+	}
 }
