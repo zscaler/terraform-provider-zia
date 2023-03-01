@@ -12,9 +12,42 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.4.2``
+``Last updated: v2.4.3``
 
 ---
+
+## 2.4.3 (February, 28 2023)
+
+### Notes
+
+- Release date: **(February, 28 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #193](https://github.com/zscaler/terraform-provider-zia/pull/193) Added new following new datasources:
+  - ``zia_firewall_filtering_application_services`` The returned values are:
+    - ``SKYPEFORBUSINESS``, ``FILE_SHAREPT_ONEDRIVE``, ``EXCHANGEONLINE``, ``M365COMMON``, ``ZOOMMEETING``, ``WEBEXMEETING``, ``WEBEXTEAMS``, ``WEBEXCALLING``, ``RINGCENTRALMEETING``, ``GOTOMEETING``, ``GOTOMEETING_INROOM``, ``LOGMEINMEETING``, ``LOGMEINRESCUE``
+
+  - ``zia_firewall_filtering_application_services_group`` The returned values are:
+    - ``OFFICE365``, ``ZOOM``, ``WEBEX``, ``RINGCENTRAL``, ``LOGMEIN``
+
+### Fixes
+
+- [PR #194](https://github.com/zscaler/terraform-provider-zia/pull/194) Improved ``Timeout`` reorder functions to ensure the rules across the below resources are organized correctly.
+  - ``zia_dlp_web_rules``
+  - ``zia_url_filtering_rules``
+  - ``zia_firewall_filtering_rule`
+
+⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests to ONE, when configuring the above resources.
+
+  This will allow the API to settle these resources in the correct order. Pushing large batches of security rules at once, may incur in Terraform to Timeout after 20 mins, as it will try to place the rules in the incorrect order. This issue will be addressed in future versions.
+
+In order to accomplish this, make sure you set the
+[parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or
+below this limit to prevent performance impacts.
+
+- [PR #195](https://github.com/zscaler/terraform-provider-zia/pull/195) Fixed ``zia_traffic_forwarding_gre_tunnel`` by removing unecessary computed values to prevent drifts.
 
 ## 2.4.2 (February, 13 2023)
 
