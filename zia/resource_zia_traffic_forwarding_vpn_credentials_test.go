@@ -17,12 +17,12 @@ import (
 
 func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringVPNCredentials)
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
 	rSharedKey := acctest.RandString(20)
 
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
-	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
 
 	resource.Test(t, resource.TestCase{
@@ -80,7 +80,7 @@ func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) erro
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.TrafficFilteringVPNCredentials {
+		if rs.Type != resourcetype.TrafficForwardingVPNCredentials {
 			continue
 		}
 
@@ -146,7 +146,7 @@ data "%s" "%s" {
 		getTrafficForwardingVPNCredentialsUFQDN_HCL(generatedName, rEmail, rSharedKey),
 
 		// data source variables
-		resourcetype.TrafficFilteringVPNCredentials,
+		resourcetype.TrafficForwardingVPNCredentials,
 		generatedName,
 		resourceTypeAndName,
 	)
@@ -162,7 +162,7 @@ resource "%s" "%s" {
 }
 `,
 		// resource variables
-		resourcetype.TrafficFilteringVPNCredentials,
+		resourcetype.TrafficForwardingVPNCredentials,
 		generatedName,
 		generatedName,
 		rEmail,
@@ -188,7 +188,7 @@ data "%s" "%s" {
 		getTrafficForwardingVPNCredentialsIP_HCL(generatedName, staticIPTypeAndName, rSharedKey),
 
 		// data source variables
-		resourcetype.TrafficFilteringVPNCredentials,
+		resourcetype.TrafficForwardingVPNCredentials,
 		generatedName,
 		resourceTypeAndName,
 	)
@@ -204,7 +204,7 @@ resource "%s" "%s" {
 }
 `,
 		// resource variables
-		resourcetype.TrafficFilteringVPNCredentials,
+		resourcetype.TrafficForwardingVPNCredentials,
 		generatedName,
 		generatedName,
 		staticIPTypeAndName,
