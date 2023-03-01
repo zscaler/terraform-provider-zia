@@ -77,58 +77,58 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a non-RFC 1918 IP address is publicly routable. This attribute is ignored if there is no ZIA Private Service Edge associated to the organization.",
 			},
-			"managed_by": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "This is an immutable reference to an entity. which mainly consists of id and name",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"last_modified_by": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Description: "This is an immutable reference to an entity. which mainly consists of id and name",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
+			// "managed_by": {
+			// 	Type:        schema.TypeSet,
+			// 	Optional:    true,
+			// 	Computed:    true,
+			// 	Description: "This is an immutable reference to an entity. which mainly consists of id and name",
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:        schema.TypeInt,
+			// 				Optional:    true,
+			// 				Description: "Identifier that uniquely identifies an entity",
+			// 			},
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"extensions": {
+			// 				Type:     schema.TypeMap,
+			// 				Optional: true,
+			// 				Elem: &schema.Schema{
+			// 					Type: schema.TypeString,
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
+			// "last_modified_by": {
+			// 	Type:        schema.TypeSet,
+			// 	Optional:    true,
+			// 	Computed:    true,
+			// 	Description: "This is an immutable reference to an entity. which mainly consists of id and name",
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"id": {
+			// 				Type:        schema.TypeInt,
+			// 				Optional:    true,
+			// 				Description: "Identifier that uniquely identifies an entity",
+			// 			},
+			// 			"name": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"extensions": {
+			// 				Type:     schema.TypeMap,
+			// 				Optional: true,
+			// 				Elem: &schema.Schema{
+			// 					Type: schema.TypeString,
+			// 				},
+			// 			},
+			// 		},
+			// 	},
+			// },
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -187,13 +187,13 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	_ = d.Set("routable_ip", resp.RoutableIP)
 	_ = d.Set("comment", resp.Comment)
 
-	if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
-		return err
-	}
+	// if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
+	// 	return err
+	// }
 
-	if err := d.Set("last_modified_by", flattenStaticLastModifiedBy(resp.LastModifiedBy)); err != nil {
-		return err
-	}
+	// if err := d.Set("last_modified_by", flattenStaticLastModifiedBy(resp.LastModifiedBy)); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -268,18 +268,19 @@ func expandTrafficForwardingStaticIP(d *schema.ResourceData) staticips.StaticIP 
 		RoutableIP:  d.Get("routable_ip").(bool),
 		Comment:     d.Get("comment").(string),
 	}
-	managedBy := expandStaticIPManagedBy(d)
-	if managedBy != nil {
-		result.ManagedBy = managedBy
-	}
+	// managedBy := expandStaticIPManagedBy(d)
+	// if managedBy != nil {
+	// 	result.ManagedBy = managedBy
+	// }
 
-	lastModifiedBy := expandStaticIPLastModifiedBy(d)
-	if lastModifiedBy != nil {
-		result.LastModifiedBy = lastModifiedBy
-	}
+	// lastModifiedBy := expandStaticIPLastModifiedBy(d)
+	// if lastModifiedBy != nil {
+	// 	result.LastModifiedBy = lastModifiedBy
+	// }
 	return result
 }
 
+/*
 func expandStaticIPManagedBy(d *schema.ResourceData) *staticips.ManagedBy {
 	managedByObj, ok := d.GetOk("managed_by")
 	if !ok {
@@ -327,3 +328,4 @@ func expandStaticIPLastModifiedBy(d *schema.ResourceData) *staticips.LastModifie
 	}
 	return nil
 }
+*/
