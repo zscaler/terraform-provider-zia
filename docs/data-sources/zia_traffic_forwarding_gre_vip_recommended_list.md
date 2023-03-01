@@ -15,16 +15,19 @@ Use the **zia_gre_vip_recommended_list** data source to get information about a 
 
 ```hcl
 # ZIA Traffic Forwarding - GRE VIP Recommended List
-data "zia_gre_vip_recommended_list" "example"{
+data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
     source_ip = "1.1.1.1"
+    required_count = 2
 }
+
 ```
 
 ## Argument Reference
 
 The following arguments are supported:
 
-* `ip_address` - (Required) - Filter based on an IP address range.
+* `source_ip` - (Required) - Filter based on an IP address range.
+* `required_count` - (Optional)  - Number of IP address to be exported.
 * `id` - (Number) Unique identifer of the GRE virtual IP address (VIP)
 
 ## Attribute Reference

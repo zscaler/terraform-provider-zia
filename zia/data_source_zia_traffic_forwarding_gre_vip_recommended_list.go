@@ -26,7 +26,7 @@ func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 			"required_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Default:  5,
 			},
 			"list": {
 				Type:     schema.TypeList,

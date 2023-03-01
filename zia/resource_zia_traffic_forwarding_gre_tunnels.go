@@ -14,11 +14,30 @@ import (
 
 func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	return &schema.Resource{
-		Create:   resourceTrafficForwardingGRETunnelCreate,
-		Read:     resourceTrafficForwardingGRETunnelRead,
-		Update:   resourceTrafficForwardingGRETunnelUpdate,
-		Delete:   resourceTrafficForwardingGRETunnelDelete,
-		Importer: &schema.ResourceImporter{},
+		Create: resourceTrafficForwardingGRETunnelCreate,
+		Read:   resourceTrafficForwardingGRETunnelRead,
+		Update: resourceTrafficForwardingGRETunnelUpdate,
+		Delete: resourceTrafficForwardingGRETunnelDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				id := d.Id()
+				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					_ = d.Set("tunnel_id", idInt)
+				} else {
+					resp, err := zClient.gretunnels.GetByIPAddress(id)
+					if err == nil {
+						d.SetId(strconv.Itoa(resp.ID))
+						_ = d.Set("tunnel_id", resp.ID)
+					} else {
+						return []*schema.ResourceData{d}, err
+					}
+				}
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"tunnel_id": {
@@ -54,11 +73,13 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 						"private_service_edge": {
 							Type:        schema.TypeBool,
 							Computed:    true,
+							Optional:    true,
 							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
 						},
 						"datacenter": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Optional:    true,
 							Description: "Data center information",
 						},
 					},
@@ -86,11 +107,13 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 						"private_service_edge": {
 							Type:        schema.TypeBool,
 							Computed:    true,
+							Optional:    true,
 							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
 						},
 						"datacenter": {
 							Type:        schema.TypeString,
 							Computed:    true,
+							Optional:    true,
 							Description: "Data center information",
 						},
 					},
@@ -101,35 +124,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Computed:     true,
 				Optional:     true,
 				Description:  "The start of the internal IP address in /29 CIDR range",
-				ValidateFunc: validation.IsIPv4Range,
-			},
-
-			"last_modification_time": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"last_modified_by": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
+				ValidateFunc: validation.IsIPv4Address,
 			},
 			"within_country": {
 				Type:        schema.TypeBool,
@@ -229,7 +224,6 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	_ = d.Set("tunnel_id", resp.ID)
 	_ = d.Set("source_ip", resp.SourceIP)
 	_ = d.Set("internal_ip_range", resp.InternalIpRange)
-	_ = d.Set("last_modification_time", resp.LastModificationTime)
 	_ = d.Set("within_country", resp.WithinCountry)
 	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
@@ -238,10 +232,6 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	}
 
 	if err := d.Set("secondary_dest_vip", flattenGreSecondaryDestVipSimple(resp.SecondaryDestVip)); err != nil {
-		return err
-	}
-
-	if err := d.Set("last_modified_by", flattenGreLastModifiedBy(resp.LastModifiedBy)); err != nil {
 		return err
 	}
 
@@ -315,13 +305,12 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 	id, _ := getIntFromResourceData(d, "tunnel_id")
 	result := gretunnels.GreTunnels{
-		ID:                   id,
-		SourceIP:             d.Get("source_ip").(string),
-		InternalIpRange:      d.Get("internal_ip_range").(string),
-		LastModificationTime: d.Get("last_modification_time").(int),
-		WithinCountry:        d.Get("within_country").(bool),
-		Comment:              d.Get("comment").(string),
-		IPUnnumbered:         d.Get("ip_unnumbered").(bool),
+		ID:              id,
+		SourceIP:        d.Get("source_ip").(string),
+		InternalIpRange: d.Get("internal_ip_range").(string),
+		WithinCountry:   d.Get("within_country").(bool),
+		Comment:         d.Get("comment").(string),
+		IPUnnumbered:    d.Get("ip_unnumbered").(bool),
 	}
 	primaryDestVip := expandPrimaryDestVip(d)
 	if primaryDestVip != nil {
@@ -330,10 +319,6 @@ func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 	secondaryDestVip := expandSecondaryDestVip(d)
 	if secondaryDestVip != nil {
 		result.SecondaryDestVip = secondaryDestVip
-	}
-	lastModifiedBy := expandLastModifiedByTunnel(d)
-	if lastModifiedBy != nil {
-		result.LastModifiedBy = lastModifiedBy
 	}
 	return result
 }
@@ -384,32 +369,6 @@ func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip
 			PrivateServiceEdge: vip["private_service_edge"].(bool),
 			Datacenter:         vip["datacenter"].(string),
 		}
-	}
-	return nil
-}
-
-func expandLastModifiedByTunnel(d *schema.ResourceData) *gretunnels.LastModifiedBy {
-	lastModifiedByObj, ok := d.GetOk("last_modified_by")
-	if !ok {
-		return nil
-	}
-	lastModifiedSet, ok := lastModifiedByObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(lastModifiedSet.List()) > 0 {
-		lastModifiedObj := lastModifiedSet.List()[0]
-		lastModified, ok := lastModifiedObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		result := &gretunnels.LastModifiedBy{
-			ID: lastModified["id"].(int),
-		}
-		if lastModified["extensions"] != nil {
-			result.Extensions, _ = lastModified["extensions"].(map[string]interface{})
-		}
-		return result
 	}
 	return nil
 }
