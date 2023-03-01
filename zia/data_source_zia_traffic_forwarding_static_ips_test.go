@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccDataSourceTrafficForwardingStaticIP_Basic(t *testing.T) {
-	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 
 	resource.Test(t, resource.TestCase{

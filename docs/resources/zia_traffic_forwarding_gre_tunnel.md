@@ -36,6 +36,47 @@ resource "zia_traffic_forwarding_static_ip" "example"{
 }
 ```
 
+```hcl
+data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
+    source_ip = zia_traffic_forwarding_static_ip.this.ip_address
+    required_count = 2
+}
+
+data "zia_gre_internal_ip_range_list" "this"{
+    required_count = 10
+}
+
+resource "zia_traffic_forwarding_static_ip" "this"{
+    ip_address =  "50.98.112.169"
+    routable_ip = true
+    comment = "Created with Terraform"
+    geo_override = true
+    latitude = 49.0526
+    longitude = -122.8291
+}
+
+resource "zia_traffic_forwarding_gre_tunnel" "this" {
+  source_ip      = zia_traffic_forwarding_static_ip.this.ip_address
+  comment        = "GRE Tunnel Created with Terraform"
+  within_country = false
+  country_code   = "CA"
+  ip_unnumbered  = false
+  primary_dest_vip {
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].datacenter
+    virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].virtual_ip
+  }
+  secondary_dest_vip {
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].datacenter
+    virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
+  }
+  depends_on     = [zia_traffic_forwarding_static_ip.this]
+}
+```
+
+-> **Note:** Although the example shows 2 valid attributes defined (datacenter, virtual_ip) within the primary_dest_vip and secondary_dest_vip, only one attribute is required. If setting the datacenter name as the attribute i.e YVR1. The provider will automatically select the agvaiulable VIP.
+
+-> **Note:** To obtain the datacenter codes and/or virtual_ips, refer to the following [Zscaler Portal](https://config.zscaler.com/zscloud.net/cenr) and choose your cloud tenant.
+
 -> **Note:** The provider will automatically query and set the Zscaler cloud for the next available `/29` internal IP range to be used in a numbered GRE tunnel.
 
 ```hcl

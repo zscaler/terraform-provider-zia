@@ -59,7 +59,7 @@ const (
 const (
 	StaticIPComment   = "this is an acceptance test"
 	StaticRoutableIP  = true
-	StaticGeoOverride = true
+	StaticGeoOverride = false
 )
 
 // Traffic Forwarding VPN Credentials resource/datasource
@@ -77,6 +77,13 @@ const (
 	LocXFF          = true
 	LocOFW          = true
 	LocIPS          = true
+)
+
+// Traffic Forwarding GRE resource/datasource
+const (
+	GRETunnelComment       = "this is an acceptance test"
+	GRETunnelWithinCountry = false
+	GRETunnelIPUnnumbered  = false
 )
 
 // DLP Dictionaries resource/datasource

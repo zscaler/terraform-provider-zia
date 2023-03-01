@@ -17,8 +17,8 @@ import (
 
 func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	var static staticips.StaticIP
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficFilteringStaticIP)
-	rIP, _ := acctest.RandIpAddress("121.234.54.0/24")
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
+	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -55,7 +55,7 @@ func testAccCheckTrafficForwardingStaticIPDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.TrafficFilteringStaticIP {
+		if rs.Type != resourcetype.TrafficForwardingStaticIP {
 			continue
 		}
 
@@ -121,7 +121,7 @@ data "%s" "%s" {
 		getTrafficForwardingStaticIPConfigure(generatedName, ipAddress, routableIP, geoOverride),
 
 		// data source variables
-		resourcetype.TrafficFilteringStaticIP,
+		resourcetype.TrafficForwardingStaticIP,
 		generatedName,
 		resourceTypeAndName,
 	)
@@ -133,14 +133,12 @@ func getTrafficForwardingStaticIPConfigure(generatedName, ipAddress string, rout
 resource "%s" "%s" {
 	comment = "tf-acc-test-%s"
     ip_address =  "%s"
-	latitude = -36.848461
-    longitude = 174.763336
     routable_ip = "%s"
     geo_override = "%s"
 }
 `,
 		// resource variables
-		resourcetype.TrafficFilteringStaticIP,
+		resourcetype.TrafficForwardingStaticIP,
 		generatedName,
 		generatedName,
 		ipAddress,
