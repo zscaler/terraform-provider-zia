@@ -14,6 +14,8 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_notification_templates"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/applicationservices"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/applicationservicesgroup"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipdestinationgroups"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipsourcegroups"
@@ -48,6 +50,8 @@ type Client struct {
 	ipsourcegroups                *ipsourcegroups.Service
 	networkapplications           *networkapplications.Service
 	networkservices               *networkservices.Service
+	applicationservices           *applicationservices.Service
+	applicationservicesgroup      *applicationservicesgroup.Service
 	timewindow                    *timewindow.Service
 	urlcategories                 *urlcategories.Service
 	urlfilteringpolicies          *urlfilteringpolicies.Service
@@ -95,6 +99,8 @@ func (c *Config) Client() (*Client, error) {
 		ipsourcegroups:                ipsourcegroups.New(cli),
 		networkapplications:           networkapplications.New(cli),
 		networkservices:               networkservices.New(cli),
+		applicationservices:           applicationservices.New(cli),
+		applicationservicesgroup:      applicationservicesgroup.New(cli),
 		timewindow:                    timewindow.New(cli),
 		urlcategories:                 urlcategories.New(cli),
 		urlfilteringpolicies:          urlfilteringpolicies.New(cli),

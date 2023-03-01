@@ -84,6 +84,8 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_network_service_groups":     dataSourceFWNetworkServiceGroups(),
 			"zia_firewall_filtering_network_application":        dataSourceFWNetworkApplication(),
 			"zia_firewall_filtering_network_application_groups": dataSourceFWNetworkApplicationGroups(),
+			"zia_firewall_filtering_application_services":       dataSourceFWApplicationServicesLite(),
+			"zia_firewall_filtering_application_services_group": dataSourceFWApplicationServicesGroupLite(),
 			"zia_firewall_filtering_ip_source_groups":           dataSourceFWIPSourceGroups(),
 			"zia_firewall_filtering_destination_groups":         dataSourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_time_window":                dataSourceFWTimeWindow(),
