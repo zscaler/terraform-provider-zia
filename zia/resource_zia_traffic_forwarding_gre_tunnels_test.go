@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
@@ -18,6 +19,10 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 	var gretunnel gretunnels.GreTunnels
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingGRETunnel)
 
+	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
+	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
+	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -25,10 +30,10 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create gree tunnel
-				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
+				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
@@ -36,10 +41,10 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 
 			// update
 			{
-				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
+				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
@@ -104,10 +109,11 @@ func testAccCheckTrafficForwardingGRETunnelExists(resource string, rule *gretunn
 	}
 }
 
-func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName string, withinCountry, ipUnnumbered bool) string {
+func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName string, withinCountry, ipUnnumbered bool) string {
 	return fmt.Sprintf(`
 
 	// gre tunnel resource
+	%s
 
 	// static ip resource
 	%s
@@ -117,7 +123,8 @@ func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, genera
 	}
 `,
 		// resource variables
-		getTrafficForwardingGRETunnel_HCL(generatedName, withinCountry, ipUnnumbered),
+		staticIPResourceHCL,
+		getTrafficForwardingGRETunnel_HCL(generatedName, staticIPTypeAndName, withinCountry, ipUnnumbered),
 
 		// data source variables
 		resourcetype.TrafficForwardingGRETunnel,
@@ -126,40 +133,21 @@ func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, genera
 	)
 }
 
-func getTrafficForwardingGRETunnel_HCL(generatedName string, withinCountry, ipUnnumbered bool) string {
+func getTrafficForwardingGRETunnel_HCL(generatedName, staticIPTypeAndName string, withinCountry, ipUnnumbered bool) string {
 	return fmt.Sprintf(`
 
-data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
-	source_ip = "104.238.235.100"
-	required_count = 2
-}
-
-data "zia_gre_internal_ip_range_list" "this"{
-    required_count = 10
-}
-
 resource "%s" "%s" {
-	source_ip = "104.238.235.100"
-	comment = "tf-acc-test-%s"
+	source_ip = "${%s.ip_address}"
+	comment = "TestAcc Created with Terraform"
 	country_code   = "CA"
     within_country = "%s"
     ip_unnumbered  = "%s"
-	primary_dest_vip {
-		datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].datacenter
-		id = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].id
-		virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].virtual_ip
-	  }
-	  secondary_dest_vip {
-		datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].datacenter
-		id = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].id
-		virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
-	  }
 }
 `,
 		// resource variables
 		resourcetype.TrafficForwardingGRETunnel,
 		generatedName,
-		generatedName,
+		staticIPTypeAndName,
 		strconv.FormatBool(withinCountry),
 		strconv.FormatBool(ipUnnumbered),
 	)
