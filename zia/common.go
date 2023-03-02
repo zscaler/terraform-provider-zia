@@ -611,7 +611,7 @@ func reorder(order, id int, resourceType string, getCount func() (int, error), u
 	if len(rules.orders[resourceType]) == 0 {
 		rules.orders[resourceType] = map[int]orderWithState{}
 	}
-	rules.orders[resourceType][id] = orderWithState{order, false}
+	rules.orders[resourceType][id] = orderWithState{order, shouldCallReorder}
 	rules.Unlock()
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
