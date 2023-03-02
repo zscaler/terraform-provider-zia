@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -17,16 +18,8 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
-/*
-type listrules struct {
-	orders map[int]int
-	sync.Mutex
-}
-
-var rules = listrules{
-	orders: make(map[int]int),
-}
-*/
+var urlFilteringLock sync.Mutex
+var urlFilteringStartingOrder int
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -207,9 +200,23 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		start := time.Now()
+		urlFilteringLock.Lock()
+		if urlFilteringStartingOrder == 0 {
+			list, _ := zClient.urlfilteringpolicies.GetAll()
+			for _, r := range list {
+				if r.Order > urlFilteringStartingOrder {
+					urlFilteringStartingOrder = r.Order
+				}
+			}
+			if urlFilteringStartingOrder == 0 {
+				urlFilteringStartingOrder = 1
+			}
+		}
+		urlFilteringLock.Unlock()
+		startWithoutLocking := time.Now()
 		order := req.Order
-		list, _ := zClient.urlfilteringpolicies.GetAll()
-		req.Order = len(list) + 1
+		req.Order = urlFilteringStartingOrder
 		resp, err := zClient.urlfilteringpolicies.Create(&req)
 		if err != nil {
 			// check is err matches regex "Rule with rank [0-9]+ is not allowed at order [0-9]+
@@ -225,7 +232,20 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
 		}
-		log.Printf("[INFO] Created url filtering rule request. ID: %v\n", resp)
+		log.Printf("[INFO] Created url filtering rule request.  took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
+			list, err := zClient.urlfilteringpolicies.GetAll()
+			return len(list), err
+
+		}, func(id, order int) error {
+			rule, err := zClient.urlfilteringpolicies.Get(id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+			return err
+		})
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
@@ -233,19 +253,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
-				list, err := zClient.urlfilteringpolicies.GetAll()
-				return len(list), err
-
-			}, func(id, order int) error {
-				rule, err := zClient.urlfilteringpolicies.Get(id)
-				if err != nil {
-					return err
-				}
-				rule.Order = order
-				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
-				return err
-			})
+			markOrderRuleAsDone(resp.ID, "url_filtering_rules")
 			return nil
 		}
 	})
@@ -362,30 +370,29 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		_, _, err := zClient.urlfilteringpolicies.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				time.Sleep(time.Second * time.Duration(req.Order+1))
 				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
 		}
+		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
+			list, err := zClient.urlfilteringpolicies.GetAll()
+			return len(list), err
 
+		}, func(id, order int) error {
+			rule, err := zClient.urlfilteringpolicies.Get(id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+			return err
+		})
 		err = resourceURLFilteringRulesRead(d, m)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
-				list, err := zClient.urlfilteringpolicies.GetAll()
-				return len(list), err
-
-			}, func(id, order int) error {
-				rule, err := zClient.urlfilteringpolicies.Get(id)
-				if err != nil {
-					return err
-				}
-				rule.Order = order
-				_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
-				return err
-			})
+			markOrderRuleAsDone(req.ID, "url_filtering_rules")
 			return nil
 		}
 	})

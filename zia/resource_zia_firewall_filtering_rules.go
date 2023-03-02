@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,6 +19,7 @@ import (
 )
 
 var firewallFilteringLock sync.Mutex
+var firewallFilteringStartingOrder int
 
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -26,8 +28,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 		Update: resourceFirewallFilteringRulesUpdate,
 		Delete: resourceFirewallFilteringRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-			Update: schema.DefaultTimeout(20 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
@@ -180,18 +182,50 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		return err
 	}
 	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
+		start := time.Now()
 		firewallFilteringLock.Lock()
-		resp, err := zClient.filteringrules.Create(&req)
+		if firewallFilteringStartingOrder == 0 {
+			list, _ := zClient.filteringrules.GetAll()
+			for _, r := range list {
+				if r.Order > firewallFilteringStartingOrder {
+					firewallFilteringStartingOrder = r.Order
+				}
+			}
+			if firewallFilteringStartingOrder == 0 {
+				firewallFilteringStartingOrder = 1
+			}
+		}
 		firewallFilteringLock.Unlock()
+		startWithoutLocking := time.Now()
+		order := req.Order
+		req.Order = firewallFilteringStartingOrder
+		resp, err := zClient.filteringrules.Create(&req)
 		if err != nil {
+			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
+				return resource.NonRetryableError(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err))
+			}
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				time.Sleep(time.Second * time.Duration(req.Order+1))
 				log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
 		}
-		log.Printf("[INFO] Created zia firewall filtering rule request. ID: %v\n", resp)
+		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
+			list, err := zClient.filteringrules.GetAll()
+			return len(list), err
+
+		}, func(id, order int) error {
+			rule, err := zClient.filteringrules.Get(id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, err = zClient.filteringrules.Update(id, rule)
+			return err
+		})
+
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
@@ -199,19 +233,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-				list, err := zClient.filteringrules.GetAll()
-				return len(list), err
-
-			}, func(id, order int) error {
-				rule, err := zClient.filteringrules.Get(id)
-				if err != nil {
-					return err
-				}
-				rule.Order = order
-				_, err = zClient.filteringrules.Update(id, rule)
-				return err
-			})
+			markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
 			return nil
 		}
 	})
@@ -336,30 +358,29 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		_, err := zClient.filteringrules.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				time.Sleep(time.Second * time.Duration(req.Order+1))
 				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
 		}
+		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
+			list, err := zClient.filteringrules.GetAll()
+			return len(list), err
 
+		}, func(id, order int) error {
+			rule, err := zClient.filteringrules.Get(id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, err = zClient.filteringrules.Update(id, rule)
+			return err
+		})
 		err = resourceFirewallFilteringRulesRead(d, m)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-				list, err := zClient.filteringrules.GetAll()
-				return len(list), err
-
-			}, func(id, order int) error {
-				rule, err := zClient.filteringrules.Get(id)
-				if err != nil {
-					return err
-				}
-				rule.Order = order
-				_, err = zClient.filteringrules.Update(id, rule)
-				return err
-			})
+			markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
 			return nil
 		}
 	})
