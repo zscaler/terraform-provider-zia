@@ -89,7 +89,8 @@ func resourceDlpWebRules() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "The rule order of execution for the DLP policy rule with respect to other rules.",
 			},
 			"cloud_applications": {

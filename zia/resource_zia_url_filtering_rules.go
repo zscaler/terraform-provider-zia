@@ -70,7 +70,8 @@ func resourceURLFilteringRules() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
@@ -85,8 +86,8 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      7,
-				ValidateFunc: validation.IntBetween(1, 7),
-				Description:  "Admin rank of the admin who creates this rule",
+				ValidateFunc: validation.IntBetween(0, 7),
+				Description:  "Admin rank of the Firewall Filtering policy rule",
 			},
 			"end_user_notification_url": {
 				Type:        schema.TypeString,
