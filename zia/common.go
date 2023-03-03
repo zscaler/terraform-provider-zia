@@ -505,25 +505,30 @@ func getDLPRuleFileTypes(desc string) *schema.Schema {
 	}
 }
 
-func sortOrders(ruleOrderMap map[int]int) RuleIDOrderPairList {
+func sortOrders(ruleOrderMap map[int]orderWithState) RuleIDOrderPairList {
 	pl := make(RuleIDOrderPairList, len(ruleOrderMap))
 	i := 0
 	for k, v := range ruleOrderMap {
-		pl[i] = RuleIDOrderPair{k, v}
+		pl[i] = RuleIDOrderPair{k, v.order}
 		i++
 	}
 	sort.Sort(pl)
 	return pl
 }
 
+type orderWithState struct {
+	order int
+	done  bool
+}
+
 type listrules struct {
-	orders  map[string]map[int]int
+	orders  map[string]map[int]orderWithState
 	orderer map[string]int
 	sync.Mutex
 }
 
 var rules = listrules{
-	orders: make(map[string]map[int]int),
+	orders: make(map[string]map[int]orderWithState),
 }
 
 type RuleIDOrderPair struct {
@@ -543,42 +548,58 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 30) // create a ticker that ticks every half minute
+	ticker := time.NewTicker(time.Second * 50) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
 		select {
 		case <-ticker.C:
 			rules.Lock()
-			count, _ := getCount()
 			size := len(rules.orders[resourceType])
-			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
-			// sort by order (ascending)
-			sorted := sortOrders(rules.orders[resourceType])
-			log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
-			for _, v := range sorted {
-				if v.Order <= count {
-					if err := updateOrder(v.ID, v.Order); err != nil {
-						log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
-					}
+			done := true
+			// first check if all rules creation is done
+			for _, v := range rules.orders[resourceType] {
+				if !v.done {
+					done = false
 				}
 			}
-			rules.Unlock()
-			if numResources[0] == numResources[1] && numResources[1] == numResources[2] {
-				// No changes after a while, stop the ticker
+			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
+			if done && numResources[0] == numResources[1] && numResources[1] == numResources[2] {
+				// No changes after a while (4 runs), so reorder, and return
+				count, _ := getCount()
+				// sort by order (ascending)
+				sorted := sortOrders(rules.orders[resourceType])
+				log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
+				for _, v := range sorted {
+					if v.Order <= count {
+						if err := updateOrder(v.ID, v.Order); err != nil {
+							log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
+						}
+					}
+				}
+				rules.Unlock()
 				return
 			}
+			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 30)
 		}
 	}
+}
+
+func markOrderRuleAsDone(id int, resourceType string) {
+	rules.Lock()
+	r := rules.orders[resourceType][id]
+	r.done = true
+	rules.orders[resourceType][id] = r
+	rules.Unlock()
 }
 
 func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
 	rules.Lock()
 	shouldCallReorder := false
 	if len(rules.orders) == 0 {
-		rules.orders = map[string]map[int]int{}
+		rules.orders = map[string]map[int]orderWithState{}
 		rules.orderer = map[string]int{}
 	}
 	if _, ok := rules.orderer[resourceType]; ok {
@@ -588,9 +609,9 @@ func reorder(order, id int, resourceType string, getCount func() (int, error), u
 		shouldCallReorder = true
 	}
 	if len(rules.orders[resourceType]) == 0 {
-		rules.orders[resourceType] = map[int]int{}
+		rules.orders[resourceType] = map[int]orderWithState{}
 	}
-	rules.orders[resourceType][id] = order
+	rules.orders[resourceType][id] = orderWithState{order, shouldCallReorder}
 	rules.Unlock()
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
