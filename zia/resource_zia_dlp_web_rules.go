@@ -247,7 +247,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return resource.NonRetryableError(err)
 		} else {
-			markOrderRuleAsDone(req.ID, "dlp_web_rules")
+			markOrderRuleAsDone(resp.ID, "dlp_web_rules")
 			return nil
 		}
 	})
