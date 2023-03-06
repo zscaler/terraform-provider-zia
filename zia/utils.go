@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -8,6 +9,16 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
+
+var ErrNotFound = fmt.Errorf("ErrNotFound")
+
+type DuplicateError struct {
+	Err error
+}
+
+func (d DuplicateError) Error() string {
+	return d.Err.Error()
+}
 
 func SetToStringSlice(d *schema.Set) []string {
 	list := d.List()

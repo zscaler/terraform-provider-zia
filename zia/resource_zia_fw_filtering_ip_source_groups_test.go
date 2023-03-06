@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipsourcegroups"
 )
 
-func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
+func TestAccZIAResourceFWIPSourceGroupsBasic(t *testing.T) {
 	var groups ipsourcegroups.IPSourceGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringSourceGroup)
+
+	skipAcc := os.Getenv("SKIP_FW_IP_SOURCE_GROUPS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping ip source group test as SKIP_FW_IP_SOURCE_GROUPS is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

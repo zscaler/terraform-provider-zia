@@ -9,7 +9,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 )
 
-func TestAccDataSourceAdminUsers_Basic(t *testing.T) {
+func TestAccDataSourceZIAAdminUsers_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminUsers)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rPassword := acctest.RandString(10)

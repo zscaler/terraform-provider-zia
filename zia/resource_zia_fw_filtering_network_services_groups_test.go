@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
 )
 
-func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
+func TestAccZIAResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 	var services networkservices.NetworkServiceGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
+
+	skipAcc := os.Getenv("SKIP_FW_NETWORK_SERVICE_GROUPS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping network service groups test as SKIP_FW_NETWORK_SERVICE_GROUPS is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

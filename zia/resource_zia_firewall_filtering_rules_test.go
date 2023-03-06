@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
 
-func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
+func TestAccZIAResourceFirewallFilteringRuleBasic(t *testing.T) {
 	var rules filteringrules.FirewallFilteringRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
+
+	skipAcc := os.Getenv("SKIP_FIREWALL_FILTERING_RULE")
+	if skipAcc == "yes" {
+		t.Skip("Skipping firewall filtering rule test as SKIP_FIREWALL_FILTERING_RULE is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

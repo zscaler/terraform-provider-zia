@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -15,10 +16,15 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/staticips"
 )
 
-func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
+func TestAccZIAResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	var static staticips.StaticIP
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
+
+	skipAcc := os.Getenv("SKIP_TRAFFIC_FORWARDING_STATIC_IP")
+	if skipAcc == "yes" {
+		t.Skip("Skipping traffic forwarding static ip test as SKIP_TRAFFIC_FORWARDING_STATIC_IP is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

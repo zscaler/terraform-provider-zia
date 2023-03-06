@@ -10,7 +10,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
+func TestAccDataSourceZIATrafficForwardingVPNCredentials_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
 	rSharedKey := acctest.RandString(20)

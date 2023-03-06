@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -15,9 +16,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement"
 )
 
-func TestAccResourceLocationManagementBasic(t *testing.T) {
+func TestAccZIAResourceLocationManagementBasic(t *testing.T) {
 	var locations locationmanagement.Locations
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingLocManagement)
+
+	skipAcc := os.Getenv("SKIP_LOCATION_MANAGEMENT")
+	if skipAcc == "yes" {
+		t.Skip("Skipping location management test as SKIP_LOCATION_MANAGEMENT is set")
+	}
 
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)

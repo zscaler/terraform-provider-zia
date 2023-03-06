@@ -9,7 +9,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceFWIPDestinationGroups_Basic(t *testing.T) {
+func TestAccDataSourceZIAFWIPDestinationGroups_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringDestinationGroup)
 
 	resource.Test(t, resource.TestCase{

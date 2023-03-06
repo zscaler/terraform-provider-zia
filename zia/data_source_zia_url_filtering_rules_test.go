@@ -9,7 +9,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
+func TestAccDataSourceZIAURLFilteringRules_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
 
 	resource.Test(t, resource.TestCase{

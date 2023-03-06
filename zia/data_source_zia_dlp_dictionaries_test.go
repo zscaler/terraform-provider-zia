@@ -9,7 +9,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
+func TestAccDataSourceZIADLPDictionaries_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
 	resource.Test(t, resource.TestCase{

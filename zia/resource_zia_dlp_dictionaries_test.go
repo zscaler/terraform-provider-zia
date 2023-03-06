@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
 )
 
-func TestAccResourceDLPDictionariesBasic(t *testing.T) {
+func TestAccZIAResourceDLPDictionariesBasic(t *testing.T) {
 	var dictionary dlpdictionaries.DlpDictionary
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
+
+	skipAcc := os.Getenv("SKIP_DLP_DICTIONARIES")
+	if skipAcc == "yes" {
+		t.Skip("Skipping dlp dictionaries test as SKIP_DLP_DICTIONARIES is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

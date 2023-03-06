@@ -11,7 +11,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
+func TestAccDataSourceZIALocationManagement_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingLocManagement)
 
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")

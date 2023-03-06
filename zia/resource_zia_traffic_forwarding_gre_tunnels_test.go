@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -15,9 +16,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnels"
 )
 
-func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
+func TestAccZIAResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 	var gretunnel gretunnels.GreTunnels
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingGRETunnel)
+
+	skipAcc := os.Getenv("SKIP_TRAFFIC_FORWARDING_GRE_TUNNEL")
+	if skipAcc == "yes" {
+		t.Skip("Skipping traffic forwarding gre tunnel test as SKIP_TRAFFIC_FORWARDING_GRE_TUNNEL is set")
+	}
 
 	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)

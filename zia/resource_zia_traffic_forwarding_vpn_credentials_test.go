@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/vpncredentials"
 )
 
-func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
+func TestAccZIAResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
@@ -24,6 +25,11 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
+
+	skipAcc := os.Getenv("SKIP_TRAFFIC_FORWARDING_VPN_CREDENTIALS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping traffic forwarding vpn credentials test as SKIP_TRAFFIC_FORWARDING_VPN_CREDENTIALS is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

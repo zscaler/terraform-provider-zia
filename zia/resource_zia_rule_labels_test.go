@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
 )
 
-func TestAccResourceRuleLabelsBasic(t *testing.T) {
+func TestAccZIAResourceRuleLabelsBasic(t *testing.T) {
 	var labels rule_labels.RuleLabels
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+
+	skipAcc := os.Getenv("SKIP_RULE_LABELS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping rule labels test as SKIP_RULE_LABELS is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

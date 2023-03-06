@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -15,11 +16,16 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
 )
 
-func TestAccResourceAdminUsersBasic(t *testing.T) {
+func TestAccZIAResourceAdminUsersBasic(t *testing.T) {
 	var admins adminuserrolemgmt.AdminUsers
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminUsers)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rPassword := acctest.RandString(10)
+
+	skipAcc := os.Getenv("SKIP_ADMIN_USERS")
+	if skipAcc == "yes" {
+		t.Skip("Skipping admin users test as SKIP_ADMIN_USERS is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

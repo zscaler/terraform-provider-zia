@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"testing"
 
@@ -14,9 +15,14 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 )
 
-func TestAccResourceDlpWebRulesBasic(t *testing.T) {
+func TestAccZIAResourceDlpWebRulesBasic(t *testing.T) {
 	var rules dlp_web_rules.WebDLPRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
+
+	skipAcc := os.Getenv("SKIP_DLP_WEB_RULES")
+	if skipAcc == "yes" {
+		t.Skip("Skipping dlp web rules test as SKIP_DLP_WEB_RULES is set")
+	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

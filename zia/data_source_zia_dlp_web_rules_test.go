@@ -10,7 +10,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
-func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
+func TestAccDataSourceZIADlpWebRules_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
 	resource.Test(t, resource.TestCase{
