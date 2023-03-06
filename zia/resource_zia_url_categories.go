@@ -102,7 +102,7 @@ func resourceURLCategories() *schema.Resource {
 			"editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,

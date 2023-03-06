@@ -60,14 +60,12 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"latitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-90, 90),
 				Description:  "Required only if the geoOverride attribute is set. Latitude with 7 digit precision after decimal point, ranges between -90 and 90 degrees.",
 			},
 			"longitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
-				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-180, 180),
 				Description:  "Required only if the geoOverride attribute is set. Longitude with 7 digit precision after decimal point, ranges between -180 and 180 degrees.",
 			},
@@ -77,58 +75,6 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a non-RFC 1918 IP address is publicly routable. This attribute is ignored if there is no ZIA Private Service Edge associated to the organization.",
 			},
-			// "managed_by": {
-			// 	Type:        schema.TypeSet,
-			// 	Optional:    true,
-			// 	Computed:    true,
-			// 	Description: "This is an immutable reference to an entity. which mainly consists of id and name",
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:        schema.TypeInt,
-			// 				Optional:    true,
-			// 				Description: "Identifier that uniquely identifies an entity",
-			// 			},
-			// 			"name": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 			"extensions": {
-			// 				Type:     schema.TypeMap,
-			// 				Optional: true,
-			// 				Elem: &schema.Schema{
-			// 					Type: schema.TypeString,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
-			// "last_modified_by": {
-			// 	Type:        schema.TypeSet,
-			// 	Optional:    true,
-			// 	Computed:    true,
-			// 	Description: "This is an immutable reference to an entity. which mainly consists of id and name",
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"id": {
-			// 				Type:        schema.TypeInt,
-			// 				Optional:    true,
-			// 				Description: "Identifier that uniquely identifies an entity",
-			// 			},
-			// 			"name": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 			"extensions": {
-			// 				Type:     schema.TypeMap,
-			// 				Optional: true,
-			// 				Elem: &schema.Schema{
-			// 					Type: schema.TypeString,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
