@@ -153,6 +153,12 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Surrogate IP. When set to true, users are mapped to internal device IP addresses.",
 			},
+			"basic_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Basic Authentication.",
+			},
 			"auth_required": {
 				Type:        schema.TypeBool,
 				Optional:    true,
