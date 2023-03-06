@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.4.6 (March, 6 2023)
+
+### Notes
+
+- Release date: **(March, 6 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- ``zia_location_management``: Fixed IPv4 Address and IPv4Address range validation.
+- ``zia_traffic_forwarding_static_ip``: Fixed Longitude and Latitude computed attributes.
+- ``zia_url_categories``: Removed ``Default: false`` attribute to prevent drifts.
+
 ## 2.4.5 (March, 2 2023)
 
 ### Notes
