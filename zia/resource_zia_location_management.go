@@ -46,9 +46,10 @@ func resourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Location Name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Location Name.",
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
 				Type:         schema.TypeString,

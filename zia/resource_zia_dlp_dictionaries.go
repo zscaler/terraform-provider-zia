@@ -45,14 +45,16 @@ func resourceDLPDictionaries() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The DLP dictionary's name",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "The DLP dictionary's name",
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The desciption of the DLP dictionary",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "The desciption of the DLP dictionary",
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"confidence_threshold": {
 				Type:        schema.TypeString,

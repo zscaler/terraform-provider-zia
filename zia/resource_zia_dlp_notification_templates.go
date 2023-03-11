@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_notification_templates"
 )
@@ -39,36 +40,45 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The unique identifier for a DLP notification template",
 			},
 			"template_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The unique identifier for a DLP notification template",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+				Description:  "The DLP notification template name",
 			},
 			"subject": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The Subject line that is displayed within the DLP notification email",
 			},
 			"attach_content": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "f set to true, the content that is violation is attached to the DLP notification email",
 			},
 			"plain_text_message": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The template for the plain text UTF-8 message body that must be displayed in the DLP notification email",
 			},
 			"html_message": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The template for the HTML message body that must be displayed in the DLP notification email",
 			},
 			"tls_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, TLS will be enabled",
 			},
 		},
 	}

@@ -50,14 +50,16 @@ func resourceUserManagement() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "User name. This appears when choosing users for policies.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 127),
+				Description:  "User name. This appears when choosing users for policies.",
 			},
 			"email": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization.",
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 127),
+				Description:  "User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization.",
 			},
 			"comments": {
 				Type:         schema.TypeString,
@@ -76,10 +78,10 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
-			"groups": listIDsSchemaTypeCustom(8, "list of groups for which rule must be applied"),
+			"groups": listIDsSchemaType("List of Groups a user belongs to. Groups are used in policies."),
 			"department": {
 				Type:     schema.TypeSet,
-				Optional: true,
+				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
