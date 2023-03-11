@@ -71,13 +71,16 @@ func resourceUserManagement() *schema.Resource {
 				Description: "Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.",
 			},
 			"auth_methods": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeSet,
 				Optional:    true,
 				Description: "Accepted Authentication Methods",
-				ValidateFunc: validation.StringInSlice([]string{
-					"BASIC",
-					"DIGEST",
-				}, false),
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"BASIC",
+						"DIGEST",
+					}, false),
+				},
 			},
 			"password": {
 				Type:        schema.TypeString,
@@ -137,6 +140,15 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
+	if len(resp.AuthMethods) > 0 {
+		_, err = zClient.usermanagement.EnrollUser(resp.ID, usermanagement.EnrollUserRequest{
+			AuthMethods: resp.AuthMethods,
+			Password:    resp.Password,
+		})
+		if err != nil {
+			log.Printf("[ERROR] enrolling user failed: %v\n", err)
+		}
+	}
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("user_id", resp.ID)
 	return resourceUserManagementRead(d, m)
