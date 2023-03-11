@@ -144,6 +144,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 		_ = d.Set("admin_user", resp.AdminUser)
 		_ = d.Set("type", resp.Type)
+		_ = d.Set("auth_methods", resp.AuthMethods)
 
 		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
 			return err
