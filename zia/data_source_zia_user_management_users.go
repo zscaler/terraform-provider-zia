@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
 )
 
@@ -83,6 +84,18 @@ func dataSourceUserManagement() *schema.Resource {
 			"temp_auth_email": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"auth_methods": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Accepted Authentication Methods",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"BASIC",
+						"DIGEST",
+					}, false),
+				},
 			},
 			"is_auditor": {
 				Type:     schema.TypeString,
