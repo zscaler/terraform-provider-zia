@@ -15,6 +15,7 @@ const (
 	TrafficForwardingVPNCredentials = "zia_traffic_forwarding_vpn_credentials"
 	TrafficForwardingLocManagement  = "zia_location_management"
 	DLPDictionaries                 = "zia_dlp_dictionaries"
+	DLPNotificationTemplates        = "zia_dlp_notification_templates"
 	DLPWebRules                     = "zia_dlp_web_rules"
 	AdminUsers                      = "zia_admin_users"
 	Users                           = "zia_user_management"

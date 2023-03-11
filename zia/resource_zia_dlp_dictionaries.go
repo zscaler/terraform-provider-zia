@@ -100,9 +100,10 @@ func resourceDLPDictionaries() *schema.Resource {
 							Description: "The action applied to a DLP dictionary using patterns",
 						},
 						"pattern": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "DLP dictionary pattern",
+							Type:         schema.TypeString,
+							Optional:     true,
+							Description:  "DLP dictionary pattern",
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 					},
 				},

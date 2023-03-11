@@ -51,6 +51,11 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -103,10 +108,6 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"type": {
 				Type:     schema.TypeString,

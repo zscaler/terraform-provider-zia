@@ -62,9 +62,16 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the Firewall Filtering policy rule",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Name of the Firewall Filtering policy rule",
+				ValidateFunc: validation.StringLenBetween(0, 31),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about the rule",
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
 				Type:        schema.TypeInt,
@@ -106,11 +113,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 					"ENABLED",
 					"DISABLED",
 				}, false),
-			},
-			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about the rule",
 			},
 			"src_ips": {
 				Type:        schema.TypeSet,

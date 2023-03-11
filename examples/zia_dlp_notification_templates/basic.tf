@@ -1,6 +1,7 @@
 resource "zia_dlp_notification_templates" "terraform_dlp_template" {
   name               = "Terraform DLP Template"
   attach_content     = true
+  tls_enabled 		 = true
   subject            = local.subject
   plain_text_message = local.msg_plain_text
   html_message       = local.msg_html

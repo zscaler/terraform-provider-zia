@@ -47,8 +47,14 @@ func resourceLocationManagement() *schema.Resource {
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Required:    true,
 				Description: "Location Name.",
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"parent_id": {
 				Type:         schema.TypeInt,
@@ -251,12 +257,6 @@ func resourceLocationManagement() *schema.Resource {
 					"IOT",
 					"WORKLOAD",
 				}, false),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
-				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 		},
 	}

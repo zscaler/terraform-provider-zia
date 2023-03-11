@@ -64,9 +64,16 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "URL Filtering Rule ID",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Rule Name",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Rule Name",
+				ValidateFunc: validation.StringLenBetween(0, 31),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Description:  "Additional information about the URL Filtering rule",
 			},
 			"order": {
 				Type:        schema.TypeInt,
@@ -110,12 +117,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(10, 100000),
 				Description:  "Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
-				Description:  "Additional information about the URL Filtering rule",
 			},
 			"validity_start_time": {
 				Type:        schema.TypeInt,
