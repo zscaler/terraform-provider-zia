@@ -210,7 +210,15 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 	if _, _, err := zClient.usermanagement.Update(id, &req); err != nil {
 		return err
 	}
-
+	if d.HasChange("auth_methods") && len(req.AuthMethods) > 0 {
+		_, err := zClient.usermanagement.EnrollUser(id, usermanagement.EnrollUserRequest{
+			AuthMethods: req.AuthMethods,
+			Password:    req.Password,
+		})
+		if err != nil {
+			log.Printf("[ERROR] enrolling user failed: %v\n", err)
+		}
+	}
 	return resourceUserManagementRead(d, m)
 }
 
