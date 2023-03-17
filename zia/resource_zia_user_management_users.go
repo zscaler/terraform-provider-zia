@@ -140,9 +140,10 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
-	if len(resp.AuthMethods) > 0 {
+	authMethods := SetToStringList(d, "auth_methods")
+	if len(authMethods) > 0 {
 		_, err = zClient.usermanagement.EnrollUser(resp.ID, usermanagement.EnrollUserRequest{
-			AuthMethods: resp.AuthMethods,
+			AuthMethods: authMethods,
 			Password:    resp.Password,
 		})
 		if err != nil {
@@ -178,7 +179,6 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("email", resp.Email)
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
-	_ = d.Set("auth_methods", resp.AuthMethods)
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
 		return err
@@ -210,9 +210,10 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 	if _, _, err := zClient.usermanagement.Update(id, &req); err != nil {
 		return err
 	}
-	if d.HasChange("auth_methods") && len(req.AuthMethods) > 0 {
+	authMethods := SetToStringList(d, "auth_methods")
+	if d.HasChange("auth_methods") && len(authMethods) > 0 {
 		_, err := zClient.usermanagement.EnrollUser(id, usermanagement.EnrollUserRequest{
-			AuthMethods: req.AuthMethods,
+			AuthMethods: authMethods,
 			Password:    req.Password,
 		})
 		if err != nil {
@@ -263,7 +264,6 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
-		AuthMethods:   SetToStringList(d, "auth_methods"),
 		Groups:        expandIDNameExtensionsSet(d, "groups"),
 	}
 
