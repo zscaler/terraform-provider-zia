@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.5.0 (March, 20 2023)
+
+### Notes
+
+- Release date: **(March, 20 2023)**
+- Supported Terraform version: **v1.x**
+
+### Ehancements
+
+- [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) ``zia_user_management``: Implemented new attribute ``auth_methods``. The attribute supports the following values: ``BASIC`` and/or ``DIGEST``.
+- ``zia_location_management``: Implemented new attribute ``basic_auth_enabled``. The supported values are: ``true`` or ``false``
+
+- [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) The provider now supports authentication to Zscaler ``preview`` and ``zscalerten`` clouds.
+
+### Fixes
+
+- [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) ``zia_user_management``: Fixed flattening function to expand group attribute values.
+
 ## 2.4.6 (March, 6 2023)
 
 ### Notes

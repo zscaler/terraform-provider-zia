@@ -52,9 +52,16 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description: "Unique identifer for the destination IP group",
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Destination IP group name",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Destination IP group name",
+				ValidateFunc: validation.StringLenBetween(0, 64),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about the destination IP group",
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"type": {
 				Type:        schema.TypeString,
@@ -75,12 +82,6 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Destination IP addresses within the group",
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional information about the destination IP group",
-				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"ip_categories": getURLCategories(),
 			"countries":     getCloudFirewallDstCountries(),

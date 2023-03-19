@@ -129,9 +129,10 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "When within_country is enabled, you must set this to the country code.",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about this GRE tunnel",
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about this GRE tunnel",
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"ip_unnumbered": {
 				Type:        schema.TypeBool,
