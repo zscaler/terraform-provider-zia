@@ -52,3 +52,5 @@ dist/
 goreleaser.sh
 local_test/
 local_test/*
+local_dev/
+local_dev/*
