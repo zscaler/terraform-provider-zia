@@ -24,6 +24,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/timewindow"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement/locationgroups"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement/locationlite"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/security_policy_settings"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/greinternalipranges"
@@ -64,6 +65,7 @@ type Client struct {
 	vpncredentials                *vpncredentials.Service
 	locationmanagement            *locationmanagement.Service
 	locationgroups                *locationgroups.Service
+	locationlite                  *locationlite.Service
 	activation                    *activation.Service
 	devicegroups                  *devicegroups.Service
 	dlpdictionaries               *dlpdictionaries.Service
@@ -113,6 +115,7 @@ func (c *Config) Client() (*Client, error) {
 		staticips:                     staticips.New(cli),
 		locationmanagement:            locationmanagement.New(cli),
 		locationgroups:                locationgroups.New(cli),
+		locationlite:                  locationlite.New(cli),
 		activation:                    activation.New(cli),
 		devicegroups:                  devicegroups.New(cli),
 		dlpdictionaries:               dlpdictionaries.New(cli),
