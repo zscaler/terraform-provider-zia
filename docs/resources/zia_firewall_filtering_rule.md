@@ -57,7 +57,7 @@ The following arguments are supported:
 
 ### Required
 
-* `name` - (Required) Name of the network service group
+* `name` - (Required) Name of the Firewall Filtering policy rule
 * `order` - (Required) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
 
 ### Optional
