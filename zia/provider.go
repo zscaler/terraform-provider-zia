@@ -102,6 +102,7 @@ func Provider() *schema.Provider {
 			"zia_gre_internal_ip_range_list":                    dataSourceTrafficForwardingGreInternalIPRangeList(),
 			"zia_location_management":                           dataSourceLocationManagement(),
 			"zia_location_groups":                               dataSourceLocationGroup(),
+			"zia_location_lite":                                 dataSourceLocationLite(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
 			"zia_dlp_engines":                                   dataSourceDLPEngines(),
 			"zia_dlp_icap_servers":                              dataSourceDLPICAPServers(),
