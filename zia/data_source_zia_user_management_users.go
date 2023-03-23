@@ -150,6 +150,8 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
+		// This function needs to be fixed, as the attributes are not application for user management
+		// See: https://help.zscaler.com/zia/user-management#/users-get
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
 			return err
 		}
