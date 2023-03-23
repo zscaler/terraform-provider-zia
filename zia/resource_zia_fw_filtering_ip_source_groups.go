@@ -50,18 +50,19 @@ func resourceFWIPSourceGroups() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 10240),
+			},
+			"ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
 			},
 		},
 	}

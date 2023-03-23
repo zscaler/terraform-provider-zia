@@ -51,6 +51,11 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 256),
+			},
 			"urls": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -102,11 +107,7 @@ func resourceURLCategories() *schema.Resource {
 			"editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"type": {
 				Type:     schema.TypeString,

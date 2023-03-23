@@ -103,6 +103,12 @@ const (
 	DLPDictionaryDescription  = "this is an acceptance test"
 )
 
+// DLP Dictionaries resource/datasource
+const (
+	DLPNoticationTemplateAttachContent = true
+	DLPNoticationTemplateTLSEnabled    = true
+)
+
 // Admin Users
 const (
 	AdminUserLoginName = "testAcc@bd-hashicorp.com"

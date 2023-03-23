@@ -50,8 +50,14 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"services": {
 				Type:        schema.TypeSet,
@@ -69,11 +75,6 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 						},
 					},
 				},
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 		},
 	}

@@ -46,9 +46,16 @@ func resourceLocationManagement() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Location Name.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "Location Name.",
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
+				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"parent_id": {
 				Type:         schema.TypeInt,
@@ -77,6 +84,7 @@ func resourceLocationManagement() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.Any(
 						validation.IsIPv4Address,
+						validation.IsIPv4Range,
 					),
 				},
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
@@ -274,12 +282,6 @@ func resourceLocationManagement() *schema.Resource {
 					"IOT",
 					"WORKLOAD",
 				}, false),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
-				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 		},
 	}

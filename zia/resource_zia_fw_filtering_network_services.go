@@ -50,8 +50,14 @@ func resourceFWNetworkServices() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"tag":            getCloudFirewallNwServicesTag(),
 			"src_tcp_ports":  resourceNetworkPortsSchema("src tcp ports"),
@@ -66,11 +72,6 @@ func resourceFWNetworkServices() *schema.Resource {
 					"PREDEFINED",
 					"CUSTOM",
 				}, false),
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"is_name_l10n_tag": {
 				Type:     schema.TypeBool,
