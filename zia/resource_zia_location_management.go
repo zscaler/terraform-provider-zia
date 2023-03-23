@@ -161,6 +161,30 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Surrogate IP. When set to true, users are mapped to internal device IP addresses.",
 			},
+			"basic_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Basic Authentication at the location",
+			},
+			"digest_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Digest Authentication at the location",
+			},
+			"kerberos_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Kerberos Authentication at the location",
+			},
+			"iot_discovery_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable IOT Discovery at the location",
+			},
 			"auth_required": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -347,6 +371,10 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("ports", resp.Ports)
 	_ = d.Set("auth_required", resp.AuthRequired)
+	_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
+	_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
+	_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
+	_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
 	_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 	_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
@@ -468,6 +496,10 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		IPAddresses:                         removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
 		AuthRequired:                        d.Get("auth_required").(bool),
+		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),
+		DigestAuthEnabled:                   d.Get("digest_auth_enabled").(bool),
+		KerberosAuth:                        d.Get("kerberos_auth_enabled").(bool),
+		IOTDiscoveryEnabled:                 d.Get("iot_discovery_enabled").(bool),
 		SSLScanEnabled:                      d.Get("ssl_scan_enabled").(bool),
 		ZappSSLScanEnabled:                  d.Get("zapp_ssl_scan_enabled").(bool),
 		XFFForwardEnabled:                   d.Get("xff_forward_enabled").(bool),

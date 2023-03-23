@@ -44,6 +44,8 @@ func Provider() *schema.Provider {
 					"zscloud",
 					"zscalerbeta",
 					"zscalergov",
+					"zscalerten",
+					"zspreview",
 				}, false),
 				Required: true,
 			},

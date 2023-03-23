@@ -128,6 +128,27 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"basic_auth_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Enable Basic Authentication at the location",
+			},
+			"digest_auth_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable Digest Authentication at the location",
+			},
+			"kerberos_auth_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable Kerberos Authentication at the location",
+			},
+			"iot_discovery_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Enable IOT Discovery at the location",
+			},
 			"ssl_scan_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -239,6 +260,10 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("ip_addresses", resp.IPAddresses)
 		_ = d.Set("ports", resp.Ports)
 		_ = d.Set("auth_required", resp.AuthRequired)
+		_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
+		_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
+		_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
+		_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
 		_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
 		_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 		_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)

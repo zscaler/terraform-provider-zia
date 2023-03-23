@@ -31,10 +31,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `email` - (Required) User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization
-* `admin_user` - (Optional) True if this user is an Admin user. readOnly: `true` default: `false`
-* `comments` - (Optional) Additional information about this user.
+* `admin_user` - (String) True if this user is an Admin user. readOnly: `true` default: `false`
+* `comments` - (String) Additional information about this user.
 * `password` -(String, Sensitive)
 * `temp_auth_email` - (String) Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.
+* `auth_methods` - (String) Type of authentication method to be enabled. Supported values are: ``BASIC`` and ``DIGEST``
 * `type` - (String) User type. Provided only if this user is not an end user. The supported types are:
   * `SUPERADMIN`
   * `ADMIN`
@@ -43,14 +44,14 @@ In addition to all arguments above, the following attributes are exported:
   * `REPORT_USER`
   * `UNAUTH_TRAFFIC_DEFAULT`
 
-* `department` - (Required) Department a user belongs to
+* `department` - (String) Department a user belongs to
   * `id` - (Number) Department ID
   * `name` - (String) Department name
   * `idp_id` - (Number) Identity provider (IdP) ID
   * `comments` - (String) Additional information about this department
   * `deleted` - (Boolean) default: `false`
 
-* `groups` - (Required) List of Groups a user belongs to. Groups are used in policies.
+* `groups` - (String) List of Groups a user belongs to. Groups are used in policies.
   * `id` - (Number) Unique identfier for the group
   * `name` - (String) Group name
   * `idp_id` - (Number) Unique identfier for the identity provider (IdP)

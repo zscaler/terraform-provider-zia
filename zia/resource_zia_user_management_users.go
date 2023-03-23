@@ -72,6 +72,18 @@ func resourceUserManagement() *schema.Resource {
 				Optional:    true,
 				Description: "Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.",
 			},
+			"auth_methods": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "Accepted Authentication Methods",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						"BASIC",
+						"DIGEST",
+					}, false),
+				},
+			},
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
@@ -130,6 +142,16 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
+	authMethods := SetToStringList(d, "auth_methods")
+	if len(authMethods) > 0 {
+		_, err = zClient.usermanagement.EnrollUser(resp.ID, usermanagement.EnrollUserRequest{
+			AuthMethods: authMethods,
+			Password:    resp.Password,
+		})
+		if err != nil {
+			log.Printf("[ERROR] enrolling user failed: %v\n", err)
+		}
+	}
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("user_id", resp.ID)
 	return resourceUserManagementRead(d, m)
@@ -190,7 +212,16 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 	if _, _, err := zClient.usermanagement.Update(id, &req); err != nil {
 		return err
 	}
-
+	authMethods := SetToStringList(d, "auth_methods")
+	if d.HasChange("auth_methods") && len(authMethods) > 0 {
+		_, err := zClient.usermanagement.EnrollUser(id, usermanagement.EnrollUserRequest{
+			AuthMethods: authMethods,
+			Password:    req.Password,
+		})
+		if err != nil {
+			log.Printf("[ERROR] enrolling user failed: %v\n", err)
+		}
+	}
 	return resourceUserManagementRead(d, m)
 }
 
@@ -235,8 +266,7 @@ func expandUsers(d *schema.ResourceData) usermanagement.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
-		// Department:    expandIDNameExtensionsSet(d, "department"),
-		Groups: expandIDNameExtensionsSet(d, "groups"),
+		Groups:        expandIDNameExtensionsSet(d, "groups"),
 	}
 
 	department := expandUserDepartment(d)
