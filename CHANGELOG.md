@@ -14,6 +14,8 @@
 
 - [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) The provider now supports authentication to Zscaler ``preview`` and ``zscalerten`` clouds.
 
+- [PR #211](https://github.com/zscaler/terraform-provider-zia/pull/211) Added new datasource ``zia_location_lite``. This data source can be used to return the "Road Warrior" location, which can then be used in the following resources: ``zia_url_filtering_rules``, ``zia_firewall_filtering_rule`` and ``zia_dlp_web_rules``
+
 ### Fixes
 
 - [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) ``zia_user_management``: Fixed flattening function to expand group attribute values.
