@@ -225,6 +225,8 @@ func dataSourceLocationManagement() *schema.Resource {
 	}
 }
 
+// Add logic to search SubLocation by Name and ID
+// See SDK #PR93 https://github.com/zscaler/zscaler-sdk-go/pull/93
 func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
