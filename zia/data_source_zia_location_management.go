@@ -234,7 +234,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.locationmanagement.GetLocation(id)
+		res, err := zClient.locationmanagement.GetLocationOrSublocationByID(id)
 		if err != nil {
 			return err
 		}
@@ -244,7 +244,7 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationmanagement.GetLocationByName(name)
+		res, err := zClient.locationmanagement.GetLocationOrSublocationByName(name)
 		if err != nil {
 			return err
 		}
