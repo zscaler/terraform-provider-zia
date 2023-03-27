@@ -230,7 +230,9 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	_ = d.Set("tunnel_id", resp.ID)
 	_ = d.Set("source_ip", resp.SourceIP)
 	_ = d.Set("internal_ip_range", resp.InternalIpRange)
-	_ = d.Set("within_country", resp.WithinCountry)
+	if resp.WithinCountry != nil {
+		_ = d.Set("within_country", *resp.WithinCountry)
+	}
 	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
 	if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVipSimple(resp.PrimaryDestVip)); err != nil {
@@ -310,11 +312,12 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 
 func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 	id, _ := getIntFromResourceData(d, "tunnel_id")
+	withinCountry := d.Get("within_country").(bool)
 	result := gretunnels.GreTunnels{
 		ID:              id,
 		SourceIP:        d.Get("source_ip").(string),
 		InternalIpRange: d.Get("internal_ip_range").(string),
-		WithinCountry:   d.Get("within_country").(bool),
+		WithinCountry:   &withinCountry,
 		Comment:         d.Get("comment").(string),
 		IPUnnumbered:    d.Get("ip_unnumbered").(bool),
 	}
