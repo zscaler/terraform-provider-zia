@@ -15,14 +15,6 @@ func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"routable_ip": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"geo_override": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"required_count": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -48,6 +40,26 @@ func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 						"datacenter": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"city": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"latitude": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Computed: true,
+						},
+						"longitude": {
+							Type:     schema.TypeFloat,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -84,6 +96,10 @@ func flattenVIPList(list []virtualipaddresslist.GREVirtualIPList) []interface{} 
 			"virtual_ip":           vip.VirtualIp,
 			"private_service_edge": vip.PrivateServiceEdge,
 			"datacenter":           vip.DataCenter,
+			"city":                 vip.City,
+			"region":               vip.Region,
+			"latitude":             vip.Latitude,
+			"longitude":            vip.Longitude,
 		}
 	}
 	return result
