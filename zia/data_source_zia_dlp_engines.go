@@ -17,11 +17,11 @@ func dataSourceDLPEngines() *schema.Resource {
 				Computed:    true,
 				Description: "The unique identifier for the DLP engine.",
 			},
-			// "name": {
-			// 	Type:        schema.TypeString,
-			// 	Optional:    true,
-			// 	Description: "The DLP engine name as configured by the admin. This attribute is required in POST and PUT requests for custom DLP engines.",
-			// },
+			"name": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DLP engine name as configured by the admin.",
+			},
 			"predefined_engine_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -59,15 +59,15 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 		}
 		resp = res
 	}
-	// name, _ := d.Get("name").(string)
-	// if resp == nil && name != "" {
-	// 	log.Printf("[INFO] Getting data for dlp engine name: %s\n", name)
-	// 	res, err := zClient.dlp_engines.GetByName(name)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	resp = res
-	// }
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting data for dlp engine name: %s\n", name)
+		res, err := zClient.dlp_engines.GetByName(name)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
 
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
