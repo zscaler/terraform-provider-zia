@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.5.0 (March, 20 2023)
+## 2.5.0 (March, 27 2023)
 
 ### Notes
 
-- Release date: **(March, 20 2023)**
+- Release date: **(March, 27 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Ehancements
@@ -16,9 +16,13 @@
 
 - [PR #211](https://github.com/zscaler/terraform-provider-zia/pull/211) Added new datasource ``zia_location_lite``. This data source can be used to return the "Road Warrior" location, which can then be used in the following resources: ``zia_url_filtering_rules``, ``zia_firewall_filtering_rule`` and ``zia_dlp_web_rules``
 
+- [PR #213](https://github.com/zscaler/terraform-provider-zia/pull/213) Added support to search for sub-location within the resource ``zia_location_management``
+
 ### Fixes
 
-- [PR #202](https://github.com/zscaler/terraform-provider-zia/pull/202) ``zia_user_management``: Fixed flattening function to expand group attribute values.
+- [PR #212](https://github.com/zscaler/terraform-provider-zia/pull/212) ``zia_user_management``: Fixed flattening function to expand group attribute values. Issue [#205](https://github.com/zscaler/terraform-provider-zia/issues/205)
+
+- [PR #214](https://github.com/zscaler/terraform-provider-zia/pull/214) ``zia_traffic_forwarding_gre_tunnel``: Fixed issue while creating GRE Tunnels. Issue #208
 
 ## 2.4.6 (March, 6 2023)
 

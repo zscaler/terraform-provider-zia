@@ -176,11 +176,14 @@ func flattenIDs(list []common.IDNameExtensions) []interface{} {
 func flattenIDNameExtensions(list []common.IDNameExtensions) []interface{} {
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
-		flattenedList[i] = map[string]interface{}{
-			"id":         val.ID,
-			"name":       val.Name,
-			"extensions": val.Extensions,
+		r := map[string]interface{}{
+			"id":   val.ID,
+			"name": val.Name,
 		}
+		if val.Extensions != nil {
+			r["extensions"] = val.Extensions
+		}
+		flattenedList[i] = r
 	}
 	return flattenedList
 }

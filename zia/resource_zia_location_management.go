@@ -28,7 +28,7 @@ func resourceLocationManagement() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("location_id", idInt)
 				} else {
-					resp, err := zClient.locationmanagement.GetLocationByName(id)
+					resp, err := zClient.locationmanagement.GetLocationOrSublocationByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("location_id", resp.ID)
@@ -346,7 +346,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	if !ok {
 		return fmt.Errorf("no location management id is set")
 	}
-	resp, err := zClient.locationmanagement.GetLocation(id)
+	resp, err := zClient.locationmanagement.GetLocationOrSublocationByID(id)
 
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -429,7 +429,7 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	if err := checkSurrogateIPDependencies(req); err != nil {
 		return err
 	}
-	if _, err := zClient.locationmanagement.GetLocation(id); err != nil {
+	if _, err := zClient.locationmanagement.GetLocationOrSublocationByID(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
