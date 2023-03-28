@@ -58,6 +58,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "The primary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+							Description: "GRE cluster virtual IP ID",
+						},
 						"virtual_ip": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -87,6 +93,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description: "The secondary destination data center and virtual IP address (VIP) of the GRE tunnel",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Computed:    true,
+							Description: "GRE cluster virtual IP ID",
+						},
 						"virtual_ip": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -144,6 +156,9 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	}
 }
 
+// Provider is returning error during POST and PUT method when assigning the primary VIP
+// "message":"Invalid primary data center VIP."
+// Issue is more frequent when defining the attributes primary_dest_vip and secondary_dest_vip
 func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -215,7 +230,9 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	_ = d.Set("tunnel_id", resp.ID)
 	_ = d.Set("source_ip", resp.SourceIP)
 	_ = d.Set("internal_ip_range", resp.InternalIpRange)
-	_ = d.Set("within_country", resp.WithinCountry)
+	if resp.WithinCountry != nil {
+		_ = d.Set("within_country", *resp.WithinCountry)
+	}
 	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
 	if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVipSimple(resp.PrimaryDestVip)); err != nil {
@@ -232,6 +249,7 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
+			"id":                   primaryDestVip.ID,
 			"virtual_ip":           primaryDestVip.VirtualIP,
 			"private_service_edge": primaryDestVip.PrivateServiceEdge,
 			"datacenter":           primaryDestVip.Datacenter,
@@ -241,6 +259,7 @@ func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) i
 func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
+			"id":                   secondaryDestVip.ID,
 			"virtual_ip":           secondaryDestVip.VirtualIP,
 			"private_service_edge": secondaryDestVip.PrivateServiceEdge,
 			"datacenter":           secondaryDestVip.Datacenter,
@@ -293,11 +312,12 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 
 func expandGRETunnel(d *schema.ResourceData) gretunnels.GreTunnels {
 	id, _ := getIntFromResourceData(d, "tunnel_id")
+	withinCountry := d.Get("within_country").(bool)
 	result := gretunnels.GreTunnels{
 		ID:              id,
 		SourceIP:        d.Get("source_ip").(string),
 		InternalIpRange: d.Get("internal_ip_range").(string),
-		WithinCountry:   d.Get("within_country").(bool),
+		WithinCountry:   &withinCountry,
 		Comment:         d.Get("comment").(string),
 		IPUnnumbered:    d.Get("ip_unnumbered").(bool),
 	}
@@ -327,11 +347,16 @@ func expandPrimaryDestVip(d *schema.ResourceData) *gretunnels.PrimaryDestVip {
 		if !ok {
 			return nil
 		}
-		return &gretunnels.PrimaryDestVip{
+		r := &gretunnels.PrimaryDestVip{
 			VirtualIP:          vip["virtual_ip"].(string),
 			PrivateServiceEdge: vip["private_service_edge"].(bool),
 			Datacenter:         vip["datacenter"].(string),
 		}
+
+		if id, ok := vip["id"].(int); ok && id != 0 {
+			r.ID = id
+		}
+		return r
 	}
 	return nil
 }
@@ -351,11 +376,16 @@ func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip
 		if !ok {
 			return nil
 		}
-		return &gretunnels.SecondaryDestVip{
+		r := &gretunnels.SecondaryDestVip{
 			VirtualIP:          vip["virtual_ip"].(string),
 			PrivateServiceEdge: vip["private_service_edge"].(bool),
 			Datacenter:         vip["datacenter"].(string),
 		}
+		if id, ok := vip["id"].(int); ok && id != 0 {
+			r.ID = id
+		}
+
+		return r
 	}
 	return nil
 }
