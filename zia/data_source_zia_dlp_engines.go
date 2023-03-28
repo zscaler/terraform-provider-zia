@@ -14,7 +14,7 @@ func dataSourceDLPEngines() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
-				Computed:    true,
+				Optional:    true,
 				Description: "The unique identifier for the DLP engine.",
 			},
 			"name": {
