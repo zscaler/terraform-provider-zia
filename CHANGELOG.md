@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.1 (Month, xx 2023) - Unreleased
+
+### Notes
+
+- Release date: **(Month, xx 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #217](https://github.com/zscaler/terraform-provider-zia/pull/217) ``zia_dlp_engines``: Fixed DLP Engine data source to allow search for predefined engines. Issue [#216](https://github.com/zscaler/terraform-provider-zia/issues/216)
+
 ## 2.5.0 (March, 27 2023)
 
 ### Notes
