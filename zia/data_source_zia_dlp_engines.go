@@ -78,7 +78,7 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("custom_dlp_engine", resp.CustomDlpEngine)
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp engine id '%d'", id)
+		return fmt.Errorf("couldn't find any dlp engine name '%s' or id '%d'", name, id)
 	}
 
 	return nil
