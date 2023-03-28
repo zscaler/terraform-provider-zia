@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.5.0 (March, 20 2023)
+## 2.5.0 (March, 27 2023)
 
 ### Notes
 
-- Release date: **(March, 20 2023)**
+- Release date: **(March, 27 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Ehancements
@@ -21,6 +21,8 @@
 ### Fixes
 
 - [PR #212](https://github.com/zscaler/terraform-provider-zia/pull/212) ``zia_user_management``: Fixed flattening function to expand group attribute values. Issue [#205](https://github.com/zscaler/terraform-provider-zia/issues/205)
+
+- [PR #214](https://github.com/zscaler/terraform-provider-zia/pull/214) ``zia_traffic_forwarding_gre_tunnel``: Fixed issue while creating GRE Tunnels. Issue #208
 
 ## 2.4.6 (March, 6 2023)
 
