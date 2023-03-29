@@ -12,15 +12,15 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.0``
+``Last updated: v2.5.1``
 
 ---
 
-## 2.5.1 (Month, xx 2023) - Unreleased
+## 2.5.1 (Month, 29 2023) - Unreleased
 
 ### Notes
 
-- Release date: **(Month, xx 2023)**
+- Release date: **(Month, 29 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Fixes

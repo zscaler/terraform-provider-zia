@@ -156,9 +156,6 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	}
 }
 
-// Provider is returning error during POST and PUT method when assigning the primary VIP
-// "message":"Invalid primary data center VIP."
-// Issue is more frequent when defining the attributes primary_dest_vip and secondary_dest_vip
 func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
