@@ -17,6 +17,9 @@ func TestAccDataSourceDLPEngines_Basic(t *testing.T) {
 					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.credit_cards"),
 					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.canada_ssn"),
 					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.us_ssn"),
+					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.glba"),
+					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.hipaa"),
+					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.pci"),
 				),
 			},
 		},
@@ -41,4 +44,17 @@ data "zia_dlp_engines" "canada_ssn"{
 data "zia_dlp_engines" "us_ssn"{
     name = "Social Security Numbers"
 }
+
+data "zia_dlp_engines" "glba"{
+    name = "GLBA"
+}
+
+data "zia_dlp_engines" "hipaa"{
+    name = "HIPAA"
+}
+
+data "zia_dlp_engines" "pci"{
+    name = "PCI"
+}
+
 `

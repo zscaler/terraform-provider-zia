@@ -12,15 +12,26 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.0``
+``Last updated: v2.5.1``
 
 ---
 
-## 2.5.0 (March, 27 2023)
+## 2.5.1 (Month, 29 2023) - Unreleased
 
 ### Notes
 
-- Release date: **(March, 27 2023)**
+- Release date: **(Month, 29 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #217](https://github.com/zscaler/terraform-provider-zia/pull/217) ``zia_dlp_engines``: Fixed DLP Engine data source to allow search for predefined engines. Issue [#216](https://github.com/zscaler/terraform-provider-zia/issues/216)
+
+## 2.5.0 (March, 20 2023)
+
+### Notes
+
+- Release date: **(March, 20 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Ehancements
@@ -37,8 +48,6 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 ### Fixes
 
 - [PR #212](https://github.com/zscaler/terraform-provider-zia/pull/212) ``zia_user_management``: Fixed flattening function to expand group attribute values. Issue [#205](https://github.com/zscaler/terraform-provider-zia/issues/205)
-
-- [PR #214](https://github.com/zscaler/terraform-provider-zia/pull/214) ``zia_traffic_forwarding_gre_tunnel``: Fixed issue while creating GRE Tunnels. Issue #208
 
 ## 2.4.6 (March, 6 2023)
 

@@ -20,7 +20,7 @@ func dataSourceDLPEngines() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The DLP engine name as configured by the admin. This attribute is required in POST and PUT requests for custom DLP engines.",
+				Description: "The DLP engine name as configured by the admin.",
 			},
 			"predefined_engine_name": {
 				Type:        schema.TypeString,
