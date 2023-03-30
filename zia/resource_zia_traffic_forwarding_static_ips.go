@@ -60,12 +60,14 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"latitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-90, 90),
 				Description:  "Required only if the geoOverride attribute is set. Latitude with 7 digit precision after decimal point, ranges between -90 and 90 degrees.",
 			},
 			"longitude": {
 				Type:         schema.TypeFloat,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.FloatBetween(-180, 180),
 				Description:  "Required only if the geoOverride attribute is set. Longitude with 7 digit precision after decimal point, ranges between -180 and 180 degrees.",
 			},
