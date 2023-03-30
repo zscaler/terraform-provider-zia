@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -36,7 +35,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
 				),
 			},
@@ -50,7 +49,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
 				),
 			},
@@ -135,10 +134,8 @@ resource "%s" "%s" {
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {
-		id = data.zia_group_management.marketing.id
-	}
-	groups {
-		id = data.zia_group_management.sales.id
+		id = [data.zia_group_management.marketing.id,
+		      data.zia_group_management.sales.id ]
 	}
 	department {
 		id = data.zia_department_management.finance.id
@@ -164,4 +161,3 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
-*/

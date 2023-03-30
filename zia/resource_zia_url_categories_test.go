@@ -31,7 +31,6 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
@@ -44,7 +43,6 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
