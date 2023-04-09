@@ -27,7 +27,7 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, "email"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "comments", resourceTypeAndName, "comments"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "department.#", "1"),
 				),
 			},
