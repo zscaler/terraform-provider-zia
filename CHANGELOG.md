@@ -1,15 +1,20 @@
 # Changelog
 
-## 2.5.1 (Month, xx 2023) - Unreleased
+## 2.5.1 (April, 12 2023)
 
 ### Notes
 
-- Release date: **(Month, xx 2023)**
+- Release date: **(April, 12 2023)**
 - Supported Terraform version: **v1.x**
+
+### Ehancements
+
+- [PR #213](https://github.com/zscaler/terraform-provider-zia/pull/213) ``zia_location_management``: Added to support to sub-location search within data source. Issue [#209](https://github.com/zscaler/terraform-provider-zia/issues/209)
 
 ### Fixes
 
 - [PR #217](https://github.com/zscaler/terraform-provider-zia/pull/217) ``zia_dlp_engines``: Fixed DLP Engine data source to allow search for predefined engines. Issue [#216](https://github.com/zscaler/terraform-provider-zia/issues/216)
+- [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: DLP Web rule configuration drift for certain attributes when not set in order.
 
 ## 2.5.0 (March, 27 2023)
 
