@@ -185,12 +185,17 @@ func resourceDLPDictionaries() *schema.Resource {
 						"adp_idm_profile": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							MaxItems:    1,
+							MinItems:    1,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:     schema.TypeInt,
+										Computed: true,
+										Optional: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
 									},
@@ -485,6 +490,7 @@ func expandIDMProfile(m map[string]interface{}, key string) []common.IDNameExten
 			if itemMap != nil {
 				result = append(result, common.IDNameExtensions{
 					ID:         itemMap["id"].(int),
+					Name:       itemMap["name"].(string),
 					Extensions: itemMap["extensions"].(map[string]interface{}),
 				})
 			}
