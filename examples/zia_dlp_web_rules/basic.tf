@@ -12,14 +12,31 @@ resource "zia_dlp_web_rules" "this" {
   zscaler_incident_reciever = true
   without_content_inspection = false
   url_categories {
-    id = [data.zia_url_categories.marketing.val, data.zia_url_categories.business.val]
+    id = [data.zia_url_categories.marketing.val]
   }
+  dlp_engines {
+      id = [data.zia_dlp_engines.this.id]
+    }
+  locations {
+    id = [data.zia_location_management.this.id]
+  }
+  labels {
+      id = [data.zia_rule_labels.this.id]
+    }
 }
 
 data "zia_url_categories" "marketing" {
     id = "CORPORATE_MARKETING"
 }
 
-data "zia_url_categories" "business" {
-    id = "OTHER_BUSINESS_AND_ECONOMY"
+data "zia_dlp_engines" "this" {
+  name = "PCI"
+}
+
+data "zia_location_management" "this" {
+  name = "Branch01"
+}
+
+data "zia_rule_labels" "this" {
+  name = "Compliance"
 }

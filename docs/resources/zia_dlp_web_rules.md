@@ -10,6 +10,8 @@ description: |-
 
 The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP Web Rules in the Zscaler Internet Access cloud or via the API.
 
+⚠️ **WARNING:** Zscaler Internet Access DLP supports a maximum of 127 Web DLP Rules to be created via API.
+
 ## Example Usage
 
 ```hcl
