@@ -562,6 +562,8 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 		_ = d.Set("ocr_enabled", resp.OcrEnabled)
 		_ = d.Set("zscaler_incident_reciever", resp.ZscalerIncidentReciever)
+		_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
+		_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 
 		if err := d.Set("locations", flattenIDExtensions(resp.Locations)); err != nil {
 			return err
