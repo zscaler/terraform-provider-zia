@@ -11,6 +11,7 @@
 
 - [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Reduced TimeTicker for faster rule order processing during creation and modifications.
 - [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Updated DLP Web Rule documentation with more examples
+- [PR #226](https://github.com/zscaler/terraform-provider-zia/pull/226) ``zia_admin_users``: ZIA: Added ability to search for auditor users ``/adminUsers`` by setting the bool attribute includeAuditorUsers.
 
 ## 2.5.1 (April, 12 2023)
 
