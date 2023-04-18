@@ -66,7 +66,6 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2048,
 			},
 			"keywords_retaining_parent_category": {
 				Type:     schema.TypeSet,
