@@ -166,7 +166,7 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Enables or disables image file scanning.",
 			},
-			"zscaler_incident_reciever": {
+			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
@@ -223,7 +223,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		req.Order = dlpWebStartingOrder
 		resp, err := zClient.dlp_web_rules.Create(&req)
 		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
@@ -293,7 +293,7 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("ocr_enabled", resp.OcrEnabled)
 	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 	_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
-	_ = d.Set("zscaler_incident_reciever", resp.ZscalerIncidentReciever)
+	_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return err
@@ -458,7 +458,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		OcrEnabled:               d.Get("ocr_enabled").(bool),
 		DLPDownloadScanEnabled:   d.Get("dlp_download_scan_enabled").(bool),
 		ZCCNotificationsEnabled:  d.Get("zcc_notifications_enabled").(bool),
-		ZscalerIncidentReciever:  d.Get("zscaler_incident_reciever").(bool),
+		ZscalerIncidentReceiver:  d.Get("zscaler_incident_receiver").(bool),
 		MinSize:                  d.Get("min_size").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),

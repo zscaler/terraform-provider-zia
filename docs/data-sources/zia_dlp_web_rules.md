@@ -36,7 +36,7 @@ rules.
 * `match_only` - (Bool) The match only criteria for DLP engines.
 * `without_content_inspection` - (Bool) Indicates a DLP policy rule without content inspection, when the value is set to true.
 * `ocr_enabled` - (Bool) Enables or disables image file scanning.
-* `zscaler_incident_reciever` - (Bool) Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.
+* `zscaler_incident_receiver` - (Bool) Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.
 * `last_modified_time` - (Number) Timestamp when the DLP policy rule was last modified.
 
 * `access_control` - (String) The access privilege for this DLP policy rule based on the admin's state. The supported values are:
