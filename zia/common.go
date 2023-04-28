@@ -12,6 +12,31 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
 )
 
+func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
+	ids := &schema.Schema{
+		Type:     schema.TypeSet,
+		Required: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeInt,
+		},
+	}
+	if maxItems != nil && *maxItems > 0 {
+		ids.MaxItems = *maxItems
+	}
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		MaxItems:    1,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": ids,
+			},
+		},
+	}
+}
+
 func listIDsSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
 	ids := &schema.Schema{
 		Type:     schema.TypeList,
@@ -67,6 +92,29 @@ func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common
 		return &r
 	}
 	return nil
+}
+
+func expandSetIDsSchemaTypeCustom(d *schema.ResourceData, key string) []common.IDNameExtensions {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.IDNameExtensions
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil {
+				s, ok := itemMap["id"].(*schema.Set)
+				if ok && s != nil {
+					for _, id := range s.List() {
+						result = append(result, common.IDNameExtensions{
+							ID: id.(int),
+						})
+					}
+				}
+			}
+		}
+		return result
+	}
+	return []common.IDNameExtensions{}
 }
 
 func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNameExtensions {
@@ -551,7 +599,7 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 50) // create a ticker that ticks every half minute
+	ticker := time.NewTicker(time.Second * 25) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -585,7 +633,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 30)
+			time.Sleep(time.Second * 10)
 		}
 	}
 }

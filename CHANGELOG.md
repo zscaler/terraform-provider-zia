@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.5.2 (April, 28 2023)
+
+### Notes
+
+- Release date: **(April, 28 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: Fixed drift issues with attributes ``url_categories`` and ``dlp_engines``
+- [PR #221](https://github.com/zscaler/terraform-provider-zia/pull/221) ``zia_dlp_dictionary``: Fix DLP dictionary resource when ``phrase`` attribute is not provided
+
+### Ehancements
+
+- [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Reduced TimeTicker for faster rule order processing during creation and modifications.
+- [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Updated DLP Web Rule documentation with more examples
+- [PR #226](https://github.com/zscaler/terraform-provider-zia/pull/226) Expanded ZIA search criteria to include auditor users.
+
 ## 2.5.1 (April, 12 2023)
 
 ### Notes
@@ -15,7 +33,6 @@
 
 - [PR #217](https://github.com/zscaler/terraform-provider-zia/pull/217) ``zia_dlp_engines``: Fixed DLP Engine data source to allow search for predefined engines. Issue [#216](https://github.com/zscaler/terraform-provider-zia/issues/216)
 - [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: DLP Web rule configuration drift for certain attributes when not set in order.
-- [PR #220](https://github.com/zscaler/terraform-provider-zia/pull/220) ``zia_dlp_dictionary``: Fixed ``zia_dlp_dictionary`` to accept empty phrases block during terraform apply.
 
 ## 2.5.0 (March, 27 2023)
 
