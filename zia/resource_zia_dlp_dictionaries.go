@@ -356,7 +356,7 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 	}
 
 	patterns := expandDLPDictionariesPatterns(d)
-	if phrases != nil {
+	if patterns != nil {
 		result.Patterns = patterns
 	}
 
@@ -387,10 +387,12 @@ func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phra
 		if !ok {
 			return dlpPhraseItems
 		}
-		dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
-			Action: dlpItem["action"].(string),
-			Phrase: dlpItem["phrase"].(string),
-		})
+		if dlpItem["action"].(string) != "" {
+			dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
+				Action: dlpItem["action"].(string),
+				Phrase: dlpItem["phrase"].(string),
+			})
+		}
 	}
 	return dlpPhraseItems
 }
@@ -410,10 +412,12 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 		if !ok {
 			return dlpPatternsItems
 		}
-		dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
-			Action:  dlpItem["action"].(string),
-			Pattern: dlpItem["pattern"].(string),
-		})
+		if dlpItem["action"].(string) != "" {
+			dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
+				Action:  dlpItem["action"].(string),
+				Pattern: dlpItem["pattern"].(string),
+			})
+		}
 	}
 	return dlpPatternsItems
 }
