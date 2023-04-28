@@ -183,7 +183,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"excluded_departments":  listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"excluded_users":        listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"excluded_groups":       listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"dlp_engines":           listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
+			"dlp_engines":           setIDsSchemaTypeCustom(nil, "The list of DLP engines to which the DLP policy rule must be applied."),
 			"time_windows":          listIDsSchemaTypeCustom(2, "list of time interval during which rule must be enforced."),
 			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
 			"url_categories":        setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied."),
