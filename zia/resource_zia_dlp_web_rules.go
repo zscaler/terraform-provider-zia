@@ -166,25 +166,27 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Enables or disables image file scanning.",
 			},
-			"zscaler_incident_reciever": {
+			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
+			// We need to ensure that no drifts are ocurring when the following attributes are set.
+			// Currently if items in a list i.e dlp_engines or url_categories are unordered a drift is caused as Terraform tries to re-arrange the objects at every run
 			"file_types":            getDLPRuleFileTypes("The list of file types to which the DLP policy rule must be applied."),
 			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
 			"users":                 listIDsSchemaTypeCustom(4, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"groups":                listIDsSchemaTypeCustom(8, "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
-			"departments":           listIDsSchemaType("The Name-ID pairs of departments to which the DLP policy rule must be applied."),
+			"departments":           listIDsSchemaTypeCustom(8, "The Name-ID pairs of departments to which the DLP policy rule must be applied."),
 			"excluded_departments":  listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"excluded_users":        listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
 			"excluded_groups":       listIDsSchemaTypeCustom(256, "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"dlp_engines":           listIDsSchemaTypeCustom(4, "The list of DLP engines to which the DLP policy rule must be applied."),
-			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
+			"dlp_engines":           setIDsSchemaTypeCustom(nil, "The list of DLP engines to which the DLP policy rule must be applied."),
+			"time_windows":          listIDsSchemaTypeCustom(2, "list of time interval during which rule must be enforced."),
 			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
-			"url_categories":        listIDsSchemaType("The list of URL categories to which the DLP policy rule must be applied."),
+			"url_categories":        setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied."),
 			"auditor":               listIDsSchemaTypeCustom(1, "The auditor to which the DLP policy rule must be applied."),
 			"notification_template": listIDsSchemaTypeCustom(1, "The template used for DLP notification emails."),
 			"icap_server":           listIDsSchemaTypeCustom(1, "The DLP server, using ICAP, to which the transaction content is forwarded."),
@@ -221,7 +223,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		req.Order = dlpWebStartingOrder
 		resp, err := zClient.dlp_web_rules.Create(&req)
 		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				return resource.RetryableError(errors.New("expected resource to be created but was not"))
 			}
 			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
@@ -291,7 +293,7 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("ocr_enabled", resp.OcrEnabled)
 	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 	_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
-	_ = d.Set("zscaler_incident_reciever", resp.ZscalerIncidentReciever)
+	_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return err
@@ -456,7 +458,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		OcrEnabled:               d.Get("ocr_enabled").(bool),
 		DLPDownloadScanEnabled:   d.Get("dlp_download_scan_enabled").(bool),
 		ZCCNotificationsEnabled:  d.Get("zcc_notifications_enabled").(bool),
-		ZscalerIncidentReciever:  d.Get("zscaler_incident_reciever").(bool),
+		ZscalerIncidentReceiver:  d.Get("zscaler_incident_receiver").(bool),
 		MinSize:                  d.Get("min_size").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),
@@ -469,7 +471,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Groups:                   expandIDNameExtensionsSet(d, "groups"),
 		Departments:              expandIDNameExtensionsSet(d, "departments"),
 		Users:                    expandIDNameExtensionsSet(d, "users"),
-		URLCategories:            expandIDNameExtensionsSet(d, "url_categories"),
+		URLCategories:            expandSetIDsSchemaTypeCustom(d, "url_categories"),
 		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
 		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                   expandIDNameExtensionsSet(d, "labels"),

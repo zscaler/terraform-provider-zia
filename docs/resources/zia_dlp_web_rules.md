@@ -29,7 +29,7 @@ resource "zia_dlp_web_rules" "test" {
     ocr_enabled                 = true
     file_types                = [ "WINDOWS_META_FORMAT", "BITMAP", "JPEG", "PNG", "TIFF"]
     min_size                    = 20
-    zscaler_incident_reciever   = true
+    zscaler_incident_receiver   = true
 }
 ```
 
@@ -49,7 +49,7 @@ The following arguments are supported:
 * `match_only` - (Optional) The match only criteria for DLP engines.
 * `without_content_inspection` - (Optional) Indicates a DLP policy rule without content inspection, when the value is set to true.
 * `ocr_enabled` - (Optional) Enables or disables image file scanning. When OCR is enabled only the following ``file_types`` are supported: ``WINDOWS_META_FORMAT``, ``BITMAP``, ``JPEG``, ``PNG``, ``TIFF``
-* `zscaler_incident_reciever` - (Optional) Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.
+* `zscaler_incident_receiver` - (Optional) Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.
 
 * `action` - (Optional) The action taken when traffic matches the DLP policy rule criteria. The supported values are:
   * `ANY`

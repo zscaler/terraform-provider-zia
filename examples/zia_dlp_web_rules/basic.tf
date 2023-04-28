@@ -9,7 +9,7 @@ resource "zia_dlp_web_rules" "this" {
   file_types                = [ "WINDOWS_META_FORMAT", "BITMAP", "JPEG", "PNG", "TIFF" ]
   rank                      = 7
   state                     = "ENABLED"
-  zscaler_incident_reciever = true
+  zscaler_incident_receiver = true
   without_content_inspection = false
   url_categories {
     id = [data.zia_url_categories.marketing.val]

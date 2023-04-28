@@ -134,7 +134,7 @@ resource "%s" "%s" {
 	ocr_enabled 				= false
 	file_types                  = []
 	min_size 					= 20
-	zscaler_incident_reciever 	= true
+	zscaler_incident_receiver 	= true
 }
 
 data "%s" "%s" {
