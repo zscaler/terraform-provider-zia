@@ -105,5 +105,7 @@ The following arguments are supported:
         - `"HEAVY"`
 
 * `proximity` - (Optional) The DLP dictionary proximity length.
-* `custom` - (Optional) This value is set to true for custom DLP dictionaries.
-* `proximity_length_enabled` - (Optional) This value is set to true if proximity length and high confidence phrases are enabled for the DLP dictionary.
+* `ignore_exact_match_idm_dict` - (Optional) Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.
+* `include_bin_numbers` - (Optional) A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
+* `bin_numbers` - (Optional) The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
+* `dict_template_id` - (Optional) ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.

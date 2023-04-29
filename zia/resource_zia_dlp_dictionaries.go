@@ -221,6 +221,27 @@ func resourceDLPDictionaries() *schema.Resource {
 				Optional:    true,
 				Description: "The DLP dictionary proximity length.",
 			},
+			"ignore_exact_match_idm_dict": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.",
+			},
+			"include_bin_numbers": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary.Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"bin_numbers": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"dict_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.",
+			},
 		},
 	}
 
@@ -273,6 +294,10 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 	_ = d.Set("threshold_type", resp.ThresholdType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
+	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
+	_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
+	_ = d.Set("bin_numbers", resp.BinNumbers)
+	_ = d.Set("dict_template_id", resp.DictTemplateId)
 	_ = d.Set("proximity", resp.Proximity)
 	if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
 		return err
@@ -338,12 +363,17 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
 	result := dlpdictionaries.DlpDictionary{
-		ID:                    id,
-		Name:                  d.Get("name").(string),
-		Description:           d.Get("description").(string),
-		ConfidenceThreshold:   d.Get("confidence_threshold").(string),
-		CustomPhraseMatchType: d.Get("custom_phrase_match_type").(string),
-		DictionaryType:        d.Get("dictionary_type").(string),
+		ID:                      id,
+		Name:                    d.Get("name").(string),
+		Description:             d.Get("description").(string),
+		ConfidenceThreshold:     d.Get("confidence_threshold").(string),
+		CustomPhraseMatchType:   d.Get("custom_phrase_match_type").(string),
+		DictionaryType:          d.Get("dictionary_type").(string),
+		IgnoreExactMatchIdmDict: d.Get("ignore_exact_match_idm_dict").(bool),
+		IncludeBinNumbers:       d.Get("include_bin_numbers").(bool),
+		BinNumbers:              d.Get("bin_numbers").([]int),
+		DictTemplateId:          d.Get("dict_template_id").(int),
+		Proximity:               d.Get("proximity").(int),
 	}
 	phrases := expandDLPDictionariesPhrases(d)
 	if phrases != nil {
