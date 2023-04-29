@@ -185,12 +185,17 @@ func resourceDLPDictionaries() *schema.Resource {
 						"adp_idm_profile": {
 							Type:        schema.TypeSet,
 							Optional:    true,
-							MaxItems:    1,
+							MinItems:    1,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:     schema.TypeInt,
+										Computed: true,
+										Optional: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
 									},
@@ -351,7 +356,7 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 	}
 
 	patterns := expandDLPDictionariesPatterns(d)
-	if phrases != nil {
+	if patterns != nil {
 		result.Patterns = patterns
 	}
 
@@ -382,10 +387,12 @@ func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phra
 		if !ok {
 			return dlpPhraseItems
 		}
-		dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
-			Action: dlpItem["action"].(string),
-			Phrase: dlpItem["phrase"].(string),
-		})
+		if dlpItem["action"].(string) != "" {
+			dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
+				Action: dlpItem["action"].(string),
+				Phrase: dlpItem["phrase"].(string),
+			})
+		}
 	}
 	return dlpPhraseItems
 }
@@ -405,10 +412,12 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 		if !ok {
 			return dlpPatternsItems
 		}
-		dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
-			Action:  dlpItem["action"].(string),
-			Pattern: dlpItem["pattern"].(string),
-		})
+		if dlpItem["action"].(string) != "" {
+			dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
+				Action:  dlpItem["action"].(string),
+				Pattern: dlpItem["pattern"].(string),
+			})
+		}
 	}
 	return dlpPatternsItems
 }
@@ -485,6 +494,7 @@ func expandIDMProfile(m map[string]interface{}, key string) []common.IDNameExten
 			if itemMap != nil {
 				result = append(result, common.IDNameExtensions{
 					ID:         itemMap["id"].(int),
+					Name:       itemMap["name"].(string),
 					Extensions: itemMap["extensions"].(map[string]interface{}),
 				})
 			}
