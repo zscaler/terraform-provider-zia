@@ -371,10 +371,14 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 		DictionaryType:          d.Get("dictionary_type").(string),
 		IgnoreExactMatchIdmDict: d.Get("ignore_exact_match_idm_dict").(bool),
 		IncludeBinNumbers:       d.Get("include_bin_numbers").(bool),
-		BinNumbers:              d.Get("bin_numbers").([]int),
 		DictTemplateId:          d.Get("dict_template_id").(int),
 		Proximity:               d.Get("proximity").(int),
 	}
+	binNumbers := []int{}
+	for _, i := range d.Get("bin_numbers").([]interface{}) {
+		binNumbers = append(binNumbers, i.(int))
+	}
+	result.BinNumbers = binNumbers
 	phrases := expandDLPDictionariesPhrases(d)
 	if phrases != nil {
 		result.Phrases = phrases
