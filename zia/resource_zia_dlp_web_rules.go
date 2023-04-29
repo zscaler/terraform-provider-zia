@@ -172,8 +172,6 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
-			// We need to ensure that no drifts are ocurring when the following attributes are set.
-			// Currently if items in a list i.e dlp_engines or url_categories are unordered a drift is caused as Terraform tries to re-arrange the objects at every run
 			"file_types":            getDLPRuleFileTypes("The list of file types to which the DLP policy rule must be applied."),
 			"locations":             listIDsSchemaTypeCustom(8, "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       listIDsSchemaTypeCustom(32, "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
@@ -472,7 +470,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Departments:              expandIDNameExtensionsSet(d, "departments"),
 		Users:                    expandIDNameExtensionsSet(d, "users"),
 		URLCategories:            expandSetIDsSchemaTypeCustom(d, "url_categories"),
-		DLPEngines:               expandSetIDsSchemaTypeCustom(d, "dlp_engines"),
+		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
 		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                   expandIDNameExtensionsSet(d, "labels"),
 		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),

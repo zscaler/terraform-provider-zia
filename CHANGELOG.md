@@ -1,22 +1,23 @@
 # Changelog
 
-## 2.5.2 (April, 28 2023)
+## 2.5.2 (May, 1 2023)
 
 ### Notes
 
-- Release date: **(April, 28 2023)**
+- Release date: **(May, 1 2023)**
 - Supported Terraform version: **v1.x**
-
-### Fixes
-
-- [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: Fixed drift issues with attributes ``url_categories`` and ``dlp_engines``
-- [PR #221](https://github.com/zscaler/terraform-provider-zia/pull/221) ``zia_dlp_dictionary``: Fix DLP dictionary resource when ``phrase`` attribute is not provided
 
 ### Ehancements
 
 - [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Reduced TimeTicker for faster rule order processing during creation and modifications.
 - [PR #224](https://github.com/zscaler/terraform-provider-zia/pull/224) ``zia_dlp_web_rule``: Updated DLP Web Rule documentation with more examples
 - [PR #226](https://github.com/zscaler/terraform-provider-zia/pull/226) Expanded ZIA search criteria to include auditor users.
+- [PR #227](https://github.com/zscaler/terraform-provider-zia/pull/227) Introduced new attribute ``parent_name`` to the resource ``zia_location_management``. The attribute will allow the ability to search for sublocation resources across multiple parent locations specially when overlapping names are in use. Issue [#223](https://github.com/zscaler/terraform-provider-zia/issues/223)
+
+### Fixes
+
+- [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: Fixed drift issues with attributes ``url_categories`` and ``dlp_engines``
+- [PR #221](https://github.com/zscaler/terraform-provider-zia/pull/221) ``zia_dlp_dictionary``: Fix DLP dictionary resource when ``phrase`` attribute is not provided
 
 ## 2.5.1 (April, 12 2023)
 
