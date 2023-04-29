@@ -351,7 +351,7 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 	}
 
 	patterns := expandDLPDictionariesPatterns(d)
-	if phrases != nil {
+	if patterns != nil {
 		result.Patterns = patterns
 	}
 
