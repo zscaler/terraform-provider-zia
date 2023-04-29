@@ -20,6 +20,10 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"parent_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"parent_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -240,15 +244,24 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		}
 		resp = res
 	}
-
+	parentName, _ := d.Get("parent_name").(string)
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationmanagement.GetLocationOrSublocationByName(name)
-		if err != nil {
-			return err
+		if parentName != "" {
+			log.Printf("[INFO] Getting data for location name: %s - parent name:%s\n", name, parentName)
+			res, err := zClient.locationmanagement.GetSubLocationByNames(parentName, name)
+			if err != nil {
+				return err
+			}
+			resp = res
+		} else {
+			log.Printf("[INFO] Getting data for location name: %s\n", name)
+			res, err := zClient.locationmanagement.GetLocationOrSublocationByName(name)
+			if err != nil {
+				return err
+			}
+			resp = res
 		}
-		resp = res
 	}
 
 	if resp != nil {
