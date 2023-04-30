@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
 )
 
@@ -132,6 +133,11 @@ func dataSourceDLPDictionaries() *schema.Resource {
 										Type:        schema.TypeInt,
 										Computed:    true,
 										Description: "Identifier that uniquely identifies an entity",
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
 									},
 									"extensions": {
 										Type:     schema.TypeMap,
@@ -294,9 +300,14 @@ func flattenEDMDetails(edm *dlpdictionaries.DlpDictionary) []interface{} {
 func flattenIDMProfileMatchAccuracy(edm *dlpdictionaries.DlpDictionary) []interface{} {
 	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
 	for i, val := range edm.IDMProfileMatchAccuracy {
+		exts := []common.IDNameExtensions{}
+		if val.AdpIdmProfile != nil {
+			exts = append(exts, *val.AdpIdmProfile)
+		}
+
 		idmProfileMatchAccuracies[i] = map[string]interface{}{
 			"match_accuracy":  val.MatchAccuracy,
-			"adp_idm_profile": val.AdpIdmProfile,
+			"adp_idm_profile": flattenIDNameExtensions(exts),
 		}
 	}
 

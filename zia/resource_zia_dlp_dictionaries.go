@@ -194,6 +194,11 @@ func resourceDLPDictionaries() *schema.Resource {
 										Computed: true,
 										Optional: true,
 									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 									"extensions": {
 										Type:     schema.TypeMap,
 										Computed: true,
