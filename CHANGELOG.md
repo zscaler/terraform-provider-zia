@@ -18,6 +18,7 @@
 
 - [PR #219](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: Fixed drift issues with attributes ``url_categories`` and ``dlp_engines``
 - [PR #221](https://github.com/zscaler/terraform-provider-zia/pull/221) ``zia_dlp_dictionary``: Fix DLP dictionary resource when ``phrase`` attribute is not provided
+- [PR #228](https://github.com/zscaler/terraform-provider-zia/pull/228) ``zia_dlp_dictionary``: Fixed ``idm_profile_match_accuracy`` attribute to prevent drifts, plus accept ``zia_dlp_idm_profile_lite`` template_id when selecting ``dictionary_type`` INDEXED_DATA_MATCH
 
 ## 2.5.1 (April, 12 2023)
 
