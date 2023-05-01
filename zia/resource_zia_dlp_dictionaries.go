@@ -85,6 +85,7 @@ func resourceDLPDictionaries() *schema.Resource {
 			"custom_phrase_match_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY",
 					"MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY",
@@ -93,32 +94,25 @@ func resourceDLPDictionaries() *schema.Resource {
 			"patterns": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "The action applied to a DLP dictionary using patterns",
 						},
 						"pattern": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							Description:  "DLP dictionary pattern",
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 					},
 				},
-			},
-			"name_l10n_tag": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Indicates whether the name is localized or not. This is always set to True for predefined DLP dictionaries.",
-			},
-			"threshold_type": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "DLP threshold type",
 			},
 			"dictionary_type": {
 				Type:        schema.TypeString,
@@ -183,9 +177,10 @@ func resourceDLPDictionaries() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"adp_idm_profile": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							MaxItems:    1,
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							// MaxItems:    1,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -213,6 +208,7 @@ func resourceDLPDictionaries() *schema.Resource {
 						"match_accuracy": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "The IDM template match accuracy.",
 							ValidateFunc: validation.StringInSlice([]string{
 								"LOW", "MEDIUM", "HEAVY",
@@ -234,6 +230,7 @@ func resourceDLPDictionaries() *schema.Resource {
 			"include_bin_numbers": {
 				Type:        schema.TypeBool,
 				Optional:    true,
+				Computed:    true,
 				Description: "A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary.Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
 			},
 			"bin_numbers": {
@@ -296,8 +293,6 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 	_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
-	_ = d.Set("name_l10n_tag", resp.NameL10nTag)
-	_ = d.Set("threshold_type", resp.ThresholdType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
 	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
 	_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
