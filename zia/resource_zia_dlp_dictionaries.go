@@ -249,7 +249,10 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 
 	req := expandDLPDictionaries(d)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
-
+	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+	}
 	resp, _, err := zClient.dlpdictionaries.Create(&req)
 	if err != nil {
 		return err
