@@ -85,6 +85,7 @@ func resourceDLPDictionaries() *schema.Resource {
 			"custom_phrase_match_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY",
 					"MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY",
@@ -93,32 +94,25 @@ func resourceDLPDictionaries() *schema.Resource {
 			"patterns": {
 				Type:        schema.TypeSet,
 				Optional:    true,
+				Computed:    true,
 				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "The action applied to a DLP dictionary using patterns",
 						},
 						"pattern": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							Description:  "DLP dictionary pattern",
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 					},
 				},
-			},
-			"name_l10n_tag": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Indicates whether the name is localized or not. This is always set to True for predefined DLP dictionaries.",
-			},
-			"threshold_type": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "DLP threshold type",
 			},
 			"dictionary_type": {
 				Type:        schema.TypeString,
@@ -183,19 +177,15 @@ func resourceDLPDictionaries() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"adp_idm_profile": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							MinItems:    1,
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							// MaxItems:    1,
 							Description: "The action applied to a DLP dictionary using patterns",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
 										Type:     schema.TypeInt,
-										Computed: true,
-										Optional: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
 									},
@@ -213,6 +203,7 @@ func resourceDLPDictionaries() *schema.Resource {
 						"match_accuracy": {
 							Type:        schema.TypeString,
 							Optional:    true,
+							Computed:    true,
 							Description: "The IDM template match accuracy.",
 							ValidateFunc: validation.StringInSlice([]string{
 								"LOW", "MEDIUM", "HEAVY",
@@ -226,6 +217,28 @@ func resourceDLPDictionaries() *schema.Resource {
 				Optional:    true,
 				Description: "The DLP dictionary proximity length.",
 			},
+			"ignore_exact_match_idm_dict": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.",
+			},
+			"include_bin_numbers": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary.Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"bin_numbers": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"dict_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.",
+			},
 		},
 	}
 
@@ -236,7 +249,10 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 
 	req := expandDLPDictionaries(d)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
-
+	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+	}
 	resp, _, err := zClient.dlpdictionaries.Create(&req)
 	if err != nil {
 		return err
@@ -275,9 +291,11 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 	_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
-	_ = d.Set("name_l10n_tag", resp.NameL10nTag)
-	_ = d.Set("threshold_type", resp.ThresholdType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
+	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
+	_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
+	_ = d.Set("bin_numbers", resp.BinNumbers)
+	_ = d.Set("dict_template_id", resp.DictTemplateId)
 	_ = d.Set("proximity", resp.Proximity)
 	if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
 		return err
@@ -291,11 +309,42 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Need to fully flatten and expand this menu
-	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracy(resp)); err != nil {
+	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracySimple(resp)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenIDNameExtensionSimple(list []common.IDNameExtensions) []interface{} {
+	flattenedList := make([]interface{}, len(list))
+	for i, val := range list {
+		r := map[string]interface{}{
+			"id": val.ID,
+		}
+		if val.Extensions != nil {
+			r["extensions"] = val.Extensions
+		}
+		flattenedList[i] = r
+	}
+	return flattenedList
+}
+
+func flattenIDMProfileMatchAccuracySimple(edm *dlpdictionaries.DlpDictionary) []interface{} {
+	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
+	for i, val := range edm.IDMProfileMatchAccuracy {
+		exts := []common.IDNameExtensions{}
+		if val.AdpIdmProfile != nil {
+			exts = append(exts, *val.AdpIdmProfile)
+		}
+
+		idmProfileMatchAccuracies[i] = map[string]interface{}{
+			"match_accuracy":  val.MatchAccuracy,
+			"adp_idm_profile": flattenIDNameExtensionSimple(exts),
+		}
+	}
+
+	return idmProfileMatchAccuracies
 }
 
 func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error {
@@ -313,6 +362,10 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 			d.SetId("")
 			return nil
 		}
+	}
+	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
 	}
 	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
@@ -343,13 +396,22 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
 	result := dlpdictionaries.DlpDictionary{
-		ID:                    id,
-		Name:                  d.Get("name").(string),
-		Description:           d.Get("description").(string),
-		ConfidenceThreshold:   d.Get("confidence_threshold").(string),
-		CustomPhraseMatchType: d.Get("custom_phrase_match_type").(string),
-		DictionaryType:        d.Get("dictionary_type").(string),
+		ID:                      id,
+		Name:                    d.Get("name").(string),
+		Description:             d.Get("description").(string),
+		ConfidenceThreshold:     d.Get("confidence_threshold").(string),
+		CustomPhraseMatchType:   d.Get("custom_phrase_match_type").(string),
+		DictionaryType:          d.Get("dictionary_type").(string),
+		IgnoreExactMatchIdmDict: d.Get("ignore_exact_match_idm_dict").(bool),
+		IncludeBinNumbers:       d.Get("include_bin_numbers").(bool),
+		DictTemplateId:          d.Get("dict_template_id").(int),
+		Proximity:               d.Get("proximity").(int),
 	}
+	binNumbers := []int{}
+	for _, i := range d.Get("bin_numbers").([]interface{}) {
+		binNumbers = append(binNumbers, i.(int))
+	}
+	result.BinNumbers = binNumbers
 	phrases := expandDLPDictionariesPhrases(d)
 	if phrases != nil {
 		result.Phrases = phrases
@@ -387,12 +449,10 @@ func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phra
 		if !ok {
 			return dlpPhraseItems
 		}
-		if dlpItem["action"].(string) != "" {
-			dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
-				Action: dlpItem["action"].(string),
-				Phrase: dlpItem["phrase"].(string),
-			})
-		}
+		dlpPhraseItems = append(dlpPhraseItems, dlpdictionaries.Phrases{
+			Action: dlpItem["action"].(string),
+			Phrase: dlpItem["phrase"].(string),
+		})
 	}
 	return dlpPhraseItems
 }
@@ -412,12 +472,10 @@ func expandDLPDictionariesPatterns(d *schema.ResourceData) []dlpdictionaries.Pat
 		if !ok {
 			return dlpPatternsItems
 		}
-		if dlpItem["action"].(string) != "" {
-			dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
-				Action:  dlpItem["action"].(string),
-				Pattern: dlpItem["pattern"].(string),
-			})
-		}
+		dlpPatternsItems = append(dlpPatternsItems, dlpdictionaries.Patterns{
+			Action:  dlpItem["action"].(string),
+			Pattern: dlpItem["pattern"].(string),
+		})
 	}
 	return dlpPatternsItems
 }
@@ -494,7 +552,6 @@ func expandIDMProfile(m map[string]interface{}, key string) []common.IDNameExten
 			if itemMap != nil {
 				result = append(result, common.IDNameExtensions{
 					ID:         itemMap["id"].(int),
-					Name:       itemMap["name"].(string),
 					Extensions: itemMap["extensions"].(map[string]interface{}),
 				})
 			}
