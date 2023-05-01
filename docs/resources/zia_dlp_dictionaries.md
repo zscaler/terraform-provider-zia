@@ -43,6 +43,7 @@ The following arguments are supported:
 * `custom_phrase_match_type` - (Required) The DLP custom phrase match type. Supported values are:
   * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
   * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`
+  Note: This attribute should only be set when the dictionary_type is set to ``PATTERNS_AND_PHRASES``
 
 * `phrases` - (Required) List containing the phrases used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Required when `dictionary_type` is `PATTERNS_AND_PHRASES`
   * `action` - (Required) The action applied to a DLP dictionary using patterns. The following values are supported:

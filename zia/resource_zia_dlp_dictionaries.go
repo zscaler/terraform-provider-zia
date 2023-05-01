@@ -363,6 +363,10 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 			return nil
 		}
 	}
+	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+	}
 	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
 	}
