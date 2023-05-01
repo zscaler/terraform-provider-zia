@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
 )
 
@@ -24,6 +25,10 @@ func dataSourceDLPDictionaries() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"custom": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"confidence_threshold": {
@@ -129,6 +134,11 @@ func dataSourceDLPDictionaries() *schema.Resource {
 										Computed:    true,
 										Description: "Identifier that uniquely identifies an entity",
 									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
 									"extensions": {
 										Type:     schema.TypeMap,
 										Computed: true,
@@ -151,6 +161,37 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "The DLP dictionary proximity length.",
+			},
+			"ignore_exact_match_idm_dict": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.",
+			},
+			"include_bin_numbers": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary.Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"bin_numbers": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeInt},
+				Description: "The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.",
+			},
+			"dict_template_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.",
+			},
+			"predefined_clone": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This field is set to true if the dictionary is cloned from a predefined dictionary. Otherwise, it is set to false.",
+			},
+			"proximity_length_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "This value is set to true if proximity length and high confidence phrases are enabled for the DLP dictionary.",
 			},
 		},
 	}
@@ -183,11 +224,19 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("description", resp.Description)
+		_ = d.Set("custom", resp.Custom)
 		_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 		_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 		_ = d.Set("threshold_type", resp.ThresholdType)
 		_ = d.Set("dictionary_type", resp.DictionaryType)
+		_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
+		_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
+		_ = d.Set("bin_numbers", resp.BinNumbers)
+		_ = d.Set("dict_template_id", resp.DictTemplateId)
+		_ = d.Set("predefined_clone", resp.PredefinedClone)
+		_ = d.Set("proximity_length_enabled", resp.ProximityLengthEnabled)
+		_ = d.Set("proximity", resp.Proximity)
 		if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
 			return err
 		}
@@ -251,9 +300,14 @@ func flattenEDMDetails(edm *dlpdictionaries.DlpDictionary) []interface{} {
 func flattenIDMProfileMatchAccuracy(edm *dlpdictionaries.DlpDictionary) []interface{} {
 	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
 	for i, val := range edm.IDMProfileMatchAccuracy {
+		exts := []common.IDNameExtensions{}
+		if val.AdpIdmProfile != nil {
+			exts = append(exts, *val.AdpIdmProfile)
+		}
+
 		idmProfileMatchAccuracies[i] = map[string]interface{}{
 			"match_accuracy":  val.MatchAccuracy,
-			"adp_idm_profile": val.AdpIdmProfile,
+			"adp_idm_profile": flattenIDNameExtensions(exts),
 		}
 	}
 
