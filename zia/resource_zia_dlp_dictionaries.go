@@ -189,11 +189,6 @@ func resourceDLPDictionaries() *schema.Resource {
 										Computed: true,
 										Optional: true,
 									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
 									"extensions": {
 										Type:     schema.TypeMap,
 										Computed: true,
@@ -311,11 +306,42 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Need to fully flatten and expand this menu
-	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracy(resp)); err != nil {
+	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracySimple(resp)); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func flattenIDNameExtensionSimple(list []common.IDNameExtensions) []interface{} {
+	flattenedList := make([]interface{}, len(list))
+	for i, val := range list {
+		r := map[string]interface{}{
+			"id": val.ID,
+		}
+		if val.Extensions != nil {
+			r["extensions"] = val.Extensions
+		}
+		flattenedList[i] = r
+	}
+	return flattenedList
+}
+
+func flattenIDMProfileMatchAccuracySimple(edm *dlpdictionaries.DlpDictionary) []interface{} {
+	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
+	for i, val := range edm.IDMProfileMatchAccuracy {
+		exts := []common.IDNameExtensions{}
+		if val.AdpIdmProfile != nil {
+			exts = append(exts, *val.AdpIdmProfile)
+		}
+
+		idmProfileMatchAccuracies[i] = map[string]interface{}{
+			"match_accuracy":  val.MatchAccuracy,
+			"adp_idm_profile": flattenIDNameExtensionSimple(exts),
+		}
+	}
+
+	return idmProfileMatchAccuracies
 }
 
 func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error {
