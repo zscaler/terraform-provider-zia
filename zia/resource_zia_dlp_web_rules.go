@@ -472,12 +472,13 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Departments:              expandIDNameExtensionsSet(d, "departments"),
 		Users:                    expandIDNameExtensionsSet(d, "users"),
 		URLCategories:            expandSetIDsSchemaTypeCustom(d, "url_categories"),
-		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
-		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
-		Labels:                   expandIDNameExtensionsSet(d, "labels"),
-		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
-		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
-		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
+		// Panic is occurring when setting DLP engine IDs within the rule.
+		DLPEngines:          expandIDNameExtensionsSet(d, "dlp_engines"),
+		TimeWindows:         expandIDNameExtensionsSet(d, "time_windows"),
+		Labels:              expandIDNameExtensionsSet(d, "labels"),
+		ExcludedUsers:       expandIDNameExtensionsSet(d, "excluded_groups"),
+		ExcludedGroups:      expandIDNameExtensionsSet(d, "excluded_departments"),
+		ExcludedDepartments: expandIDNameExtensionsSet(d, "excluded_users"),
 	}
 	return result
 }
