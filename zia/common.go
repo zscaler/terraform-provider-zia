@@ -85,8 +85,9 @@ func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.ID
 	}
 	return []common.IDNameExtensions{}
 }
-func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	l := expandIDNameExtensionsSet(d, key)
+
+func expandIDNameExtensionsListSingle(d *schema.ResourceData, key string) *common.IDNameExtensions {
+	l := expandIDNameExtensionsList(d, key)
 	if len(l) > 0 {
 		r := l[0]
 		return &r
@@ -117,6 +118,27 @@ func expandSetIDsSchemaTypeCustom(d *schema.ResourceData, key string) []common.I
 	return []common.IDNameExtensions{}
 }
 
+func expandIDNameExtensionsList(d *schema.ResourceData, key string) []common.IDNameExtensions {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.IDNameExtensions
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil && itemMap["id"] != nil {
+				set := itemMap["id"].([]interface{})
+				for _, id := range set {
+					result = append(result, common.IDNameExtensions{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.IDNameExtensions{}
+}
+
 func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNameExtensions {
 	setInterface, ok := d.GetOk(key)
 	if ok {
@@ -124,8 +146,9 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 		var result []common.IDNameExtensions
 		for _, item := range set.List() {
 			itemMap, _ := item.(map[string]interface{})
-			if itemMap != nil {
-				for _, id := range itemMap["id"].([]interface{}) {
+			if itemMap != nil && itemMap["id"] != nil {
+				set := itemMap["id"].(*schema.Set)
+				for _, id := range set.List() {
 					result = append(result, common.IDNameExtensions{
 						ID: id.(int),
 					})
