@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.3 (May, 13 2023)
+
+### Notes
+
+- Release date: **(May, 13 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #231](https://github.com/zscaler/terraform-provider-zia/pull/219) ``zia_dlp_web_rules``: Fixed panic with ``zia_web_dlp_rules`` due to ``dlp_engines`` attribute expand function
+
 ## 2.5.2 (May, 1 2023)
 
 ### Notes

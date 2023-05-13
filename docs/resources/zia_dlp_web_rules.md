@@ -75,7 +75,7 @@ The following arguments are supported:
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
 * `dlp_engines` - (Optional) The list of DLP engines to which the DLP policy rule must be applied.
-  * `id` - (Optional) Identifier that uniquely identifies an entity
+  * `id` - (Optional) Identifier that uniquely identifies an entity. Maximum of up to `4` dlp engines. When not used it implies `Any` to apply the rule to all locations.
 
 * `locations` - (Optional) The Name-ID pairs of locations to which the DLP policy rule must be applied. Maximum of up to `8` locations. When not used it implies `Any` to apply the rule to all locations.
   * `id` - (Optional) Identifier that uniquely identifies an entity
