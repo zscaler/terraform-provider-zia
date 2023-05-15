@@ -113,6 +113,22 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 
 func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
+
+data "zia_group_management" "group" {
+	name = "Engineering"
+}
+
+data "zia_department_management" "department" {
+	name = "Engineering"
+}
+
+data "zia_rule_labels" "global" {
+	name = "GLOBAL"
+}
+
+data "zia_firewall_filtering_time_window" "work_hours"{
+    name = "Work hours"
+}
 resource "%s" "%s" {
     name = "%s"
     description = "%s"
@@ -122,6 +138,18 @@ resource "%s" "%s" {
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+	groups {
+		id = [data.zia_group_management.group.id]
+	}
+	departments {
+		id = [data.zia_department_management.department.id]
+	}
+	labels {
+		id = [data.zia_rule_labels.global.id]
+	}
+	time_windows {
+		id = [data.zia_firewall_filtering_time_window.work_hours.id]
+	}
 }
 
 data "%s" "%s" {

@@ -442,78 +442,17 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
-	}
-	locations := expandIDNameExtensionsSet(d, "locations")
-	if locations != nil {
-		result.Locations = locations
-	}
-	groups := expandIDNameExtensionsSet(d, "groups")
-	if groups != nil {
-		result.Groups = groups
-	}
-	departments := expandIDNameExtensionsSet(d, "departments")
-	if departments != nil {
-		result.Departments = departments
-	}
-	users := expandIDNameExtensionsSet(d, "users")
-	if users != nil {
-		result.Users = users
-	}
-	timeWindows := expandIDNameExtensionsSet(d, "time_windows")
-	if timeWindows != nil {
-		result.TimeWindows = timeWindows
-	}
-	overrideUsers := expandIDNameExtensionsSet(d, "override_users")
-	if overrideUsers != nil {
-		result.OverrideUsers = overrideUsers
-	}
-	overrideGroups := expandIDNameExtensionsSet(d, "override_groups")
-	if overrideGroups != nil {
-		result.OverrideGroups = overrideGroups
-	}
-	locationGroups := expandIDNameExtensionsSet(d, "location_groups")
-	if locationGroups != nil {
-		result.LocationGroups = locationGroups
-	}
-	labels := expandIDNameExtensionsSet(d, "labels")
-	if labels != nil {
-		result.Labels = labels
-	}
-	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
-	if deviceGroups != nil {
-		result.DeviceGroups = deviceGroups
-	}
-	devices := expandIDNameExtensionsSet(d, "devices")
-	if devices != nil {
-		result.Devices = devices
+		Locations:              expandIDNameExtensionsList(d, "locations"),
+		Groups:                 expandIDNameExtensionsList(d, "groups"),
+		Departments:            expandIDNameExtensionsList(d, "departments"),
+		Users:                  expandIDNameExtensionsList(d, "users"),
+		TimeWindows:            expandIDNameExtensionsList(d, "time_windows"),
+		OverrideUsers:          expandIDNameExtensionsList(d, "override_users"),
+		OverrideGroups:         expandIDNameExtensionsList(d, "override_groups"),
+		LocationGroups:         expandIDNameExtensionsList(d, "location_groups"),
+		Labels:                 expandIDNameExtensionsList(d, "labels"),
+		DeviceGroups:           expandIDNameExtensionsList(d, "device_groups"),
+		Devices:                expandIDNameExtensionsList(d, "devices"),
 	}
 	return result
 }
-
-/*
-
-func reorder(order, id int, zClient *Client) {
-	defer reorderAll(zClient)
-	rules.Lock()
-	rules.orders[id] = order
-	rules.Unlock()
-}
-
-
-// we keep calling reordering endpoint to reorder all rules after new rule was added
-// because the reorder endpoint shifts all order up to replac the new order.
-func reorderAll(zClient *Client) {
-	rules.Lock()
-	defer rules.Unlock()
-	count := zClient.urlfilteringpolicies.RulesCount()
-	for k, v := range rules.orders {
-		// the only valid order you can set is 0,count
-		if v <= count {
-			_, err := zClient.urlfilteringpolicies.Reorder(k, v)
-			if err != nil {
-				log.Printf("[ERROR] couldn't reorder the url filtering policy, the order may not have taken place: %v\n", err)
-			}
-		}
-	}
-}
-*/
