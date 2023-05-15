@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.3``
+``Last updated: v2.5.4``
 
 ---
+
+## 2.5.4 (May, 15 2023)
+
+### Notes
+
+- Release date: **(May, 15 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #236](https://github.com/zscaler/terraform-provider-zia/pull/236) Added new datasource``zia_dlp_edm_schema`` to retrieve Exact Data Match ``schema_id``. The shema_id value can then be used as part of ``zia_dlp_dictionaries`` when the ``dictionary_type`` is set to ``EXACT_DATA_MATCH``
 
 ## 2.5.3 (May, 13 2023)
 
