@@ -8,6 +8,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/devicegroups"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_exact_data_match"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_icap_servers"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_idm_profiles"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_incident_receiver_servers"
@@ -71,6 +72,7 @@ type Client struct {
 	dlpdictionaries               *dlpdictionaries.Service
 	dlp_engines                   *dlp_engines.Service
 	dlp_idm_profiles              *dlp_idm_profiles.Service
+	dlp_exact_data_match          *dlp_exact_data_match.Service
 	dlp_icap_servers              *dlp_icap_servers.Service
 	dlp_incident_receiver_servers *dlp_incident_receiver_servers.Service
 	dlp_notification_templates    *dlp_notification_templates.Service
@@ -121,6 +123,7 @@ func (c *Config) Client() (*Client, error) {
 		dlpdictionaries:               dlpdictionaries.New(cli),
 		dlp_engines:                   dlp_engines.New(cli),
 		dlp_idm_profiles:              dlp_idm_profiles.New(cli),
+		dlp_exact_data_match:          dlp_exact_data_match.New(cli),
 		dlp_icap_servers:              dlp_icap_servers.New(cli),
 		dlp_incident_receiver_servers: dlp_incident_receiver_servers.New(cli),
 		dlp_notification_templates:    dlp_notification_templates.New(cli),

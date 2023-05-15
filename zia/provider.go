@@ -106,6 +106,7 @@ func Provider() *schema.Provider {
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
 			"zia_dlp_engines":                                   dataSourceDLPEngines(),
 			"zia_dlp_icap_servers":                              dataSourceDLPICAPServers(),
+			"zia_dlp_edm_schema":                                dataSourceDLPEDMSchema(),
 			"zia_dlp_idm_profiles":                              dataSourceDLPIDMProfiles(),
 			"zia_dlp_idm_profile_lite":                          dataSourceDLPIDMProfileLite(),
 			"zia_dlp_incident_receiver_servers":                 dataSourceDLPIncidentReceiverServers(),
