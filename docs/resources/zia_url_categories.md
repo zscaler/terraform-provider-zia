@@ -69,13 +69,11 @@ The following arguments are supported:
 * `urls_retaining_parent_category_count` - (Optional) The number of custom IP address ranges associated to the URL category, that also need to be retained under the original parent category.
 
 * `scopes` - (Optional) Scope of the custom categories.
+  * `type` - (Optional) The admin scope type. The attribute name is subject to change. `ORGANIZATION`, `DEPARTMENT`, `LOCATION`, `LOCATION_GROUP`
   * `scope_group_member_entities` - (List of Object) Only applicable for the LOCATION_GROUP admin scope type, in which case this attribute gives the list of ID/name pairs of locations within the location group. The attribute name is subject to change.
     * `id` - (Optional)
-
-* `type` - (Optional) The admin scope type. The attribute name is subject to change. `ORGANIZATION`, `DEPARTMENT`, `LOCATION`, `LOCATION_GROUP`
-
-* `scope_entities` - (Optional)
-  * `id` - (Optional)
+  * `scope_entities` - (Optional)
+    * `id` - (Optional)
 
 * `url_keyword_counts` - (Optional) URL and keyword counts for the category.
   * `total_url_count` - (Optional) Custom URL count for the category.
