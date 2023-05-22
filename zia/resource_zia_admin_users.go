@@ -99,7 +99,7 @@ func resourceAdminUsers() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
+						"scope_group_member_entities": setIDsSchemaTypeCustom(nil, "list of scope group member IDs"),
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -111,7 +111,7 @@ func resourceAdminUsers() *schema.Resource {
 								"LOCATION_GROUP",
 							}, false),
 						},
-						"scope_entities": listIDsSchemaType("list of scope IDs"),
+						"scope_entities": setIDsSchemaTypeCustom(nil, "list of scope IDs"),
 					},
 				},
 			},
