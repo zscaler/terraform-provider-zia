@@ -114,21 +114,50 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
 
-data "zia_group_management" "group" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "department" {
-	name = "Engineering"
-}
-
-data "zia_rule_labels" "global" {
+data "zia_rule_labels" "global"{
 	name = "GLOBAL"
 }
 
-data "zia_firewall_filtering_time_window" "work_hours"{
-    name = "Work hours"
+data "zia_firewall_filtering_time_window" "work_hours" {
+	name = "Work Hours"
 }
+
+data "zia_firewall_filtering_time_window" "off_hours" {
+	name = "Off Hours"
+}
+
+data "zia_department_management" "engineering" {
+	name = "Engineering"
+}
+
+data "zia_department_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_group_management" "engineering" {
+	name = "Engineering"
+}
+
+data "zia_group_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_location_management" "au_sydney_branch01" {
+	name = "AU-Sydney-Branch01"
+}
+
+data "zia_location_management" "au_sydney_branch02" {
+	name = "AU-Sydney-Branch02"
+}
+
+data "zia_location_groups" "sdwan_can" {
+	name = "SDWAN_CAN"
+}
+
+data "zia_location_groups" "sdwan_usa" {
+	name = "SDWAN_USA"
+}
+
 resource "%s" "%s" {
     name = "%s"
     description = "%s"
@@ -138,17 +167,23 @@ resource "%s" "%s" {
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    locations {
+		id = [data.zia_location_management.au_sydney_branch01.id, data.zia_location_management.au_sydney_branch02.id]
+	}
+	location_groups {
+		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
+	}
 	groups {
-		id = [data.zia_group_management.group.id]
+		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
 	}
 	departments {
-		id = [data.zia_department_management.department.id]
+		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
+	}
+	time_windows {
+		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 	labels {
 		id = [data.zia_rule_labels.global.id]
-	}
-	time_windows {
-		id = [data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 }
 
