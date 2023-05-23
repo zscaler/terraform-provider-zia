@@ -90,7 +90,7 @@ func resourceUserManagement() *schema.Resource {
 				Sensitive:   true,
 				Description: "User's password. Applicable only when authentication type is Hosted DB. Password strength must follow what is defined in the auth settings.",
 			},
-			"groups": listIDsSchemaType("List of Groups a user belongs to. Groups are used in policies."),
+			"groups": setIDsSchemaTypeCustom(nil, "List of Groups a user belongs to. Groups are used in policies."),
 			"department": {
 				Type:     schema.TypeSet,
 				Required: true,

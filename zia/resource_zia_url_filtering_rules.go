@@ -161,17 +161,17 @@ func resourceURLFilteringRules() *schema.Resource {
 				Computed:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			"locations":           listIDsSchemaTypeCustom(8, "Name-ID pairs of locations for which rule must be applied"),
-			"groups":              listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which rule must be applied"),
-			"departments":         listIDsSchemaTypeCustom(8, "Name-ID pairs of departments for which rule must be applied"),
-			"users":               listIDsSchemaTypeCustom(4, "Name-ID pairs of users for which rule must be applied"),
-			"time_windows":        listIDsSchemaType("Name-ID pairs of time interval during which rule must be enforced."),
-			"override_users":      listIDsSchemaType("Name-ID pairs of users for which this rule can be overridden."),
-			"override_groups":     listIDsSchemaTypeCustom(8, "Name-ID pairs of groups for which this rule can be overridden."),
-			"device_groups":       listIDsSchemaType("This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":             listIDsSchemaType("Name-ID pairs of devices for which rule must be applied."),
-			"location_groups":     listIDsSchemaTypeCustom(32, "Name-ID pairs of the location groups to which the rule must be applied."),
-			"labels":              listIDsSchemaType("The URL Filtering rule's label."),
+			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
+			"groups":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
+			"departments":         setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
+			"users":               setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
+			"time_windows":        setIDsSchemaTypeCustom(nil, "Name-ID pairs of time interval during which rule must be enforced."),
+			"override_users":      setIDsSchemaTypeCustom(nil, "Name-ID pairs of users for which this rule can be overridden."),
+			"override_groups":     setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which this rule can be overridden."),
+			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"location_groups":     setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of the location groups to which the rule must be applied."),
+			"labels":              setIDsSchemaTypeCustom(nil, "The URL Filtering rule's label."),
 			"device_trust_levels": getDeviceTrustLevels(),
 			"url_categories":      getURLCategories(),
 			"request_methods":     getURLRequestMethods(),
@@ -442,78 +442,17 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
-	}
-	locations := expandIDNameExtensionsSet(d, "locations")
-	if locations != nil {
-		result.Locations = locations
-	}
-	groups := expandIDNameExtensionsSet(d, "groups")
-	if groups != nil {
-		result.Groups = groups
-	}
-	departments := expandIDNameExtensionsSet(d, "departments")
-	if departments != nil {
-		result.Departments = departments
-	}
-	users := expandIDNameExtensionsSet(d, "users")
-	if users != nil {
-		result.Users = users
-	}
-	timeWindows := expandIDNameExtensionsSet(d, "time_windows")
-	if timeWindows != nil {
-		result.TimeWindows = timeWindows
-	}
-	overrideUsers := expandIDNameExtensionsSet(d, "override_users")
-	if overrideUsers != nil {
-		result.OverrideUsers = overrideUsers
-	}
-	overrideGroups := expandIDNameExtensionsSet(d, "override_groups")
-	if overrideGroups != nil {
-		result.OverrideGroups = overrideGroups
-	}
-	locationGroups := expandIDNameExtensionsSet(d, "location_groups")
-	if locationGroups != nil {
-		result.LocationGroups = locationGroups
-	}
-	labels := expandIDNameExtensionsSet(d, "labels")
-	if labels != nil {
-		result.Labels = labels
-	}
-	deviceGroups := expandIDNameExtensionsSet(d, "device_groups")
-	if deviceGroups != nil {
-		result.DeviceGroups = deviceGroups
-	}
-	devices := expandIDNameExtensionsSet(d, "devices")
-	if devices != nil {
-		result.Devices = devices
+		Locations:              expandIDNameExtensionsSet(d, "locations"),
+		Groups:                 expandIDNameExtensionsSet(d, "groups"),
+		Departments:            expandIDNameExtensionsSet(d, "departments"),
+		Users:                  expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
+		OverrideUsers:          expandIDNameExtensionsSet(d, "override_users"),
+		OverrideGroups:         expandIDNameExtensionsSet(d, "override_groups"),
+		LocationGroups:         expandIDNameExtensionsSet(d, "location_groups"),
+		Labels:                 expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:                expandIDNameExtensionsSet(d, "devices"),
 	}
 	return result
 }
-
-/*
-
-func reorder(order, id int, zClient *Client) {
-	defer reorderAll(zClient)
-	rules.Lock()
-	rules.orders[id] = order
-	rules.Unlock()
-}
-
-
-// we keep calling reordering endpoint to reorder all rules after new rule was added
-// because the reorder endpoint shifts all order up to replac the new order.
-func reorderAll(zClient *Client) {
-	rules.Lock()
-	defer rules.Unlock()
-	count := zClient.urlfilteringpolicies.RulesCount()
-	for k, v := range rules.orders {
-		// the only valid order you can set is 0,count
-		if v <= count {
-			_, err := zClient.urlfilteringpolicies.Reorder(k, v)
-			if err != nil {
-				log.Printf("[ERROR] couldn't reorder the url filtering policy, the order may not have taken place: %v\n", err)
-			}
-		}
-	}
-}
-*/

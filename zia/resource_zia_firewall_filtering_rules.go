@@ -21,6 +21,10 @@ import (
 var firewallFilteringLock sync.Mutex
 var firewallFilteringStartingOrder int
 
+func intPtr(n int) *int {
+	return &n
+}
+
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceFirewallFilteringRulesCreate,
@@ -143,20 +147,20 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				// Computed:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
-			"locations":             listIDsSchemaTypeCustom(8, "list of locations for which rule must be applied"),
-			"location_groups":       listIDsSchemaTypeCustom(32, "list of locations groups"),
-			"users":                 listIDsSchemaTypeCustom(4, "list of users for which rule must be applied"),
-			"groups":                listIDsSchemaTypeCustom(8, "list of groups for which rule must be applied"),
-			"departments":           listIDsSchemaType("list of departments for which rule must be applied"),
-			"time_windows":          listIDsSchemaType("list of time interval during which rule must be enforced."),
-			"labels":                listIDsSchemaType("list of Labels that are applicable to the rule."),
-			"src_ip_groups":         listIDsSchemaType("list of source ip groups"),
-			"dest_ip_groups":        listIDsSchemaType("list of destination ip groups"),
-			"app_service_groups":    listIDsSchemaType("list of application service groups"),
-			"app_services":          listIDsSchemaType("list of application services"),
-			"nw_application_groups": listIDsSchemaType("list of nw application groups"),
-			"nw_service_groups":     listIDsSchemaType("list of nw service groups"),
-			"nw_services":           listIDsSchemaTypeCustom(1024, "list of nw services"),
+			"locations":             setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
+			"location_groups":       setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
+			"users":                 setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
+			"groups":                setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
+			"departments":           setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
+			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
+			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"src_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
+			"dest_ip_groups":        setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"app_service_groups":    setIDsSchemaTypeCustom(nil, "list of application service groups"),
+			"app_services":          setIDsSchemaTypeCustom(nil, "list of application services"),
+			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
+			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
+			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
 			"dest_countries":        getCloudFirewallDstCountries(),
 			"nw_applications":       getCloudFirewallNwApplications(),
 		},
