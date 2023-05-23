@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.3``
+``Last updated: v2.5.4``
 
 ---
+
+## 2.5.4 (May, 23 2023)
+
+### Notes
+
+- Release date: **(May, 23 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #234](https://github.com/zscaler/terraform-provider-zia/pull/234) Fix expand functions to ensure correct API response processing across all resource rule creation.
 
 ## 2.5.3 (May, 13 2023)
 

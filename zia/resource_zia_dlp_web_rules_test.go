@@ -31,9 +31,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "cloud_applications.#", "4"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
@@ -49,9 +47,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "cloud_applications.#", "4"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
@@ -120,6 +116,65 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
 	return fmt.Sprintf(`
 
+data "zia_url_categories" "corporate_marketing"{
+	id = "CORPORATE_MARKETING"
+}
+
+data "zia_url_categories" "finance"{
+	id = "FINANCE"
+}
+
+data "zia_dlp_engines" "pci" {
+	name = "PCI"
+}
+
+data "zia_dlp_engines" "glba" {
+	name = "GLBA"
+}
+data "zia_rule_labels" "can"{
+	name = "GLOBAL"
+}
+
+data "zia_firewall_filtering_time_window" "work_hours" {
+	name = "Work Hours"
+}
+
+data "zia_firewall_filtering_time_window" "off_hours" {
+	name = "Off Hours"
+}
+
+data "zia_department_management" "engineering" {
+	name = "Engineering"
+}
+
+data "zia_department_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_group_management" "engineering" {
+	name = "Engineering"
+}
+
+data "zia_group_management" "marketing" {
+	name = "Marketing"
+}
+
+data "zia_location_groups" "sdwan_can" {
+	name = "SDWAN_CAN"
+}
+
+data "zia_location_groups" "sdwan_usa" {
+	name = "SDWAN_USA"
+}
+
+data "zia_location_management" "au_sydney_branch01" {
+	name = "AU-Sydney-Branch01"
+}
+
+data "zia_location_management" "au_sydney_branch02" {
+	name = "AU-Sydney-Branch02"
+}
+
 resource "%s" "%s" {
 	name 						= "tf-acc-test-%s"
 	description 				= "%s"
@@ -127,14 +182,37 @@ resource "%s" "%s" {
     state 						= "%s"
 	order 						= 1
 	rank 						= 7
-	protocols 					= [ "HTTPS_RULE", "HTTP_RULE" ]
-	cloud_applications 			= ["ZENDESK", "LUCKY_ORANGE", "MICROSOFT_POWERAPPS", "MICROSOFTLIVEMEETING"]
+	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
 	match_only 					= false
 	ocr_enabled 				= false
 	file_types                  = []
 	min_size 					= 20
 	zscaler_incident_receiver 	= true
+    locations {
+		id = [data.zia_location_management.au_sydney_branch01.id, data.zia_location_management.au_sydney_branch02.id]
+	}
+	location_groups {
+		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
+	}
+	groups {
+		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
+	}
+	departments {
+		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
+	}
+	time_windows {
+		id = [data.zia_firewall_filtering_time_window.work_hours.id, data.zia_firewall_filtering_time_window.off_hours.id]
+	}
+	labels {
+		id = [data.zia_rule_labels.can.id]
+	}
+	dlp_engines {
+		id = [data.zia_dlp_engines.pci.id, data.zia_dlp_engines.glba.id]
+	}
+	url_categories {
+		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
+	}
 }
 
 data "%s" "%s" {
