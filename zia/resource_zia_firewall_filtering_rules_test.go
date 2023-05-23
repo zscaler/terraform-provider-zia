@@ -36,8 +36,8 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
@@ -56,8 +56,8 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.#", "2"),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
@@ -125,6 +125,22 @@ func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedNa
 	return fmt.Sprintf(`
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
+}
+
+data "zia_firewall_filtering_ip_source_groups" "example100"{
+	name = "Example100"
+}
+
+data "zia_firewall_filtering_ip_source_groups" "example200"{
+	name = "Example200"
+}
+
+data "zia_firewall_filtering_destination_groups" "example240"{
+	name = "Example240"
+}
+
+data "zia_firewall_filtering_destination_groups" "example250"{
+	name = "Example250"
 }
 
 data "zia_rule_labels" "global"{
@@ -197,6 +213,12 @@ resource "%s" "%s" {
 	}
 	labels {
 		id = [data.zia_rule_labels.global.id]
+	}
+    src_ip_groups {
+		id = [data.zia_firewall_filtering_ip_source_groups.example100.id, data.zia_firewall_filtering_ip_source_groups.example200.id]
+	}
+	dest_ip_groups {
+		id = [data.zia_firewall_filtering_destination_groups.example240.id, data.zia_firewall_filtering_destination_groups.example250.id]
 	}
 }
 
