@@ -16,11 +16,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 2.5.4 (May, 23 2023)
+## 2.5.4 (May, 25 2023)
 
 ### Notes
 
-- Release date: **(May, 23 2023)**
+- Release date: **(May, 25 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Fixes
