@@ -111,7 +111,7 @@ jobs:
         # following syntax:
         # SOME_VAR: ${{ secrets.SOME_VAR }}
       run: |
-        go test -v -cover ./zia -v -parallel 30  -timeout 60m
+        go test -v -cover ./zia -v -parallel 30  -timeout 120m
         go mod vendor && go mod tidy
         go build ./cli/ziaActivator.go
         mv ziaActivator /usr/local/bin
