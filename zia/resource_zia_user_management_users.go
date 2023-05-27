@@ -213,7 +213,7 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	authMethods := SetToStringList(d, "auth_methods")
-	if d.HasChange("auth_methods") && len(authMethods) > 0 {
+	if (d.HasChange("password") || d.HasChange("auth_methods")) && len(authMethods) > 0 {
 		_, err := zClient.usermanagement.EnrollUser(id, usermanagement.EnrollUserRequest{
 			AuthMethods: authMethods,
 			Password:    req.Password,
