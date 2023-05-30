@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.4``
+``Last updated: v2.5.5``
 
 ---
+
+## 2.5.5 (May, 29 2023)
+
+### Notes
+
+- Release date: **(May, 29 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #244](https://github.com/zscaler/terraform-provider-zia/pull/244) Fix ``zia_user_management`` to ensure when the ``auth_methods``attribute is set, and user password is changed, the provide will re-enroll the user to update the password.
 
 ## 2.5.4 (May, 25 2023)
 
