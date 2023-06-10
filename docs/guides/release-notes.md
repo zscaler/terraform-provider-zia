@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.5``
+``Last updated: v2.5.6``
 
 ---
+
+## 2.5.6 (June, 10 2023)
+
+### Notes
+
+- Release date: **(June, 10 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- Updated to Zscaler-SDK-GO v1.5.5. The update improves search mechanisms for ZIA resources, to ensure streamline upstream GET API requests and responses using ``search`` parameter. Notice that not all current API endpoints support the search parameter, in which case, all resources will be returned.
 
 ## 2.5.5 (May, 29 2023)
 
