@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.6``
+``Last updated: v2.5.7``
 
 ---
+
+## 2.5.7 (June, 19 2023)
+
+### Notes
+
+- Release date: **(June, 19 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Added new predefied URL Category ``AI_ML_APPS`` to resource ``resource_zia_url_categories``.
+- [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Upgraded provider to latest Zscaler SDK GO v1.6.0
 
 ## 2.5.6 (June, 10 2023)
 
