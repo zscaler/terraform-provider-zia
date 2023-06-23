@@ -8,7 +8,6 @@ ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
 default: build
 
 dep: # Download required dependencies
-	go mod tidy
 
 build: fmtcheck
 	go install
@@ -21,7 +20,6 @@ else
 build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.5.7/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
-	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.5.7
