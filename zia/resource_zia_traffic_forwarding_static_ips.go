@@ -135,14 +135,6 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	_ = d.Set("routable_ip", resp.RoutableIP)
 	_ = d.Set("comment", resp.Comment)
 
-	// if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
-	// 	return err
-	// }
-
-	// if err := d.Set("last_modified_by", flattenStaticLastModifiedBy(resp.LastModifiedBy)); err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
 
