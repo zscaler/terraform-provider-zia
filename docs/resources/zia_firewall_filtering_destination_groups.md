@@ -52,7 +52,7 @@ resource "zia_firewall_filtering_destination_groups" "example_dstn_other" {
   description   = "Example Destination Other"
   type          = "DSTN_OTHER"
   countries     = ["COUNTRY_CA"]
-  categories    = ["COUNTRY_CA"]
+  ip_categories = ["CUSTOM_01", "CUSTOM_02"]
 }
 ```
 
@@ -74,4 +74,5 @@ The following arguments are supported:
 
 * `countries` (Optional) Destination IP address counties. You can identify destinations based on the location of a server.
 * `description` (Optional) Additional information about the destination IP group
-* `ip_categories` (Optional) Destination IP address URL categories. You can identify destinations based on the URL category of the domain.
+* `ip_categories` (Optional) Destination IP address URL categories. You can identify destinations based on the URL category of the domain. See list of all IP Categories [Here](https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-get)
+  * !> **WARNING:** The `ip_categories` attribute only accepts custom URL categories.

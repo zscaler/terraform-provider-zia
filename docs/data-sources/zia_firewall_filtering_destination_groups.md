@@ -34,5 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `description` - (String) Additional information about the destination IP group
 * `addresses` - (List of String) Destination IP addresses within the group
 * `countries` - (List of String) Destination IP address counties. You can identify destinations based on the location of a server.
-* `ip_categories` - (List of String) Destination IP address URL categories. You can identify destinations based on the URL category of the domain.
+* `ip_categories` - (List of String) Destination IP address URL categories. You can identify destinations based on the URL category of the domain. See list of all IP Categories [Here](https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-get)
+  * !> **WARNING:** The `ip_categories` attribute only accepts custom URL categories.
+
 * `type` - (String) Destination IP group type (i.e., the group can contain destination IP addresses or FQDNs)

@@ -1,16 +1,17 @@
 # Changelog
 
-## 2.5.7 (June, 19 2023)
+## 2.5.7 (July, 6 2023)
 
 ### Notes
 
-- Release date: **(June, 19 2023)**
+- Release date: **(July, 6 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Fixes
 
 - [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Added new predefied URL Category ``AI_ML_APPS`` to resource ``resource_zia_url_categories``.
-- [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Upgraded provider to latest Zscaler SDK GO v1.6.0
+- [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Upgraded provider to latest Zscaler SDK GO v1.6.1
+- [PR #253](https://github.com/zscaler/terraform-provider-zia/pull/253) Fixed documentation for resource ``zia_firewall_filtering_destination_groups``
 
 ## 2.5.6 (June, 10 2023)
 
