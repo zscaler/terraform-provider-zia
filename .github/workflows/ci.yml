@@ -22,7 +22,7 @@ on:
   # change.
 
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '0 6 * * 1-5'
 
 jobs:
   # ensure the code builds...
