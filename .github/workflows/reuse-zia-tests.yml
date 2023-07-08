@@ -2,7 +2,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: The GitHub environment to use
+        description: The GitHub Environment To Use
         type: string
         required: true
     secrets:
