@@ -102,7 +102,6 @@ jobs:
 
     - name: Set ZS2 Cloud Credentials
       env:
-        TF_ACC: true
         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
@@ -143,7 +142,6 @@ jobs:
 
     - name: Set ZS3 Cloud Credentials
       env:
-        TF_ACC: true
         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
@@ -184,7 +182,6 @@ jobs:
 
     - name: Set ZS Beta Cloud Credentials
       env:
-        TF_ACC: true
         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
