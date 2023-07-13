@@ -1,0 +1,47 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: The GitHub environment to use
+        type: string
+        required: true
+    secrets:
+      ZIA_USERNAME:
+        required: true
+      ZIA_PASSWORD:
+        required: true
+      ZIA_API_KEY:
+        required: true
+      ZIA_CLOUD:
+        required: true
+
+jobs:
+  zia-test:
+    environment: ${{ inputs.environment }}
+    strategy:
+      matrix:
+        go-version: [1.19]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go${{ matrix.go-version }}-${{ hashFiles('**/go.mod') }}-${{ hashFiles('**/go.sum') }}
+      - name: Set Credentials
+        env:
+          ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+          ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+          ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+          ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+        run: |
+          go test -v -cover ./zia -v -parallel 30  -timeout 120m
+          go mod vendor && go mod tidy
+          go build ./cli/ziaActivator.go
+          mv ziaActivator /usr/local/bin
+          ziaActivator
