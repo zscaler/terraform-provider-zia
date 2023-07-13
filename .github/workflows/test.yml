@@ -19,12 +19,33 @@ on:
     - cron: '0 6 * * 1-5'
 
 jobs:
-  zia-tests:
+  zs2-tests:
     uses: ./.github/workflows/reuse-zia-tests.yml
     with:
-      environment: ZIA_ZSCALER_TWO
+      environment: ZS2_CLOUD
     secrets:
       ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
       ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
       ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
       ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+
+  zs3-tests:
+    uses: ./.github/workflows/reuse-zia-tests.yml
+    with:
+      environment: ZS3_CLOUD
+    secrets:
+      ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+      ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+      ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+      ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+
+  zs-beta-tests:
+    uses: ./.github/workflows/reuse-zia-tests.yml
+    with:
+      environment: ZS_BETA_CLOUD
+    secrets:
+      ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+      ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+      ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+      ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+
