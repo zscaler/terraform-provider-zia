@@ -12,21 +12,25 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.5.7``
+``Last updated: v2.6.0``
 
 ---
 
-## 2.5.7 (July, 6 2023)
+## 2.6.0 (July, xx 2023)
 
 ### Notes
 
-- Release date: **(July, 6 2023)**
+- Release date: **(July, xx 2023)**
 - Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #257](https://github.com/zscaler/terraform-provider-zia/pull/257) Added New Public ZIA DLP Engine Endpoints (POST/PUT/DELETE)
+⚠️ **WARNING:** "To enable /dlpEngines endpoints that use ``POST``, ``PUT``, and ``DELETE`` methods for your organization, contact [Zscaler Support](https://help.zscaler.com/login-tickets)."
 
 ### Fixes
 
 - [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Added new predefied URL Category ``AI_ML_APPS`` to resource ``resource_zia_url_categories``.
-- [PR #251](https://github.com/zscaler/terraform-provider-zia/pull/251) Upgraded provider to latest Zscaler SDK GO v1.6.1
 - [PR #253](https://github.com/zscaler/terraform-provider-zia/pull/253) Fixed documentation for resource ``zia_firewall_filtering_destination_groups``
 
 ## 2.5.6 (June, 10 2023)
