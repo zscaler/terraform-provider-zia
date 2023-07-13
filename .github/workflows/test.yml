@@ -28,7 +28,7 @@ jobs:
       ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
       ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
       ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
-
+      TF_ACC: ${{ secrets.TF_ACC }}
   zs3-tests:
     uses: ./.github/workflows/reuse-zia-tests.yml
     with:
@@ -38,7 +38,7 @@ jobs:
       ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
       ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
       ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
-
+      TF_ACC: ${{ secrets.TF_ACC }}
   zs-beta-tests:
     uses: ./.github/workflows/reuse-zia-tests.yml
     with:
@@ -48,4 +48,5 @@ jobs:
       ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
       ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
       ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+      TF_ACC: ${{ secrets.TF_ACC }}
 
