@@ -171,14 +171,6 @@ data "zia_group_management" "marketing" {
 	name = "Marketing"
 }
 
-data "zia_location_management" "au_sydney_branch01" {
-	name = "AU-Sydney-Branch01"
-}
-
-data "zia_location_management" "au_sydney_branch02" {
-	name = "AU-Sydney-Branch02"
-}
-
 data "zia_location_groups" "sdwan_can" {
 	name = "SDWAN_CAN"
 }
@@ -191,14 +183,11 @@ resource "%s" "%s" {
     description = "%s"
     action = "%s"
     state = "%s"
-    order = 4
+    order = 6
 	enable_full_logging = "%s"
     nw_services {
         id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
     }
-	locations {
-		id = [data.zia_location_management.au_sydney_branch01.id, data.zia_location_management.au_sydney_branch02.id]
-	}
 	location_groups {
 		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
 	}
