@@ -7,9 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 )
 
 func resourceDLPEngines() *schema.Resource {
@@ -41,9 +39,12 @@ func resourceDLPEngines() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "The unique identifier for the DLP engine.",
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 			"name": {
 				Type:        schema.TypeString,
@@ -81,7 +82,7 @@ func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Created zia dlp engine request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("rule_label_id", resp.ID)
+	_ = d.Set("engine_id", resp.ID)
 	return resourceDLPEnginesRead(d, m)
 }
 
@@ -119,7 +120,7 @@ func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "rule_label_id")
+	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
 		log.Printf("[ERROR] dlp engine ID not set: %v\n", id)
 	}
@@ -146,21 +147,8 @@ func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[ERROR] dlp engine ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting zia dlp engine ID: %v\n", (d.Id()))
-	err := DetachDLPEngineIDNameExtensions(
-		zClient,
-		id,
-		"DLPEngines",
-		func(r *dlp_web_rules.WebDLPRules) []common.IDNameExtensions {
-			return r.DLPEngines
-		},
-		func(r *dlp_web_rules.WebDLPRules, ids []common.IDNameExtensions) {
-			r.DLPEngines = ids
-		},
-	)
-	if err != nil {
-		return err
-	}
-	if _, err := zClient.dlp_web_rules.Delete(id); err != nil {
+
+	if _, err := zClient.dlp_engines.Delete(id); err != nil {
 		return err
 	}
 	d.SetId("")

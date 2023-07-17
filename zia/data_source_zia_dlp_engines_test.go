@@ -1,60 +1,32 @@
 package zia
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
 )
 
 func TestAccDataSourceDLPEngines_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPEngines)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckDLPEnginesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceDLPEnginesConfig_basic,
+				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPCustomEngine),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.credit_cards"),
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.canada_ssn"),
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.us_ssn"),
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.glba"),
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.hipaa"),
-					testAccDataSourceDLPEnginesCheck("data.zia_dlp_engines.pci"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_dlp_engine", strconv.FormatBool(variable.DLPCustomEngine)),
 				),
 			},
 		},
 	})
 }
-
-func testAccDataSourceDLPEnginesCheck(name string) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(name, "name"),
-	)
-}
-
-var testAccCheckDataSourceDLPEnginesConfig_basic = `
-data "zia_dlp_engines" "credit_cards"{
-    name = "Credit Cards"
-}
-
-data "zia_dlp_engines" "canada_ssn"{
-    name = "Canada-SSN"
-}
-
-data "zia_dlp_engines" "us_ssn"{
-    name = "Social Security Numbers"
-}
-
-data "zia_dlp_engines" "glba"{
-    name = "GLBA"
-}
-
-data "zia_dlp_engines" "hipaa"{
-    name = "HIPAA"
-}
-
-data "zia_dlp_engines" "pci"{
-    name = "PCI"
-}
-
-`

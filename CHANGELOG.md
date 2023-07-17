@@ -10,7 +10,7 @@
 ### Enhancements
 
 - [PR #257](https://github.com/zscaler/terraform-provider-zia/pull/257) Added New Public ZIA DLP Engine Endpoints (POST/PUT/DELETE)
-⚠️ **WARNING:** "To enable /dlpEngines endpoints that use ``POST``, ``PUT``, and ``DELETE`` methods for your organization, contact [Zscaler Support](https://help.zscaler.com/login-tickets)."
+⚠️ **WARNING:** "Before using the new ``zia_dlp_engines`` resource contact [Zscaler Support](https://help.zscaler.com/login-tickets)." and request the following API methods ``POST``, ``PUT``, and ``DELETE`` to be enabled for your organization.
 
 ### Fixes
 
