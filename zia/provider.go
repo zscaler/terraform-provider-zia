@@ -54,6 +54,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"zia_admin_users":                                   resourceAdminUsers(),
 			"zia_dlp_dictionaries":                              resourceDLPDictionaries(),
+			"zia_dlp_engines":                                   resourceDLPEngines(),
 			"zia_dlp_notification_templates":                    resourceDLPNotificationTemplates(),
 			"zia_dlp_web_rules":                                 resourceDlpWebRules(),
 			"zia_firewall_filtering_rule":                       resourceFirewallFilteringRules(),
