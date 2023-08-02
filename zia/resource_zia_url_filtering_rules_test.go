@@ -142,14 +142,6 @@ data "zia_group_management" "marketing" {
 	name = "Marketing"
 }
 
-data "zia_location_management" "au_sydney_branch01" {
-	name = "AU-Sydney-Branch01"
-}
-
-data "zia_location_management" "au_sydney_branch02" {
-	name = "AU-Sydney-Branch02"
-}
-
 data "zia_location_groups" "sdwan_can" {
 	name = "SDWAN_CAN"
 }
@@ -167,9 +159,6 @@ resource "%s" "%s" {
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    locations {
-		id = [data.zia_location_management.au_sydney_branch01.id, data.zia_location_management.au_sydney_branch02.id]
-	}
 	location_groups {
 		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
 	}
