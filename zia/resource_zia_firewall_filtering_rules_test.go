@@ -183,7 +183,7 @@ resource "%s" "%s" {
     description = "%s"
     action = "%s"
     state = "%s"
-    order = 6
+    order = 7
 	enable_full_logging = "%s"
     nw_services {
         id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
