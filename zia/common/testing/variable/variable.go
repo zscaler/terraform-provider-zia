@@ -103,6 +103,11 @@ const (
 	DLPDictionaryDescription  = "this is an acceptance test"
 )
 
+// DLP Engines resource/datasource
+const (
+	DLPCustomEngine = true
+)
+
 // DLP Dictionaries resource/datasource
 const (
 	DLPNoticationTemplateAttachContent = true

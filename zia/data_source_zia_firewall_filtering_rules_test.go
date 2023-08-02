@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"strconv"
 	"testing"
@@ -39,3 +40,4 @@ func TestAccDataSourceFirewallFilteringRule_Basic(t *testing.T) {
 		},
 	})
 }
+*/

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
 
@@ -80,6 +81,39 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 			_, err = client.filteringrules.Get(rule.ID)
 			if err == nil {
 				_, err = client.filteringrules.Update(rule.ID, &rule)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
+	log.Printf("[INFO] Detaching dlp engine from %s: %d\n", resource, id)
+	rules, err := client.dlp_web_rules.GetAll()
+	if err != nil {
+		log.Printf("[error] Error while getting filtering rule")
+		return err
+	}
+
+	for _, rule := range rules {
+		ids := []common.IDNameExtensions{}
+		shouldUpdate := false
+		for _, dlpEngine := range getResources(&rule) {
+			if dlpEngine.ID != id {
+				ids = append(ids, dlpEngine)
+			} else {
+				shouldUpdate = true
+			}
+		}
+		if shouldUpdate {
+			setResources(&rule, ids)
+			time.Sleep(time.Second * 5)
+			_, err = client.dlp_web_rules.Get(rule.ID)
+			if err == nil {
+				_, err = client.dlp_web_rules.Update(rule.ID, &rule)
 				if err != nil {
 					return err
 				}
