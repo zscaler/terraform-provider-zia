@@ -167,14 +167,6 @@ data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
 }
 
-data "zia_location_management" "au_sydney_branch01" {
-	name = "AU-Sydney-Branch01"
-}
-
-data "zia_location_management" "au_sydney_branch02" {
-	name = "AU-Sydney-Branch02"
-}
-
 resource "%s" "%s" {
 	name 						= "tf-acc-test-%s"
 	description 				= "%s"
@@ -189,9 +181,6 @@ resource "%s" "%s" {
 	file_types                  = []
 	min_size 					= 20
 	zscaler_incident_receiver 	= true
-    locations {
-		id = [data.zia_location_management.au_sydney_branch01.id, data.zia_location_management.au_sydney_branch02.id]
-	}
 	location_groups {
 		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
 	}
