@@ -92,6 +92,7 @@ const (
 	DLPWebRuleDesc           = "this is an acceptance test"
 	DLPRuleResourceAction    = "ALLOW"
 	DLPRuleResourceState     = "ENABLED"
+	DLPRuleOrder             = 1
 	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
 	DLPOCREnabled            = false

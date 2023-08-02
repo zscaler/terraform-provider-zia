@@ -172,7 +172,7 @@ resource "%s" "%s" {
 	description 				= "%s"
     action 						= "%s"
     state 						= "%s"
-	order 						= 1
+	order 						= "%d"
 	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
@@ -216,6 +216,7 @@ data "%s" "%s" {
 		description,
 		action,
 		state,
+		variable.DLPRuleOrder,
 
 		// data source variables
 		resourcetype.DLPWebRules,

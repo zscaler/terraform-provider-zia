@@ -19,7 +19,7 @@ func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
