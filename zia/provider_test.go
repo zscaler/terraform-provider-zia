@@ -36,34 +36,34 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
-	err := accPreCheck()
-	if err != nil {
+	if err := accPreCheck(); err != nil {
 		t.Fatalf("%v", err)
-	}
-	if v := os.Getenv("ZIA_USERNAME"); v == "" {
-		t.Fatal("ZIA_USERNAME must be set for acceptance tests.")
-	}
-	if v := os.Getenv("ZIA_PASSWORD"); v == "" {
-		t.Fatal("ZIA_PASSWORD must be set for acceptance tests.")
-	}
-	if v := os.Getenv("ZIA_API_KEY"); v == "" {
-		t.Fatal("ZIA_API_KEY must be set for acceptance tests.")
-	}
-	if v := os.Getenv("ZIA_CLOUD"); v == "" {
-		t.Fatal("zia_cloud must be set for acceptance tests.")
 	}
 }
 
+// accPreCheck checks if the necessary environment variables for acceptance tests are set.
 func accPreCheck() error {
-	if v := os.Getenv("ZIA_USERNAME"); v == "" {
-		return errors.New("ZIA_USERNAME must be set for acceptance tests")
-	}
 	username := os.Getenv("ZIA_USERNAME")
 	password := os.Getenv("ZIA_PASSWORD")
-	api_key := os.Getenv("ZIA_API_KEY")
-	zia_cloud := os.Getenv("ZIA_CLOUD")
-	if username == "" && (username == "" || password == "" || api_key == "" || zia_cloud == "") {
-		return errors.New("either ZIA_USERNAME or ZIA_PASSWORD, ZIA_API_KEY and zia_cloud must be set for acceptance tests")
+	apiKey := os.Getenv("ZIA_API_KEY")
+	ziaCloud := os.Getenv("ZIA_CLOUD")
+
+	// Check for the presence of necessary environment variables.
+	if username == "" {
+		return errors.New("ZIA_USERNAME must be set for acceptance tests")
 	}
+
+	if password == "" {
+		return errors.New("ZIA_PASSWORD must be set for acceptance tests")
+	}
+
+	if apiKey == "" {
+		return errors.New("ZIA_API_KEY must be set for acceptance tests")
+	}
+
+	if ziaCloud == "" {
+		return errors.New("ZIA_CLOUD must be set for acceptance tests")
+	}
+
 	return nil
 }
