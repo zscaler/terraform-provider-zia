@@ -52,7 +52,7 @@ func testAccResourceAuthSettingsUrlsConfig(domains []string) string {
 	for _, domain := range domains {
 		config += `"` + domain + `",`
 	}
-	config = config[:len(config)-1]  // Remove the trailing comma
+	config = config[:len(config)-1] // Remove the trailing comma
 	config += `] }`
 
 	return config

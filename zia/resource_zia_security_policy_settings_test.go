@@ -59,8 +59,8 @@ func testAccResourceSecurityPolicySettingsConfig(whitelistDomains []string, blac
 	for _, domain := range blacklistDomains {
 		blacklist += `"` + domain + `",`
 	}
-	whitelist = whitelist[:len(whitelist)-1]  // Remove the trailing comma
-	blacklist = blacklist[:len(blacklist)-1]  // Remove the trailing comma
+	whitelist = whitelist[:len(whitelist)-1] // Remove the trailing comma
+	blacklist = blacklist[:len(blacklist)-1] // Remove the trailing comma
 
 	config := `resource "zia_security_settings" "test" {
 		whitelist_urls = [` + whitelist + `]
