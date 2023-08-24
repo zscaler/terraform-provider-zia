@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.0``
+``Last updated: v2.6.1``
 
 ---
+
+## 2.6.1 (August, xx 2023)
+
+### Notes
+
+- Release date: **(August, xx 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #259](https://github.com/zscaler/terraform-provider-zia/pull/259) Fixed drift problem within the resource `zia_firewall_filtering_network_service_groups`.
 
 ## 2.6.0 (August, 1 2023)
 

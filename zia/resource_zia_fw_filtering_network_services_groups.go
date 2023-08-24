@@ -67,7 +67,7 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeInt,
@@ -213,10 +213,13 @@ func expandServicesSet(d *schema.ResourceData) []networkservices.Services {
 		for _, item := range set.List() {
 			itemMap, _ := item.(map[string]interface{})
 			if itemMap != nil {
-				for _, id := range itemMap["id"].([]interface{}) {
-					result = append(result, networkservices.Services{
-						ID: id.(int),
-					})
+				idSet, ok := itemMap["id"].(*schema.Set)
+				if ok {
+					for _, id := range idSet.List() {
+						result = append(result, networkservices.Services{
+							ID: id.(int),
+						})
+					}
 				}
 			}
 		}
