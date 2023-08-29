@@ -306,6 +306,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
+	_ = d.Set("order", resp.Order)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
