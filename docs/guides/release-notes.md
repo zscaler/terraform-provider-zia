@@ -12,20 +12,25 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.0``
+``Last updated: v2.6.1``
 
 ---
 
-## 2.6.1 (August, xx 2023)
+## 2.6.1 (August, 29 2023)
 
 ### Notes
 
-- Release date: **(August, xx 2023)**
+- Release date: **(August, 29 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
 
 - [PR #258](https://github.com/zscaler/terraform-provider-zia/pull/258) Improved geographical coordinates for attributes `latitude` and `longitude` in the resource `zia_traffic_forwarding_static_ip` to ensures that the state always mirrors the backend system's values.
+
+### Fixes
+
+- [PR #259](https://github.com/zscaler/terraform-provider-zia/pull/259) Fixed drift problem within the resource `zia_firewall_filtering_network_service_groups`.
+- [PR #266](https://github.com/zscaler/terraform-provider-zia/pull/266) Fixed drift problem within the resource `zia_url_filtering_rules` order attribute
 
 ## 2.6.0 (August, 1 2023)
 
