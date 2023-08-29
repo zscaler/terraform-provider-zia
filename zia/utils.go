@@ -1,7 +1,10 @@
 package zia
 
 import (
+	"fmt"
 	"log"
+	"math"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -121,4 +124,42 @@ func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, ge
 		}
 	}
 	return nil
+}
+
+func ValidateLatitude(val interface{}, _ string) (warns []string, errs []error) {
+	// Directly type assert to float64
+	v, ok := val.(float64)
+	if !ok {
+		errs = append(errs, fmt.Errorf("expected latitude to be a float64"))
+		return
+	}
+	if v < -90 || v > 90 {
+		errs = append(errs, fmt.Errorf("latitude must be between -90 and 90"))
+	}
+	return
+}
+
+func ValidateLongitude(val interface{}, _ string) (warns []string, errs []error) {
+	// Directly type assert to float64
+	v, ok := val.(float64)
+	if !ok {
+		errs = append(errs, fmt.Errorf("expected longitude to be a float64"))
+		return
+	}
+	if v < -180 || v > 180 {
+		errs = append(errs, fmt.Errorf("longitude must be between -180 and 180"))
+	}
+	return
+}
+
+func DiffSuppressFuncCoordinate(_, old, new string, _ *schema.ResourceData) bool {
+	o, err := strconv.ParseFloat(old, 64)
+	if err != nil {
+		return false
+	}
+	n, err := strconv.ParseFloat(new, 64)
+	if err != nil {
+		return false
+	}
+	return math.Round(o*1000000)/1000000 == math.Round(n*1000000)/1000000
 }
