@@ -12,13 +12,17 @@ import (
 func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
 
+	// Generate Rule Label HCL Resource
+	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckURLFilteringRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
+				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName,generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
@@ -28,6 +32,7 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "url_categories.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "request_methods.#", "9"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "labels.#", "1"),
 				),
 			},
 		},

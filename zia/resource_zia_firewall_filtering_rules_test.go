@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -19,13 +18,25 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 	var rules filteringrules.FirewallFilteringRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
 
+	// Generate Rule Label HCL Resource
+	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+
+	// Generate Source IP Group HCL Resource
+	sourceIPGroupTypeAndName, _, sourceIPGroupGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringSourceGroup)
+	sourceIPGroupHCL := testAccCheckFWIPSourceGroupsConfigure(sourceIPGroupTypeAndName, sourceIPGroupGeneratedName, variable.FWSRCGroupDescription)
+
+	// Generate Destination IP Group HCL Resource
+	dstIPGroupTypeAndName, _, dstIPGroupGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringDestinationGroup)
+	dstIPGroupHCL := testAccCheckFWIPDestinationGroupsConfigure(dstIPGroupTypeAndName, dstIPGroupGeneratedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFirewallFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging),
+				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -37,15 +48,16 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging),
+				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -57,8 +69,9 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
@@ -122,30 +135,50 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 	}
 }
 
-func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, description, action, state string, enableLogging bool) string {
+func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL string) string {
 	return fmt.Sprintf(`
+// rule label resource
+%s
+
+// source ip group resource
+%s
+
+// destination ip group resource
+%s
+
+// firewall filtering rule resource
+%s
+
+data "%s" "%s" {
+	id = "${%s.id}"
+}
+`,
+		// resource variables
+		ruleLabelHCL,
+		sourceIPGroupHCL,
+		dstIPGroupHCL,
+		getFirewallFilteringRuleResourceHCL(generatedName, name, description, action, state, enableLogging, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName),
+
+		// data source variables
+		resourcetype.FirewallFilteringRules,
+		generatedName,
+		resourceTypeAndName,
+	)
+}
+
+func getFirewallFilteringRuleResourceHCL(generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
+		return fmt.Sprintf(`
+
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
 }
 
-data "zia_firewall_filtering_ip_source_groups" "example100"{
-	name = "Example100"
+data "zia_location_groups" "sdwan_can" {
+	name = "SDWAN_CAN"
 }
 
-data "zia_firewall_filtering_ip_source_groups" "example200"{
-	name = "Example200"
-}
-
-data "zia_firewall_filtering_destination_groups" "example240"{
-	name = "Example240"
-}
-
-data "zia_firewall_filtering_destination_groups" "example250"{
-	name = "Example250"
-}
-
-data "zia_rule_labels" "global"{
-	name = "GLOBAL"
+data "zia_location_groups" "sdwan_usa" {
+	name = "SDWAN_USA"
 }
 
 data "zia_firewall_filtering_time_window" "work_hours" {
@@ -172,23 +205,16 @@ data "zia_group_management" "marketing" {
 	name = "Marketing"
 }
 
-data "zia_location_groups" "sdwan_can" {
-	name = "SDWAN_CAN"
-}
-
-data "zia_location_groups" "sdwan_usa" {
-	name = "SDWAN_USA"
-}
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
-    description = "%s"
-    action = "%s"
-    state = "%s"
-    order = 7
+	name = "tf-acc-test-%s"
+	description = "%s"
+	action = "%s"
+	state = "%s"
+	order = 1
 	enable_full_logging = "%s"
-    nw_services {
-        id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
-    }
+	nw_services {
+		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
+	}
 	location_groups {
 		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
 	}
@@ -202,34 +228,31 @@ resource "%s" "%s" {
 		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 	labels {
-		id = [data.zia_rule_labels.global.id]
+		id = ["${%s.id}"]
 	}
-    src_ip_groups {
-		id = [data.zia_firewall_filtering_ip_source_groups.example100.id, data.zia_firewall_filtering_ip_source_groups.example200.id]
+	src_ip_groups {
+		id = ["${%s.id}"]
 	}
 	dest_ip_groups {
-		id = [data.zia_firewall_filtering_destination_groups.example240.id, data.zia_firewall_filtering_destination_groups.example250.id]
+		id = ["${%s.id}"]
 	}
+	depends_on = [ %s, %s, %s ]
 }
+		`,
+			// resource variables
+			resourcetype.FirewallFilteringRules,
+			generatedName,
+			name,
+			description,
+			action,
+			state,
+			strconv.FormatBool(enableLogging),
+			ruleLabelTypeAndName,
+			sourceIPGroupTypeAndName,
+			dstIPGroupTypeAndName,
+			ruleLabelTypeAndName,
+			sourceIPGroupTypeAndName,
+			dstIPGroupTypeAndName,
 
-data "%s" "%s" {
-	id = "${%s.id}"
-  }
-
-`,
-		// resource variables
-		resourcetype.FirewallFilteringRules,
-		generatedName,
-		generatedName,
-		description,
-		action,
-		state,
-		strconv.FormatBool(enableLogging),
-
-		// data source variables
-		resourcetype.FirewallFilteringRules,
-		generatedName,
-		resourceTypeAndName,
 	)
 }
-*/

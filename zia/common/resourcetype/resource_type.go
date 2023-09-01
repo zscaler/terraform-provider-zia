@@ -14,6 +14,7 @@ const (
 	TrafficForwardingGRETunnel      = "zia_traffic_forwarding_gre_tunnel"
 	TrafficForwardingVPNCredentials = "zia_traffic_forwarding_vpn_credentials"
 	TrafficForwardingLocManagement  = "zia_location_management"
+	LocationGroups                  = "zia_location_groups"
 	DLPDictionaries                 = "zia_dlp_dictionaries"
 	DLPEngines                      = "zia_dlp_engines"
 	DLPNotificationTemplates        = "zia_dlp_notification_templates"

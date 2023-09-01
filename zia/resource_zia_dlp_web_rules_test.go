@@ -18,13 +18,17 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 	var rules dlp_web_rules.WebDLPRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
+	// Generate Rule Label HCL Resource
+	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -35,12 +39,13 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -51,6 +56,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
 		},
@@ -113,7 +119,31 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 	}
 }
 
-func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
+func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
+
+	return fmt.Sprintf(`
+// rule label resource
+%s
+
+// dlp web rule resource
+%s
+
+data "%s" "%s" {
+	id = "${%s.id}"
+}
+`,
+		// resource variables
+		ruleLabelHCL,
+		getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName),
+
+		// data source variables
+		resourcetype.DLPWebRules,
+		generatedName,
+		resourceTypeAndName,
+	)
+}
+
+func getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName string) string {
 	return fmt.Sprintf(`
 
 data "zia_url_categories" "corporate_marketing"{
@@ -172,7 +202,7 @@ resource "%s" "%s" {
 	description 				= "%s"
     action 						= "%s"
     state 						= "%s"
-	order 						= "%d"
+	order 						= 1
 	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
@@ -193,34 +223,24 @@ resource "%s" "%s" {
 	time_windows {
 		id = [data.zia_firewall_filtering_time_window.work_hours.id, data.zia_firewall_filtering_time_window.off_hours.id]
 	}
-	labels {
-		id = [data.zia_rule_labels.can.id]
-	}
 	dlp_engines {
 		id = [data.zia_dlp_engines.pci.id, data.zia_dlp_engines.glba.id]
 	}
 	url_categories {
 		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
 	}
+	labels {
+		id = ["${%s.id}"]
+	}
 }
-
-data "%s" "%s" {
-	id = "${%s.id}"
-}
-
 `,
 		// resource variables
 		resourcetype.DLPWebRules,
 		generatedName,
-		generatedName,
+		name,
 		description,
 		action,
 		state,
-		variable.DLPRuleOrder,
-
-		// data source variables
-		resourcetype.DLPWebRules,
-		generatedName,
-		resourceTypeAndName,
+		ruleLabelTypeAndName,
 	)
 }
