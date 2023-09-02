@@ -1,6 +1,6 @@
 package resourcetype
 
-// zpa Types
+// ZIA Resource names, defined in place, used throughout the provider and tests
 const (
 	URLCategories                   = "zia_url_categories"
 	URLFilteringRules               = "zia_url_filtering_rules"

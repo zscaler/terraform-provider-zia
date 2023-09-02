@@ -108,13 +108,24 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.dlp_web_rules.Get(id)
 
-		if err != nil {
-			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
+		var receivedRule *dlp_web_rules.WebDLPRules
+
+		// Integrate retry here
+		retryErr := RetryOnError(func() error {
+			var innerErr error
+			receivedRule, innerErr = apiClient.dlp_web_rules.Get(id)
+			if innerErr != nil {
+				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
+			}
+			return nil
+		})
+
+		if retryErr != nil {
+			return retryErr
 		}
-		*rule = *receivedRule
 
+		*rule = *receivedRule
 		return nil
 	}
 }

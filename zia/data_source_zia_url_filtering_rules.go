@@ -15,16 +15,13 @@ func dataSourceURLFilteringRules() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"order": {
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"protocols": {
@@ -325,7 +322,7 @@ func dataSourceURLFilteringRules() *schema.Resource {
 			},
 			"device_trust_levels": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"validity_start_time": {
@@ -373,7 +370,7 @@ func dataSourceURLFilteringRules() *schema.Resource {
 			},
 			"user_agent_types": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cbi_profile_id": {

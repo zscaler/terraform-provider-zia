@@ -53,6 +53,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
@@ -74,6 +75,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -124,13 +126,24 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.filteringrules.Get(id)
 
-		if err != nil {
-			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
+		var receivedRule *filteringrules.FirewallFilteringRules
+
+		// Integrate retry here
+		retryErr := RetryOnError(func() error {
+			var innerErr error
+			receivedRule, innerErr = apiClient.filteringrules.Get(id)
+			if innerErr != nil {
+				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
+			}
+			return nil
+		})
+
+		if retryErr != nil {
+			return retryErr
 		}
-		*rule = *receivedRule
 
+		*rule = *receivedRule
 		return nil
 	}
 }
@@ -167,7 +180,7 @@ data "%s" "%s" {
 }
 
 func getFirewallFilteringRuleResourceHCL(generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
-		return fmt.Sprintf(`
+	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
@@ -210,7 +223,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 1
+	order = 4
 	enable_full_logging = "%s"
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
@@ -239,20 +252,19 @@ resource "%s" "%s" {
 	depends_on = [ %s, %s, %s ]
 }
 		`,
-			// resource variables
-			resourcetype.FirewallFilteringRules,
-			generatedName,
-			name,
-			description,
-			action,
-			state,
-			strconv.FormatBool(enableLogging),
-			ruleLabelTypeAndName,
-			sourceIPGroupTypeAndName,
-			dstIPGroupTypeAndName,
-			ruleLabelTypeAndName,
-			sourceIPGroupTypeAndName,
-			dstIPGroupTypeAndName,
-
+		// resource variables
+		resourcetype.FirewallFilteringRules,
+		generatedName,
+		name,
+		description,
+		action,
+		state,
+		strconv.FormatBool(enableLogging),
+		ruleLabelTypeAndName,
+		sourceIPGroupTypeAndName,
+		dstIPGroupTypeAndName,
+		ruleLabelTypeAndName,
+		sourceIPGroupTypeAndName,
+		dstIPGroupTypeAndName,
 	)
 }

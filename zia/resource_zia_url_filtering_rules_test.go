@@ -43,11 +43,12 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName,generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
+				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -62,6 +63,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -145,7 +147,6 @@ data "%s" "%s" {
 		resourceTypeAndName,
 	)
 }
-
 
 func getURLFilteringRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName string) string {
 	return fmt.Sprintf(`

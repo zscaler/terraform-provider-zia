@@ -78,9 +78,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeInt,
+				Optional: true,
+				// Computed:    true,
 				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
 			"rank": {
@@ -96,9 +96,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Default:  false,
 			},
 			"action": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed:    true,
 				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ALLOW",
@@ -109,9 +109,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"state": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed:    true,
 				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ENABLED",
@@ -127,8 +127,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"dest_addresses": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				// Computed: true,
-				Elem: &schema.Schema{Type: schema.TypeString},
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"dest_ip_categories": {
 				Type:     schema.TypeSet,

@@ -76,9 +76,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description:  "Additional information about the URL Filtering rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeInt,
+				Optional: true,
+				// Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
@@ -104,7 +104,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"block_override": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				// Computed: true,
 			},
 			"time_quota": {
 				Type:         schema.TypeInt,
@@ -134,9 +134,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
 			},
 			"enforce_time_validity": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				// Computed:    true,
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
 			"user_agent_types": {
@@ -156,9 +156,9 @@ func resourceURLFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"ciparule": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				// Computed:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
 			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),

@@ -1,9 +1,22 @@
+SWEEP?=global
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep "zia/")
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=zia
+GOFMT:=gofumpt
+TFPROVIDERLINT=tfproviderlint
+STATICCHECK=staticcheck
 TF_PLUGIN_DIR=~/.terraform.d/plugins
 ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
+
+# Expression to match against tests
+# go test -run <filter>
+# e.g. Iden will run all TestAccIdentity tests
+ifdef TEST_FILTER
+	TEST_FILTER := -run $(TEST_FILTER)
+endif
+
+TESTARGS?=-test.v
 
 default: build
 
@@ -12,6 +25,23 @@ dep: # Download required dependencies
 
 build: fmtcheck
 	go install
+
+clean:
+	go clean -cache -testcache ./...
+
+clean-all:
+	go clean -cache -testcache -modcache ./...
+
+sweep:
+	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
+	go test $(TEST) -sweep=$(SWEEP) $(SWEEPARGS)
+
+test:
+	echo $(TEST) | \
+		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=4
+
+testacc:
+	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
@@ -26,30 +56,17 @@ build13: fmtcheck
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.6.1
 
-test: fmtcheck
-	go test $(TEST) || exit 1
-	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=600s -parallel=4
-
-testacc: fmtcheck
-	TF_ACC=true go test $(TEST) -v $(TESTARGS) -timeout 600m
-
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"
-	@echo "go vet ."
-	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
+	@go vet ./...
+	@staticcheck ./...
 
 imports:
 	goimports -w $(GOFMT_FILES)
 
-fmt:
+fmt: tools # Format the code
 	@echo "formatting the code with $(GOFMT)..."
-	gofmt -w $(GOFMT_FILES)
+	@$(GOFMT) -l -w .
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
@@ -58,9 +75,14 @@ errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
 tools:
-	@echo "==> installing required tooling..."
-	@sh "$(CURDIR)/scripts/gogetcookie.sh"
-	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.4.0
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
+
+tools-update:
+	@go install mvdan.cc/gofumpt@v0.4.0
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
 
 vendor-status:
 	@govendor status
