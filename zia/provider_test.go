@@ -31,46 +31,6 @@ func init() {
 	}
 }
 
-func TestProvider(t *testing.T) {
-	if err := Provider().InternalValidate(); err != nil {
-		t.Fatalf("err: %s", err)
-	}
-}
-
-func TestProvider_impl(t *testing.T) {
-	_ = Provider()
-}
-
-func testAccPreCheck(t *testing.T) func() {
-	return func() {
-		err := accPreCheck()
-		if err != nil {
-			t.Fatalf("%v", err)
-		}
-	}
-}
-
-func sdkClientForTest() (*Client, error) {
-	if testSdkClient == nil {
-		sweeperLogger.Warn("testSdkClient is not initialized. Initializing now...")
-
-		config := &Config{
-			Username:   os.Getenv("ZIA_USERNAME"),
-			Password:   os.Getenv("ZIA_PASSWORD"),
-			APIKey:     os.Getenv("ZIA_API_KEY"),
-			ZIABaseURL: os.Getenv("ZIA_CLOUD"),   // I assume this is the base URL; adjust if necessary
-			UserAgent:  "terraform-provider-zia", // This is a guess; set your desired UserAgent
-		}
-
-		var err error
-		testSdkClient, err = config.Client()
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize testSdkClient: %v", err)
-		}
-	}
-	return testSdkClient, nil
-}
-
 // TestMain overridden main testing function. Package level BeforeAll and AfterAll.
 // It also delineates between acceptance tests and unit tests
 func TestMain(m *testing.M) {
@@ -106,6 +66,25 @@ func TestMain(m *testing.M) {
 	resource.TestMain(m)
 }
 
+func TestProvider(t *testing.T) {
+	if err := Provider().InternalValidate(); err != nil {
+		t.Fatalf("err: %s", err)
+	}
+}
+
+func TestProvider_impl(t *testing.T) {
+	_ = Provider()
+}
+
+func testAccPreCheck(t *testing.T) func() {
+	return func() {
+		err := accPreCheck()
+		if err != nil {
+			t.Fatalf("%v", err)
+		}
+	}
+}
+
 // accPreCheck checks if the necessary environment variables for acceptance tests are set.
 func accPreCheck() error {
 	username := os.Getenv("ZIA_USERNAME")
@@ -131,4 +110,25 @@ func accPreCheck() error {
 	}
 
 	return nil
+}
+
+func sdkClientForTest() (*Client, error) {
+	if testSdkClient == nil {
+		sweeperLogger.Warn("testSdkClient is not initialized. Initializing now...")
+
+		config := &Config{
+			Username:   os.Getenv("ZIA_USERNAME"),
+			Password:   os.Getenv("ZIA_PASSWORD"),
+			APIKey:     os.Getenv("ZIA_API_KEY"),
+			ZIABaseURL: os.Getenv("ZIA_CLOUD"),
+			UserAgent:  "terraform-provider-zia",
+		}
+
+		var err error
+		testSdkClient, err = config.Client()
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize testSdkClient: %v", err)
+		}
+	}
+	return testSdkClient, nil
 }

@@ -131,7 +131,7 @@ func getTrafficForwardingStaticIPConfigure(generatedName, ipAddress string, rout
 	return fmt.Sprintf(`
 
 resource "%s" "%s" {
-	comment = "TestAcc Created with Terraform"
+	comment = "tf-acc-test-%s"
     ip_address =  "%s"
     routable_ip = "%s"
     geo_override = "%s"
@@ -139,6 +139,7 @@ resource "%s" "%s" {
 `,
 		// resource variables
 		resourcetype.TrafficForwardingStaticIP,
+		generatedName,
 		generatedName,
 		ipAddress,
 		strconv.FormatBool(routableIP),
