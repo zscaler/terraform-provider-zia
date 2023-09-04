@@ -14,6 +14,8 @@ on:
         required: true
       ZIA_CLOUD:
         required: true
+      ZIA_ACC_TEST_FORCE_SWEEPERS:
+        required: true
       TF_ACC:
         required: true
 
@@ -35,16 +37,24 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go${{ matrix.go-version }}-${{ hashFiles('**/go.mod') }}-${{ hashFiles('**/go.sum') }}
-      - name: Set Credentials
+
+      - name: Run tests with retry
+        uses: nick-invision/retry@v2
+        with:
+          max_attempts: 3
+          timeout_minutes: 120
+          command: |
+            make sweep
+            go test -v -cover ./zia -v -parallel 30 -timeout 120m
+            go mod vendor && go mod tidy
+            go build ./cli/ziaActivator.go
+            mv ziaActivator /usr/local/bin
+            make sweep
+            ziaActivator
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
           ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
           ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
           ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+          ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
           TF_ACC: ${{ secrets.TF_ACC }}
-        run: |
-          go test -v -cover ./zia -v -parallel 30  -timeout 120m
-          go mod vendor && go mod tidy
-          go build ./cli/ziaActivator.go
-          mv ziaActivator /usr/local/bin
-          ziaActivator

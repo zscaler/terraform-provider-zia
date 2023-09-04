@@ -18,38 +18,52 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 	var rules urlfilteringpolicies.URLFilteringRule
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
 
+	// Generate Rule Label HCL Resource
+	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckURLFilteringRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState),
+				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.URLFilteringRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState),
+				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLFilteringRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.URLFilteringRuleAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.URLFilteringRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "url_categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
+				// ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -111,12 +125,31 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 	}
 }
 
-func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, description, action, state string) string {
+func testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
 	return fmt.Sprintf(`
+// rule label resource
+%s
 
-data "zia_rule_labels" "global"{
-	name = "GLOBAL"
+// url filtering rule resource
+%s
+
+data "%s" "%s" {
+	id = "${%s.id}"
 }
+`,
+		// resource variables
+		ruleLabelHCL,
+		getURLFilteringRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName),
+
+		// data source variables
+		resourcetype.URLFilteringRules,
+		generatedName,
+		resourceTypeAndName,
+	)
+}
+
+func getURLFilteringRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName string) string {
+	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_time_window" "work_hours" {
 	name = "Work Hours"
@@ -151,7 +184,7 @@ data "zia_location_groups" "sdwan_usa" {
 }
 
 resource "%s" "%s" {
-    name = "%s"
+    name = "tf-acc-test-%s"
     description = "%s"
 	action = "%s"
     state = "%s"
@@ -172,25 +205,17 @@ resource "%s" "%s" {
 		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 	labels {
-		id = [data.zia_rule_labels.global.id]
+		id = ["${%s.id}"]
 	}
 }
-
-data "%s" "%s" {
-	name = "${%s.name}"
-  }
 `,
 		// resource variables
 		resourcetype.URLFilteringRules,
 		generatedName,
-		generatedName,
+		name,
 		description,
 		action,
 		state,
-
-		// data source variables
-		resourcetype.URLFilteringRules,
-		generatedName,
-		resourceTypeAndName,
+		ruleLabelTypeAndName,
 	)
 }

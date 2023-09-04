@@ -121,13 +121,24 @@ func testAccCheckLocationManagementExists(resource string, rule *locationmanagem
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedLoc, err := apiClient.locationmanagement.GetLocation(id)
 
-		if err != nil {
-			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
+		var receivedLoc *locationmanagement.Locations
+
+		// Integrate retry here
+		retryErr := RetryOnError(func() error {
+			var innerErr error
+			receivedLoc, innerErr = apiClient.locationmanagement.GetLocation(id)
+			if innerErr != nil {
+				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
+			}
+			return nil
+		})
+
+		if retryErr != nil {
+			return retryErr
 		}
-		*rule = *receivedLoc
 
+		*rule = *receivedLoc
 		return nil
 	}
 }

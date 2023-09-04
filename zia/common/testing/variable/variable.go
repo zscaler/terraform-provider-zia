@@ -92,7 +92,6 @@ const (
 	DLPWebRuleDesc           = "this is an acceptance test"
 	DLPRuleResourceAction    = "ALLOW"
 	DLPRuleResourceState     = "ENABLED"
-	DLPRuleOrder             = 1
 	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
 	DLPOCREnabled            = false
@@ -117,9 +116,9 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "testAcc@bd-hashicorp.com"
+	AdminUserLoginName = "testAcc@securitygeek.io"
 	AdminUserName      = "Test Acc"
-	AdminUserEmail     = "testAcc@bd-hashicorp.com"
+	AdminUserEmail     = "testAcc@securitygeek.io"
 	AdminUserPassword  = "Password@123!"
 )
 

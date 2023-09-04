@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"strconv"
 	"testing"
@@ -14,13 +13,25 @@ import (
 func TestAccDataSourceFirewallFilteringRule_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
 
+	// Generate Rule Label HCL Resource
+	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
+	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+
+	// Generate Source IP Group HCL Resource
+	sourceIPGroupTypeAndName, _, sourceIPGroupGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringSourceGroup)
+	sourceIPGroupHCL := testAccCheckFWIPSourceGroupsConfigure(sourceIPGroupTypeAndName, sourceIPGroupGeneratedName, variable.FWSRCGroupDescription)
+
+	// Generate Destination IP Group HCL Resource
+	dstIPGroupTypeAndName, _, dstIPGroupGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringDestinationGroup)
+	dstIPGroupHCL := testAccCheckFWIPDestinationGroupsConfigure(dstIPGroupTypeAndName, dstIPGroupGeneratedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFirewallFilteringRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging),
+				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
@@ -33,11 +44,11 @@ func TestAccDataSourceFirewallFilteringRule_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "departments.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "time_windows.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "src_ip_groups.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "dest_ip_groups.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "labels.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "src_ip_groups.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "dest_ip_groups.#", "1"),
 				),
 			},
 		},
 	})
 }
-*/

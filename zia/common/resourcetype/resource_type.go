@@ -1,6 +1,6 @@
 package resourcetype
 
-// zpa Types
+// ZIA Resource names, defined in place, used throughout the provider and tests
 const (
 	URLCategories                   = "zia_url_categories"
 	URLFilteringRules               = "zia_url_filtering_rules"
@@ -14,6 +14,7 @@ const (
 	TrafficForwardingGRETunnel      = "zia_traffic_forwarding_gre_tunnel"
 	TrafficForwardingVPNCredentials = "zia_traffic_forwarding_vpn_credentials"
 	TrafficForwardingLocManagement  = "zia_location_management"
+	LocationGroups                  = "zia_location_groups"
 	DLPDictionaries                 = "zia_dlp_dictionaries"
 	DLPEngines                      = "zia_dlp_engines"
 	DLPNotificationTemplates        = "zia_dlp_notification_templates"

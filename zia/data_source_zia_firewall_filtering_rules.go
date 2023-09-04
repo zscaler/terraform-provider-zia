@@ -15,12 +15,10 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"order": {
 				Type:     schema.TypeInt,
@@ -178,19 +176,19 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 			},
 			"action": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"state": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"last_modified_time": {
 				Type:     schema.TypeInt,
-				Optional: true,
+				Computed: true,
 			},
 			"last_modified_by": {
 				Type:     schema.TypeList,

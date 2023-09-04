@@ -29,7 +29,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
@@ -41,7 +41,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
@@ -131,7 +131,7 @@ func getTrafficForwardingStaticIPConfigure(generatedName, ipAddress string, rout
 	return fmt.Sprintf(`
 
 resource "%s" "%s" {
-	comment = "TestAcc Created with Terraform"
+	comment = "tf-acc-test-%s"
     ip_address =  "%s"
     routable_ip = "%s"
     geo_override = "%s"
@@ -139,6 +139,7 @@ resource "%s" "%s" {
 `,
 		// resource variables
 		resourcetype.TrafficForwardingStaticIP,
+		generatedName,
 		generatedName,
 		ipAddress,
 		strconv.FormatBool(routableIP),
