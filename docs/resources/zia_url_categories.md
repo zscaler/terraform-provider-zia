@@ -23,7 +23,7 @@ resource "zia_url_categories" "example" {
   scopes {
     type = "LOCATION"
     scope_entities {
-      id = [ data.zpa_location_management.nyc_site.id ]
+      id = [ data.zia_location_management.nyc_site.id ]
     }
     scope_group_member_entities {
       id = [ data.zia_group_management.engineering.id ]

@@ -569,24 +569,24 @@ The ZIA cloud service API  now includes new endpoints in order to fully support 
 
 DATA SOURCES:
 
-- ``data_source_zia_device_group`` [PR#50](https://github.com/zscaler/terraform-provider-zpa/pull/50) :rocket:
-- ``data_source_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``data_source_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``data_source_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
+- ``data_source_zia_device_group`` [PR#50](https://github.com/zscaler/terraform-provider-zia/pull/50) :rocket:
+- ``data_source_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``data_source_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``data_source_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
 
 RESOURCES:
 
-- ``resource_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53):rocket:
-- ``resource_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``resource_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
+- ``resource_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53):rocket:
+- ``resource_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``resource_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
 
 UPDATES:
 
-- Added ``zia_device_groups`` to ``resource_zia_url_filtering_rules``.[PR#51](https://github.com/zscaler/terraform-provider-zpa/pull/51) :rocket:
+- Added ``zia_device_groups`` to ``resource_zia_url_filtering_rules``.[PR#51](https://github.com/zscaler/terraform-provider-zia/pull/51) :rocket:
 
 ### New Acceptance Tests
 
-- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#54](https://github.com/zscaler/terraform-provider-zpa/pull/51)
+- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#54](https://github.com/zscaler/terraform-provider-zia/pull/51)
 - Added GoRelease workflow to GitHub Actions CI/CD for automatic software release.
 
 ## 1.0.3

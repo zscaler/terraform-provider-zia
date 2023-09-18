@@ -20,7 +20,7 @@ Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 
 Support Disclaimer
 -------
-!> **Disclaimer:** This Terraform provider is community supported. Although this provider is supported by Zscaler employees, it is **NOT** supported by Zscaler support. Please open all enhancement requests and issues on [Github Issues](https://github.com/zscaler/terraform-provider-zpa/issues) for support.
+!> **Disclaimer:** This Terraform provider is community supported. Although this provider is supported by Zscaler employees, it is **NOT** supported by Zscaler support. Please open all enhancement requests and issues on [Github Issues](https://github.com/zscaler/terraform-provider-zia/issues) for support.
 
 Requirements
 ------------

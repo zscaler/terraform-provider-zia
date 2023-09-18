@@ -22,7 +22,7 @@ labels: enhancement
 
 <!--- Please list the new or affected resources and data sources. --->
 
-- zpa_XXXXX
+- zia_XXXXX
 
 ### Potential Terraform Configuration
 
