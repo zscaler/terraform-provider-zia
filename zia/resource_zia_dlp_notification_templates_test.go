@@ -97,7 +97,6 @@ func testAccCheckDLPNotificationTemplateExists(resource string, dlpTemplate *dlp
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedTemplate, err := apiClient.dlp_notification_templates.Get(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

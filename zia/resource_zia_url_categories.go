@@ -208,7 +208,6 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no url category rule id is set")
 	}
 	resp, err := zClient.urlcategories.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
@@ -344,6 +343,7 @@ func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCou
 	}
 	return &keywordCounts
 }
+
 func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 	var scopes []urlcategories.Scopes
 	if scopeInterface, ok := d.GetOk("scopes"); ok {

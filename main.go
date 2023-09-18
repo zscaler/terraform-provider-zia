@@ -10,5 +10,6 @@ import (
 func main() {
 	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
 	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: zia.Provider})
+		ProviderFunc: zia.Provider,
+	})
 }

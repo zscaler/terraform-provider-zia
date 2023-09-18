@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.6.2 (September, 18 2023)
+
+### Notes
+
+- Release date: **(September, 18 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zpa/pull/276) - Added Country code validation for attribute `dest_countries` in the resource `zia_firewall_filtering_rule`. The provider validates the use of proper 2 letter country codes [ISO3166 By Alpha2Code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zpa/pull/276) - Added Timezone code validation for attribute `dest_countries` in the resource `zia_firewall_filtering_rule`. The provider validates the use of proper 2 letter country codes [ISO3166 By Alpha2Code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+
 ## 2.6.1 (August, 29 2023)
 
 ### Notes

@@ -46,15 +46,15 @@ testacc:
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.1/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.2/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.1/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.2/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
 	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-zia_v2.6.1
+	go build -o $(DESTINATION)/terraform-provider-zia_v2.6.2
 
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"

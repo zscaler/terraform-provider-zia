@@ -99,7 +99,6 @@ func testAccCheckTrafficForwardingGRETunnelExists(resource string, rule *gretunn
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedGRETunnel, err := apiClient.gretunnels.GetGreTunnels(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

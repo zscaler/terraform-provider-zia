@@ -44,6 +44,7 @@ func expandSecurityPolicySettings(d *schema.ResourceData) security_policy_settin
 		White: SetToStringList(d, "whitelist_urls"),
 	}
 }
+
 func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	listUrls := expandSecurityPolicySettings(d)
@@ -65,6 +66,7 @@ func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{})
 	}
 	return resourceSecurityPolicySettingsRead(d, m)
 }
+
 func resourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 

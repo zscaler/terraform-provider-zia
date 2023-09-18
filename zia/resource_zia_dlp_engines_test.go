@@ -93,7 +93,6 @@ func testAccCheckDLPEnginesExists(resource string, engine *dlp_engines.DLPEngine
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedEngine, err := apiClient.dlp_engines.Get(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

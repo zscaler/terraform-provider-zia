@@ -241,7 +241,6 @@ func resourceDLPDictionaries() *schema.Resource {
 			},
 		},
 	}
-
 }
 
 func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error {
@@ -272,7 +271,6 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no DLP dictionary id is set")
 	}
 	resp, err := zClient.dlpdictionaries.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing dlp dictionary %s from state because it no longer exists in ZIA", d.Id())

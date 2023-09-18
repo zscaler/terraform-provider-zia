@@ -122,7 +122,6 @@ func testAccCheckTrafficForwardingVPNCredentialsExists(resource string, rule *vp
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedRule, err := apiClient.vpncredentials.Get(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

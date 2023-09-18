@@ -93,7 +93,6 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedRule, err := apiClient.networkapplications.GetNetworkApplicationGroups(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
