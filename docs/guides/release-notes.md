@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.1``
+``Last updated: v2.6.2``
 
 ---
+
+## 2.6.2 (September, 19 2023)
+
+### Notes
+
+- Release date: **(September, 19 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zia/pull/276) - Added Country code validation for attribute `dest_countries` in the resource `zia_firewall_filtering_rule`. The provider validates the use of proper 2 letter country codes [ISO3166 By Alpha2Code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zia/pull/276) - Added Country name validation for attribute `country` in the resource `zia_location_management`. The provider validates the use uppercase country codes using [ISO-3166-1](https://en.wikipedia.org/wiki/ISO_3166-1)
 
 ## 2.6.1 (August, 29 2023)
 

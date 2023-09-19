@@ -141,3 +141,19 @@ This type of error happens when the administrator fails to provide a valid upper
 ```sh
 │ Error: 'UNITED_STATE' is not a valid country name. Please refer to ISO 3166-1 for a list of valid country names
 ```
+
+### │ Error: FAILED: POST, https://zsapi.***.net/api/v1/networkServices, 400, 400 , {"code":"DUPLICATE_ITEM","message":"DUPLICATE_ITEM"}, api responded with code: 400
+
+This type of error happens when the administrator is attempting to create a new service that already exists. This is mostly common when attempting to create a service with the same name of a predefined service or other resource that have been previously created in the tenant.
+
+```sh
+│ Error: FAILED: POST, https://zsapi.***.net/api/v1/networkServices, 400, 400 , {"code":"DUPLICATE_ITEM","message":"DUPLICATE_ITEM"}, api responded with code: 400
+```
+
+### │ Error: no dictionary found with name: Social Security Numbers (US)
+
+This error is commonly returned when attempting to create a `zia_dlp_dictionaries` where the name contains spaces. To prevent this from happening we recommend to clone the existing predefined DLP dictionary, and provide a name containing underscores or dashes.
+
+```sh
+│ Error: no dictionary found with name: Social Security Numbers (US)
+```
