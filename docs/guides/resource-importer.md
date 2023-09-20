@@ -4,7 +4,10 @@ page_title: "Resource Importer"
 
 # Zscaler Terraformer Tool
 
-!> **Disclaimer:** Please refer to our [General Support Statement](support.md) before proceeding with the use of this provider.
+Support Disclaimer
+
+-------
+-> **Disclaimer:** Please refer to our [General Support Statement](support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](troubleshooting.md) for guidance on typical problems.
 
 ## Overview
 
