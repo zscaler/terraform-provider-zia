@@ -16,6 +16,9 @@
 - [PR #259](https://github.com/zscaler/terraform-provider-zia/pull/259) Fixed drift problem within the resource `zia_firewall_filtering_network_service_groups`.
 - [PR #266](https://github.com/zscaler/terraform-provider-zia/pull/266) Fixed drift problem within the resource `zia_url_filtering_rules` order attribute
 
+- [PR #260](https://github.com/zscaler/terraform-provider-zia/pull/260) Updated `zia_firewall_filtering_network_service` resource documentation.
+!> **NOTE:** Resources of type `PREDEFINED` are built-in resources within the ZIA cloud and must be imported before the Terraform execution. Attempting to update the resource directly will return `DUPLICATE_ITEM` error message. To import a predefined built-in resource use the following command for example: `terraform import zia_firewall_filtering_network_service.this "DHCP"`
+
 ## 2.6.0 (August, 1 2023)
 
 ### Notes

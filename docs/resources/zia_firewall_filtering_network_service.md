@@ -49,6 +49,8 @@ The following arguments are supported:
 * `name` - (Required) Name of the service
 * `type` - (Required) Supported values: `STANDARD`, `PREDEFINED`, `CUSTOM`
 
+!> **NOTE:** Resources of type `PREDEFINED` are built-in resources within the ZIA cloud and must be imported before the Terraform execution. Attempting to update the resource directly will return `DUPLICATE_ITEM` error message. To import a predefined built-in resource use the following command for example: `terraform import zia_firewall_filtering_network_service.this "DHCP"`
+
 * `src_tcp_ports` - (Required) The TCP source port number (example: 50) or port number range (example: 1000-1050), if any, that is used by the network service
   * `start` - (Required)
   * `end` - (Required)
