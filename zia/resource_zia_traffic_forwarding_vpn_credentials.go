@@ -119,7 +119,6 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 		return fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set")
 	}
 	resp, err := zClient.vpncredentials.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing vpn credentials %s from state because it no longer exists in ZIA", d.Id())

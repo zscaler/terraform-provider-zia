@@ -103,7 +103,6 @@ func testAccCheckUserManagementExists(resource string, users *usermanagement.Use
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedUser, err := apiClient.usermanagement.Get(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

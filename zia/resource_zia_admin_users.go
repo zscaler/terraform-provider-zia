@@ -351,6 +351,7 @@ func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
 	}
 	return nil
 }
+
 func expandAdminUsersScopes(d *schema.ResourceData) (string, []common.IDNameExtensions, []common.IDNameExtensions) {
 	if scopeInterface, ok := d.GetOk("admin_scope"); ok {
 		scopesSet, ok := scopeInterface.(*schema.Set)

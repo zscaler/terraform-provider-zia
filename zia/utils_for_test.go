@@ -9,8 +9,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-const maxRetries = 3
-const retryInterval = 10 * time.Second
+const (
+	maxRetries    = 3
+	retryInterval = 10 * time.Second
+)
 
 // RetryOnError will execute the passed function and check its returned error.
 func RetryOnError(fn func() error) error {

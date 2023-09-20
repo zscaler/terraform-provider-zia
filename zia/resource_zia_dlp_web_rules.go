@@ -17,8 +17,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
 )
 
-var dlpWebRulesLock sync.Mutex
-var dlpWebStartingOrder int
+var (
+	dlpWebRulesLock     sync.Mutex
+	dlpWebStartingOrder int
+)
 
 func resourceDlpWebRules() *schema.Resource {
 	return &schema.Resource{
@@ -230,7 +232,6 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		reorder(order, resp.ID, "dlp_web_rules", func() (int, error) {
 			list, err := zClient.dlp_web_rules.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.dlp_web_rules.Get(id)
 			if err != nil {
@@ -252,6 +253,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	})
 }
+
 func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
@@ -260,7 +262,6 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no zia web dlp rule id is set")
 	}
 	resp, err := zClient.dlp_web_rules.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing web dlp rule %s from state because it no longer exists in ZIA", d.Id())
@@ -383,7 +384,6 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
 			list, err := zClient.dlp_web_rules.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.dlp_web_rules.Get(id)
 			if err != nil {

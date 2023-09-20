@@ -102,7 +102,6 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedRule, err := apiClient.adminuserrolemgmt.GetAdminUsers(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

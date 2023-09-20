@@ -109,7 +109,6 @@ func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{})
 		return fmt.Errorf("no DLP notification template id is set")
 	}
 	resp, err := zClient.dlp_notification_templates.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing dlp notification template %s from state because it no longer exists in ZIA", d.Id())

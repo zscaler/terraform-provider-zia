@@ -315,6 +315,7 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 
 	return resourceLocationManagementRead(d, m)
 }
+
 func checkVPNCredentials(locations locationmanagement.Locations) error {
 	for _, vpn := range locations.VPNCredentials {
 		if vpn.Type == "IP" && vpn.IPAddress == "" {
@@ -323,6 +324,7 @@ func checkVPNCredentials(locations locationmanagement.Locations) error {
 	}
 	return nil
 }
+
 func checkSurrogateIPDependencies(loc locationmanagement.Locations) error {
 	if loc.SurrogateIP && loc.IdleTimeInMinutes == 0 {
 		return fmt.Errorf("surrogate IP requires setting of an idle timeout")
@@ -347,7 +349,6 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 		return fmt.Errorf("no location management id is set")
 	}
 	resp, err := zClient.locationmanagement.GetLocationOrSublocationByID(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing location management %s from state because it no longer exists in ZIA", d.Id())

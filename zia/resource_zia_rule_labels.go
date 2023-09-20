@@ -87,7 +87,6 @@ func resourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no rule labels id is set")
 	}
 	resp, err := zClient.rule_labels.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia rule labels %s from state because it no longer exists in ZIA", d.Id())

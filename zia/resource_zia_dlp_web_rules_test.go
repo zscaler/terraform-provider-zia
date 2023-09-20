@@ -131,7 +131,6 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 }
 
 func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
-
 	return fmt.Sprintf(`
 // rule label resource
 %s

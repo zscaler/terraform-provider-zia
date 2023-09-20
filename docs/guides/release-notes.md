@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.1``
+``Last updated: v2.6.2``
 
 ---
+
+## 2.6.2 (September, 19 2023)
+
+### Notes
+
+- Release date: **(September, 19 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zia/pull/276) - Added Country code validation for attribute `dest_countries` in the resource `zia_firewall_filtering_rule`. The provider validates the use of proper 2 letter country codes [ISO3166 By Alpha2Code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
+
+- [PR #276](https://github.com/zscaler/terraform-provider-zia/pull/276) - Added Country name validation for attribute `country` in the resource `zia_location_management`. The provider validates the use uppercase country codes using [ISO-3166-1](https://en.wikipedia.org/wiki/ISO_3166-1)
 
 ## 2.6.1 (August, 29 2023)
 
@@ -572,24 +585,24 @@ The ZIA cloud service API  now includes new endpoints in order to fully support 
 
 DATA SOURCES:
 
-- ``data_source_zia_device_group`` [PR#50](https://github.com/zscaler/terraform-provider-zpa/pull/50) :rocket:
-- ``data_source_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``data_source_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``data_source_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
+- ``data_source_zia_device_group`` [PR#50](https://github.com/zscaler/terraform-provider-zia/pull/50) :rocket:
+- ``data_source_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``data_source_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``data_source_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
 
 RESOURCES:
 
-- ``resource_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53):rocket:
-- ``resource_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
-- ``resource_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zpa/pull/53) :rocket:
+- ``resource_zia_dlp_notification_templates``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53):rocket:
+- ``resource_zia_dlp_web_rules``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
+- ``resource_zia_dlp_engines``.[PR#53](https://github.com/zscaler/terraform-provider-zia/pull/53) :rocket:
 
 UPDATES:
 
-- Added ``zia_device_groups`` to ``resource_zia_url_filtering_rules``.[PR#51](https://github.com/zscaler/terraform-provider-zpa/pull/51) :rocket:
+- Added ``zia_device_groups`` to ``resource_zia_url_filtering_rules``.[PR#51](https://github.com/zscaler/terraform-provider-zia/pull/51) :rocket:
 
 ### New Acceptance Tests
 
-- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#54](https://github.com/zscaler/terraform-provider-zpa/pull/51)
+- Added multiple acceptance tests to easily and routinely verify that Terraform Plugins produce the expected outcome. [PR#54](https://github.com/zscaler/terraform-provider-zia/pull/51)
 - Added GoRelease workflow to GitHub Actions CI/CD for automatic software release.
 
 ## 1.0.3

@@ -94,7 +94,6 @@ func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no dlp engine id is set")
 	}
 	resp, err := zClient.dlp_engines.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia dlp engine%s from state because it no longer exists in ZIA", d.Id())

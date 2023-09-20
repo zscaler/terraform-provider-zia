@@ -97,7 +97,6 @@ func testAccCheckTrafficForwardingStaticIPExists(resource string, rule *staticip
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedRule, err := apiClient.staticips.Get(id)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

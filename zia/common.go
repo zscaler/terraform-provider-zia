@@ -464,7 +464,7 @@ func getCloudFirewallDstCountries() *schema.Schema {
 		Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
 		Elem: &schema.Schema{
 			Type:         schema.TypeString,
-			ValidateFunc: validateCloudFirewallDstCountries(),
+			ValidateFunc: validateCloudFirewallDstCountries,
 		},
 		Optional: true,
 		Computed: true,

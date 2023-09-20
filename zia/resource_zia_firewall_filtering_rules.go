@@ -18,8 +18,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
 )
 
-var firewallFilteringLock sync.Mutex
-var firewallFilteringStartingOrder int
+var (
+	firewallFilteringLock          sync.Mutex
+	firewallFilteringStartingOrder int
+)
 
 func intPtr(n int) *int {
 	return &n
@@ -165,6 +167,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 		},
 	}
 }
+
 func validatRule(req filteringrules.FirewallFilteringRules) error {
 	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
 		return errors.New("predefined rule cannot be deleted")
@@ -220,7 +223,6 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
 			list, err := zClient.filteringrules.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.filteringrules.Get(id)
 			if err != nil {
@@ -252,7 +254,6 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		return fmt.Errorf("no zia firewall filtering rule id is set")
 	}
 	resp, err := zClient.filteringrules.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
@@ -371,7 +372,6 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
 			list, err := zClient.filteringrules.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.filteringrules.Get(id)
 			if err != nil {
@@ -410,6 +410,18 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
+
+	// Process the DestCountries to add the prefix where needed
+	rawDestCountries := SetToStringList(d, "dest_countries")
+	processedDestCountries := make([]string, len(rawDestCountries))
+	for i, country := range rawDestCountries {
+		if country != "ANY" && country != "NONE" && len(country) == 2 { // Assuming the 2 letter code is an ISO Alpha-2 Code
+			processedDestCountries[i] = "COUNTRY_" + country
+		} else {
+			processedDestCountries[i] = country
+		}
+	}
+
 	result := filteringrules.FirewallFilteringRules{
 		ID:                  id,
 		Name:                d.Get("name").(string),
@@ -421,7 +433,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		SrcIps:              SetToStringList(d, "src_ips"),
 		DestAddresses:       SetToStringList(d, "dest_addresses"),
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
-		DestCountries:       SetToStringList(d, "dest_countries"),
+		DestCountries:       processedDestCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),
 		DefaultRule:         d.Get("default_rule").(bool),

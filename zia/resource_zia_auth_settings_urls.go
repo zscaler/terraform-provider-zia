@@ -39,6 +39,7 @@ func expandAuthSettingsUrls(d *schema.ResourceData) user_authentication_settings
 		URLs: SetToStringList(d, "urls"),
 	}
 }
+
 func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	urls := expandAuthSettingsUrls(d)

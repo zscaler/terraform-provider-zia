@@ -203,6 +203,7 @@ func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnel
 	}
 	return nil
 }
+
 func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	id, ok := getIntFromResourceData(d, "tunnel_id")
@@ -210,7 +211,6 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 		return fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set")
 	}
 	resp, err := zClient.gretunnels.GetGreTunnels(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing gre tunnel %s from state because it no longer exists in ZIA", d.Id())
@@ -253,6 +253,7 @@ func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) i
 		},
 	}
 }
+
 func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{

@@ -22,7 +22,7 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckURLFilteringRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName,generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState, ruleLabelTypeAndName, ruleLabelHCL),
+				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),

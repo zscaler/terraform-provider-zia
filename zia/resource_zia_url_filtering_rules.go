@@ -18,8 +18,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
 )
 
-var urlFilteringLock sync.Mutex
-var urlFilteringStartingOrder int
+var (
+	urlFilteringLock          sync.Mutex
+	urlFilteringStartingOrder int
+)
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
@@ -238,7 +240,6 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
 			list, err := zClient.urlfilteringpolicies.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.urlfilteringpolicies.Get(id)
 			if err != nil {
@@ -269,7 +270,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 		return fmt.Errorf("no url filtering rule id is set")
 	}
 	resp, err := zClient.urlfilteringpolicies.Get(id)
-
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
@@ -381,7 +381,6 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
 			list, err := zClient.urlfilteringpolicies.GetAll()
 			return len(list), err
-
 		}, func(id, order int) error {
 			rule, err := zClient.urlfilteringpolicies.Get(id)
 			if err != nil {

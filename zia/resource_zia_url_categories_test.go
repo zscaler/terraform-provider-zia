@@ -82,7 +82,6 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 
 		apiClient := testAccProvider.Meta().(*Client)
 		receivedRule, err := apiClient.urlcategories.Get(rs.Primary.ID)
-
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
