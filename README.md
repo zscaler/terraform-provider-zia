@@ -19,15 +19,16 @@ Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 - Zscaler Community: [Zscaler Community](https://community.zscaler.com/)
 
 Support Disclaimer
+
 -------
-!> **Disclaimer:** This Terraform provider is community supported. Although this provider is supported by Zscaler employees, it is **NOT** supported by Zscaler support. Please open all enhancement requests and issues on [Github Issues](https://github.com/zscaler/terraform-provider-zia/issues) for support.
+!> **Disclaimer:** Please refer to our [General Support Statement](docs/guides//support.md) before proceeding with the use of this provider.
 
 Requirements
 ------------
 
 - Install [Terraform](https://www.terraform.io/downloads.html) 0.12.x/0.13.x/0.14.x/0.15.x (0.11.x or lower is incompatible)
 - Install [Go](https://golang.org/doc/install) 1.16+ (This will be used to build the provider plugin.)
-- Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable)
+- Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable
 
 Building The Provider (Terraform v0.12+)
 ---------------------
