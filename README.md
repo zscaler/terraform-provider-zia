@@ -18,10 +18,9 @@ Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
 - Documentation: <https://help.zscaler.com/zia>
 - Zscaler Community: [Zscaler Community](https://community.zscaler.com/)
 
-Support Disclaimer
+## Support Disclaimer
 
--------
-!> **Disclaimer:** Please refer to our [General Support Statement](docs/guides//support.md) before proceeding with the use of this provider.
+-> **Disclaimer:** Please refer to our [General Support Statement](guides/support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](guides/troubleshooting.md) for guidance on typical problems.
 
 Requirements
 ------------
