@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.6.2 (September, 18 2023)
+## 2.6.2 (September, 20 2023)
 
 ### Notes
 
-- Release date: **(September, 18 2023)**
+- Release date: **(September, 20 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
