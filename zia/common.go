@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
 )
 
 func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {

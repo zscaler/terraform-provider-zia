@@ -2,7 +2,7 @@ package zia
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/greinternalipranges"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/greinternalipranges"
 )
 
 func dataSourceTrafficForwardingGreInternalIPRangeList() *schema.Resource {

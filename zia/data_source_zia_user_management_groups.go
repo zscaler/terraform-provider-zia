@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/groups"
 )
 
 func dataSourceGroupManagement() *schema.Resource {
@@ -35,32 +35,41 @@ func dataSourceGroupManagement() *schema.Resource {
 func dataSourceGroupManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Groups
+	var resp *groups.Groups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := zClient.usermanagement.GetGroups(id)
+		res, err := zClient.groups.GetGroups(id)
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting group by ID %d: %s", id, err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for user : %s\n", name)
-		res, err := zClient.usermanagement.GetGroupByName(name)
+		res, err := zClient.groups.GetGroupByName(name)
 		if err != nil {
-			return err
+			return fmt.Errorf("error getting group by name %s: %s", name, err)
 		}
 		resp = res
+		log.Printf("[DEBUG] Group received: %+v", resp) // Log the received group for debugging
 	}
 
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
-		_ = d.Set("name", resp.Name)
-		_ = d.Set("idp_id", resp.IdpID)
-		_ = d.Set("comments", resp.Comments)
-
+		err := d.Set("name", resp.Name)
+		if err != nil {
+			return fmt.Errorf("error setting name: %s", err)
+		}
+		err = d.Set("idp_id", resp.IdpID)
+		if err != nil {
+			return fmt.Errorf("error setting idp_id: %s", err)
+		}
+		err = d.Set("comments", resp.Comments)
+		if err != nil {
+			return fmt.Errorf("error setting comments: %s", err)
+		}
 	} else {
 		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
 	}

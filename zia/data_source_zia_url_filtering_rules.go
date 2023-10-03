@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
 )
 
 func dataSourceURLFilteringRules() *schema.Resource {

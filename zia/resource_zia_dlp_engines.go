@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_engines"
 )
 
 func resourceDLPEngines() *schema.Resource {

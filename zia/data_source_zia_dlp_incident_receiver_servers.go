@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_incident_receiver_servers"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_incident_receiver_servers"
 )
 
 func dataSourceDLPIncidentReceiverServers() *schema.Resource {

@@ -9,12 +9,13 @@ require (
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.29.0
-	github.com/zscaler/zscaler-sdk-go v1.8.0-beta
+	github.com/zscaler/zscaler-sdk-go/v2 v2.1.2
 )
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230717121422-5aa5874ade95 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
+	github.com/allegro/bigcache/v3 v3.1.0 // indirect
 	github.com/apparentlymart/go-cidr v1.1.0 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect

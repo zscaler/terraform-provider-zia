@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/terraform-provider-zia/v2/zia/common"
 )
 
 func Provider() *schema.Provider {
@@ -152,7 +153,7 @@ func ziaConfigure(d *schema.ResourceData, terraformVersion string) (interface{},
 		Password:   d.Get("password").(string),
 		APIKey:     d.Get("api_key").(string),
 		ZIABaseURL: d.Get("zia_cloud").(string),
-		UserAgent:  fmt.Sprintf("(%s %s) Terraform/%s", runtime.GOOS, runtime.GOARCH, terraformVersion),
+		UserAgent:  fmt.Sprintf("(%s %s) Terraform/%s Version/%s", runtime.GOOS, runtime.GOARCH, terraformVersion, common.Version()),
 	}
 
 	return config.Client()

@@ -7,8 +7,8 @@ import (
 	"runtime"
 
 	"github.com/zscaler/terraform-provider-zia/v2/zia"
-	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/activation"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 )
 
 func getEnvVarOrFail(k string) string {

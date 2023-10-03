@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
 )
 
 func SetToStringSlice(d *schema.Set) []string {

@@ -2,7 +2,7 @@ package zia
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/user_authentication_settings"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/user_authentication_settings"
 )
 
 func resourceAuthSettingsUrls() *schema.Resource {

@@ -3,41 +3,43 @@ package zia
 import (
 	"log"
 
-	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/activation"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/adminuserrolemgmt"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/devicegroups"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_engines"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_exact_data_match"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_icap_servers"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_idm_profiles"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_incident_receiver_servers"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_notification_templates"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlp_web_rules"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/applicationservices"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/applicationservicesgroup"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipdestinationgroups"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/ipsourcegroups"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkapplications"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/networkservices"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/timewindow"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement/locationgroups"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/locationmanagement/locationlite"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/rule_labels"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/security_policy_settings"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/greinternalipranges"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnelinfo"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnels"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/staticips"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/virtualipaddresslist"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/vpncredentials"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/urlcategories"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/urlfilteringpolicies"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/user_authentication_settings"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/devicegroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_exact_data_match"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_icap_servers"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_idm_profiles"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_incident_receiver_servers"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/applicationservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/applicationservicesgroup"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipsourcegroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/timewindow"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationlite"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/greinternalipranges"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnelinfo"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/user_authentication_settings"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/departments"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/groups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
 )
 
 func init() {
@@ -58,6 +60,8 @@ type Client struct {
 	urlcategories                 *urlcategories.Service
 	urlfilteringpolicies          *urlfilteringpolicies.Service
 	usermanagement                *usermanagement.Service
+	groups                        *groups.Service
+	departments                   *departments.Service
 	gretunnels                    *gretunnels.Service
 	gretunnelinfo                 *gretunnelinfo.Service
 	greinternalipranges           *greinternalipranges.Service
@@ -109,6 +113,8 @@ func (c *Config) Client() (*Client, error) {
 		urlcategories:                 urlcategories.New(cli),
 		urlfilteringpolicies:          urlfilteringpolicies.New(cli),
 		usermanagement:                usermanagement.New(cli),
+		groups:                        groups.New(cli),
+		departments:                   departments.New(cli),
 		virtualipaddresslist:          virtualipaddresslist.New(cli),
 		vpncredentials:                vpncredentials.New(cli),
 		gretunnels:                    gretunnels.New(cli),

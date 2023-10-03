@@ -7,9 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/dlpdictionaries"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlpdictionaries"
 )
 
 func resourceDLPDictionaries() *schema.Resource {

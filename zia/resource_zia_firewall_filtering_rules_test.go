@@ -11,7 +11,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
 )
 
 func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
