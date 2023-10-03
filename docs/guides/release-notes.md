@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.2``
+``Last updated: v2.6.3``
 
 ---
+
+## 2.6.3 (October, 3 2023)
+
+### Notes
+
+- Release date: **(October, 3 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #278](https://github.com/zscaler/terraform-provider-zia/pull/278) - Provider HTTP Header now includes enhanced ``User-Agent`` information for troubleshooting assistance.
+  - i.e ``User-Agent: (darwin arm64) Terraform/1.5.5 Version/2.6.3``
 
 ## 2.6.2 (September, 19 2023)
 
