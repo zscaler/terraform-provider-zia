@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
 )
 
 func TestAccResourceUserManagementBasic(t *testing.T) {

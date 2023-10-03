@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/departments"
 )
 
 func dataSourceDepartmentManagement() *schema.Resource {
@@ -39,11 +39,11 @@ func dataSourceDepartmentManagement() *schema.Resource {
 func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Department
+	var resp *departments.Department
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for department id: %d\n", id)
-		res, err := zClient.usermanagement.GetDepartments(id)
+		res, err := zClient.departments.GetDepartments(id)
 		if err != nil {
 			return err
 		}
@@ -52,7 +52,7 @@ func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) e
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for department : %s\n", name)
-		res, err := zClient.usermanagement.GetDepartmentsByName(name)
+		res, err := zClient.departments.GetDepartmentsByName(name)
 		if err != nil {
 			return err
 		}

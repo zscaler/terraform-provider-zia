@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/trafficforwarding/gretunnelinfo"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnelinfo"
 )
 
 func dataSourceTrafficForwardingIPGreTunnelInfo() *schema.Resource {

@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/zia"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/firewallpolicies/filteringrules"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
 )
 
 var (

@@ -604,7 +604,7 @@ func sweepTestAdminUser(client *testClient) error {
 func sweepTestUsers(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.usermanagement.GetAll()
+	rule, err := client.sdkClient.usermanagement.GetAllUsers()
 	if err != nil {
 		return err
 	}

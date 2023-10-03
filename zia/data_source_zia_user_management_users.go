@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/zia/services/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
 )
 
 func dataSourceUserManagement() *schema.Resource {
