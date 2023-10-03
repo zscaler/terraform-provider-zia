@@ -27,6 +27,7 @@ jobs:
       ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
       ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
       ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+      ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
       ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
       TF_ACC: ${{ secrets.TF_ACC }}
   zs3-tests:
