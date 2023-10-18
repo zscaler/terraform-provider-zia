@@ -58,10 +58,9 @@ func resourceLocationManagement() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
 			"parent_id": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"ip_addresses"},
-				Description:  "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Parent Location ID. If this ID does not exist or is 0, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: SUB",
 			},
 			"up_bandwidth": {
 				Type:         schema.TypeInt,
