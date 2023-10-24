@@ -43,6 +43,12 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
 			},
+			// Import test
+			{
+				ResourceName: resourceTypeAndName,
+				ImportState:  true,
+				// ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -105,7 +111,7 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
+    name        = "tf-acc-test-%s"
     description = "%s"
     network_applications = [
             "YAMMER",

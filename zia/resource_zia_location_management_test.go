@@ -72,6 +72,12 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 					// resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

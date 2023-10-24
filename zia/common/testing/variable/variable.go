@@ -55,6 +55,13 @@ const (
 	FWNetworkServicesType        = "CUSTOM"
 )
 
+// Firewall Filtering IP Destination Group resource/datasource
+const (
+	FowardingControlZPAGWName        = "this is an acceptance test"
+	FowardingControlZPAGWDescription = "this is an acceptance test"
+	FowardingControlType             = "ZPA"
+)
+
 // Traffic Forwarding Static IP resource/datasource
 const (
 	StaticIPComment   = "this is an acceptance test"
@@ -116,9 +123,9 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "testAcc@securitygeek.io"
+	AdminUserLoginName = "testAcc@bd-hashicorp.com"
 	AdminUserName      = "Test Acc"
-	AdminUserEmail     = "testAcc@securitygeek.io"
+	AdminUserEmail     = "testAcc@bd-hashicorp.com"
 	AdminUserPassword  = "Password@123!"
 )
 

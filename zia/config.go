@@ -84,6 +84,7 @@ type Client struct {
 	rule_labels                   *rule_labels.Service
 	security_policy_settings      *security_policy_settings.Service
 	user_authentication_settings  *user_authentication_settings.Service
+	// zpa_gateways                  *zpa_gateways.Service
 }
 
 type Config struct {
@@ -137,6 +138,7 @@ func (c *Config) Client() (*Client, error) {
 		rule_labels:                   rule_labels.New(cli),
 		security_policy_settings:      security_policy_settings.New(cli),
 		user_authentication_settings:  user_authentication_settings.New(cli),
+		// zpa_gateways:                  zpa_gateways.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

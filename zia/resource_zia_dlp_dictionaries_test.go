@@ -45,6 +45,12 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
