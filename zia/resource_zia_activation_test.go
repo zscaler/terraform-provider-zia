@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccResourceActivationStatus_transition(t *testing.T) {
+func TestAccResourceActivationStatus(t *testing.T) {
 	resourceName := "zia_activation_status.test"
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    testAccProviders, // Ensure you have a provider configuration for testing
