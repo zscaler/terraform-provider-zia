@@ -23,6 +23,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/timewindow"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationlite"
@@ -84,6 +85,7 @@ type Client struct {
 	rule_labels                   *rule_labels.Service
 	security_policy_settings      *security_policy_settings.Service
 	user_authentication_settings  *user_authentication_settings.Service
+	forwarding_rules              *forwarding_rules.Service
 }
 
 type Config struct {
@@ -137,6 +139,7 @@ func (c *Config) Client() (*Client, error) {
 		rule_labels:                   rule_labels.New(cli),
 		security_policy_settings:      security_policy_settings.New(cli),
 		user_authentication_settings:  user_authentication_settings.New(cli),
+		forwarding_rules:              forwarding_rules.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
