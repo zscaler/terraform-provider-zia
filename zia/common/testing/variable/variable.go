@@ -55,6 +55,12 @@ const (
 	FWNetworkServicesType        = "CUSTOM"
 )
 
+// Forwarding Control ZPA Gateway
+const (
+	FowardingControlZPAGWDescription = "this is an acceptance test"
+	FowardingControlZPAGWType        = "ZPA"
+)
+
 // Traffic Forwarding Static IP resource/datasource
 const (
 	StaticIPComment   = "this is an acceptance test"

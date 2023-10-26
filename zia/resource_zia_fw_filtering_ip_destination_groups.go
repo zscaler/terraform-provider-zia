@@ -84,7 +84,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Description: "Destination IP addresses within the group",
 			},
 			"ip_categories": getURLCategories(),
-			"countries":     getCloudFirewallDstCountries(),
+			"countries":     getDestinationCountries(),
 		},
 	}
 }

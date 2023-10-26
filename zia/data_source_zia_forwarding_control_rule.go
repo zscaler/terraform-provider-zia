@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -32,12 +33,14 @@ func dataSourceForwardingControlRule() *schema.Resource {
 				Description: "The rule type selected from the available options",
 			},
 			"forward_method": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The type of traffic forwarding method selected from the available options",
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Indicates whether the forwarding rule is enabled or disabled",
 			},
 			"order": {
 				Type:        schema.TypeInt,
@@ -896,3 +899,4 @@ func flattenZPAApplicationSegmentGroups(list []forwarding_rules.ZPAApplicationSe
 	}
 	return flattenedList
 }
+*/

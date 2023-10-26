@@ -23,10 +23,6 @@ var (
 	firewallFilteringStartingOrder int
 )
 
-func intPtr(n int) *int {
-	return &n
-}
-
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceFirewallFilteringRulesCreate,
@@ -98,9 +94,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Default:  false,
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ALLOW",
@@ -111,9 +106,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ENABLED",
@@ -137,15 +131,13 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"default_rule": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "If set to true, the default rule is applied",
 			},
 			"predefined": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
 			"locations":             setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
@@ -162,8 +154,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
-			"dest_countries":        getCloudFirewallDstCountries(),
-			"nw_applications":       getCloudFirewallNwApplications(),
+			"dest_countries":        getDestinationCountries(),
+			"nw_applications":       getNwApplications(),
 		},
 	}
 }
