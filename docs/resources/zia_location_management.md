@@ -70,7 +70,7 @@ The following arguments are supported:
 * `description` - (String) Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.
 * `country` - (Optional) Country
 * `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT.
-* `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`.
+* `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`, `WORKLOAD`.
 
 * `aup_block_internet_until_accepted` - (Optional) For First Time AUP Behavior, Block Internet Access. When set, all internet access (including non-HTTP traffic) is disabled until the user accepts the AUP.
 * `aup_enabled` - (Optional) Enable AUP. When set to true, AUP is enabled for the location.
@@ -93,6 +93,14 @@ The following arguments are supported:
 * `surrogate_refresh_time_unit` - (Optional) Display Refresh Time Unit. The time unit to display for refresh time for re-validation of surrogacy.
 * `xff_forward_enabled` - (Optional) Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.
 * `zapp_ssl_scan_enabled` - (Optional) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
+
+* `other_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.
+
+* `other6_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.
+
+* `ipv6_enabled` - (Optional) If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.
+
+* `ipv6_dns_64prefix` - (Optional) Name-ID pair of the NAT64 prefix configured as the DNS64 prefix for the location. If specified, the DNS64 prefix is used for the IP addresses that reside in this location. If not specified, a prefix is selected from the set of supported prefixes. This field is applicable only if ipv6Enabled is set is true.
 
 * `managed_by` - (Optional)
   * `id` - (Optional) Identifier that uniquely identifies an entity

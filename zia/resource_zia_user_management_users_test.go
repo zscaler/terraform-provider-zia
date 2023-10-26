@@ -32,7 +32,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
@@ -46,7 +46,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
@@ -129,7 +129,7 @@ data "zia_department_management" "finance" {
 
 resource "%s" "%s" {
 	name 		= "%s"
-	email 		= "%s@securitygeek.io"
+	email 		= "%s@bd-hashicorp.com"
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {
