@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -899,4 +898,3 @@ func flattenZPAApplicationSegmentGroups(list []forwarding_rules.ZPAApplicationSe
 	}
 	return flattenedList
 }
-*/

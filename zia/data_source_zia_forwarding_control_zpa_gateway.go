@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -172,4 +171,3 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 
 	return nil
 }
-*/

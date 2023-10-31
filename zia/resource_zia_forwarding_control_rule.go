@@ -527,5 +527,4 @@ func flattenZPAApplicationSegmentGroupsSimple(list []forwarding_rules.ZPAApplica
 	}
 	return flattenedList
 }
-
 */
