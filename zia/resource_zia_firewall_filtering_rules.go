@@ -80,9 +80,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeInt,
+				Optional:    true,
 				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
 			"rank": {
@@ -98,9 +97,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Default:  false,
 			},
 			"action": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ALLOW",
@@ -111,9 +109,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"state": {
-				Type:     schema.TypeString,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeString,
+				Optional:    true,
 				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ENABLED",
@@ -136,21 +133,14 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			// "dest_countries": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// },
 			"default_rule": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "If set to true, the default rule is applied",
 			},
 			"predefined": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
 			"locations":             setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
