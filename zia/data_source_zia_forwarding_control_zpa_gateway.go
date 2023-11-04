@@ -63,7 +63,7 @@ func dataSourceForwardingControlZPAGateway() *schema.Resource {
 					},
 				},
 			},
-			"zpa_application_segments": {
+			"zpa_app_segments": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
@@ -157,7 +157,7 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 
-		if err := d.Set("zpa_application_segments", flattenIDNameExtensions(resp.ZPAAppSegments)); err != nil {
+		if err := d.Set("zpa_app_segments", flattenIDNameExtensions(resp.ZPAAppSegments)); err != nil {
 			return err
 		}
 
