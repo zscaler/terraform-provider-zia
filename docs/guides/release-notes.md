@@ -12,24 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.4``
+``Last updated: v2.6.5``
 
 ---
 
-## 2.6.4 (October, 25 2023)
+## 2.6.5 (November, xx 2023)
 
 ### Notes
 
-- Release date: **(October, 25 2023)**
+- Release date: **(November, xx 2023)**
 - Supported Terraform version: **v1.x**
-
-### Enhancements
-
-- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Introduced new `zia_location_management`  attributes: `other_sublocation`, `other6_sublocation`, `ipv6_enabled`, `ipv6_dns_64prefix`
 
 ### Fixes
 
-- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Fixed `zia_location_management` resource attribute `ip_addresses` to `TypeSet` to prevent drifts in case the API returns IP addresses in an ordered fashion.
+- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Fixed drift within `zia_firewall_filtering_rule` for the attribute `dest_countries`.
 
 ## 2.6.3 (October, 18 2023)
 

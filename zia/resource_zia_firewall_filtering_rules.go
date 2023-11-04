@@ -136,6 +136,11 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			// "dest_countries": {
+			// 	Type:     schema.TypeSet,
+			// 	Optional: true,
+			// 	Elem:     &schema.Schema{Type: schema.TypeString},
+			// },
 			"default_rule": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -253,6 +258,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	if !ok {
 		return fmt.Errorf("no zia firewall filtering rule id is set")
 	}
+
 	resp, err := zClient.filteringrules.Get(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -262,6 +268,11 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		}
 
 		return err
+	}
+
+	processedDestCountries := make([]string, len(resp.DestCountries))
+	for i, country := range resp.DestCountries {
+		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
 	}
 
 	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
@@ -278,7 +289,8 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("src_ips", resp.SrcIps)
 	_ = d.Set("dest_addresses", resp.DestAddresses)
 	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
-	_ = d.Set("dest_countries", resp.DestCountries)
+	// _ = d.Set("dest_countries", resp.DestCountries)
+	_ = d.Set("dest_countries", processedDestCountries)
 	_ = d.Set("nw_applications", resp.NwApplications)
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
@@ -423,16 +435,17 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	}
 
 	result := filteringrules.FirewallFilteringRules{
-		ID:                  id,
-		Name:                d.Get("name").(string),
-		Order:               d.Get("order").(int),
-		Rank:                d.Get("rank").(int),
-		Action:              d.Get("action").(string),
-		State:               d.Get("state").(string),
-		Description:         d.Get("description").(string),
-		SrcIps:              SetToStringList(d, "src_ips"),
-		DestAddresses:       SetToStringList(d, "dest_addresses"),
-		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
+		ID:               id,
+		Name:             d.Get("name").(string),
+		Order:            d.Get("order").(int),
+		Rank:             d.Get("rank").(int),
+		Action:           d.Get("action").(string),
+		State:            d.Get("state").(string),
+		Description:      d.Get("description").(string),
+		SrcIps:           SetToStringList(d, "src_ips"),
+		DestAddresses:    SetToStringList(d, "dest_addresses"),
+		DestIpCategories: SetToStringList(d, "dest_ip_categories"),
+		// DestCountries:    SetToStringList(d, "dest_countries"),
 		DestCountries:       processedDestCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),
