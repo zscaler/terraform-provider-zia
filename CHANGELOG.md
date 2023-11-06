@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.6.5 (November, xx 2023)
+## 2.6.5 (November, 5 2023)
 
 ### Notes
 
-- Release date: **(November, xx 2023)**
+- Release date: **(November, 5 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Fixes
