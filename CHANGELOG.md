@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.6.5 (November, xx 2023)
+
+### Notes
+
+- Release date: **(November, xx 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Fixed drift within `zia_firewall_filtering_rule` for the attribute `dest_countries`.
+
 ## 2.6.4 (October, 25 2023)
 
 ### Notes
