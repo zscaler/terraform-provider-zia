@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -47,12 +46,19 @@ func dataForwardingControlZPAGateway() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The configured name of the entity",
+						},
+						"external_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
@@ -64,19 +70,26 @@ func dataForwardingControlZPAGateway() *schema.Resource {
 					},
 				},
 			},
-			"zpa_application_segments": {
+			"zpa_app_segments": {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The configured name of the entity",
+						},
+						"external_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.",
 						},
 						"extensions": {
 							Type:     schema.TypeMap,
@@ -154,11 +167,11 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("zpa_tenant_id", resp.ZPATenantId)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 
-		if err := d.Set("zpa_server_group", flattenIDNameExtensions(resp.ZPAServerGroup)); err != nil {
+		if err := d.Set("zpa_server_group", flattenZPAServerGroupID(resp.ZPAServerGroup)); err != nil {
 			return err
 		}
 
-		if err := d.Set("zpa_application_segments", flattenIDNameExtensions(resp.ZPAAppSegments)); err != nil {
+		if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsID(resp.ZPAAppSegments)); err != nil {
 			return err
 		}
 
@@ -172,4 +185,3 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 
 	return nil
 }
-*/

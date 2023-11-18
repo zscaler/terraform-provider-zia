@@ -21,7 +21,6 @@ TESTARGS?=-test.v
 default: build
 
 dep: # Download required dependencies
-	go mod tidy
 
 build: fmtcheck
 	go install
@@ -51,7 +50,6 @@ else
 build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.7.0/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
-	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.7.0
@@ -74,15 +72,9 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-tools:
-	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.4.0
-	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
-	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
-
-tools-update:
-	@go install mvdan.cc/gofumpt@v0.4.0
-	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
-	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
+fmt-docs:
+	@echo "✓ Formatting code samples in documentation"
+	@terrafmt fmt -p '*.md' .
 
 vendor-status:
 	@govendor status
@@ -94,6 +86,41 @@ test-compile:
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)
+
+lint:
+	@echo "==> Checking source code against linters..."
+	@$(TFPROVIDERLINT) \
+		-c 1 \
+		-AT001 \
+    -R004 \
+		-S001 \
+		-S002 \
+		-S003 \
+		-S004 \
+		-S005 \
+		-S007 \
+		-S008 \
+		-S009 \
+		-S010 \
+		-S011 \
+		-S012 \
+		-S013 \
+		-S014 \
+		-S015 \
+		-S016 \
+		-S017 \
+		-S019 \
+		./$(PKG_NAME)
+
+tools:
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.5.0
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
+
+tools-update:
+	@go install mvdan.cc/gofumpt@v0.5.0
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
 
 ziaActivator: GOOS=$(shell go env GOOS)

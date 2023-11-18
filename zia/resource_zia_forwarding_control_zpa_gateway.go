@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -117,7 +116,11 @@ func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("zpa_tenant_id", resp.ZPATenantId)
 
-	if err := d.Set("zpa_server_group", flattenIDExtensionsListIDs(resp.ZPAServerGroup)); err != nil {
+	if err := d.Set("zpa_server_group", flattenZPAServerGroupID(resp.ZPAServerGroup)); err != nil {
+		return err
+	}
+
+	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsID(resp.ZPAAppSegments)); err != nil {
 		return err
 	}
 
@@ -171,9 +174,8 @@ func expandForwardingControlZPAGateway(d *schema.ResourceData) zpa_gateways.ZPAG
 		Description:    d.Get("description").(string),
 		Type:           d.Get("type").(string),
 		ZPATenantId:    d.Get("zpa_tenant_id").(int),
-		ZPAServerGroup: expandIDNameExtensionsSet(d, "zpa_server_group"),
-		ZPAAppSegments: expandIDNameExtensionsSet(d, "zpa_application_segments"),
+		ZPAServerGroup: expandZPAServerGroupID(d, "zpa_server_group"),
+		ZPAAppSegments: expandZPAAppSegmentsID(d, "zpa_app_segments"),
 	}
 	return result
 }
-*/
