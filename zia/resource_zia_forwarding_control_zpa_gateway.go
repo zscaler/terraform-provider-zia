@@ -25,12 +25,12 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					_ = d.Set("rule_id", idInt)
+					_ = d.Set("gateway_id", idInt)
 				} else {
 					resp, err := zClient.zpa_gateways.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						_ = d.Set("rule_id", resp.ID)
+						_ = d.Set("gateway_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -41,6 +41,10 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"gateway_id": {
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"name": {
@@ -67,8 +71,45 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 				Optional:    true,
 				Description: "The ID of the ZPA tenant where Source IP Anchoring is configured",
 			},
-			"zpa_server_group":         setIDsSchemaTypeCustom(intPtr(1), "The ZPA Server Group that is configured for Source IP Anchoring"),
-			"zpa_application_segments": setIDsSchemaTypeCustom(intPtr(1), "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
+			"zpa_server_group": {
+				Type:        schema.TypeList,
+				Required:    true,
+				MaxItems:    1,
+				Description: "The ZPA Server Group that is configured for Source IP Anchoring",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"external_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "ID of the ZPA Gateway.",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the ZPA Gateway.",
+						},
+					},
+				},
+			},
+			"zpa_app_segments": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Name of the application segment.",
+						},
+						"external_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "External ID of the application segment.",
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -85,17 +126,21 @@ func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interfa
 	}
 	log.Printf("[INFO] Created forwarding control zpa gateway request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("id", resp.ID)
-	return resourceFWIPDestinationGroupsRead(d, m)
+	_ = d.Set("gateway_id", resp.ID)
+	return resourceForwardingControlZPAGatewayRead(d, m)
 }
 
 func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	log.Printf("[DEBUG] Current value of gateway_id: %v", d.Get("gateway_id"))
+
+	id, ok := getIntFromResourceData(d, "gateway_id")
+
 	if !ok {
 		return fmt.Errorf("no forwarding control zpa gateway id is set")
 	}
+
 	resp, err := zClient.zpa_gateways.Get(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -110,17 +155,20 @@ func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface
 	log.Printf("[INFO] Getting forwarding control zpa gateway:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("id", resp.ID)
+	_ = d.Set("gateway_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
+	log.Printf("[DEBUG] Type returned from API: %s", resp.Type)
+	if resp.Type == "" {
+		resp.Type = d.Get("type").(string)
+	}
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("zpa_tenant_id", resp.ZPATenantId)
 
-	if err := d.Set("zpa_server_group", flattenZPAServerGroupID(resp.ZPAServerGroup)); err != nil {
+	if err := d.Set("zpa_server_group", flattenZPAServerGroupSimple(resp.ZPAServerGroup)); err != nil {
 		return err
 	}
-
-	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsID(resp.ZPAAppSegments)); err != nil {
+	if err := d.Set("zpa_app_segments", flattenZPAGWAppSegments(resp.ZPAAppSegments)); err != nil {
 		return err
 	}
 
@@ -130,9 +178,12 @@ func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface
 func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "gateway_id")
 	if !ok {
 		log.Printf("[ERROR] forwarding control zpa gateway ID not set: %v\n", id)
+	}
+	if !d.HasChange("type") || d.Get("type") == "" {
+		d.Set("type", "ZPA")
 	}
 	log.Printf("[INFO] Updating zia forwarding control zpa gateway ID: %v\n", id)
 	req := expandForwardingControlZPAGateway(d)
@@ -152,7 +203,7 @@ func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interfa
 func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "id")
+	id, ok := getIntFromResourceData(d, "gateway_id")
 	if !ok {
 		log.Printf("[ERROR] forwarding control zpa gateway not set: %v\n", id)
 	}
@@ -167,15 +218,76 @@ func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interfa
 }
 
 func expandForwardingControlZPAGateway(d *schema.ResourceData) zpa_gateways.ZPAGateways {
-	id, _ := getIntFromResourceData(d, "id")
+	id, _ := getIntFromResourceData(d, "gateway_id")
+	gatewayType, exists := d.GetOk("type")
+	if !exists {
+		gatewayType = "ZPA"
+	}
 	result := zpa_gateways.ZPAGateways{
 		ID:             id,
 		Name:           d.Get("name").(string),
 		Description:    d.Get("description").(string),
-		Type:           d.Get("type").(string),
+		Type:           gatewayType.(string),
 		ZPATenantId:    d.Get("zpa_tenant_id").(int),
-		ZPAServerGroup: expandZPAServerGroupID(d, "zpa_server_group"),
-		ZPAAppSegments: expandZPAAppSegmentsID(d, "zpa_app_segments"),
+		ZPAServerGroup: expandZPAServerGroup(d, "zpa_server_group"),
+		ZPAAppSegments: expandZPAGWAppSegment(d, "zpa_app_segments"),
 	}
 	return result
+}
+
+func expandZPAServerGroup(d *schema.ResourceData, key string) zpa_gateways.ZPAServerGroup {
+	listInterface, exists := d.GetOk(key)
+	if !exists || len(listInterface.([]interface{})) == 0 {
+		return zpa_gateways.ZPAServerGroup{}
+	}
+
+	groupMap := listInterface.([]interface{})[0].(map[string]interface{})
+
+	return zpa_gateways.ZPAServerGroup{
+		ExternalID: groupMap["external_id"].(string),
+		Name:       groupMap["name"].(string),
+	}
+}
+
+func flattenZPAServerGroupSimple(serverGroup zpa_gateways.ZPAServerGroup) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			"name":        serverGroup.Name,
+			"external_id": serverGroup.ExternalID,
+		},
+	}
+}
+
+func expandZPAGWAppSegment(d *schema.ResourceData, key string) []zpa_gateways.ZPAAppSegments {
+	setInterface, exists := d.GetOk(key)
+	if !exists {
+		return nil
+	}
+
+	inputSet := setInterface.(*schema.Set).List()
+	var result []zpa_gateways.ZPAAppSegments
+	for _, item := range inputSet {
+		itemMap := item.(map[string]interface{})
+		name := itemMap["name"].(string)
+		externalID := itemMap["external_id"].(string)
+
+		segment := zpa_gateways.ZPAAppSegments{
+			Name:       name,
+			ExternalID: externalID,
+		}
+		result = append(result, segment)
+	}
+	return result
+}
+
+func flattenZPAGWAppSegments(list []zpa_gateways.ZPAAppSegments) []interface{} {
+	flattenedList := make([]interface{}, 0, len(list))
+	for _, val := range list {
+		r := map[string]interface{}{
+			"name":        val.Name,
+			"external_id": val.ExternalID,
+		}
+		flattenedList = append(flattenedList, r)
+	}
+	return flattenedList
 }

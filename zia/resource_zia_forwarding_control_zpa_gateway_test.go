@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"testing"
 
+	zpa "github.com/zscaler/terraform-provider-zpa"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
@@ -20,32 +22,35 @@ func TestAccResourceForwardingControlZPAGatewayBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ForwardingControlZPAGateway)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck: func() { testAccPreCheck(t) },
+		Providers: map[string]terraform.ResourceProvider{
+			// "zia": zia.Provider(), // Assuming 'zia' is the alias for your primary provider
+			"zpa": zpa.Provider(), // This sets up the secondary provider
+		},
 		CheckDestroy: testAccCheckForwardingControlZPAGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckForwardingControlZPAGatewayConfigure(resourceTypeAndName, generatedName, variable.FowardingControlZPAGWDescription, variable.FowardingControlType),
+				Config: testAccCheckForwardingControlZPAGatewayConfigure(resourceTypeAndName, generatedName, variable.FowardingControlZPAGWDescription, variable.FowardingControlZPAGWType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckForwardingControlZPAGatewayExists(resourceTypeAndName, &groups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlZPAGWDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlZPAGWType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_server_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_application_segments.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_app_segments.#", "1"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckForwardingControlZPAGatewayConfigure(resourceTypeAndName, generatedName, variable.FowardingControlZPAGWDescription, variable.FowardingControlType),
+				Config: testAccCheckForwardingControlZPAGatewayConfigure(resourceTypeAndName, generatedName, variable.FowardingControlZPAGWDescription, variable.FowardingControlZPAGWType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckForwardingControlZPAGatewayExists(resourceTypeAndName, &groups),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlZPAGWDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlZPAGWType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_server_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_application_segments.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "zpa_app_segments.#", "1"),
 				),
 			},
 			// Import test

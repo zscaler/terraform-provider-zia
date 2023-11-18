@@ -8,7 +8,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/zpa_gateways"
 )
 
-func dataForwardingControlZPAGateway() *schema.Resource {
+func dataSourceForwardingControlZPAGateway() *schema.Resource {
 	return &schema.Resource{
 		Read: dataForwardingControlZPAGatewayRead,
 		Schema: map[string]*schema.Schema{
@@ -40,32 +40,18 @@ func dataForwardingControlZPAGateway() *schema.Resource {
 				Description: "The ID of the ZPA tenant where Source IP Anchoring is configured",
 			},
 			"zpa_server_group": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Computed:    true,
 				Description: "The ZPA Server Group that is configured for Source IP Anchoring",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
 						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"external_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -76,27 +62,13 @@ func dataForwardingControlZPAGateway() *schema.Resource {
 				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
 						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"external_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeString,
 							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -167,11 +139,11 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("zpa_tenant_id", resp.ZPATenantId)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 
-		if err := d.Set("zpa_server_group", flattenZPAServerGroupID(resp.ZPAServerGroup)); err != nil {
+		if err := d.Set("zpa_server_group", flattenZPAServerGroup(resp.ZPAServerGroup)); err != nil {
 			return err
 		}
 
-		if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsID(resp.ZPAAppSegments)); err != nil {
+		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return err
 		}
 
@@ -184,4 +156,26 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 	}
 
 	return nil
+}
+
+func flattenZPAServerGroup(group zpa_gateways.ZPAServerGroup) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			"name":        group.Name,
+			"external_id": group.ExternalID,
+		},
+	}
+}
+
+func flattenZPAAppSegments(segments []zpa_gateways.ZPAAppSegments) []map[string]interface{} {
+	flattenedSegments := make([]map[string]interface{}, len(segments))
+
+	for i, segment := range segments {
+		flattenedSegments[i] = map[string]interface{}{
+			"name":        segment.Name,
+			"external_id": segment.ExternalID,
+		}
+	}
+
+	return flattenedSegments
 }
