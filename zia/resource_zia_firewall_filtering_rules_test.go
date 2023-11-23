@@ -223,7 +223,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 4
+	order = 1
 	enable_full_logging = "%s"
 	dest_countries = ["CA", "US", "BR", "BT"]
 	nw_services {
