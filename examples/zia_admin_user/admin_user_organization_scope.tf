@@ -1,6 +1,6 @@
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
-  user_name                       = "John Smith"
+  username                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
   password                        = "AeQ9E5w8B$"
@@ -12,9 +12,7 @@ resource "zia_admin_users" "john_smith" {
   role {
     id = data.zia_admin_roles.super_admin.id
   }
-  admin_scope {
-    type = "ORGANIZATION"
-  }
+  admin_scope_type = "ORGANIZATION"
 }
 
 data "zia_admin_roles" "super_admin" {

@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.5``
+``Last updated: v2.6.6``
 
 ---
+
+## 2.6.6 (November, 23 2023)
+
+### Notes
+
+- Release date: **(November, 23 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #291](https://github.com/zscaler/terraform-provider-zia/pull/291) - Fixed panic with resource `zia_admin_users` due to API changes.
 
 ## 2.6.5 (November, 5 2023)
 

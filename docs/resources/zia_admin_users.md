@@ -10,17 +10,9 @@ description: |-
 
 The **zia_admin_users** resource allows the creation and management of ZIA admin user account created in the Zscaler Internet Access cloud or via the API.
 
-## Example Usage
+## Example Usage - Organization Scope
 
 ```hcl
-data "zia_admin_roles" "super_admin" {
-  name = "Super Admin"
-}
-
-data "zia_department_management" "engineering" {
-  name = "Engineering"
-}
-
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
   user_name                       = "John Smith"
@@ -34,12 +26,104 @@ resource "zia_admin_users" "john_smith" {
   role {
     id = data.zia_admin_roles.super_admin.id
   }
-  admin_scope {
-    type = "DEPARTMENT"
-    scope_entities {
-      id = [data.zia_department_management.engineering.id]
-    }
+  admin_scope_type = "ORGANIZATION"
+}
+
+data "zia_admin_roles" "super_admin" {
+  name = "Super Admin"
+}
+```
+
+## Example Usage - Department Scope
+
+```hcl
+resource "zia_admin_users" "john_smith" {
+  login_name                      = "john.smith@acme.com"
+  user_name                       = "John Smith"
+  email                           = "john.smith@acme.com"
+  is_password_login_allowed       = true
+  password                        = "AeQ9E5w8B$"
+  is_security_report_comm_enabled = true
+  is_service_update_comm_enabled  = true
+  is_product_update_comm_enabled  = true
+  comments                        = "Administrator User"
+  role {
+    id = data.zia_admin_roles.super_admin.id
   }
+  admin_scope_type = "DEPARTMENT"
+    admin_scope_entities {
+        id = [ data.zia_department_management.engineering.id, data.zia_department_management.sales.id ]
+    }
+}
+
+data "zia_admin_roles" "super_admin" {
+  name = "Super Admin"
+}
+
+data "zia_department_management" "engineering" {
+  name = "Engineering"
+}
+```
+
+## Example Usage - Location Scope
+
+```hcl
+resource "zia_admin_users" "john_smith" {
+  login_name                      = "john.smith@acme.com"
+  user_name                       = "John Smith"
+  email                           = "john.smith@acme.com"
+  is_password_login_allowed       = true
+  password                        = "AeQ9E5w8B$"
+  is_security_report_comm_enabled = true
+  is_service_update_comm_enabled  = true
+  is_product_update_comm_enabled  = true
+  comments                        = "Administrator User"
+  role {
+    id = data.zia_admin_roles.super_admin.id
+  }
+  admin_scope_type = "LOCATION"
+    admin_scope_entities {
+        id = [ data.zia_location_management.au_sydney_branch01.id ]
+    }
+}
+
+data "zia_admin_roles" "super_admin" {
+  name = "Super Admin"
+}
+
+data "zia_location_management" "au_sydney_branch01" {
+  name = "AU - Sydney - Branch01"
+}
+```
+
+## Example Usage - Location Group Scope
+
+```hcl
+resource "zia_admin_users" "john_smith" {
+  login_name                      = "john.smith@acme.com"
+  user_name                       = "John Smith"
+  email                           = "john.smith@acme.com"
+  is_password_login_allowed       = true
+  password                        = "AeQ9E5w8B$"
+  is_security_report_comm_enabled = true
+  is_service_update_comm_enabled  = true
+  is_product_update_comm_enabled  = true
+  comments                        = "Administrator User"
+  role {
+    id = data.zia_admin_roles.super_admin.id
+  }
+  admin_scope_type = "LOCATION_GROUP"
+    admin_scope_entities {
+        id = [ data.zia_location_groups.corporate_user_traffic_group.id ]
+    }
+}
+
+data "zia_admin_roles" "super_admin" {
+  name = "Super Admin"
+}
+
+data "zia_location_groups" "corporate_user_traffic_group" {
+  name = "Corporate User Traffic Group"
 }
 ```
 
@@ -71,11 +155,6 @@ The following arguments are supported:
 * `is_security_report_comm_enabled` - (Optional) Communication for Security Report is enabled.
 * `is_service_update_comm_enabled` - (Optional) Communication setting for Service Update.
 
-* `admin_scope` - (Optional) The admin's scope. A scope is required for admins, but not applicable to auditors. This attribute is subject to change.
-  * `scope_group_member_entities` - (Optional) Only applicable for the LOCATION_GROUP admin scope type, in which case this attribute gives the list of ID/name pairs of locations within the location group.
+* `admin_scope_type` - (Optional) The admin's scope. A scope is required for admins, but not applicable to auditors. This attribute is subject to change. Support values are: `ORGANIZATION`, `DEPARTMENT`, `LOCATION`, `LOCATION_GROUP`
+  * `admin_scope_entities` - (Optional) Based on the admin scope type, the entities can be the ID/name pair of departments, locations, or location groups.
     * `id` - (Optional) Identifier that uniquely identifies an entity
-    * `name` - (Optional) The configured name of the entity
-  * `type` - (Optional) The admin scope type. The attribute name is subject to change.
-  * `scope_entities` - (Optional) Based on the admin scope type, the entities can be the ID/name pair of departments, locations, or location groups.
-    * `id` - (Optional) Identifier that uniquely identifies an entity
-    * `name` - (Optional) The configured name of the entity
