@@ -27,6 +27,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationlite"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_settings"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/greinternalipranges"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnelinfo"
@@ -84,6 +85,7 @@ type Client struct {
 	rule_labels                   *rule_labels.Service
 	security_policy_settings      *security_policy_settings.Service
 	user_authentication_settings  *user_authentication_settings.Service
+	sandbox_settings              *sandbox_settings.Service
 }
 
 type Config struct {
@@ -137,6 +139,7 @@ func (c *Config) Client() (*Client, error) {
 		rule_labels:                   rule_labels.New(cli),
 		security_policy_settings:      security_policy_settings.New(cli),
 		user_authentication_settings:  user_authentication_settings.New(cli),
+		sandbox_settings:              sandbox_settings.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

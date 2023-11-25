@@ -75,6 +75,7 @@ func Provider() *schema.Provider {
 			"zia_rule_labels":                                   resourceRuleLabels(),
 			"zia_auth_settings_urls":                            resourceAuthSettingsUrls(),
 			"zia_security_settings":                             resourceSecurityPolicySettings(),
+			"zia_sandbox_behavioral_analysis":                   resourceSandboxSettings(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -120,6 +121,7 @@ func Provider() *schema.Provider {
 			"zia_activation_status":                             dataSourceActivationStatus(),
 			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
+			"zia_sandbox_behavioral_analysis":                   dataSourceSandboxSettings(),
 		},
 	}
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
