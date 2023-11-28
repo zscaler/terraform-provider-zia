@@ -27,7 +27,9 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement/locationlite"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_report"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_settings"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_submission"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/greinternalipranges"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnelinfo"
@@ -86,6 +88,8 @@ type Client struct {
 	security_policy_settings      *security_policy_settings.Service
 	user_authentication_settings  *user_authentication_settings.Service
 	sandbox_settings              *sandbox_settings.Service
+	sandbox_submission            *sandbox_submission.Service
+	sandbox_report                *sandbox_report.Service
 }
 
 type Config struct {
@@ -140,6 +144,8 @@ func (c *Config) Client() (*Client, error) {
 		security_policy_settings:      security_policy_settings.New(cli),
 		user_authentication_settings:  user_authentication_settings.New(cli),
 		sandbox_settings:              sandbox_settings.New(cli),
+		sandbox_submission:            sandbox_submission.New(cli),
+		sandbox_report:                sandbox_report.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

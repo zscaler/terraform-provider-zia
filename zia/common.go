@@ -621,3 +621,23 @@ func reorder(order, id int, resourceType string, getCount func() (int, error), u
 		reorderAll(resourceType, getCount, updateOrder)
 	}
 }
+
+// flattenSandboxRSS converts a slice of SandboxRSS structs to a slice of maps for Terraform.
+// func flattenSandboxRSS(sandboxRSSs []*common.SandboxRSS) []interface{} {
+// 	var results []interface{}
+// 	for _, item := range sandboxRSSs {
+// 		if item != nil {
+// 			result := make(map[string]interface{})
+// 			result["risk"] = item.Risk
+// 			result["signature"] = item.Signature
+
+// 			var sources []interface{}
+// 			for _, src := range item.SignatureSources {
+// 				sources = append(sources, src)
+// 			}
+// 			result["signature_sources"] = sources
+// 			results = append(results, result)
+// 		}
+// 	}
+// 	return results
+// }
