@@ -66,11 +66,6 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 					"ECZPA",
 				}, false),
 			},
-			"zpa_tenant_id": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The ID of the ZPA tenant where Source IP Anchoring is configured",
-			},
 			"zpa_server_group": {
 				Type:        schema.TypeList,
 				Required:    true,
@@ -163,7 +158,6 @@ func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface
 		resp.Type = d.Get("type").(string)
 	}
 	_ = d.Set("type", resp.Type)
-	_ = d.Set("zpa_tenant_id", resp.ZPATenantId)
 
 	if err := d.Set("zpa_server_group", flattenZPAServerGroupSimple(resp.ZPAServerGroup)); err != nil {
 		return err
@@ -228,7 +222,6 @@ func expandForwardingControlZPAGateway(d *schema.ResourceData) zpa_gateways.ZPAG
 		Name:           d.Get("name").(string),
 		Description:    d.Get("description").(string),
 		Type:           gatewayType.(string),
-		ZPATenantId:    d.Get("zpa_tenant_id").(int),
 		ZPAServerGroup: expandZPAServerGroup(d, "zpa_server_group"),
 		ZPAAppSegments: expandZPAGWAppSegment(d, "zpa_app_segments"),
 	}
