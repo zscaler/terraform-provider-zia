@@ -88,7 +88,7 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 			},
 			"zpa_app_segments": {
 				Type:        schema.TypeSet,
-				Optional:    true,
+				Required:    true,
 				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

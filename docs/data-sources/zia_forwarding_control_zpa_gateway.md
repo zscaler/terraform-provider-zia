@@ -36,3 +36,6 @@ In addition to all arguments above, the following attributes are exported:
   * `name` - (string) - The configured name of the entity
 * `last_modified_time` - (int) - Timestamp when the ZPA gateway was last modified
 * `type` - (string) - Indicates whether the ZPA gateway is configured for Zscaler Internet Access (using option ZPA) or Zscaler Cloud Connector (using option ECZPA)
+* `zpa_server_group` - () - The ZPA Server Group that is configured for Source IP Anchoring
+  * `external_id` - (string) An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.
+  * `name` - (string) The configured name of the entity
