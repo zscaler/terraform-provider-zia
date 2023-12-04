@@ -57,8 +57,15 @@ const (
 
 // Forwarding Control ZPA Gateway
 const (
-	FowardingControlZPAGWDescription = "this is an acceptance test"
-	FowardingControlZPAGWType        = "ZPA"
+	FowardingControlDescription = "this is an acceptance test"
+	FowardingControlType        = "FORWARDING"
+	FowardingControlState       = "ENABLED"
+)
+
+// Forwarding Control ZPA Gateway
+const (
+	FowardingControlUpdateDescription = "this is an updated acceptance test"
+	FowardingControlUpdateState       = "ENABLED"
 )
 
 // Traffic Forwarding Static IP resource/datasource

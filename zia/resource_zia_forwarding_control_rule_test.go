@@ -36,43 +36,39 @@ func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
 		CheckDestroy: testAccCheckForwardingControlRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
+				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FowardingControlDescription, variable.FowardingControlType, variable.FWRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckForwardingControlRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlState),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
+				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FowardingControlUpdateDescription, variable.FowardingControlType, variable.FowardingControlUpdateState, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckForwardingControlRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlUpdateDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlUpdateState),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
 			},
 		},
@@ -127,6 +123,7 @@ func testAccCheckForwardingControlRuleExists(resource string, rule *forwarding_r
 
 		var receivedRule *forwarding_rules.ForwardingRules
 
+		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
 			receivedRule, innerErr = apiClient.forwarding_rules.Get(id)
@@ -145,7 +142,7 @@ func testAccCheckForwardingControlRuleExists(resource string, rule *forwarding_r
 	}
 }
 
-func testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL string) string {
+func testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, name, description, ruleType, state string, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL string) string {
 	return fmt.Sprintf(`
 // rule label resource
 %s
@@ -156,7 +153,7 @@ func testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedNa
 // destination ip group resource
 %s
 
-// firewall filtering rule resource
+// forwarding control rule resource
 %s
 
 data "%s" "%s" {
@@ -167,7 +164,7 @@ data "%s" "%s" {
 		ruleLabelHCL,
 		sourceIPGroupHCL,
 		dstIPGroupHCL,
-		getForwardingControlRuleResourceHCL(generatedName, name, description, action, state, enableLogging, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName),
+		getForwardingControlRuleResourceHCL(generatedName, name, description, ruleType, state, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName),
 
 		// data source variables
 		resourcetype.ForwardingControlRule,
@@ -176,7 +173,7 @@ data "%s" "%s" {
 	)
 }
 
-func getForwardingControlRuleResourceHCL(generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
+func getForwardingControlRuleResourceHCL(generatedName, name, description, ruleType, state string, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
 	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
@@ -189,14 +186,6 @@ data "zia_location_groups" "sdwan_can" {
 
 data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
-}
-
-data "zia_firewall_filtering_time_window" "work_hours" {
-	name = "Work Hours"
-}
-
-data "zia_firewall_filtering_time_window" "off_hours" {
-	name = "Off Hours"
 }
 
 data "zia_department_management" "engineering" {
@@ -218,10 +207,11 @@ data "zia_group_management" "marketing" {
 resource "%s" "%s" {
 	name = "tf-acc-test-%s"
 	description = "%s"
-	action = "%s"
+	type = "%s"
 	state = "%s"
-	order = 4
-	enable_full_logging = "%s"
+	order = 1
+	rank = 7
+    forward_method = "DIRECT"
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
 	}
@@ -233,9 +223,6 @@ resource "%s" "%s" {
 	}
 	departments {
 		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
-	}
-	time_windows {
-		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 	labels {
 		id = ["${%s.id}"]
@@ -254,9 +241,8 @@ resource "%s" "%s" {
 		generatedName,
 		name,
 		description,
-		action,
+		ruleType,
 		state,
-		strconv.FormatBool(enableLogging),
 		ruleLabelTypeAndName,
 		sourceIPGroupTypeAndName,
 		dstIPGroupTypeAndName,

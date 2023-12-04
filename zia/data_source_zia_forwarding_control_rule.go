@@ -67,13 +67,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -92,13 +85,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -119,13 +105,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -144,13 +123,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -171,13 +143,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -196,44 +161,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"last_modified_time": {
-				Type:        schema.TypeInt,
-				Computed:    true,
-				Description: "Timestamp when the rule was last modified. This field is not applicable for POST or PUT request.",
-			},
-			"last_modified_by": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Admin user that last modified the rule. This field is not applicable for POST or PUT request.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -260,13 +187,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -285,13 +205,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -336,13 +249,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -361,13 +267,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -388,13 +287,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -413,13 +305,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -446,13 +331,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Computed:    true,
 							Description: "The configured name of the entity",
 						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
 					},
 				},
 			},
@@ -470,39 +348,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"time_windows": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The time interval at which the forwarding rule applies",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -522,13 +367,6 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -550,14 +388,9 @@ func dataSourceForwardingControlRule() *schema.Resource {
 							Description: "The name of the Application Segment",
 						},
 						"external_id": {
-							Type:        schema.TypeInt,
+							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "Indicates the external ID. Applicable only when this reference is of an external entity.",
-						},
-						"zpa_tenant_id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "ID of the ZPA tenant where the Application Segment is configured",
 						},
 					},
 				},
@@ -749,7 +582,7 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("rank", resp.Rank)
 		_ = d.Set("state", resp.State)
 		_ = d.Set("type", resp.Type)
-		_ = d.Set("last_modified_time", resp.LastModifiedTime)
+		// _ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("src_ips", resp.SrcIps)
 		_ = d.Set("dest_addresses", resp.DestAddresses)
 		_ = d.Set("dest_ip_categories", resp.DestIpCategories)
@@ -779,14 +612,6 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		}
 
 		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
-			return err
-		}
-
-		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
-			return err
-		}
-
-		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 			return err
 		}
 
@@ -822,11 +647,11 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 
-		if err := d.Set("proxy_gateway", flattenIDNameExtensions(resp.ProxyGateway)); err != nil {
+		if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
 			return err
 		}
 
-		if err := d.Set("zpa_gateway", flattenIDNameExtensions(resp.ZPAGateway)); err != nil {
+		if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
 			return err
 		}
 
@@ -850,7 +675,7 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 	} else {
-		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any forwarding rule with name '%s' or id '%d'", name, id)
 	}
 
 	return nil
@@ -860,10 +685,9 @@ func flattenZPAAppSegments(list []forwarding_rules.ZPAAppSegments) []interface{}
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
 		r := map[string]interface{}{
-			"id":            val.ID,
-			"name":          val.Name,
-			"external_id":   val.ExternalID,
-			"zpa_tenant_id": val.ZPATenantId,
+			"id":          val.ID,
+			"name":        val.Name,
+			"external_id": val.ExternalID,
 		}
 		flattenedList[i] = r
 	}
@@ -889,10 +713,11 @@ func flattenZPAApplicationSegmentGroups(list []forwarding_rules.ZPAApplicationSe
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
 		r := map[string]interface{}{
-			"id":      val.ID,
-			"name":    val.Name,
-			"zpa_id":  val.ZPAID,
-			"deleted": val.Deleted,
+			"id":                     val.ID,
+			"name":                   val.Name,
+			"zpa_id":                 val.ZPAID,
+			"deleted":                val.Deleted,
+			"zpa_app_segments_count": val.ZPAAppSegmentsCount,
 		}
 		flattenedList[i] = r
 	}

@@ -138,32 +138,3 @@ func validateDeviceTrustLevels() schema.SchemaValidateFunc {
 var supportedDeviceTrustLevels = []string{
 	"ANY", "UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
 }
-
-func validateForwardMethodAttrs(d *schema.ResourceData) error {
-	forwardMethod := d.Get("forward_method").(string)
-
-	switch forwardMethod {
-	case "ZPA":
-		if _, ok := d.GetOk("zpa_app_segments"); !ok {
-			return fmt.Errorf("zpa_app_segments must be set when forward_method is 'ZPA'")
-		}
-		if _, ok := d.GetOk("zpa_gateway"); !ok {
-			return fmt.Errorf("zpa_gateway must be set when forward_method is 'ZPA'")
-		}
-	case "ECZPA":
-		if _, ok := d.GetOk("zpa_application_segments"); !ok {
-			return fmt.Errorf("zpa_application_segments must be set when forward_method is 'ECZPA'")
-		}
-		if _, ok := d.GetOk("zpa_application_segment_groups"); !ok {
-			return fmt.Errorf("zpa_application_segment_groups must be set when forward_method is 'ECZPA'")
-		}
-	case "PROXYCHAIN":
-		if _, ok := d.GetOk("proxy_gateway"); !ok {
-			return fmt.Errorf("proxy_gateway must be set when forward_method is 'PROXYCHAIN'")
-		}
-	default:
-		return fmt.Errorf("unsupported forward_method: %s", forwardMethod)
-	}
-
-	return nil
-}
