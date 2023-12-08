@@ -14,6 +14,8 @@ on:
         required: true
       ZIA_CLOUD:
         required: true
+      ZIA_SANDBOX_TOKEN:
+        required: true
       ZIA_ACC_TEST_FORCE_SWEEPERS:
         required: true
       TF_ACC:
@@ -76,5 +78,6 @@ jobs:
           ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
           ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
           ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+          ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
           TF_ACC: ${{ secrets.TF_ACC }}
