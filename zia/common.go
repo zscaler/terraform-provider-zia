@@ -385,8 +385,8 @@ func getURLCategories() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "List of URL categories for which rule must be applied",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringCategories(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringCategories(),
 		},
 		Optional: true,
 	}
@@ -394,10 +394,10 @@ func getURLCategories() *schema.Schema {
 
 func getSuperCategories() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Description:  "Super Category of the URL category. This field is required when creating custom URL categories.",
-		ValidateFunc: validateURLSuperCategories(),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Super Category of the URL category. This field is required when creating custom URL categories.",
+		ValidateDiagFunc: validateURLSuperCategories(),
 	}
 }
 
@@ -406,8 +406,8 @@ func getDeviceTrustLevels() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation.",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateDeviceTrustLevels(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateDeviceTrustLevels(),
 		},
 		Optional: true,
 		ForceNew: true,
@@ -419,8 +419,8 @@ func getURLRequestMethods() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringRequestMethods(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringRequestMethods(),
 		},
 		Optional: true,
 	}
@@ -433,29 +433,29 @@ func getURLProtocols() *schema.Schema {
 		Required:    true,
 		MinItems:    1,
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringProtocols(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringProtocols(), // Use ValidateDiagFunc here
 		},
 	}
 }
 
 func getLocationManagementCountries() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		ValidateFunc: validateLocationManagementCountries(),
-		Description:  "Supported Countries",
-		Optional:     true,
-		Computed:     true,
+		Type:             schema.TypeString,
+		ValidateDiagFunc: validateLocationManagementCountries(),
+		Description:      "Supported Countries",
+		Optional:         true,
+		Computed:         true,
 	}
 }
 
 func getLocationManagementTimeZones() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		ValidateFunc: validateLocationManagementTimeZones(),
-		Description:  "Timezone of the location. If not specified, it defaults to GMT.",
-		Optional:     true,
-		Computed:     true,
+		Type:             schema.TypeString,
+		ValidateDiagFunc: validateLocationManagementTimeZones(),
+		Description:      "Timezone of the location. If not specified, it defaults to GMT.",
+		Optional:         true,
+		Computed:         true,
 	}
 }
 
@@ -477,8 +477,8 @@ func getCloudFirewallNwApplications() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "User-defined network service applications on which the rule is applied. If not set, the rule is not restricted to a specific network service application.",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateCloudFirewallNwApplications(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateCloudFirewallNwApplications(),
 		},
 		Optional: true,
 		Computed: true,
@@ -487,10 +487,10 @@ func getCloudFirewallNwApplications() *schema.Schema {
 
 func getCloudFirewallNwServicesTag() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		ValidateFunc: validateCloudFirewallNwServicesTag(),
-		Optional:     true,
-		Computed:     true,
+		Type:             schema.TypeString,
+		ValidateDiagFunc: validateCloudFirewallNwServicesTag(),
+		Optional:         true,
+		Computed:         true,
 	}
 }
 
@@ -499,8 +499,8 @@ func getDLPRuleFileTypes(desc string) *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "The list of file types to which the DLP policy rule must be applied.",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateDLPRuleFileTypes(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateDLPRuleFileTypes(),
 		},
 		Optional: true,
 		Computed: true,
@@ -550,7 +550,7 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
+	ticker := time.NewTicker(time.Second * 15) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -584,7 +584,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 10)
 		}
 	}
 }
