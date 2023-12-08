@@ -35,7 +35,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope_entities.#", "1"),
 				),
 			},
 
@@ -49,7 +49,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", rPassword+("Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope_entities.#", "1"),
 				),
 			},
 		},
@@ -118,6 +118,14 @@ data "zia_admin_roles" "super_admin"{
 	name = "Super Admin"
 }
 
+data "zia_department_management" "engineering" {
+	name = "Engineering"
+  }
+
+  data "zia_department_management" "sales" {
+	name = "Sales"
+  }
+
 resource "%s" "%s" {
 	login_name                      = "%s@bd-hashicorp.com"
 	email                           = "%s@bd-hashicorp.com"
@@ -131,9 +139,11 @@ resource "%s" "%s" {
 	role {
 		id = data.zia_admin_roles.super_admin.id
 	}
-	admin_scope {
-		type = "ORGANIZATION"
-	}
+    admin_scope_type = "DEPARTMENT"
+
+    admin_scope_entities {
+        id = [ data.zia_department_management.engineering.id, data.zia_department_management.sales.id ]
+    }
 }
 
 data "%s" "%s" {
