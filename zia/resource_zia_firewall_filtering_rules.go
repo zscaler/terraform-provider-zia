@@ -152,7 +152,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
 			"dest_countries":        getDestinationCountries(),
-			"nw_applications":       getNwApplications(),
+			"nw_applications":       getCloudFirewallNwApplications(),
 		},
 	}
 }

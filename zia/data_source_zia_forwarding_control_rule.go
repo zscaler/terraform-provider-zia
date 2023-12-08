@@ -588,7 +588,6 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("dest_ip_categories", resp.DestIpCategories)
 		_ = d.Set("dest_countries", resp.DestCountries)
 		_ = d.Set("res_categories", resp.ResCategories)
-		_ = d.Set("nw_applications", resp.NwApplications)
 		_ = d.Set("zpa_broker_rule", resp.ZPABrokerRule)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
@@ -652,14 +651,6 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		}
 
 		if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
-			return err
-		}
-
-		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return err
-		}
-
-		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
 			return err
 		}
 

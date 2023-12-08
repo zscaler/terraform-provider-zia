@@ -160,15 +160,11 @@ func resourceForwardingControlRule() *schema.Resource {
 			"labels":                         setIDsSchemaTypeCustom(intPtr(1), "Labels that are applicable to the rule"),
 			"nw_application_groups":          setIDsSchemaTypeCustom(nil, "User-defined network service application groups to which the rule applied. If not set, the rule is not restricted to a specific network service application group."),
 			"app_service_groups":             setIDsSchemaTypeCustom(nil, "list of application service groups"),
-			"time_windows":                   setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
-			"device_groups":                  setIDsSchemaTypeCustom(nil, "Name-ID pairs of device groups for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. If no value is set, this field is ignored during the policy evaluation."),
-			"devices":                        setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which the rule must be applied. Specifies devices that are managed using Zscaler Client Connector. If no value is set, this field is ignored during the policy evaluation."),
 			"proxy_gateway":                  setIdNameSchemaCustom(1, "The proxy gateway for which the rule is applicable. This field is applicable only for the Proxy Chaining forwarding method."),
 			"zpa_gateway":                    setIdNameSchemaCustom(1, "The ZPA Server Group for which this rule is applicable. Only the Server Groups that are associated with the selected Application Segments are allowed. This field is applicable only for the ZPA forwarding method."),
 			"zpa_app_segments":               setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"zpa_application_segments":       setIDsSchemaTypeCustom(intPtr(255), "List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ECZPA forwarding method (used for Zscaler Cloud Connector)."),
 			"zpa_application_segment_groups": setIDsSchemaTypeCustom(intPtr(255), "List of ZPA Application Segment Groups for which this rule is applicable. This field is applicable only for the ECZPA forwarding method (used for Zscaler Cloud Connector)."),
-			"nw_applications":                getNwApplications(),
 			"dest_countries":                 getDestinationCountries(),
 		},
 	}
@@ -280,7 +276,6 @@ func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) er
 	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
 	_ = d.Set("dest_countries", processedDestCountries)
 	_ = d.Set("res_categories", resp.ResCategories)
-	_ = d.Set("nw_applications", resp.NwApplications)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
@@ -303,10 +298,6 @@ func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return err
-	}
-
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
 		return err
 	}
 
@@ -355,14 +346,6 @@ func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) er
 	}
 
 	if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
-		return err
-	}
-
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
-		return err
-	}
-
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
 		return err
 	}
 
@@ -444,22 +427,18 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		SrcIps:              SetToStringList(d, "src_ips"),
 		DestAddresses:       SetToStringList(d, "dest_addresses"),
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
-		NwApplications:      SetToStringList(d, "nw_applications"),
 		DestCountries:       processedDestCountries,
 		Locations:           expandIDNameExtensionsSet(d, "locations"),
 		LocationsGroups:     expandIDNameExtensionsSet(d, "location_groups"),
 		Departments:         expandIDNameExtensionsSet(d, "departments"),
 		Groups:              expandIDNameExtensionsSet(d, "groups"),
 		Users:               expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:         expandIDNameExtensionsSet(d, "time_windows"),
 		SrcIpGroups:         expandIDNameExtensionsSet(d, "src_ip_groups"),
 		DestIpGroups:        expandIDNameExtensionsSet(d, "dest_ip_groups"),
 		NwServices:          expandIDNameExtensionsSet(d, "nw_services"),
 		AppServiceGroups:    expandIDNameExtensionsSet(d, "app_service_groups"),
 		NwServiceGroups:     expandIDNameExtensionsSet(d, "nw_service_groups"),
 		NwApplicationGroups: expandIDNameExtensionsSet(d, "nw_application_groups"),
-		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:             expandIDNameExtensionsSet(d, "devices"),
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		ECGroups:            expandIDNameExtensionsSet(d, "ec_groups"),
 		ProxyGateway:        expandIDNameSet(d, "proxy_gateway"),
