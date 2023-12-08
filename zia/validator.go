@@ -5,6 +5,8 @@ import (
 
 	"github.com/biter777/countries"
 	"github.com/fabiotavarespr/iso3166"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -118,12 +120,60 @@ var supportedCloudFirewallNwServicesTag = []string{
 	"ICMP_ANY", "UDP_ANY", "TCP_ANY", "OTHER_NETWORK_SERVICE", "DNS", "NETBIOS", "FTP", "GNUTELLA", "H_323", "HTTP", "HTTPS", "IKE", "IMAP", "ILS", "IKE_NAT", "IRC", "LDAP", "QUIC", "TDS", "NETMEETING", "NFS", "NTP", "SIP", "SNMP", "SMB", "SMTP", "SSH", "SYSLOG", "TELNET", "TRACEROUTE", "POP3", "PPTP", "RADIUS", "REAL_MEDIA", "RTSP", "VNC", "WHOIS", "KERBEROS_SEC", "TACACS", "SNMPTRAP", "NMAP", "RSYNC", "L2TP", "HTTP_PROXY", "PC_ANYWHERE", "MSN", "ECHO", "AIM", "IDENT", "YMSG", "SCCP", "MGCP_UA", "MGCP_CA", "VDO_LIVE", "OPENVPN", "TFTP", "FTPS_IMPLICIT", "ZSCALER_PROXY_NW_SERVICES", "GRE_PROTOCOL", "ESP_PROTOCOL", "DHCP",
 }
 
-func validateCloudFirewallNwServicesTag() schema.SchemaValidateFunc {
-	return validation.StringInSlice(supportedCloudFirewallNwServicesTag, false)
+func validateCloudFirewallNwServicesTag() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for Cloud Firewall NW Services Tags validation",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedCloudFirewallNwServicesTag, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
 }
 
-func validateDLPRuleFileTypes() schema.SchemaValidateFunc {
-	return validation.StringInSlice(supportedDLPRuleFileTypes, false)
+func validateDLPRuleFileTypes() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for DLP Rule File Types validation",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedDLPRuleFileTypes, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
 }
 
 var supportedDLPRuleFileTypes = []string{
