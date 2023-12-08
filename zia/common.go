@@ -509,13 +509,13 @@ func getDestinationCountries() *schema.Schema {
 	}
 }
 
-func getNwApplications() *schema.Schema {
+func getCloudFirewallNwApplications() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "User-defined network service applications to which the rule applies. If not set, the rule is not restricted to a specific network service application.",
 		Elem: &schema.Schema{
 			Type:         schema.TypeString,
-			ValidateFunc: validateNwApplications(),
+			ValidateFunc: validateCloudFirewallNwApplications(),
 		},
 		Optional: true,
 		Computed: true,

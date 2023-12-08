@@ -1,8 +1,6 @@
 package zia
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
@@ -203,8 +200,10 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		start := time.Now()
+	timeout := d.Timeout(schema.TimeoutCreate)
+	start := time.Now()
+
+	for {
 		dlpWebRulesLock.Lock()
 		if dlpWebStartingOrder == 0 {
 			list, _ := zClient.dlp_web_rules.GetAll()
@@ -221,14 +220,20 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		startWithoutLocking := time.Now()
 		order := req.Order
 		req.Order = dlpWebStartingOrder
+
 		resp, err := zClient.dlp_web_rules.Create(&req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
-				return resource.RetryableError(errors.New("expected resource to be created but was not"))
+				if time.Since(start) < timeout {
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
+			return fmt.Errorf("error creating resource: %s", err)
 		}
-		log.Printf("[INFO] Created zia web dlp rule request.  took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+
+		log.Printf("[INFO] Created zia web dlp rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+
 		reorder(order, resp.ID, "dlp_web_rules", func() (int, error) {
 			list, err := zClient.dlp_web_rules.GetAll()
 			return len(list), err
@@ -241,17 +246,24 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 			_, err = zClient.dlp_web_rules.Update(id, rule)
 			return err
 		})
+
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
 		err = resourceDlpWebRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			if time.Since(start) < timeout {
+				time.Sleep(5 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		} else {
 			markOrderRuleAsDone(resp.ID, "dlp_web_rules")
-			return nil
+			break
 		}
-	})
+	}
+
+	return nil
 }
 
 func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
@@ -373,14 +385,22 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 			return nil
 		}
 	}
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	start := time.Now()
+
+	for {
 		_, err := zClient.dlp_web_rules.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
+				if time.Since(start) < timeout {
+					time.Sleep(5 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
+			return fmt.Errorf("error updating resource: %s", err)
 		}
+
 		reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
 			list, err := zClient.dlp_web_rules.GetAll()
 			return len(list), err
@@ -393,14 +413,21 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 			_, err = zClient.dlp_web_rules.Update(id, rule)
 			return err
 		})
+
 		err = resourceDlpWebRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
+			if time.Since(start) < timeout {
+				time.Sleep(10 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		} else {
 			markOrderRuleAsDone(req.ID, "dlp_web_rules")
-			return nil
+			break
 		}
-	})
+	}
+
+	return nil
 }
 
 func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {

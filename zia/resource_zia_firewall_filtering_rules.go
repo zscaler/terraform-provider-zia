@@ -1,7 +1,6 @@
 package zia
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -11,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
@@ -76,9 +74,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeInt,
+				Optional:    true,
 				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
 			"rank": {
@@ -175,14 +172,17 @@ func validatRule(req filteringrules.FirewallFilteringRules) error {
 
 func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
+
 	if err := validatRule(req); err != nil {
 		return err
 	}
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		start := time.Now()
+
+	timeout := d.Timeout(schema.TimeoutCreate)
+	start := time.Now()
+
+	for {
 		firewallFilteringLock.Lock()
 		if firewallFilteringStartingOrder == 0 {
 			list, _ := zClient.filteringrules.GetAll()
@@ -197,20 +197,25 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		}
 		firewallFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
+
 		order := req.Order
 		req.Order = firewallFilteringStartingOrder
 		resp, err := zClient.filteringrules.Create(&req)
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
-				return resource.NonRetryableError(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err))
-			}
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
-				return resource.RetryableError(errors.New("expected resource to be created but was not"))
+				if reg.MatchString(err.Error()) {
+					return fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err)
+				}
+				if time.Since(start) < timeout {
+					log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
+			return fmt.Errorf("error creating resource: %s", err)
 		}
+
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
 			list, err := zClient.filteringrules.GetAll()
@@ -230,12 +235,17 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 
 		err = resourceFirewallFilteringRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
-		} else {
-			markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
-			return nil
+			if time.Since(start) < timeout {
+				time.Sleep(10 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		}
-	})
+		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
+		break
+	}
+
+	return nil
 }
 
 func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
@@ -245,6 +255,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	if !ok {
 		return fmt.Errorf("no zia firewall filtering rule id is set")
 	}
+
 	resp, err := zClient.filteringrules.Get(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -254,6 +265,11 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		}
 
 		return err
+	}
+
+	processedDestCountries := make([]string, len(resp.DestCountries))
+	for i, country := range resp.DestCountries {
+		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
 	}
 
 	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
@@ -270,7 +286,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("src_ips", resp.SrcIps)
 	_ = d.Set("dest_addresses", resp.DestAddresses)
 	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
-	_ = d.Set("dest_countries", resp.DestCountries)
+	_ = d.Set("dest_countries", processedDestCountries)
 	_ = d.Set("nw_applications", resp.NwApplications)
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
@@ -338,7 +354,8 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] firewall filteringrule ID not set: %v\n", id)
+		log.Printf("[ERROR] firewall filtering rule ID not set: %v\n", id)
+		return fmt.Errorf("firewall filtering rule ID not set")
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
@@ -352,15 +369,22 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		}
 	}
 
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	start := time.Now()
+
+	for {
 		_, err := zClient.filteringrules.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
+				if time.Since(start) < timeout {
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
+			return fmt.Errorf("error updating resource: %s", err)
 		}
+
 		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
 			list, err := zClient.filteringrules.GetAll()
 			return len(list), err
@@ -373,14 +397,20 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 			_, err = zClient.filteringrules.Update(id, rule)
 			return err
 		})
+
 		err = resourceFirewallFilteringRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
-		} else {
-			markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
-			return nil
+			if time.Since(start) < timeout {
+				time.Sleep(10 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		}
-	})
+		markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
+		break
+	}
+
+	return nil
 }
 
 func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
@@ -415,16 +445,17 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	}
 
 	result := filteringrules.FirewallFilteringRules{
-		ID:                  id,
-		Name:                d.Get("name").(string),
-		Order:               d.Get("order").(int),
-		Rank:                d.Get("rank").(int),
-		Action:              d.Get("action").(string),
-		State:               d.Get("state").(string),
-		Description:         d.Get("description").(string),
-		SrcIps:              SetToStringList(d, "src_ips"),
-		DestAddresses:       SetToStringList(d, "dest_addresses"),
-		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
+		ID:               id,
+		Name:             d.Get("name").(string),
+		Order:            d.Get("order").(int),
+		Rank:             d.Get("rank").(int),
+		Action:           d.Get("action").(string),
+		State:            d.Get("state").(string),
+		Description:      d.Get("description").(string),
+		SrcIps:           SetToStringList(d, "src_ips"),
+		DestAddresses:    SetToStringList(d, "dest_addresses"),
+		DestIpCategories: SetToStringList(d, "dest_ip_categories"),
+		// DestCountries:    SetToStringList(d, "dest_countries"),
 		DestCountries:       processedDestCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),

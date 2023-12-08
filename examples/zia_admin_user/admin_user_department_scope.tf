@@ -11,12 +11,10 @@ resource "zia_admin_users" "john_smith" {
   role {
     id = data.zia_admin_roles.super_admin.id
   }
-  admin_scope {
-    type = "DEPARTMENT"
-    scope_entities {
-      id = [data.zia_department_management.engineering.id]
+  admin_scope_type = "DEPARTMENT"
+    admin_scope_entities {
+        id = [ data.zia_department_management.engineering.id, data.zia_department_management.sales.id ]
     }
-  }
 }
 
 data "zia_admin_roles" "super_admin" {
@@ -26,3 +24,8 @@ data "zia_admin_roles" "super_admin" {
 data "zia_department_management" "engineering" {
   name = "Engineering"
 }
+
+data "zia_department_management" "sales" {
+  name = "Sales"
+}
+

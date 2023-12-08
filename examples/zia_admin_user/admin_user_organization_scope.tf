@@ -12,9 +12,7 @@ resource "zia_admin_users" "john_smith" {
   role {
     id = data.zia_admin_roles.super_admin.id
   }
-  admin_scope {
-    type = "ORGANIZATION"
-  }
+  admin_scope_type = "ORGANIZATION"
 }
 
 data "zia_admin_roles" "super_admin" {
