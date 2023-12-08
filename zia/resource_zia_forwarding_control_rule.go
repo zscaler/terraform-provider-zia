@@ -174,84 +174,56 @@ func resourceForwardingControlRule() *schema.Resource {
 	}
 }
 
-func validateForwardMethodAttrs(d *schema.ResourceData) error {
+func validateForwardingRuleConstraints(d *schema.ResourceData) error {
 	forwardMethod := d.Get("forward_method").(string)
-
-	switch forwardMethod {
-	case "ZPA":
-		if _, ok := d.GetOk("zpa_app_segments"); !ok {
-			return fmt.Errorf("zpa_app_segments must be set when forward_method is 'ZPA'")
-		}
-		if _, ok := d.GetOk("zpa_gateway"); !ok {
-			return fmt.Errorf("zpa_gateway must be set when forward_method is 'ZPA'")
-		}
-	case "ECZPA":
-		if _, ok := d.GetOk("zpa_application_segments"); !ok {
-			return fmt.Errorf("zpa_application_segments must be set when forward_method is 'ECZPA'")
-		}
-		if _, ok := d.GetOk("zpa_application_segment_groups"); !ok {
-			return fmt.Errorf("zpa_application_segment_groups must be set when forward_method is 'ECZPA'")
-		}
-	case "PROXYCHAIN":
-		if _, ok := d.GetOk("proxy_gateway"); !ok {
-			return fmt.Errorf("proxy_gateway must be set when forward_method is 'PROXYCHAIN'")
-		}
-	default:
-		return fmt.Errorf("unsupported forward_method: %s", forwardMethod)
-	}
-
-	return nil
-}
-
-func validateForwardingRuleAttributes(d *schema.ResourceData) error {
 	ruleType := d.Get("type").(string)
-	forwardMethod := d.Get("forward_method").(string)
 
-	// Define a helper function to check if a given attribute is set
 	isSet := func(attr string) bool {
 		_, ok := d.GetOk(attr)
 		return ok
 	}
 
-	switch {
-	case ruleType == "FORWARDING" && forwardMethod == "DIRECT":
-		for _, attr := range []string{"zpa_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups", "proxy_gateway"} {
-			if isSet(attr) {
-				return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'DIRECT'", attr)
+	if ruleType == "FORWARDING" {
+		switch forwardMethod {
+		case "ZPA":
+			requiredAttrs := []string{"zpa_app_segments", "zpa_gateway"}
+			var missingAttrs []string
+			for _, attr := range requiredAttrs {
+				if !isSet(attr) {
+					missingAttrs = append(missingAttrs, attr)
+				}
 			}
-		}
+			if len(missingAttrs) > 0 {
+				return fmt.Errorf("the following attributes are required for ZPA forwarding: %v", missingAttrs)
+			}
 
-	case ruleType == "FORWARDING" && forwardMethod == "ZPA":
-		validAttrs := map[string]bool{
-			"zpa_gateway": true, "zpa_app_segments": true, "zpa_application_segments": true,
-			"zpa_application_segment_groups": true, "locations": true, "location_groups": true,
-			"departments": true, "groups": true, "users": true, "src_ip_groups": true, "appServiceGroups": true,
-		}
-		allAttrs := []string{
-			// list all possible attributes here
-			"zpa_gateway", "zpa_app_segments", "zpa_application_segments",
-			"zpa_application_segment_groups", "locations", "location_groups",
-			"departments", "groups", "users", "src_ip_groups", "appServiceGroups",
-		}
+		case "DIRECT":
+			prohibitedAttrs := []string{"zpa_gateway", "proxy_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
+			for _, attr := range prohibitedAttrs {
+				if isSet(attr) {
+					return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'DIRECT'", attr)
+				}
+			}
 
-		// Check for invalid attribute combinations
-		for _, attr := range allAttrs {
-			if !validAttrs[attr] && isSet(attr) {
-				return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'ZPA'", attr)
+		case "PROXYCHAIN":
+			if !isSet("proxy_gateway") {
+				return fmt.Errorf("proxy gateway is mandatory for Proxy Chaining forwarding")
+			}
+			prohibitedAttrs := []string{"zpa_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
+			for _, attr := range prohibitedAttrs {
+				if isSet(attr) {
+					return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'PROXYCHAIN'", attr)
+				}
 			}
 		}
 	}
 
-	return nil
+	return nil // Return nil to indicate no error
 }
 
 func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) error {
 
-	if err := validateForwardingRuleAttributes(d); err != nil {
-		return err
-	}
-
-	if err := validateForwardMethodAttrs(d); err != nil {
+	if err := validateForwardingRuleConstraints(d); err != nil {
 		return err
 	}
 
@@ -409,11 +381,7 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 		log.Printf("[ERROR] forwarding control rule ID not set: %v\n", id)
 	}
 
-	if err := validateForwardingRuleAttributes(d); err != nil {
-		return err
-	}
-
-	if err := validateForwardMethodAttrs(d); err != nil {
+	if err := validateForwardingRuleConstraints(d); err != nil {
 		return err
 	}
 
