@@ -11,12 +11,10 @@ resource "zia_admin_users" "john_smith" {
   role {
     id = data.zia_admin_roles.super_admin.id
   }
-  admin_scope {
-    type = "LOCATION"
-    scope_entities {
-      id = [ data.zia_location_management.au_sydney_branch01.id ]
+  admin_scope_type = "LOCATION"
+    admin_scope_entities {
+        id = [ data.zia_location_management.au_sydney_branch01.id ]
     }
-  }
 }
 
 data "zia_admin_roles" "super_admin" {

@@ -41,6 +41,10 @@ func resourceLocationManagement() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"location_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -77,7 +81,7 @@ func resourceLocationManagement() *schema.Resource {
 			"country": getLocationManagementCountries(),
 			"tz":      getLocationManagementTimeZones(),
 			"ip_addresses": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -153,6 +157,18 @@ func resourceLocationManagement() *schema.Resource {
 				Optional:    true,
 				Computed:    true,
 				Description: "Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.",
+			},
+			"other_sublocation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.",
+			},
+			"other6_sublocation": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.",
 			},
 			"surrogate_ip": {
 				Type:        schema.TypeBool,
@@ -263,6 +279,16 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "For First Time AUP Behavior, Force SSL Inspection. When set, Zscaler will force SSL Inspection in order to enforce AUP for HTTPS traffic.",
 			},
+			"ipv6_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.",
+			},
+			"ipv6_dns_64prefix": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "(Optional) Name-ID pair of the NAT64 prefix configured as the DNS64 prefix for the location. If specified, the DNS64 prefix is used for the IP addresses that reside in this location. If not specified, a prefix is selected from the set of supported prefixes. ",
+			},
 			"aup_timeout_in_days": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -363,6 +389,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("location_id", resp.ID)
 	_ = d.Set("name", resp.Name)
+	_ = d.Set("description", resp.Description)
 	_ = d.Set("parent_id", resp.ParentID)
 	_ = d.Set("up_bandwidth", resp.UpBandwidth)
 	_ = d.Set("dn_bandwidth", resp.DnBandwidth)
@@ -375,6 +402,8 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
 	_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
 	_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
+	_ = d.Set("other_sublocation", resp.OtherSubLocation)
+	_ = d.Set("other6_sublocation", resp.Other6SubLocation)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
 	_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 	_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
@@ -392,7 +421,8 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("aup_force_ssl_inspection", resp.AUPForceSSLInspection)
 	_ = d.Set("aup_timeout_in_days", resp.AUPTimeoutInDays)
 	_ = d.Set("profile", resp.Profile)
-	_ = d.Set("description", resp.Description)
+	_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
+	_ = d.Set("ipv6_dns_64prefix", resp.IPv6Dns64Prefix)
 
 	if err := d.Set("vpn_credentials", flattenLocationVPNCredentialsSimple(resp.VPNCredentials)); err != nil {
 		return err
@@ -488,12 +518,13 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 	result := locationmanagement.Locations{
 		ID:                                  id,
 		Name:                                d.Get("name").(string),
+		Description:                         d.Get("description").(string),
 		ParentID:                            d.Get("parent_id").(int),
 		UpBandwidth:                         d.Get("up_bandwidth").(int),
 		DnBandwidth:                         d.Get("dn_bandwidth").(int),
 		Country:                             d.Get("country").(string),
 		TZ:                                  d.Get("tz").(string),
-		IPAddresses:                         removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
+		IPAddresses:                         SetToStringList(d, "ip_addresses"), //removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),
@@ -515,10 +546,14 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		CautionEnabled:                      d.Get("caution_enabled").(bool),
 		AUPBlockInternetUntilAccepted:       d.Get("aup_block_internet_until_accepted").(bool),
 		AUPForceSSLInspection:               d.Get("aup_force_ssl_inspection").(bool),
-		AUPTimeoutInDays:                    d.Get("aup_timeout_in_days").(int),
-		Profile:                             d.Get("profile").(string),
-		Description:                         d.Get("description").(string),
-		VPNCredentials:                      expandLocationManagementVPNCredentials(d),
+		IPv6Enabled:                         d.Get("ipv6_enabled").(bool),
+		IPv6Dns64Prefix:                     d.Get("ipv6_dns_64prefix").(bool),
+		OtherSubLocation:                    d.Get("other_sublocation").(bool),
+		Other6SubLocation:                   d.Get("other6_sublocation").(bool),
+
+		AUPTimeoutInDays: d.Get("aup_timeout_in_days").(int),
+		Profile:          d.Get("profile").(string),
+		VPNCredentials:   expandLocationManagementVPNCredentials(d),
 	}
 	vpnCredentials := expandLocationManagementVPNCredentials(d)
 	if vpnCredentials != nil {
