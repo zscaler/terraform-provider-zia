@@ -14,6 +14,8 @@ on:
         required: true
       ZIA_CLOUD:
         required: true
+      ZIA_SANDBOX_TOKEN:
+        required: true
       ZIA_ACC_TEST_FORCE_SWEEPERS:
         required: true
       TF_ACC:
@@ -57,6 +59,7 @@ jobs:
 
       - name: Check Build
         run: make build
+
       - name: Run tests with retry
         uses: nick-invision/retry@v2
         with:
@@ -65,15 +68,12 @@ jobs:
           command: |
             make sweep
             go test -v -cover ./zia -v -parallel 30 -timeout 120m
-            go mod vendor && go mod tidy
-            go build ./cli/ziaActivator.go
-            mv ziaActivator /usr/local/bin
             make sweep
-            ziaActivator
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
           ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
           ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
           ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+          ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
           TF_ACC: ${{ secrets.TF_ACC }}

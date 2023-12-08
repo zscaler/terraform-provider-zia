@@ -1,5 +1,56 @@
 # Changelog
 
+## 2.7.0 (December, xx 2023)
+
+### Notes
+
+- Release date: **(December, xx 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+NEW - RESOURCES, DATA SOURCES
+
+- [PR #293](https://github.com/zscaler/terraform-provider-zia/pull/293) - ✨ Added support for ZIA 🆕 Custom ZPA Gateway for use with Forwarding Control policy to forward traffic to ZPA for Source IP Anchoring.
+- [PR #294](https://github.com/zscaler/terraform-provider-zia/pull/294) - ✨ Added support for ZIA 🆕 Forwarding Control Rule configuration.
+
+## 2.6.6 (November, 23 2023)
+
+### Notes
+
+- Release date: **(November, 23 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #291](https://github.com/zscaler/terraform-provider-zia/pull/291) - Fixed panic with resource `zia_admin_users` due to API changes.
+
+## 2.6.5 (November, 5 2023)
+
+### Notes
+
+- Release date: **(November, 5 2023)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Fixed drift within `zia_firewall_filtering_rule` for the attribute `dest_countries`.
+
+## 2.6.4 (October, 25 2023)
+
+### Notes
+
+- Release date: **(October, 25 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Introduced new `zia_location_management`  attributes: `other_sublocation`, `other6_sublocation`, `ipv6_enabled`, `ipv6_dns_64prefix`
+
+### Fixes
+
+- [PR #285](https://github.com/zscaler/terraform-provider-zia/pull/285) - Fixed `zia_location_management` resource attribute `ip_addresses` to `TypeSet` to prevent drifts in case the API returns IP addresses in an ordered fashion.
+
 ## 2.6.3 (October, 18 2023)
 
 ### Notes
