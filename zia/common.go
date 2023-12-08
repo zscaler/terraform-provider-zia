@@ -87,6 +87,7 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
+/*
 func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
 	idNameExtObj, ok := d.GetOk(key)
 	if !ok {
@@ -110,7 +111,7 @@ func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameEx
 	}
 	return nil
 }
-
+*/
 /*
 	func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
 		setInterface, ok := d.GetOk(key)
