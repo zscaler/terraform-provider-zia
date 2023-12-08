@@ -10,7 +10,7 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplicationgroups"
 )
 
 func resourceFWNetworkApplicationGroups() *schema.Resource {
@@ -28,7 +28,7 @@ func resourceFWNetworkApplicationGroups() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("app_id", idInt)
 				} else {
-					resp, err := zClient.networkapplications.GetNetworkApplicationGroupsByName(id)
+					resp, err := zClient.networkapplicationgroups.GetNetworkApplicationGroupsByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("app_id", resp.ID)
@@ -74,7 +74,7 @@ func resourceFWNetworkApplicationGroupsCreate(d *schema.ResourceData, m interfac
 	req := expandNetworkApplicationGroups(d)
 	log.Printf("[INFO] Creating network application groups\n%+v\n", req)
 
-	resp, err := zClient.networkapplications.Create(&req)
+	resp, err := zClient.networkapplicationgroups.Create(&req)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func resourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{
 	if !ok {
 		return fmt.Errorf("no network application groups id is set")
 	}
-	resp, err := zClient.networkapplications.GetNetworkApplicationGroups(id)
+	resp, err := zClient.networkapplicationgroups.GetNetworkApplicationGroups(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia network application groups %s from state because it no longer exists in ZIA", d.Id())
@@ -121,13 +121,13 @@ func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interfac
 	}
 	log.Printf("[INFO] Updating network application groups ID: %v\n", id)
 	req := expandNetworkApplicationGroups(d)
-	if _, err := zClient.networkapplications.GetNetworkApplicationGroups(id); err != nil {
+	if _, err := zClient.networkapplicationgroups.GetNetworkApplicationGroups(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.networkapplications.Update(id, &req); err != nil {
+	if _, _, err := zClient.networkapplicationgroups.Update(id, &req); err != nil {
 		return err
 	}
 
@@ -156,7 +156,7 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.networkapplications.Delete(id); err != nil {
+	if _, err := zClient.networkapplicationgroups.Delete(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -164,9 +164,9 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 	return nil
 }
 
-func expandNetworkApplicationGroups(d *schema.ResourceData) networkapplications.NetworkApplicationGroups {
+func expandNetworkApplicationGroups(d *schema.ResourceData) networkapplicationgroups.NetworkApplicationGroups {
 	id, _ := getIntFromResourceData(d, "app_id")
-	result := networkapplications.NetworkApplicationGroups{
+	result := networkapplicationgroups.NetworkApplicationGroups{
 		ID:                  id,
 		Name:                d.Get("name").(string),
 		NetworkApplications: SetToStringList(d, "network_applications"),

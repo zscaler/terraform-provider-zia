@@ -10,7 +10,7 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
 )
 
 func resourceFWNetworkServiceGroups() *schema.Resource {
@@ -28,7 +28,7 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("network_service_group_id", idInt)
 				} else {
-					resp, err := zClient.networkservices.GetNetworkServiceGroupsByName(id)
+					resp, err := zClient.networkservicegroups.GetNetworkServiceGroupsByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("network_service_group_id", resp.ID)
@@ -86,7 +86,7 @@ func resourceFWNetworkServiceGroupsCreate(d *schema.ResourceData, m interface{})
 	req := expandNetworkServiceGroups(d)
 	log.Printf("[INFO] Creating network service groups\n%+v\n", req)
 
-	resp, err := zClient.networkservices.CreateNetworkServiceGroups(&req)
+	resp, err := zClient.networkservicegroups.CreateNetworkServiceGroups(&req)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) e
 	if !ok {
 		return fmt.Errorf("no network service groups id is set")
 	}
-	resp, err := zClient.networkservices.GetNetworkServiceGroups(id)
+	resp, err := zClient.networkservicegroups.GetNetworkServiceGroups(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia network service groups %s from state because it no longer exists in ZIA", d.Id())
@@ -128,7 +128,7 @@ func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) e
 	return nil
 }
 
-func flattenServicesSimple(list []networkservices.Services) []interface{} {
+func flattenServicesSimple(list []networkservicegroups.Services) []interface{} {
 	result := make([]interface{}, 1)
 	mapIds := make(map[string]interface{})
 	ids := make([]int, len(list))
@@ -149,13 +149,13 @@ func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Updating network service groups ID: %v\n", id)
 	req := expandNetworkServiceGroups(d)
-	if _, err := zClient.networkservices.GetNetworkServiceGroups(req.ID); err != nil {
+	if _, err := zClient.networkservicegroups.GetNetworkServiceGroups(req.ID); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.networkservices.UpdateNetworkServiceGroups(id, &req); err != nil {
+	if _, _, err := zClient.networkservicegroups.UpdateNetworkServiceGroups(id, &req); err != nil {
 		return err
 	}
 
@@ -184,7 +184,7 @@ func resourceFWNetworkServiceGroupsDelete(d *schema.ResourceData, m interface{})
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.networkservices.DeleteNetworkServiceGroups(id); err != nil {
+	if _, err := zClient.networkservicegroups.DeleteNetworkServiceGroups(id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -192,9 +192,9 @@ func resourceFWNetworkServiceGroupsDelete(d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func expandNetworkServiceGroups(d *schema.ResourceData) networkservices.NetworkServiceGroups {
+func expandNetworkServiceGroups(d *schema.ResourceData) networkservicegroups.NetworkServiceGroups {
 	id, _ := getIntFromResourceData(d, "network_service_group_id")
-	result := networkservices.NetworkServiceGroups{
+	result := networkservicegroups.NetworkServiceGroups{
 		ID:          id,
 		Name:        d.Get("name").(string),
 		Description: d.Get("description").(string),
@@ -204,18 +204,18 @@ func expandNetworkServiceGroups(d *schema.ResourceData) networkservices.NetworkS
 	return result
 }
 
-func expandServicesSet(d *schema.ResourceData) []networkservices.Services {
+func expandServicesSet(d *schema.ResourceData) []networkservicegroups.Services {
 	setInterface, ok := d.GetOk("services")
 	if ok {
 		set := setInterface.(*schema.Set)
-		var result []networkservices.Services
+		var result []networkservicegroups.Services
 		for _, item := range set.List() {
 			itemMap, _ := item.(map[string]interface{})
 			if itemMap != nil {
 				idSet, ok := itemMap["id"].(*schema.Set)
 				if ok {
 					for _, id := range idSet.List() {
-						result = append(result, networkservices.Services{
+						result = append(result, networkservicegroups.Services{
 							ID: id.(int),
 						})
 					}
@@ -224,5 +224,5 @@ func expandServicesSet(d *schema.ResourceData) []networkservices.Services {
 		}
 		return result
 	}
-	return []networkservices.Services{}
+	return []networkservicegroups.Services{}
 }

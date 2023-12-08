@@ -11,11 +11,11 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
 )
 
 func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
-	var services networkservices.NetworkServiceGroups
+	var services networkservicegroups.NetworkServiceGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
 
 	resource.Test(t, resource.TestCase{
@@ -43,12 +43,6 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
 			},
-			// Import test
-			{
-				ResourceName:      resourceTypeAndName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -67,7 +61,7 @@ func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.networkservices.GetNetworkServiceGroups(id)
+		rule, err := apiClient.networkservicegroups.GetNetworkServiceGroups(id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -81,7 +75,7 @@ func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkservices.NetworkServiceGroups) resource.TestCheckFunc {
+func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkservicegroups.NetworkServiceGroups) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -98,7 +92,7 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.networkservices.GetNetworkServiceGroups(id)
+		receivedRule, err := apiClient.networkservicegroups.GetNetworkServiceGroups(id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

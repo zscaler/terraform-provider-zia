@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func resourceTrafficForwardingGRETunnel() *schema.Resource {
@@ -180,19 +180,19 @@ func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnel
 		(req.SecondaryDestVip == nil || (req.SecondaryDestVip.VirtualIP == "" && req.SecondaryDestVip.ID == 0)) {
 		// one of the vips not set, pick 2 from the recommandedVips
 		countryCode, ok := getStringFromResourceData(d, "country_code")
-		var pair []virtualipaddresslist.GREVirtualIPList
+		var pair []virtualipaddress.GREVirtualIPList
 		if ok {
-			vips, err := zClient.virtualipaddresslist.GetPairZSGREVirtualIPsWithinCountry(req.SourceIP, countryCode)
+			vips, err := zClient.virtualipaddress.GetPairZSGREVirtualIPsWithinCountry(req.SourceIP, countryCode)
 			if err != nil {
 				log.Printf("[ERROR] Got: %v\n", err)
-				vips, err = zClient.virtualipaddresslist.GetZSGREVirtualIPList(req.SourceIP, 2)
+				vips, err = zClient.virtualipaddress.GetZSGREVirtualIPList(req.SourceIP, 2)
 				if err != nil {
 					return err
 				}
 			}
 			pair = *vips
 		} else {
-			vips, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList(req.SourceIP, 2)
+			vips, err := zClient.virtualipaddress.GetZSGREVirtualIPList(req.SourceIP, 2)
 			if err != nil {
 				return err
 			}

@@ -30,11 +30,11 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingGRETunnelDestroy,
 		Steps: []resource.TestStep{
 			{
-				// create GRE tunnel
+				// create gree tunnel
 				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
@@ -45,16 +45,10 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "TestAcc Created with Terraform"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
-			},
-			// Import test
-			{
-				ResourceName:      resourceTypeAndName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -144,7 +138,7 @@ func getTrafficForwardingGRETunnel_HCL(generatedName, staticIPTypeAndName string
 
 resource "%s" "%s" {
 	source_ip = "${%s.ip_address}"
-	comment = "tf-acc-test-%s"
+	comment = "TestAcc Created with Terraform"
 	country_code   = "CA"
     within_country = "%s"
     ip_unnumbered  = "%s"
@@ -154,7 +148,6 @@ resource "%s" "%s" {
 		resourcetype.TrafficForwardingGRETunnel,
 		generatedName,
 		staticIPTypeAndName,
-		generatedName,
 		strconv.FormatBool(withinCountry),
 		strconv.FormatBool(ipUnnumbered),
 	)

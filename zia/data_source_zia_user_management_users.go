@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
 )
 
 func dataSourceUserManagement() *schema.Resource {
@@ -116,11 +116,11 @@ func dataSourceUserManagement() *schema.Resource {
 func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *usermanagement.Users
+	var resp *users.Users
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := zClient.usermanagement.Get(id)
+		res, err := zClient.users.Get(id)
 		if err != nil {
 			return err
 		}
@@ -129,7 +129,7 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for user : %s\n", name)
-		res, err := zClient.usermanagement.GetUserByName(name)
+		res, err := zClient.users.GetUserByName(name)
 		if err != nil {
 			return err
 		}

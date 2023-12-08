@@ -10,7 +10,7 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
 )
 
 func resourceLocationManagement() *schema.Resource {

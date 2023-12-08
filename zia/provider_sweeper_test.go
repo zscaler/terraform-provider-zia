@@ -74,7 +74,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestNetworkAppGroups(testClient)
 	sweepTestLocationManagement(testClient)
 	sweepTestGRETunnels(testClient)
-	// sweepTestFirewallFilteringRule(testClient)
+	sweepTestFirewallFilteringRule(testClient)
 	sweepTestURLFilteringRule(testClient)
 	sweepTestDLPWebRule(testClient)
 	sweepTestDLPEngines(testClient)
@@ -212,7 +212,7 @@ func sweepTestNetworkServices(client *testClient) error {
 
 func sweepTestNetworkServicesGroup(client *testClient) error {
 	var errorList []error
-	groups, err := client.sdkClient.networkservices.GetAllNetworkServiceGroups()
+	groups, err := client.sdkClient.networkservicegroups.GetAllNetworkServiceGroups()
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func sweepTestNetworkServicesGroup(client *testClient) error {
 
 func sweepTestNetworkAppGroups(client *testClient) error {
 	var errorList []error
-	groups, err := client.sdkClient.networkapplications.GetAllNetworkApplicationGroups()
+	groups, err := client.sdkClient.networkapplicationgroups.GetAllNetworkApplicationGroups()
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func sweepTestNetworkAppGroups(client *testClient) error {
 	for _, b := range groups {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) {
-			if _, err := client.sdkClient.networkapplications.Delete(b.ID); err != nil {
+			if _, err := client.sdkClient.networkapplicationgroups.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -318,32 +318,32 @@ func sweepTestGRETunnels(client *testClient) error {
 	return condenseError(errorList)
 }
 
-// func sweepTestFirewallFilteringRule(client *testClient) error {
-// 	var errorList []error
-// 	rule, err := client.sdkClient.filteringrules.GetAll()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	// Logging the number of identified resources before the deletion loop
-// 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
-// 	for _, b := range rule {
-// 		// Check if the resource name has the required prefix before deleting it
-// 		if strings.HasPrefix(b.Name, testResourcePrefix) {
-// 			if _, err := client.sdkClient.filteringrules.Delete(b.ID); err != nil {
-// 				errorList = append(errorList, err)
-// 				continue
-// 			}
-// 			logSweptResource(resourcetype.FirewallFilteringRules, fmt.Sprintf("%d", b.ID), b.Name)
-// 		}
-// 	}
-// 	// Log errors encountered during the deletion process
-// 	if len(errorList) > 0 {
-// 		for _, err := range errorList {
-// 			sweeperLogger.Error(err.Error())
-// 		}
-// 	}
-// 	return condenseError(errorList)
-// }
+func sweepTestFirewallFilteringRule(client *testClient) error {
+	var errorList []error
+	rule, err := client.sdkClient.filteringrules.GetAll()
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) {
+			if _, err := client.sdkClient.filteringrules.Delete(b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.FirewallFilteringRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
 
 func sweepTestURLFilteringRule(client *testClient) error {
 	var errorList []error
@@ -576,7 +576,7 @@ func sweepTestURLCategories(client *testClient) error {
 func sweepTestAdminUser(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.adminuserrolemgmt.GetAllAdminUsers()
+	rule, err := client.sdkClient.admins.GetAllAdminUsers()
 	if err != nil {
 		return err
 	}
@@ -585,7 +585,7 @@ func sweepTestAdminUser(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.UserName, testResourcePrefix) {
-			if _, err := client.sdkClient.adminuserrolemgmt.DeleteAdminUser(b.ID); err != nil {
+			if _, err := client.sdkClient.admins.DeleteAdminUser(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -604,7 +604,7 @@ func sweepTestAdminUser(client *testClient) error {
 func sweepTestUsers(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.usermanagement.GetAllUsers()
+	rule, err := client.sdkClient.users.GetAllUsers()
 	if err != nil {
 		return err
 	}
@@ -613,7 +613,7 @@ func sweepTestUsers(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) {
-			if _, err := client.sdkClient.usermanagement.Delete(b.ID); err != nil {
+			if _, err := client.sdkClient.users.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}

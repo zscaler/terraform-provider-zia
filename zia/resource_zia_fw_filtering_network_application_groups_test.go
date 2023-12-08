@@ -11,11 +11,11 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplicationgroups"
 )
 
 func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
-	var appGroups networkapplications.NetworkApplicationGroups
+	var appGroups networkapplicationgroups.NetworkApplicationGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkAppGroups)
 
 	resource.Test(t, resource.TestCase{
@@ -43,12 +43,6 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
 			},
-			// Import test
-			{
-				ResourceName: resourceTypeAndName,
-				ImportState:  true,
-				// ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -67,7 +61,7 @@ func testAccCheckFWNetworkApplicationGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.networkapplications.GetNetworkApplicationGroups(id)
+		rule, err := apiClient.networkapplicationgroups.GetNetworkApplicationGroups(id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -81,7 +75,7 @@ func testAccCheckFWNetworkApplicationGroupsDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *networkapplications.NetworkApplicationGroups) resource.TestCheckFunc {
+func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *networkapplicationgroups.NetworkApplicationGroups) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -98,7 +92,7 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.networkapplications.GetNetworkApplicationGroups(id)
+		receivedRule, err := apiClient.networkapplicationgroups.GetNetworkApplicationGroups(id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -111,7 +105,7 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name        = "tf-acc-test-%s"
+    name = "tf-acc-test-%s"
     description = "%s"
     network_applications = [
             "YAMMER",

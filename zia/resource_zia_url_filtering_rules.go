@@ -1,8 +1,6 @@
 package zia
 
 import (
-	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
@@ -203,8 +200,11 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutCreate)-time.Minute, func() *resource.RetryError {
-		start := time.Now()
+
+	timeout := d.Timeout(schema.TimeoutCreate)
+	start := time.Now()
+
+	for {
 		urlFilteringLock.Lock()
 		if urlFilteringStartingOrder == 0 {
 			list, _ := zClient.urlfilteringpolicies.GetAll()
@@ -219,24 +219,28 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		}
 		urlFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
+
 		order := req.Order
 		req.Order = urlFilteringStartingOrder
 		resp, err := zClient.urlfilteringpolicies.Create(&req)
+
 		if err != nil {
-			// check is err matches regex "Rule with rank [0-9]+ is not allowed at order [0-9]+
-			// if so, retry
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
-				return resource.NonRetryableError(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err))
+				return fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err)
 			}
+
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Creating url filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
-				time.Sleep(time.Second * time.Duration(order+1))
-				return resource.RetryableError(errors.New("expected resource to be created but was not"))
+				if time.Since(start) < timeout {
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error creating resource: %s", err))
+			return fmt.Errorf("error creating resource: %s", err)
 		}
-		log.Printf("[INFO] Created url filtering rule request.  took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+
+		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
 			list, err := zClient.urlfilteringpolicies.GetAll()
 			return len(list), err
@@ -249,17 +253,23 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
 			return err
 		})
+
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
 		err = resourceURLFilteringRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
-		} else {
-			markOrderRuleAsDone(resp.ID, "url_filtering_rules")
-			return nil
+			if time.Since(start) < timeout {
+				time.Sleep(5 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		}
-	})
+		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
+		break
+	}
+
+	return nil
 }
 
 func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
@@ -363,21 +373,23 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
 	req := expandURLFilteringRules(d)
-	if _, err := zClient.urlfilteringpolicies.Get(id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			d.SetId("")
-			return nil
-		}
-	}
-	return resource.RetryContext(context.Background(), d.Timeout(schema.TimeoutUpdate)-time.Minute, func() *resource.RetryError {
+
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	start := time.Now()
+
+	for {
 		_, _, err := zClient.urlfilteringpolicies.Update(id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-				return resource.RetryableError(errors.New("expected resource to be updated but was not"))
+				if time.Since(start) < timeout {
+					time.Sleep(5 * time.Second) // Wait before retrying
+					continue
+				}
 			}
-			return resource.NonRetryableError(fmt.Errorf("error updating resource: %s", err))
+			return fmt.Errorf("error updating resource: %s", err)
 		}
+
 		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
 			list, err := zClient.urlfilteringpolicies.GetAll()
 			return len(list), err
@@ -390,14 +402,20 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
 			return err
 		})
+
 		err = resourceURLFilteringRulesRead(d, m)
 		if err != nil {
-			return resource.NonRetryableError(err)
-		} else {
-			markOrderRuleAsDone(req.ID, "url_filtering_rules")
-			return nil
+			if time.Since(start) < timeout {
+				time.Sleep(5 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
 		}
-	})
+		markOrderRuleAsDone(req.ID, "url_filtering_rules")
+		break
+	}
+
+	return nil
 }
 
 func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
