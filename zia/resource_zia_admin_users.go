@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 )
 
 func resourceAdminUsers() *schema.Resource {
@@ -27,7 +26,7 @@ func resourceAdminUsers() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("admin_id", idInt)
 				} else {
-					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
+					resp, err := zClient.admins.GetAdminUsersByLoginName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("admin_id", resp.ID)
@@ -40,6 +39,10 @@ func resourceAdminUsers() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"admin_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -61,29 +64,12 @@ func resourceAdminUsers() *schema.Resource {
 			"role": {
 				Type:        schema.TypeSet,
 				Optional:    true,
-				Computed:    true,
 				Description: "Role of the admin. This is not required for an auditor.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_name_l10n_tag": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
 						},
 					},
 				},
@@ -93,42 +79,29 @@ func resourceAdminUsers() *schema.Resource {
 				Optional:    true,
 				Description: "Additional information about the admin or auditor.",
 			},
-			"admin_scope": {
-				Type:     schema.TypeSet,
+			"admin_scope_type": {
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"scope_group_member_entities": setIDsSchemaTypeCustom(nil, "list of scope group member IDs"),
-						"type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								"ORGANIZATION",
-								"DEPARTMENT",
-								"LOCATION",
-								"LOCATION_GROUP",
-							}, false),
-						},
-						"scope_entities": setIDsSchemaTypeCustom(nil, "list of scope IDs"),
-					},
-				},
+				ValidateFunc: validation.StringInSlice([]string{
+					"ORGANIZATION",
+					"DEPARTMENT",
+					"LOCATION",
+					"LOCATION_GROUP",
+				}, false),
 			},
+			"admin_scope_entities": setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
 			"is_non_editable": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"disabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_auditor": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"password": {
 				Type:         schema.TypeString,
@@ -140,32 +113,26 @@ func resourceAdminUsers() *schema.Resource {
 			"is_password_login_allowed": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_security_report_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_service_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_product_update_comm_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_password_expired": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 			"is_exec_mobile_app_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}
@@ -182,24 +149,25 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	if err := checkAdminScopeType(req); err != nil {
 		return err
 	}
-	resp, err := zClient.adminuserrolemgmt.CreateAdminUser(req)
+	resp, err := zClient.admins.CreateAdminUser(req)
 	if err != nil {
 		return err
 	}
 	log.Printf("[INFO] Created zia admin user request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("admin_id", resp.ID)
+
 	return resourceAdminUsersRead(d, m)
 }
 
-func checkPasswordAllowed(pass adminuserrolemgmt.AdminUsers) error {
+func checkPasswordAllowed(pass admins.AdminUsers) error {
 	if pass.IsPasswordLoginAllowed && pass.Password == "" {
 		return fmt.Errorf("enter a password for the admin. It can be 8 to 100 characters and must contain at least one number, one special character, and one upper-case letter")
 	}
 	return nil
 }
 
-func checkAdminScopeType(scopeType adminuserrolemgmt.AdminUsers) error {
+func checkAdminScopeType(scopeType admins.AdminUsers) error {
 	if scopeType.IsExecMobileAppEnabled && scopeType.AdminScopeType != "ORGANIZATION" {
 		return fmt.Errorf("mobile app access can only be enabled for an admin with organization scope")
 	}
@@ -208,11 +176,12 @@ func checkAdminScopeType(scopeType adminuserrolemgmt.AdminUsers) error {
 
 func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+
 	id, ok := getIntFromResourceData(d, "admin_id")
 	if !ok {
 		return fmt.Errorf("no admin users id is set")
 	}
-	resp, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
+	resp, err := zClient.admins.GetAdminUsers(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing admin user %s from state because it no longer exists in ZIA", d.Id())
@@ -233,51 +202,52 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("is_non_editable", resp.IsNonEditable)
 	_ = d.Set("disabled", resp.Disabled)
 	_ = d.Set("is_auditor", resp.IsAuditor)
+	_ = d.Set("admin_scope_type", resp.AdminScopeType)
 	_ = d.Set("is_password_login_allowed", resp.IsPasswordLoginAllowed)
 	_ = d.Set("is_security_report_comm_enabled", resp.IsSecurityReportCommEnabled)
 	_ = d.Set("is_service_update_comm_enabled", resp.IsServiceUpdateCommEnabled)
 	_ = d.Set("is_product_update_comm_enabled", resp.IsProductUpdateCommEnabled)
 	_ = d.Set("is_password_expired", resp.IsPasswordExpired)
 
-	if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
+	if err := d.Set("role", flattenAdminUserRoleSimple(resp.Role)); err != nil {
 		return err
 	}
 
-	if err := d.Set("admin_scope", flattenAdminUsersScopesLite(resp)); err != nil {
+	if err := d.Set("admin_scope_entities", flattenIDs(resp.AdminScopeEntities)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func flattenAdminUsersScopesLite(resp *adminuserrolemgmt.AdminUsers) []map[string]interface{} {
-	scope := make([]map[string]interface{}, 1)
-	scope[0] = map[string]interface{}{
-		"type": resp.AdminScopeType,
-	}
-	if len(resp.AdminScopeGroupMemberEntities) > 0 {
-		scope[0]["scope_group_member_entities"] = flattenIDs(resp.AdminScopeGroupMemberEntities)
-	}
-	if len(resp.AdminScopeEntities) > 0 {
-		scope[0]["scope_entities"] = flattenIDs(resp.AdminScopeEntities)
-	}
-	return scope
-}
-
 func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+
+	id, ok := getIntFromResourceData(d, "admin_id")
+	if !ok {
+		log.Printf("[ERROR] admin user ID not set: %v\n", id)
+		return fmt.Errorf("admin user ID not set")
+	}
+
+	log.Printf("[DEBUG] Updating admin user with ID: %d", id)
+
 	req := expandAdminUsers(d)
-	log.Printf("[INFO] Updating admin users ID: %v\n", req.ID)
-	if _, err := zClient.adminuserrolemgmt.Get(req.ID); err != nil {
+	log.Printf("[DEBUG] Update request data: %+v", req)
+
+	if _, err := zClient.admins.GetAdminUsers(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			log.Printf("[INFO] Admin user %d not found. Removing from state", id)
 			d.SetId("")
 			return nil
 		}
-	}
-	if _, err := zClient.adminuserrolemgmt.UpdateAdminUser(req.ID, req); err != nil {
+		log.Printf("[ERROR] Error retrieving admin user before update: %s", err)
 		return err
 	}
 
+	if _, err := zClient.admins.UpdateAdminUser(id, req); err != nil {
+		log.Printf("[ERROR] Error updating admin user: %s", err)
+		return err
+	}
 	return resourceAdminUsersRead(d, m)
 }
 
@@ -290,7 +260,7 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Deleting admin user ID: %v\n", id)
 
-	if _, err := zClient.adminuserrolemgmt.DeleteAdminUser(id); err != nil {
+	if _, err := zClient.admins.DeleteAdminUser(id); err != nil {
 		return err
 	}
 
@@ -299,27 +269,26 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
-	adminScopeType, AdminScopeGroupMemberEntities, AdminScopeEntities := expandAdminUsersScopes(d)
-	result := adminuserrolemgmt.AdminUsers{
-		ID:                            d.Get("admin_id").(int),
-		LoginName:                     d.Get("login_name").(string),
-		UserName:                      d.Get("username").(string),
-		Email:                         d.Get("email").(string),
-		Comments:                      d.Get("comments").(string),
-		IsNonEditable:                 d.Get("is_non_editable").(bool),
-		Disabled:                      d.Get("disabled").(bool),
-		IsAuditor:                     d.Get("is_auditor").(bool),
-		Password:                      d.Get("password").(string),
-		IsPasswordLoginAllowed:        d.Get("is_password_login_allowed").(bool),
-		IsSecurityReportCommEnabled:   d.Get("is_security_report_comm_enabled").(bool),
-		IsServiceUpdateCommEnabled:    d.Get("is_service_update_comm_enabled").(bool),
-		IsProductUpdateCommEnabled:    d.Get("is_product_update_comm_enabled").(bool),
-		IsPasswordExpired:             d.Get("is_password_expired").(bool),
-		IsExecMobileAppEnabled:        d.Get("is_exec_mobile_app_enabled").(bool),
-		AdminScopeGroupMemberEntities: AdminScopeGroupMemberEntities,
-		AdminScopeEntities:            AdminScopeEntities,
-		AdminScopeType:                adminScopeType,
+func expandAdminUsers(d *schema.ResourceData) admins.AdminUsers {
+	id, _ := getIntFromResourceData(d, "admin_id")
+	result := admins.AdminUsers{
+		ID:                          id,
+		LoginName:                   d.Get("login_name").(string),
+		UserName:                    d.Get("username").(string),
+		Email:                       d.Get("email").(string),
+		Comments:                    d.Get("comments").(string),
+		IsNonEditable:               d.Get("is_non_editable").(bool),
+		Disabled:                    d.Get("disabled").(bool),
+		IsAuditor:                   d.Get("is_auditor").(bool),
+		Password:                    d.Get("password").(string),
+		AdminScopeType:              d.Get("admin_scope_type").(string),
+		IsPasswordLoginAllowed:      d.Get("is_password_login_allowed").(bool),
+		IsSecurityReportCommEnabled: d.Get("is_security_report_comm_enabled").(bool),
+		IsServiceUpdateCommEnabled:  d.Get("is_service_update_comm_enabled").(bool),
+		IsProductUpdateCommEnabled:  d.Get("is_product_update_comm_enabled").(bool),
+		IsPasswordExpired:           d.Get("is_password_expired").(bool),
+		IsExecMobileAppEnabled:      d.Get("is_exec_mobile_app_enabled").(bool),
+		AdminScopeEntities:          expandIDNameExtensionsSet(d, "admin_scope_entities"),
 	}
 	role := expandAdminUserRoles(d)
 	if role != nil {
@@ -328,40 +297,25 @@ func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 	return result
 }
 
-func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
-	rolesObj, ok := d.GetOk("role")
-	if !ok {
-		return nil
+func flattenAdminUserRoleSimple(role *admins.Role) []interface{} {
+	if role == nil {
+		return []interface{}{}
 	}
-	roles, ok := rolesObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(roles.List()) > 0 {
-		rolesObj := roles.List()[0]
-		role, ok := rolesObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		return &adminuserrolemgmt.Role{
-			ID:         role["id"].(int),
-			Name:       role["name"].(string),
-			Extensions: role["extensions"].(map[string]interface{}),
+	roleMap := make(map[string]interface{})
+	roleMap["id"] = role.ID
+
+	return []interface{}{roleMap}
+}
+
+func expandAdminUserRoles(d *schema.ResourceData) *admins.Role {
+	if v, ok := d.GetOk("role"); ok {
+		roles := v.(*schema.Set).List()
+		if len(roles) > 0 {
+			roleMap := roles[0].(map[string]interface{})
+			return &admins.Role{
+				ID: roleMap["id"].(int),
+			}
 		}
 	}
 	return nil
-}
-
-func expandAdminUsersScopes(d *schema.ResourceData) (string, []common.IDNameExtensions, []common.IDNameExtensions) {
-	if scopeInterface, ok := d.GetOk("admin_scope"); ok {
-		scopesSet, ok := scopeInterface.(*schema.Set)
-		if !ok {
-			return "", []common.IDNameExtensions{}, []common.IDNameExtensions{}
-		}
-		for _, val := range scopesSet.List() {
-			scopeItem := val.(map[string]interface{})
-			return scopeItem["type"].(string), expandIDNameExtensionsMap(scopeItem, "scope_group_member_entities"), expandIDNameExtensionsMap(scopeItem, "scope_entities")
-		}
-	}
-	return "", []common.IDNameExtensions{}, []common.IDNameExtensions{}
 }

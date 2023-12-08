@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
@@ -78,7 +78,7 @@ func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData
 	if !ok {
 		return fmt.Errorf("please provide a source_ip for the vips list")
 	}
-	resp, err := zClient.virtualipaddresslist.GetZSGREVirtualIPList(sourceIP, count)
+	resp, err := zClient.virtualipaddress.GetZSGREVirtualIPList(sourceIP, count)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData
 	return nil
 }
 
-func flattenVIPList(list []virtualipaddresslist.GREVirtualIPList) []interface{} {
+func flattenVIPList(list []virtualipaddress.GREVirtualIPList) []interface{} {
 	result := make([]interface{}, len(list))
 	for i, vip := range list {
 		result[i] = map[string]interface{}{

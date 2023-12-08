@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 )
 
 func dataSourceAdminUsers() *schema.Resource {
@@ -207,11 +207,11 @@ func dataSourceAdminUsers() *schema.Resource {
 func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *adminuserrolemgmt.AdminUsers
+	var resp *admins.AdminUsers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
+		res, err := zClient.admins.GetAdminUsers(id)
 		if err != nil {
 			return err
 		}
@@ -220,7 +220,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	loginName, _ := d.Get("login_name").(string)
 	if resp == nil && loginName != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
-		res, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(loginName)
+		res, err := zClient.admins.GetAdminUsersByLoginName(loginName)
 		if err != nil {
 			return err
 		}
@@ -230,7 +230,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	userName, _ := d.Get("username").(string)
 	if resp == nil && userName != "" {
 		log.Printf("[INFO] Getting data for admin username: %s\n", userName)
-		res, err := zClient.adminuserrolemgmt.GetAdminByUsername(userName)
+		res, err := zClient.admins.GetAdminByUsername(userName)
 		if err != nil {
 			return err
 		}
@@ -272,7 +272,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func flattenAdminUserRole(role *adminuserrolemgmt.Role) interface{} {
+func flattenAdminUserRole(role *admins.Role) interface{} {
 	return []map[string]interface{}{
 		{
 			"id":         role.ID,
@@ -282,7 +282,7 @@ func flattenAdminUserRole(role *adminuserrolemgmt.Role) interface{} {
 	}
 }
 
-func flattenAdminScope(scopes *adminuserrolemgmt.AdminUsers) []interface{} {
+func flattenAdminScope(scopes *admins.AdminUsers) []interface{} {
 	scope := make([]interface{}, 1)
 	scope[0] = map[string]interface{}{
 		"type":                        scopes.AdminScopeType,
@@ -292,7 +292,7 @@ func flattenAdminScope(scopes *adminuserrolemgmt.AdminUsers) []interface{} {
 	return scope
 }
 
-func flattenExecMobileAppTokens(mobileAppTokens *adminuserrolemgmt.AdminUsers) []interface{} {
+func flattenExecMobileAppTokens(mobileAppTokens *admins.AdminUsers) []interface{} {
 	execMobileAppTokens := make([]interface{}, len(mobileAppTokens.ExecMobileAppTokens))
 	for i, execMobileApp := range mobileAppTokens.ExecMobileAppTokens {
 		execMobileAppTokens[i] = map[string]interface{}{

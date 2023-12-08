@@ -11,11 +11,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
 )
 
 func TestAccResourceUserManagementBasic(t *testing.T) {
-	var users usermanagement.Users
+	var users users.Users
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.Users)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rComments := acctest.RandomWithPrefix("tf-acc-test")
@@ -32,7 +32,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
@@ -46,7 +46,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
@@ -71,7 +71,7 @@ func testAccCheckUserManagementDestroy(s *terraform.State) error {
 			return err
 		}
 
-		users, err := apiClient.usermanagement.Get(id)
+		users, err := apiClient.users.Get(id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -85,7 +85,7 @@ func testAccCheckUserManagementDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckUserManagementExists(resource string, users *usermanagement.Users) resource.TestCheckFunc {
+func testAccCheckUserManagementExists(resource string, users *users.Users) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -102,7 +102,7 @@ func testAccCheckUserManagementExists(resource string, users *usermanagement.Use
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedUser, err := apiClient.usermanagement.Get(id)
+		receivedUser, err := apiClient.users.Get(id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -129,7 +129,7 @@ data "zia_department_management" "finance" {
 
 resource "%s" "%s" {
 	name 		= "%s"
-	email 		= "%s@securitygeek.io"
+	email 		= "%s@bd-hashicorp.com"
 	password 	= "%sSuper@Secret007"
 	comments	= "%s"
 	groups {

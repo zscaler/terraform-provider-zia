@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
 )
 
 func dataSourceFWNetworkServiceGroups() *schema.Resource {
@@ -57,11 +57,11 @@ func dataSourceFWNetworkServiceGroups() *schema.Resource {
 func dataSourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *networkservices.NetworkServiceGroups
+	var resp *networkservicegroups.NetworkServiceGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network service group id: %d\n", id)
-		res, err := zClient.networkservices.GetNetworkServiceGroups(id)
+		res, err := zClient.networkservicegroups.GetNetworkServiceGroups(id)
 		if err != nil {
 			return err
 		}
@@ -70,7 +70,7 @@ func dataSourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{})
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network service group : %s\n", name)
-		res, err := zClient.networkservices.GetNetworkServiceGroupsByName(name)
+		res, err := zClient.networkservicegroups.GetNetworkServiceGroupsByName(name)
 		if err != nil {
 			return err
 		}
@@ -93,7 +93,7 @@ func dataSourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func flattenServices(service []networkservices.Services) []interface{} {
+func flattenServices(service []networkservicegroups.Services) []interface{} {
 	services := make([]interface{}, len(service))
 	for i, val := range service {
 		services[i] = map[string]interface{}{

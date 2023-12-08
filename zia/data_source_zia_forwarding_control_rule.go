@@ -23,8 +23,9 @@ func dataSourceForwardingControlRule() *schema.Resource {
 				Description: "The name of the forwarding rule",
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Additional information about the forwarding rule",
 			},
 			"type": {
 				Type:        schema.TypeString,
@@ -582,7 +583,6 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("rank", resp.Rank)
 		_ = d.Set("state", resp.State)
 		_ = d.Set("type", resp.Type)
-		// _ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("src_ips", resp.SrcIps)
 		_ = d.Set("dest_addresses", resp.DestAddresses)
 		_ = d.Set("dest_ip_categories", resp.DestIpCategories)
