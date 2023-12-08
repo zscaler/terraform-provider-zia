@@ -1,17 +1,17 @@
 # Changelog
 
-## 2.7.0 (November, xx 2023)
+## 2.7.0 (December, xx 2023)
 
 ### Notes
 
-- Release date: **(November, xx 2023)**
+- Release date: **(December, xx 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
 
 NEW - RESOURCES, DATA SOURCES
 
-- [PR #283](https://github.com/zscaler/terraform-provider-zia/pull/283) - Added support to ZPA ZPA Application Segment Traffic (ZPA Gateway)feature
+- [PR #293](https://github.com/zscaler/terraform-provider-zia/pull/293) - ✨ Added support for ZIA 🆕 Custom ZPA Gateway for use with Forwarding Control policy to forward traffic to ZPA for Source IP Anchoring.
 
 ## 2.6.3 (October, 18 2023)
 
