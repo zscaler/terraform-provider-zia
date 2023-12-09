@@ -422,8 +422,8 @@ func getURLCategories() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "List of URL categories for which rule must be applied",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringCategories(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringCategories(),
 		},
 		Optional: true,
 	}
@@ -431,10 +431,10 @@ func getURLCategories() *schema.Schema {
 
 func getSuperCategories() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		Optional:     true,
-		Description:  "Super Category of the URL category. This field is required when creating custom URL categories.",
-		ValidateFunc: validateURLSuperCategories(),
+		Type:             schema.TypeString,
+		Optional:         true,
+		Description:      "Super Category of the URL category. This field is required when creating custom URL categories.",
+		ValidateDiagFunc: validateURLSuperCategories(),
 	}
 }
 
@@ -443,8 +443,8 @@ func getDeviceTrustLevels() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation.",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateDeviceTrustLevels(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateDeviceTrustLevels(),
 		},
 		Optional: true,
 		ForceNew: true,
@@ -456,8 +456,8 @@ func getURLRequestMethods() *schema.Schema {
 		Type:        schema.TypeSet,
 		Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringRequestMethods(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringRequestMethods(),
 		},
 		Optional: true,
 	}
@@ -470,29 +470,29 @@ func getURLProtocols() *schema.Schema {
 		Required:    true,
 		MinItems:    1,
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateURLFilteringProtocols(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringProtocols(), // Use ValidateDiagFunc here
 		},
 	}
 }
 
 func getLocationManagementCountries() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		ValidateFunc: validateLocationManagementCountries(),
-		Description:  "Supported Countries",
-		Optional:     true,
-		Computed:     true,
+		Type:             schema.TypeString,
+		ValidateDiagFunc: validateLocationManagementCountries(),
+		Description:      "Supported Countries",
+		Optional:         true,
+		Computed:         true,
 	}
 }
 
 func getLocationManagementTimeZones() *schema.Schema {
 	return &schema.Schema{
-		Type:         schema.TypeString,
-		ValidateFunc: validateLocationManagementTimeZones(),
-		Description:  "Timezone of the location. If not specified, it defaults to GMT.",
-		Optional:     true,
-		Computed:     true,
+		Type:             schema.TypeString,
+		ValidateDiagFunc: validateLocationManagementTimeZones(),
+		Description:      "Timezone of the location. If not specified, it defaults to GMT.",
+		Optional:         true,
+		Computed:         true,
 	}
 }
 
@@ -512,10 +512,10 @@ func getDestinationCountries() *schema.Schema {
 func getCloudFirewallNwApplications() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
-		Description: "User-defined network service applications to which the rule applies. If not set, the rule is not restricted to a specific network service application.",
+		Description: "User-defined network service applications on which the rule is applied. If not set, the rule is not restricted to a specific network service application.",
 		Elem: &schema.Schema{
-			Type:         schema.TypeString,
-			ValidateFunc: validateCloudFirewallNwApplications(),
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateCloudFirewallNwApplications(),
 		},
 		Optional: true,
 		Computed: true,
