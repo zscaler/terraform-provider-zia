@@ -103,7 +103,6 @@ func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) erro
 }
 
 func resourceSandboxSubmissionRead(d *schema.ResourceData, m interface{}) error {
-
 	// Only POST methods are available, we can't fetch data again
 
 	return nil

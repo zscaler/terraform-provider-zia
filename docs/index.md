@@ -22,7 +22,7 @@ Use the navigation on the left to read about the available resources.
 terraform {
     required_providers {
         zia = {
-            version = "2.2.3"
+            version = "2.7.0"
             source = "zscaler/zia"
         }
     }
@@ -62,6 +62,20 @@ provider "zia" {
 }
 ```
 
+### Support Zscaler Internet Access Clouds
+
+The ZIA Terraform Provider supports the following environments:
+
+* zscaler
+* zscalerone
+* zscalertwo
+* zscalerthree
+* zscloud
+* zscalerbeta
+* zscalergov
+* zscalerten
+* zspreview
+
 ### Environment variables
 
 You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_CLOUD` environment variables, representing your ZIA username, password, API Key credentials and tenant base URL, respectively.
@@ -91,6 +105,10 @@ $env:zia_cloud  = '<zscaler_cloud_name>'
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>
 
+### Zscaler Sandbox Authentication
+
+The ZIA Terraform provider requires both the `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` in order to authenticate to the Zscaler Cloud Sandbox environment. For details on how obtain the API Token visit the Zscaler help portal [About Sandbox API Token](https://help.zscaler.com/zia/about-sandbox-api-token)
+
 ### Parallelism
 
 Terraform uses goroutines to speed up deployment, but the number of parallel
@@ -100,13 +118,10 @@ operations is launches exceeds
 ⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests ONE, when configuring the following resources rules:
     - ``zia_dlp_web_rules``
     - ``zia_url_filtering_rules``
-    - ``zia_firewall_filtering_rule`
+    - ``zia_firewall_filtering_rule``
+    - ``zia_firewall_filtering_rule``
 
-  This will allow the API to settle these resources in the correct order. Pushing large batches of security rules at once, may incur in Terraform to Timeout after 20 mins, as it will try to place the rules in the incorrect order. This issue will be addressed in future versions.
-
-In order to accomplish this, make sure you set the
-[parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or
-below this limit to prevent performance impacts.
+In order to accomplish this, make sure you set the [parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or below this limit to prevent performance impacts.
 
 ## Support
 

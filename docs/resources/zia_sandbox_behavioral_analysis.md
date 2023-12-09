@@ -40,3 +40,5 @@ The following arguments are supported:
 ### Optional
 
 * `file_hashes_to_be_blocked` - (Required) A custom list of unique MD5 file hashes that must be blocked by Sandbox. A maximum of 10000 MD5 file hashes can be blocked.
+
+**Note 3**: The Sandbox only supports MD5 hashes. The provider will validate the MD5 format prior to submission.

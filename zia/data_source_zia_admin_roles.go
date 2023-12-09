@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/roles"
 )
 
 func dataSourceAdminRoles() *schema.Resource {
@@ -90,11 +90,11 @@ func dataSourceAdminRoles() *schema.Resource {
 func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *adminuserrolemgmt.AdminRoles
+	var resp *roles.AdminRoles
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for admin role id: %d\n", id)
-		res, err := zClient.adminuserrolemgmt.Get(id)
+		res, err := zClient.roles.Get(id)
 		if err != nil {
 			return err
 		}
@@ -103,7 +103,7 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
-		res, err := zClient.adminuserrolemgmt.GetByName(name)
+		res, err := zClient.roles.GetByName(name)
 		if err != nil {
 			return err
 		}

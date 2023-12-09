@@ -129,7 +129,7 @@ func Provider() *schema.Provider {
 			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
 			"zia_sandbox_behavioral_analysis":                   dataSourceSandboxSettings(),
-			"zia_sandbox_report":                                dataSourceSandboxReport(),
+			// "zia_sandbox_report":                             dataSourceSandboxReport(),
 		},
 	}
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

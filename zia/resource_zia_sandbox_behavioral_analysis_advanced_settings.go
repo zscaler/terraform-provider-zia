@@ -28,11 +28,40 @@ func resourceSandboxSettings() *schema.Resource {
 	}
 }
 
+func validateHashes(hashes []string) error {
+	for _, hash := range hashes {
+		hashType := identifyHashType(hash)
+		if hashType != "MD5" {
+			return fmt.Errorf("the hash '%s' is a %s type. The sandbox only supports MD5 hashes", hash, hashType)
+		}
+	}
+	return nil
+}
+
+func identifyHashType(hash string) string {
+	switch len(hash) {
+	case 32:
+		return "MD5"
+	case 40:
+		return "SHA1"
+	case 64:
+		return "SHA256"
+	default:
+		return "unknown"
+	}
+}
+
 func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	fileHashes := expandAndSortSandboxSettings(d)
 
-	_, err := zClient.sandbox_settings.Update(fileHashes)
+	// Validate hashes
+	err := validateHashes(fileHashes.FileHashesToBeBlocked)
+	if err != nil {
+		return err
+	}
+
+	_, err = zClient.sandbox_settings.Update(fileHashes)
 	if err != nil {
 		return err
 	}
@@ -64,6 +93,12 @@ func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error 
 	zClient := m.(*Client)
 
 	stateHashes := expandAndSortSandboxSettings(d)
+
+	// Validate hashes
+	if err := validateHashes(stateHashes.FileHashesToBeBlocked); err != nil {
+		return err
+	}
+
 	currentSettings, err := zClient.sandbox_settings.Get()
 	if err != nil {
 		return err

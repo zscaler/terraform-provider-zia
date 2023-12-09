@@ -12,11 +12,11 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 )
 
 func TestAccResourceAdminUsersBasic(t *testing.T) {
-	var admins adminuserrolemgmt.AdminUsers
+	var admins admins.AdminUsers
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminUsers)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rPassword := acctest.RandString(10)
@@ -70,7 +70,7 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 			return err
 		}
 
-		admin, err := apiClient.adminuserrolemgmt.GetAdminUsers(id)
+		admin, err := apiClient.admins.GetAdminUsers(id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -84,7 +84,7 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.AdminUsers) resource.TestCheckFunc {
+func testAccCheckAdminUsersExists(resource string, admin *admins.AdminUsers) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -101,7 +101,7 @@ func testAccCheckAdminUsersExists(resource string, admin *adminuserrolemgmt.Admi
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.adminuserrolemgmt.GetAdminUsers(id)
+		receivedRule, err := apiClient.admins.GetAdminUsers(id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

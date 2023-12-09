@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 
@@ -387,3 +388,4 @@ func flattenSandboxRSS(items []*common.SandboxRSS) []interface{} {
 	}
 	return out
 }
+*/
