@@ -34,6 +34,14 @@ func resourceSandboxSubmission() *schema.Resource {
 					"discan",
 				}, false),
 			},
+			"code": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"message": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"file_type": {
 				Type:     schema.TypeString,
 				Computed: true,
