@@ -88,52 +88,26 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 }
 
 /*
-func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	idNameExtObj, ok := d.GetOk(key)
-	if !ok {
-		return nil
-	}
-	idNameExt, ok := idNameExtObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(idNameExt.List()) > 0 {
-		lastModifiedByObj := idNameExt.List()[0]
-		lastMofied, ok := lastModifiedByObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		return &common.IDNameExtensions{
-			ID:         lastMofied["id"].(int),
-			Name:       lastMofied["name"].(string),
-			Extensions: lastMofied["extensions"].(map[string]interface{}),
-		}
-	}
-	return nil
-}
-*/
-/*
-	func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
-		setInterface, ok := d.GetOk(key)
-		if !ok {
-			return []common.UserGroups{}
-		}
-		set := setInterface.(*schema.Set)
-		var result []common.UserGroups
-		for _, groupObj := range set.List() {
-			group, ok := groupObj.(map[string]interface{})
-			if ok {
-				result = append(result, common.UserGroups{
-					ID:       group["id"].(int),
-					Name:     group["name"].(string),
-					IdpID:    group["idp_id"].(int),
-					Comments: group["comments"].(string),
-				})
+// Deprecated common helper function
+
+	func expandIDSet(d *schema.ResourceData, key string) []int {
+		var ids []int
+
+		if v, ok := d.GetOk(key); ok {
+			set := v.(*schema.Set)
+			list := set.List()
+			for _, item := range list {
+				if idMap, ok := item.(map[string]interface{}); ok {
+					if id, ok := idMap["id"].(int); ok {
+						ids = append(ids, id)
+					}
+				}
 			}
 		}
-		return result
+		return ids
 	}
 */
+
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
 	departmentObj, ok := d.GetOk("department")
 	if !ok {
@@ -263,28 +237,6 @@ func flattenCreatedBy(createdBy *common.IDNameExtensions) []interface{} {
 	}
 	return created
 }
-
-/*
-func flattenUserGroupSet(list []common.UserGroups) []interface{} {
-	var result []interface{}
-	for _, group := range list {
-		obj := map[string]interface{}{
-			"id": group.ID,
-		}
-		if group.Name != "" {
-			obj["name"] = group.Name
-		}
-		if group.IdpID != 0 {
-			obj["idp_id"] = group.IdpID
-		}
-		if group.Comments != "" {
-			obj["comments"] = group.Comments
-		}
-		result = append(result, obj)
-	}
-	return result
-}
-*/
 
 func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
 	department := make([]interface{}, 0)
@@ -459,13 +411,13 @@ func getLocationManagementTimeZones() *schema.Schema {
 	}
 }
 
-func getCloudFirewallDstCountries() *schema.Schema {
+func getDestinationCountries() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
 		Elem: &schema.Schema{
 			Type:         schema.TypeString,
-			ValidateFunc: validateCloudFirewallDstCountries,
+			ValidateFunc: validateDestinationCountries,
 		},
 		Optional: true,
 		Computed: true,
@@ -621,23 +573,3 @@ func reorder(order, id int, resourceType string, getCount func() (int, error), u
 		reorderAll(resourceType, getCount, updateOrder)
 	}
 }
-
-// flattenSandboxRSS converts a slice of SandboxRSS structs to a slice of maps for Terraform.
-// func flattenSandboxRSS(sandboxRSSs []*common.SandboxRSS) []interface{} {
-// 	var results []interface{}
-// 	for _, item := range sandboxRSSs {
-// 		if item != nil {
-// 			result := make(map[string]interface{})
-// 			result["risk"] = item.Risk
-// 			result["signature"] = item.Signature
-
-// 			var sources []interface{}
-// 			for _, src := range item.SignatureSources {
-// 				sources = append(sources, src)
-// 			}
-// 			result["signature_sources"] = sources
-// 			results = append(results, result)
-// 		}
-// 	}
-// 	return results
-// }

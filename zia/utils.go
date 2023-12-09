@@ -13,6 +13,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
 )
 
+func intPtr(n int) *int {
+	return &n
+}
+
 func SetToStringSlice(d *schema.Set) []string {
 	list := d.List()
 	return ListToStringSlice(list)
