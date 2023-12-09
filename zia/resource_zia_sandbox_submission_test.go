@@ -32,8 +32,9 @@ func TestAccZiaSandboxFileSubmission_basic(t *testing.T) {
 		}
 
 		resource.Test(t, resource.TestCase{
-			PreCheck:  func() { testAccPreCheck(t) },
-			Providers: testAccProviders,
+			PreCheck:     func() { testAccPreCheck(t) },
+			Providers:    testAccProviders,
+			CheckDestroy: testAccCheckSandboxSubmissionDestroy,
 			Steps: []resource.TestStep{
 				{
 					Config: testAccCheckZiaSandboxFileSubmissionConfig(localFilePath, "submit", true),
@@ -96,4 +97,9 @@ func downloadTestFile(url string) (string, error) {
 	}
 
 	return filePath, nil
+}
+
+func testAccCheckSandboxSubmissionDestroy(s *terraform.State) error {
+	// Implement if there's anything to check upon resource destruction
+	return nil
 }
