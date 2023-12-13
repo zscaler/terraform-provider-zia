@@ -143,7 +143,7 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 			return err
 		}
 
-		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
+		if err := d.Set("zpa_app_segments", flattenFWDZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return err
 		}
 
@@ -167,7 +167,7 @@ func flattenZPAServerGroup(group zpa_gateways.ZPAServerGroup) []interface{} {
 	}
 }
 
-func flattenZPAAppSegments(segments []zpa_gateways.ZPAAppSegments) []map[string]interface{} {
+func flattenFWDZPAAppSegments(segments []zpa_gateways.ZPAAppSegments) []map[string]interface{} {
 	flattenedSegments := make([]map[string]interface{}, len(segments))
 
 	for i, segment := range segments {
