@@ -66,6 +66,7 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				MaxItems: 2048,
 			},
 			"keywords_retaining_parent_category": {
 				Type:     schema.TypeSet,
@@ -88,7 +89,7 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope_group_member_entities": setIDsSchemaTypeCustom(nil, "list of scope group member IDs"),
+						"scope_group_member_entities": listIDsSchemaType("list of scope group member IDs"),
 						"type": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -99,7 +100,7 @@ func resourceURLCategories() *schema.Resource {
 								"LOCATION_GROUP",
 							}, false),
 						},
-						"scope_entities": setIDsSchemaTypeCustom(nil, "list of scope IDs"),
+						"scope_entities": listIDsSchemaType("list of scope IDs"),
 					},
 				},
 			},
@@ -208,6 +209,7 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 		return fmt.Errorf("no url category rule id is set")
 	}
 	resp, err := zClient.urlcategories.Get(id)
+
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
@@ -343,7 +345,6 @@ func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCou
 	}
 	return &keywordCounts
 }
-
 func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 	var scopes []urlcategories.Scopes
 	if scopeInterface, ok := d.GetOk("scopes"); ok {

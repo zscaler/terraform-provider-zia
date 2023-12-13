@@ -12,6 +12,35 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
 )
 
+func listIDsSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
+	ids := &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeInt,
+		},
+	}
+	if maxItems > 0 {
+		ids.MaxItems = maxItems
+	}
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		MaxItems:    1,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": ids,
+			},
+		},
+	}
+}
+
+func listIDsSchemaType(desc string) *schema.Schema {
+	return listIDsSchemaTypeCustom(0, desc)
+}
+
 func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 	ids := &schema.Schema{
 		Type:     schema.TypeSet,

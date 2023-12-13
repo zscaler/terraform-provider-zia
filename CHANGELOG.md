@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.7.0 (December, 13 2023)
+
+### Notes
+
+- Release date: **(December, 13 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+NEW - RESOURCES, DATA SOURCES
+
+- [PR #293](https://github.com/zscaler/terraform-provider-zia/pull/293) - ✨ Added support for ZIA 🆕 Custom ZPA Gateway for use with Forwarding Control policy to forward traffic to ZPA for Source IP Anchoring.
+- [PR #294](https://github.com/zscaler/terraform-provider-zia/pull/294) - ✨ Added support for ZIA 🆕 Forwarding Control Rule configuration.
+
+- [PR #295](https://github.com/zscaler/terraform-provider-zia/pull/295) - ✨ Added ZIA Sandbox MD5 Hash and verdict report submission Resources:
+  - **Sandbox Advanced Settings** - `zia_sandbox_behavioral_analysis` Gets and Upddates the custom list of MD5 file hashes that are blocked by Sandbox.
+  - **Sandbox Report** - `zia_sandbox_report` Gets a full (i.e., complete) or summary detail report for an MD5 hash of a file that was analyzed by Sandbox.
+
+- [PR #295](https://github.com/zscaler/terraform-provider-zia/pull/295) - ✨ Added ZIA Sandbox raw and archive file submission:
+  - **Sandbox Submission** - `zia_sandbox_file_submission` - Submits raw or archive files (e.g., ZIP) to Sandbox for analysis. You can submit up to 100 files per day and it supports all file types that are currently supported by Sandbox.
+  - **Sandbox Submission** - `zia_sandbox_file_submission` -  Submits raw or archive files (e.g., ZIP) to the Zscaler service for out-of-band file inspection to generate real-time verdicts for known and unknown files. It leverages capabilities such as Malware Prevention, Advanced Threat Prevention, Sandbox cloud effect, AI/ML-driven file analysis, and integrated third-party threat intelligence feeds to inspect files and classify them as benign or malicious instantaneously.
+    ⚠️ **Note:**: The ZIA Terraform provider requires both the `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` in order to authenticate to the Zscaler Cloud Sandbox environment. For details on how obtain the API Token visit the Zscaler help portal [About Sandbox API Token](https://help.zscaler.com/zia/about-sandbox-api-token)
+
+### Fixes
+
+- [PR #299](https://github.com/zscaler/terraform-provider-zia/pull/299) - Fixed panic with ``zia_url_categories``.
+
 ## 2.6.6 (November, 23 2023)
 
 ### Notes
