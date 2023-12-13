@@ -47,6 +47,12 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "tls_enabled", strconv.FormatBool(variable.DLPNoticationTemplateTLSEnabled)),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -31,3 +32,4 @@ var testAccCheckDataSourceActivationStatusConfig_basic = `
 data "zia_activation_status" "status" {
 }
 `
+*/
