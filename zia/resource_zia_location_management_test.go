@@ -12,7 +12,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
 )
 
 func TestAccResourceLocationManagementBasic(t *testing.T) {
@@ -71,6 +71,12 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "1"),
 					// resource.TestCheckResourceAttr(resourceTypeAndName, "vpn_credentials.#", "1"),
 				),
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

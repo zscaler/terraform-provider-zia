@@ -21,7 +21,6 @@ TESTARGS?=-test.v
 default: build
 
 dep: # Download required dependencies
-	go mod tidy
 
 build: fmtcheck
 	go install
@@ -46,15 +45,14 @@ testacc:
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.6/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.7.0/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.6.6/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.7.0/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
-	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-zia_v2.6.6
+	go build -o $(DESTINATION)/terraform-provider-zia_v2.7.0
 
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"
@@ -74,9 +72,15 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-fmt-docs:
-	@echo "✓ Formatting code samples in documentation"
-	@terrafmt fmt -p '*.md' .
+tools:
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.4.0
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
+
+tools-update:
+	@go install mvdan.cc/gofumpt@v0.4.0
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
+	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
 
 vendor-status:
 	@govendor status
@@ -88,41 +92,6 @@ test-compile:
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)
-
-lint:
-	@echo "==> Checking source code against linters..."
-	@$(TFPROVIDERLINT) \
-		-c 1 \
-		-AT001 \
-    -R004 \
-		-S001 \
-		-S002 \
-		-S003 \
-		-S004 \
-		-S005 \
-		-S007 \
-		-S008 \
-		-S009 \
-		-S010 \
-		-S011 \
-		-S012 \
-		-S013 \
-		-S014 \
-		-S015 \
-		-S016 \
-		-S017 \
-		-S019 \
-		./$(PKG_NAME)
-
-tools:
-	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.5.0
-	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
-	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
-
-tools-update:
-	@go install mvdan.cc/gofumpt@v0.5.0
-	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
-	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
 ziaActivator: GOOS=$(shell go env GOOS)
 ziaActivator: GOARCH=$(shell go env GOARCH)
@@ -144,10 +113,15 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+website-lint:
+	@echo "==> Checking website against linters..."
+	@misspell -error -source=text website/
+
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+
 .PHONY: build test testacc vet fmt fmtcheck errcheck tools vendor-status test-compile website-lint website website-test

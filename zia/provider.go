@@ -67,6 +67,7 @@ func Provider() *schema.Provider {
 			"zia_traffic_forwarding_gre_tunnel":                 resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":                  resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials":            resourceTrafficForwardingVPNCredentials(),
+			"zia_forwarding_control_zpa_gateway":                resourceForwardingControlZPAGateway(),
 			"zia_location_management":                           resourceLocationManagement(),
 			"zia_url_categories":                                resourceURLCategories(),
 			"zia_url_filtering_rules":                           resourceURLFilteringRules(),
@@ -120,6 +121,7 @@ func Provider() *schema.Provider {
 			"zia_activation_status":                             dataSourceActivationStatus(),
 			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
+			"zia_forwarding_control_zpa_gateway":                dataSourceForwardingControlZPAGateway(),
 		},
 	}
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

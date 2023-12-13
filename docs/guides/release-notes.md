@@ -12,9 +12,23 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.6.6``
+``Last updated: v2.7.0``
 
 ---
+
+## 2.7.0 (December, xx 2023)
+
+### Notes
+
+- Release date: **(December, xx 2023)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+NEW - RESOURCES, DATA SOURCES
+
+- [PR #293](https://github.com/zscaler/terraform-provider-zia/pull/293) - ✨ Added support for ZIA 🆕 Custom ZPA Gateway for use with Forwarding Control policy to forward traffic to ZPA for Source IP Anchoring.
+- [PR #294](https://github.com/zscaler/terraform-provider-zia/pull/294) - ✨ Added support for ZIA 🆕 Forwarding Control Rule configuration.
 
 ## 2.6.6 (November, 23 2023)
 

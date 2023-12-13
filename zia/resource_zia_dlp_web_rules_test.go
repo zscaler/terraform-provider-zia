@@ -11,7 +11,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
 )
 
 func TestAccResourceDlpWebRulesBasic(t *testing.T) {
@@ -58,6 +58,12 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

@@ -47,6 +47,12 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_tcp_ports.#", "3"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

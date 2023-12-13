@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp_exact_data_match"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_exact_data_match"
 )
 
 func dataSourceDLPEDMSchema() *schema.Resource {

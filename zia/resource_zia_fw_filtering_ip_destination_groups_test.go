@@ -45,6 +45,12 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

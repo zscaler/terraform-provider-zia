@@ -11,7 +11,7 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlpdictionaries"
 )
 
 func TestAccResourceDLPDictionariesBasic(t *testing.T) {
@@ -44,6 +44,12 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
 				),
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
