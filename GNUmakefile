@@ -1,7 +1,11 @@
+SWEEP?=global
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep "zia/")
 WEBSITE_REPO=github.com/hashicorp/terraform-website
 PKG_NAME=zia
+GOFMT:=gofumpt
+TFPROVIDERLINT=tfproviderlint
+STATICCHECK=staticcheck
 TF_PLUGIN_DIR=~/.terraform.d/plugins
 ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
 
