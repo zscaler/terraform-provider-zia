@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 
@@ -30,25 +29,17 @@ func dataSourceSandboxReport() *schema.Resource {
 			"summary": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"detail": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     summaryDetailSchema(),
-						},
-						"classification": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     classificationSchema(),
-						},
-						"file_properties": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     filePropertiesSchema(),
-						},
-					},
-				},
+				Elem:     summaryDetailSchema(),
+			},
+			"classification": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     classificationSchema(),
+			},
+			"file_properties": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     filePropertiesSchema(),
 			},
 			"origin":          originSchema(),
 			"system_summary":  systemSummaryDetailSchema(),
@@ -245,60 +236,56 @@ func dataSourceSandboxReportRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if resp != nil {
+	if resp != nil && resp.Details != nil {
 		d.SetId(md5Hash)
 
-		if err := d.Set("md5_hash", resp.MD5Hash); err != nil {
+		if err := d.Set("md5_hash", md5Hash); err != nil {
 			return fmt.Errorf("error setting md5_hash: %s", err)
 		}
 
-		if resp.Summary != nil {
-			summaryMap := make(map[string]interface{})
-			if resp.Summary.Detail != nil {
-				summaryMap["detail"] = []interface{}{flattenSummaryDetail(resp.Summary.Detail)}
+		if resp.Details != nil {
+			if err := d.Set("summary", []interface{}{flattenSummaryDetail(resp.Details.Summary)}); err != nil {
+				return fmt.Errorf("error setting summary: %s", err)
 			}
-			if resp.Summary.Classification != nil {
-				summaryMap["classification"] = []interface{}{flattenClassification(resp.Summary.Classification)}
-			}
-			if resp.Summary.FileProperties != nil {
-				summaryMap["file_properties"] = []interface{}{flattenFileProperties(resp.Summary.FileProperties)}
+			if err := d.Set("classification", []interface{}{flattenClassification(resp.Details.Classification)}); err != nil {
+				return fmt.Errorf("error setting classification: %s", err)
 			}
 
-			if err := d.Set("summary", []interface{}{summaryMap}); err != nil {
-				return fmt.Errorf("error setting summary: %s", err)
+			if err := d.Set("file_properties", []interface{}{flattenFileProperties(&resp.Details.FileProperties)}); err != nil {
+				return fmt.Errorf("error setting file_properties: %s", err)
 			}
 		}
 
-		if details == "full" && resp.FullDetails != nil {
+		if details == "full" {
 			// Set additional fields for full details
-			if err := d.Set("origin", []interface{}{flattenOrigin(resp.FullDetails.Origin)}); err != nil {
+			if err := d.Set("origin", []interface{}{flattenOrigin(resp.Details.Origin)}); err != nil {
 				return fmt.Errorf("error setting origin: %s", err)
 			}
 
-			if err := d.Set("system_summary", flattenSystemSummaryDetails(resp.FullDetails.SystemSummary)); err != nil {
+			if err := d.Set("system_summary", flattenSystemSummaryDetails(resp.Details.SystemSummary)); err != nil {
 				return fmt.Errorf("error setting system_summary: %s", err)
 			}
 
 			// Repeat for other SandboxRSS fields like spyware, networking, etc.
-			if err := d.Set("spyware", flattenSandboxRSS(resp.FullDetails.Spyware)); err != nil {
+			if err := d.Set("spyware", flattenSandboxRSS(resp.Details.Spyware)); err != nil {
 				return fmt.Errorf("error setting spyware: %s", err)
 			}
-			if err := d.Set("networking", flattenSandboxRSS(resp.FullDetails.Networking)); err != nil {
+			if err := d.Set("networking", flattenSandboxRSS(resp.Details.Networking)); err != nil {
 				return fmt.Errorf("error setting networking: %s", err)
 			}
-			if err := d.Set("security_bypass", flattenSandboxRSS(resp.FullDetails.SecurityBypass)); err != nil {
+			if err := d.Set("security_bypass", flattenSandboxRSS(resp.Details.SecurityBypass)); err != nil {
 				return fmt.Errorf("error setting security_bypass: %s", err)
 			}
-			if err := d.Set("exploit", flattenSandboxRSS(resp.FullDetails.Exploit)); err != nil {
+			if err := d.Set("exploit", flattenSandboxRSS(resp.Details.Exploit)); err != nil {
 				return fmt.Errorf("error setting exploit: %s", err)
 			}
-			if err := d.Set("stealth", flattenSandboxRSS(resp.FullDetails.Stealth)); err != nil {
+			if err := d.Set("stealth", flattenSandboxRSS(resp.Details.Stealth)); err != nil {
 				return fmt.Errorf("error setting stealth: %s", err)
 			}
-			if err := d.Set("persistence", flattenSandboxRSS(resp.FullDetails.Persistence)); err != nil {
+			if err := d.Set("persistence", flattenSandboxRSS(resp.Details.Persistence)); err != nil {
 				return fmt.Errorf("error setting persistence: %s", err)
 			}
-			if err := d.Set("persistence", flattenSandboxRSS(resp.FullDetails.Persistence)); err != nil {
+			if err := d.Set("persistence", flattenSandboxRSS(resp.Details.Persistence)); err != nil {
 				return fmt.Errorf("error setting persistence: %s", err)
 			}
 		}
@@ -310,7 +297,7 @@ func dataSourceSandboxReportRead(d *schema.ResourceData, m interface{}) error {
 }
 
 // Helper functions to flatten details
-func flattenSummaryDetail(summary *sandbox_report.SummaryDetail) map[string]interface{} {
+func flattenSummaryDetail(summary sandbox_report.SummaryDetail) map[string]interface{} {
 	return map[string]interface{}{
 		"status":     summary.Status,
 		"category":   summary.Category,
@@ -320,7 +307,7 @@ func flattenSummaryDetail(summary *sandbox_report.SummaryDetail) map[string]inte
 	}
 }
 
-func flattenClassification(classification *sandbox_report.Classification) map[string]interface{} {
+func flattenClassification(classification sandbox_report.Classification) map[string]interface{} {
 	return map[string]interface{}{
 		"type":             classification.Type,
 		"category":         classification.Category,
@@ -355,7 +342,7 @@ func flattenOrigin(origin *sandbox_report.Origin) map[string]interface{} {
 	}
 }
 
-func flattenSystemSummaryDetails(details []*sandbox_report.SystemSummaryDetail) []interface{} {
+func flattenSystemSummaryDetails(details []sandbox_report.SystemSummaryDetail) []interface{} {
 	if details == nil {
 		return nil
 	}
@@ -388,4 +375,3 @@ func flattenSandboxRSS(items []*common.SandboxRSS) []interface{} {
 	}
 	return out
 }
-*/

@@ -6,6 +6,5 @@ resource "zia_sandbox_behavioral_analysis" "this" {
   ]
 }
 
-
-// Erase All Hashes
+// Erases All Hashes
 resource "zia_sandbox_behavioral_analysis" "this" {}
