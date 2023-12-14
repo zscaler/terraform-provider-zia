@@ -70,9 +70,11 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_network_service":            resourceFWNetworkServices(),
 			"zia_firewall_filtering_network_service_groups":     resourceFWNetworkServiceGroups(),
 			"zia_firewall_filtering_network_application_groups": resourceFWNetworkApplicationGroups(),
+			"zia_forwarding_control_rule":                       resourceForwardingControlRule(),
 			"zia_traffic_forwarding_gre_tunnel":                 resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":                  resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials":            resourceTrafficForwardingVPNCredentials(),
+			"zia_forwarding_control_zpa_gateway":                resourceForwardingControlZPAGateway(),
 			"zia_location_management":                           resourceLocationManagement(),
 			"zia_url_categories":                                resourceURLCategories(),
 			"zia_url_filtering_rules":                           resourceURLFilteringRules(),
@@ -101,6 +103,7 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_ip_source_groups":           dataSourceFWIPSourceGroups(),
 			"zia_firewall_filtering_destination_groups":         dataSourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_time_window":                dataSourceFWTimeWindow(),
+			"zia_forwarding_control_rule":                       dataSourceForwardingControlRule(),
 			"zia_url_categories":                                dataSourceURLCategories(),
 			"zia_url_filtering_rules":                           dataSourceURLFilteringRules(),
 			"zia_traffic_forwarding_public_node_vips":           dataSourceTrafficForwardingPublicNodeVIPs(),
@@ -130,6 +133,7 @@ func Provider() *schema.Provider {
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
 			"zia_sandbox_behavioral_analysis":                   dataSourceSandboxSettings(),
 			"zia_sandbox_report":                                dataSourceSandboxReport(),
+			"zia_forwarding_control_zpa_gateway":                dataSourceForwardingControlZPAGateway(),
 		},
 	}
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

@@ -41,6 +41,12 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

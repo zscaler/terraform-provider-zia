@@ -16,7 +16,6 @@ import (
 func intPtr(n int) *int {
 	return &n
 }
-
 func SetToStringSlice(d *schema.Set) []string {
 	list := d.List()
 	return ListToStringSlice(list)

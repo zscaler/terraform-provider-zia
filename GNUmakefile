@@ -21,7 +21,9 @@ TESTARGS?=-test.v
 default: build
 
 dep: # Download required dependencies
-	go mod tidy
+
+docs:
+	go generate
 
 build: fmtcheck
 	go install
@@ -38,10 +40,11 @@ sweep:
 
 test:
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=4
+		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=10
 
 testacc:
 	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
+
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
@@ -51,10 +54,13 @@ else
 build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.7.0/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
-	go mod tidy && go mod vendor
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.7.0
+
+coverage: test
+	@echo "✓ Opening coverage for unit tests ..."
+	@go tool cover -html=coverage.txt
 
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"
@@ -144,10 +150,15 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+website-lint:
+	@echo "==> Checking website against linters..."
+	@misspell -error -source=text website/
+
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+
 .PHONY: build test testacc vet fmt fmtcheck errcheck tools vendor-status test-compile website-lint website website-test

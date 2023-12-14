@@ -59,6 +59,12 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
