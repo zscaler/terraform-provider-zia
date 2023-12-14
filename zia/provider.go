@@ -50,6 +50,12 @@ func Provider() *schema.Provider {
 				}, false),
 				Required: true,
 			},
+			"api_token": {
+				Type:        schema.TypeString,
+				DefaultFunc: envDefaultFunc("ZIA_SANDBOX_TOKEN"),
+				Required:    true,
+				Sensitive:   true,
+			},
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
@@ -77,6 +83,8 @@ func Provider() *schema.Provider {
 			"zia_rule_labels":                                   resourceRuleLabels(),
 			"zia_auth_settings_urls":                            resourceAuthSettingsUrls(),
 			"zia_security_settings":                             resourceSecurityPolicySettings(),
+			"zia_sandbox_behavioral_analysis":                   resourceSandboxSettings(),
+			"zia_sandbox_file_submission":                       resourceSandboxSubmission(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -123,6 +131,8 @@ func Provider() *schema.Provider {
 			"zia_activation_status":                             dataSourceActivationStatus(),
 			"zia_auth_settings_urls":                            dataSourceAuthSettingsUrls(),
 			"zia_security_settings":                             dataSourceSecurityPolicySettings(),
+			"zia_sandbox_behavioral_analysis":                   dataSourceSandboxSettings(),
+			"zia_sandbox_report":                                dataSourceSandboxReport(),
 			"zia_forwarding_control_zpa_gateway":                dataSourceForwardingControlZPAGateway(),
 		},
 	}

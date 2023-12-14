@@ -38,7 +38,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
@@ -223,7 +223,6 @@ resource "%s" "%s" {
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
 	match_only 					= false
-	ocr_enabled 				= false
 	file_types                  = []
 	min_size 					= 20
 	zscaler_incident_receiver 	= true

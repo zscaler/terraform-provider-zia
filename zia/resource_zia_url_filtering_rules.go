@@ -223,7 +223,6 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		order := req.Order
 		req.Order = urlFilteringStartingOrder
 		resp, err := zClient.urlfilteringpolicies.Create(&req)
-
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
