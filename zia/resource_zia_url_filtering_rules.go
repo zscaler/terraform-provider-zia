@@ -75,9 +75,8 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description:  "Additional information about the URL Filtering rule",
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeInt,
+				Optional:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
@@ -103,7 +102,6 @@ func resourceURLFilteringRules() *schema.Resource {
 			"block_override": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				// Computed: true,
 			},
 			"time_quota": {
 				Type:         schema.TypeInt,
@@ -133,9 +131,8 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
 			},
 			"enforce_time_validity": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
 			"user_agent_types": {
@@ -155,10 +152,37 @@ func resourceURLFilteringRules() *schema.Resource {
 				}, false),
 			},
 			"ciparule": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				// Computed:    true,
+				Type:        schema.TypeBool,
+				Optional:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
+			},
+			// "cbi_profile_id": {
+			// 	Type:     schema.TypeInt,
+			// 	Optional: true,
+			// },
+			"cbi_profile": {
+				Type:     schema.TypeList,
+				Optional: true,
+				// Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							// Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							// Computed: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Optional: true,
+							// Computed: true,
+						},
+					},
+				},
 			},
 			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
 			"groups":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
@@ -316,6 +340,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 	_ = d.Set("order", resp.Order)
+	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
@@ -360,6 +385,11 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
 		return err
 	}
+
+	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -470,6 +500,35 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Labels:                 expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:                expandIDNameExtensionsSet(d, "devices"),
+		CBIProfile:             expandCBIProfile(d),
 	}
+
 	return result
+}
+
+func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
+	cbiProfile := &urlfilteringpolicies.CBIProfile{}
+
+	if v, ok := d.GetOk("cbi_profile"); ok && len(v.([]interface{})) > 0 {
+		cbiProfileData := v.([]interface{})[0].(map[string]interface{})
+		cbiProfile.ID = cbiProfileData["id"].(string)
+		cbiProfile.Name = cbiProfileData["name"].(string)
+		cbiProfile.URL = cbiProfileData["url"].(string)
+	}
+
+	return cbiProfile
+}
+
+func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
+	if cbiProfile == nil || (cbiProfile.ID == "" && cbiProfile.Name == "" && cbiProfile.URL == "") {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"id":   cbiProfile.ID,
+		"name": cbiProfile.Name,
+		"url":  cbiProfile.URL,
+	}
+
+	return []interface{}{m}
 }

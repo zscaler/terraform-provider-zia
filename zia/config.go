@@ -7,6 +7,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/roles"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudbrowserisolation"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/devicegroups"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_exact_data_match"
@@ -100,6 +101,7 @@ type Client struct {
 	sandbox_settings              *sandbox_settings.Service
 	sandbox_report                *sandbox_report.Service
 	sandbox_submission            *sandbox_submission.Service
+	cloudbrowserisolation         *cloudbrowserisolation.Service
 }
 
 type Config struct {
@@ -161,6 +163,7 @@ func (c *Config) Client() (*Client, error) {
 		sandbox_settings:              sandbox_settings.New(cli),
 		sandbox_report:                sandbox_report.New(cli),
 		sandbox_submission:            sandbox_submission.New(cli),
+		cloudbrowserisolation:         cloudbrowserisolation.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")

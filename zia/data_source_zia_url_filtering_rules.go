@@ -364,6 +364,30 @@ func dataSourceURLFilteringRules() *schema.Resource {
 					},
 				},
 			},
+			"cbi_profile": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"profile_seq": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"enforce_time_validity": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -435,6 +459,7 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("ciparule", resp.Ciparule)
 		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+		_ = d.Set("cbi_profile_id", resp.CBIProfileID)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
@@ -491,9 +516,26 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 			return err
 		}
 
+		if err := d.Set("cbi_profile", flattenCBIProfile(resp.CBIProfile)); err != nil {
+			return err
+		}
+
 	} else {
 		return fmt.Errorf("couldn't find any url filtering rule with name '%s' or id '%d'", name, id)
 	}
 
 	return nil
+}
+
+func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]interface{} {
+	if cbiProfile == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"profile_seq": cbiProfile.ProfileSeq,
+		"id":          cbiProfile.ID,
+		"name":        cbiProfile.Name,
+		"url":         cbiProfile.URL,
+	}
 }
