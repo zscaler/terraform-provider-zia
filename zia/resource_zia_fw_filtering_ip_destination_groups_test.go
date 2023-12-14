@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 	var groups ipdestinationgroups.IPDestinationGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringDestinationGroup)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFWIPDestinationGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
+				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, initialName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -36,10 +40,10 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
+				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, updatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -111,6 +115,8 @@ func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinatio
 }
 
 func testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedName, description, dst_type string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "tf-acc-test-%s"
@@ -119,20 +125,23 @@ resource "%s" "%s" {
 	addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]
   }
 
-data "%s" "%s" {
-	id = "${%s.id}"
+  data "%s" "%s" {
+	id = "${%s.%s.id}"
   }
 `,
-		// resource variables
+		// Resource type and name for the destination ip group
 		resourcetype.FWFilteringDestinationGroup,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 		dst_type,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.FWFilteringDestinationGroup,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.FWFilteringDestinationGroup,
+		resourceName,
 	)
 }

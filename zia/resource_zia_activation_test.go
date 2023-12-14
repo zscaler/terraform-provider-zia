@@ -1,25 +1,24 @@
 package zia
 
 /*
-import (
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-)
-
 func TestAccResourceActivationStatus(t *testing.T) {
 	resourceName := "zia_activation_status.test"
 	resource.ParallelTest(t, resource.TestCase{
 		Providers:    testAccProviders, // Ensure you have a provider configuration for testing
 		CheckDestroy: testAccCheckActivationStatusDestroy,
 		Steps: []resource.TestStep{
-			// Step 1: Create the resource with a status of "ACTIVE"
 			{
 				Config: testAccResourceActivationStatusConfig("ACTIVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivationStatusExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+				),
+			},
+			{
+				Config: testAccResourceActivationStatusConfig("PENDING"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckActivationStatusExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "status", "PENDING"),
 				),
 			},
 		},

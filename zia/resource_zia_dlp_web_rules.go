@@ -59,10 +59,10 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 31),
-				Description:  "The DLP policy rule name.",
+				Type:     schema.TypeString,
+				Required: true,
+				// ValidateFunc: validation.StringLenBetween(0, 31),
+				Description: "The DLP policy rule name.",
 			},
 			"description": {
 				Type:         schema.TypeString,

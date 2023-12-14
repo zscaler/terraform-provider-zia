@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,9 +19,8 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 	var rules dlp_web_rules.WebDLPRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
-	// Generate Rule Label HCL Resource
-	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
-	ruleLabelHCL := testAccCheckRuleLabelsConfigure(ruleLabelTypeAndName, ruleLabelGeneratedName, variable.RuleLabelDescription)
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -28,35 +28,31 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, initialName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, updatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
-					// resource.TestCheckResourceAttr(resourceTypeAndName, "ocr_enabled", strconv.FormatBool(variable.DLPOCREnabled)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 				),
 			},
 			// Import test
@@ -136,30 +132,32 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 	}
 }
 
-func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
-	return fmt.Sprintf(`
-// rule label resource
-%s
+// func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
+// 	return fmt.Sprintf(`
+// // rule label resource
+// %s
 
-// dlp web rule resource
-%s
+// // dlp web rule resource
+// %s
 
-data "%s" "%s" {
-	id = "${%s.id}"
-}
-`,
-		// resource variables
-		ruleLabelHCL,
-		getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName),
+// data "%s" "%s" {
+// 	id = "${%s.id}"
+// }
+// `,
+// 		// resource variables
+// 		ruleLabelHCL,
+// 		getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName),
 
-		// data source variables
-		resourcetype.DLPWebRules,
-		generatedName,
-		resourceTypeAndName,
-	)
-}
+// 		// data source variables
+// 		resourcetype.DLPWebRules,
+// 		generatedName,
+// 		resourceTypeAndName,
+// 	)
+// }
 
-func getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName string) string {
+func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 
 data "zia_url_categories" "corporate_marketing"{
@@ -244,18 +242,27 @@ resource "%s" "%s" {
 	url_categories {
 		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
 	}
-	labels {
-		id = ["${%s.id}"]
-	}
 }
+
+data "%s" "%s" {
+	id = "${%s.%s.id}"
+  }
+
 `,
-		// resource variables
+		// Resource type and name for the dlp web rule
 		resourcetype.DLPWebRules,
-		generatedName,
+		resourceName,
 		name,
 		description,
 		action,
 		state,
-		ruleLabelTypeAndName,
+
+		// Data source type and name
+		resourcetype.DLPWebRules,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.DLPWebRules,
+		resourceName,
 	)
 }

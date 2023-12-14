@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -20,6 +21,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminUsers)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rPassword := acctest.RandString(10)
+	rPasswordUpdate := acctest.RandString(10)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -41,13 +43,13 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
+				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPasswordUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", rPassword+("Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPasswordUpdate+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope_entities.#", "1"),
 				),
@@ -112,6 +114,8 @@ func testAccCheckAdminUsersExists(resource string, admin *admins.AdminUsers) res
 }
 
 func testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 
 data "zia_admin_roles" "super_admin"{
@@ -147,20 +151,23 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
+	id = "${%s.%s.id}"
+  }
 `,
-		// resource variables
+		// Resource type and name for the admin user
 		resourcetype.AdminUsers,
-		generatedName,
+		resourceName,
 		rEmail,
 		rEmail,
 		variable.AdminUserName,
 		rPassword,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.AdminUsers,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.AdminUsers,
+		resourceName,
 	)
 }
