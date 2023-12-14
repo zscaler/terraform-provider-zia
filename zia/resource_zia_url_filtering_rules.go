@@ -340,7 +340,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 	_ = d.Set("order", resp.Order)
-	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
+	// _ = d.Set("cbi_profile_id", resp.CBIProfileID)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
@@ -507,28 +507,29 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 }
 
 func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
-	cbiProfile := &urlfilteringpolicies.CBIProfile{}
-
-	if v, ok := d.GetOk("cbi_profile"); ok && len(v.([]interface{})) > 0 {
-		cbiProfileData := v.([]interface{})[0].(map[string]interface{})
-		cbiProfile.ID = cbiProfileData["id"].(string)
-		cbiProfile.Name = cbiProfileData["name"].(string)
-		cbiProfile.URL = cbiProfileData["url"].(string)
+	if v, ok := d.GetOk("cbi_profile"); ok {
+		cbiProfileList := v.([]interface{})
+		if len(cbiProfileList) == 0 {
+			return nil
+		}
+		cbiProfileData := cbiProfileList[0].(map[string]interface{})
+		return &urlfilteringpolicies.CBIProfile{
+			ID:   cbiProfileData["id"].(string),
+			Name: cbiProfileData["name"].(string),
+			URL:  cbiProfileData["url"].(string),
+		}
 	}
-
-	return cbiProfile
+	return nil
 }
 
 func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
-	if cbiProfile == nil || (cbiProfile.ID == "" && cbiProfile.Name == "" && cbiProfile.URL == "") {
+	if cbiProfile == nil {
 		return []interface{}{}
 	}
-
 	m := map[string]interface{}{
 		"id":   cbiProfile.ID,
 		"name": cbiProfile.Name,
 		"url":  cbiProfile.URL,
 	}
-
 	return []interface{}{m}
 }

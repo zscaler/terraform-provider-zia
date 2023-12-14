@@ -533,9 +533,9 @@ func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]i
 	}
 
 	return map[string]interface{}{
-		"profile_seq": cbiProfile.ProfileSeq,
-		"id":          cbiProfile.ID,
-		"name":        cbiProfile.Name,
-		"url":         cbiProfile.URL,
+		// "profile_seq": cbiProfile.ProfileSeq,
+		"id":   cbiProfile.ID,
+		"name": cbiProfile.Name,
+		"url":  cbiProfile.URL,
 	}
 }
