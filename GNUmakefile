@@ -22,6 +22,9 @@ default: build
 
 dep: # Download required dependencies
 
+docs:
+	go generate
+
 build: fmtcheck
 	go install
 
@@ -37,10 +40,11 @@ sweep:
 
 test:
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=4
+		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=10
 
 testacc:
 	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
+
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
@@ -53,6 +57,10 @@ build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
 	go build -o $(DESTINATION)/terraform-provider-zia_v2.7.0
+
+coverage: test
+	@echo "✓ Opening coverage for unit tests ..."
+	@go tool cover -html=coverage.txt
 
 vet:
 	@echo "==> Checking source code against go vet and staticcheck"
@@ -72,15 +80,9 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-tools:
-	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.4.0
-	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
-	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
-
-tools-update:
-	@go install mvdan.cc/gofumpt@v0.4.0
-	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.28.1
-	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.2
+fmt-docs:
+	@echo "✓ Formatting code samples in documentation"
+	@terrafmt fmt -p '*.md' .
 
 vendor-status:
 	@govendor status
@@ -92,6 +94,41 @@ test-compile:
 		exit 1; \
 	fi
 	go test -c $(TEST) $(TESTARGS)
+
+lint:
+	@echo "==> Checking source code against linters..."
+	@$(TFPROVIDERLINT) \
+		-c 1 \
+		-AT001 \
+    -R004 \
+		-S001 \
+		-S002 \
+		-S003 \
+		-S004 \
+		-S005 \
+		-S007 \
+		-S008 \
+		-S009 \
+		-S010 \
+		-S011 \
+		-S012 \
+		-S013 \
+		-S014 \
+		-S015 \
+		-S016 \
+		-S017 \
+		-S019 \
+		./$(PKG_NAME)
+
+tools:
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.5.0
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
+
+tools-update:
+	@go install mvdan.cc/gofumpt@v0.5.0
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
 ziaActivator: GOOS=$(shell go env GOOS)
 ziaActivator: GOARCH=$(shell go env GOARCH)

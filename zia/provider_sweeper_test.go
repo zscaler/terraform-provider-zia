@@ -74,6 +74,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestNetworkAppGroups(testClient)
 	sweepTestLocationManagement(testClient)
 	sweepTestGRETunnels(testClient)
+	sweepTestForwardingControlRule(testClient)
 	sweepTestFirewallFilteringRule(testClient)
 	sweepTestURLFilteringRule(testClient)
 	sweepTestDLPWebRule(testClient)
@@ -334,6 +335,33 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 				continue
 			}
 			logSweptResource(resourcetype.FirewallFilteringRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestForwardingControlRule(client *testClient) error {
+	var errorList []error
+	rule, err := client.sdkClient.forwarding_rules.GetAll()
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) {
+			if _, err := client.sdkClient.forwarding_rules.Delete(b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.ForwardingControlRule, fmt.Sprintf("%d", b.ID), b.Name)
 		}
 	}
 	// Log errors encountered during the deletion process

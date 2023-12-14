@@ -206,7 +206,9 @@ func validateLocationManagementTimeZones() schema.SchemaValidateDiagFunc {
 	}
 }
 
-func validateCloudFirewallDstCountries(value interface{}, key string) ([]string, []error) {
+// Validate Cloud Firewall Network Service Applications
+
+func validateDestinationCountries(value interface{}, key string) ([]string, []error) {
 	var warnings []string
 	var errors []error
 
@@ -327,7 +329,7 @@ func validateDLPRuleFileTypes() schema.SchemaValidateDiagFunc {
 
 var supportedDLPRuleFileTypes = []string{
 	"ANY", "CHEMDRAW_FILES", "BITMAP", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES",
-	"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF", "ALL_OUTBOUND",
+	"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF",
 }
 
 func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {

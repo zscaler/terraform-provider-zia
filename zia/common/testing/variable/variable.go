@@ -55,11 +55,17 @@ const (
 	FWNetworkServicesType        = "CUSTOM"
 )
 
-// Firewall Filtering IP Destination Group resource/datasource
+// Forwarding Control ZPA Gateway
 const (
-	FowardingControlZPAGWName        = "this is an acceptance test"
-	FowardingControlZPAGWDescription = "this is an acceptance test"
-	FowardingControlType             = "ZPA"
+	FowardingControlDescription = "this is an acceptance test"
+	FowardingControlType        = "FORWARDING"
+	FowardingControlState       = "ENABLED"
+)
+
+// Forwarding Control ZPA Gateway
+const (
+	FowardingControlUpdateDescription = "this is an updated acceptance test"
+	FowardingControlUpdateState       = "ENABLED"
 )
 
 // Traffic Forwarding Static IP resource/datasource

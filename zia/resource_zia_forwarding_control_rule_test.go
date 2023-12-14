@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -12,12 +11,12 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
-func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
-	var rules filteringrules.FirewallFilteringRules
-	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
+func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
+	var rules forwarding_rules.ForwardingRules
+	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ForwardingControlRule)
 
 	// Generate Rule Label HCL Resource
 	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
@@ -34,64 +33,53 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFirewallFilteringRuleDestroy,
+		CheckDestroy: testAccCheckForwardingControlRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
+				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FowardingControlDescription, variable.FowardingControlType, variable.FWRuleResourceState, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
+					testAccCheckForwardingControlRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlState),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
-				// ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
 			{
-				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
+				Config: testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FowardingControlUpdateDescription, variable.FowardingControlType, variable.FowardingControlUpdateState, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallFilteringRuleExists(resourceTypeAndName, &rules),
+					testAccCheckForwardingControlRuleExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlUpdateDescription),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlUpdateState),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
-			},
-			// Import test
-			{
-				ResourceName:      resourceTypeAndName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
+func testAccCheckForwardingControlRuleDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.FirewallFilteringRules {
+		if rs.Type != resourcetype.ForwardingControlRule {
 			continue
 		}
 
@@ -101,21 +89,21 @@ func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.filteringrules.Get(id)
+		rule, err := apiClient.forwarding_rules.Get(id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
 		}
 
 		if rule != nil {
-			return fmt.Errorf("firewall filtering rule with id %d exists and wasn't destroyed", id)
+			return fmt.Errorf("forwarding control rule with id %d exists and wasn't destroyed", id)
 		}
 	}
 
 	return nil
 }
 
-func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrules.FirewallFilteringRules) resource.TestCheckFunc {
+func testAccCheckForwardingControlRuleExists(resource string, rule *forwarding_rules.ForwardingRules) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -133,12 +121,12 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 
 		apiClient := testAccProvider.Meta().(*Client)
 
-		var receivedRule *filteringrules.FirewallFilteringRules
+		var receivedRule *forwarding_rules.ForwardingRules
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedRule, innerErr = apiClient.filteringrules.Get(id)
+			receivedRule, innerErr = apiClient.forwarding_rules.Get(id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}
@@ -154,7 +142,7 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 	}
 }
 
-func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL string) string {
+func testAccCheckForwardingControlRuleConfigure(resourceTypeAndName, generatedName, name, description, ruleType, state string, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL string) string {
 	return fmt.Sprintf(`
 // rule label resource
 %s
@@ -165,7 +153,7 @@ func testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedNa
 // destination ip group resource
 %s
 
-// firewall filtering rule resource
+// forwarding control rule resource
 %s
 
 data "%s" "%s" {
@@ -176,16 +164,16 @@ data "%s" "%s" {
 		ruleLabelHCL,
 		sourceIPGroupHCL,
 		dstIPGroupHCL,
-		getFirewallFilteringRuleResourceHCL(generatedName, name, description, action, state, enableLogging, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName),
+		getForwardingControlRuleResourceHCL(generatedName, name, description, ruleType, state, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName),
 
 		// data source variables
-		resourcetype.FirewallFilteringRules,
+		resourcetype.ForwardingControlRule,
 		generatedName,
 		resourceTypeAndName,
 	)
 }
 
-func getFirewallFilteringRuleResourceHCL(generatedName, name, description, action, state string, enableLogging bool, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
+func getForwardingControlRuleResourceHCL(generatedName, name, description, ruleType, state string, ruleLabelTypeAndName, sourceIPGroupTypeAndName, dstIPGroupTypeAndName string) string {
 	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
@@ -198,14 +186,6 @@ data "zia_location_groups" "sdwan_can" {
 
 data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
-}
-
-data "zia_firewall_filtering_time_window" "work_hours" {
-	name = "Work Hours"
-}
-
-data "zia_firewall_filtering_time_window" "off_hours" {
-	name = "Off Hours"
 }
 
 data "zia_department_management" "engineering" {
@@ -227,10 +207,11 @@ data "zia_group_management" "marketing" {
 resource "%s" "%s" {
 	name = "tf-acc-test-%s"
 	description = "%s"
-	action = "%s"
+	type = "%s"
 	state = "%s"
-	order = 3
-	enable_full_logging = "%s"
+	order = 1
+	rank = 7
+    forward_method = "DIRECT"
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
 	}
@@ -242,9 +223,6 @@ resource "%s" "%s" {
 	}
 	departments {
 		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
-	}
-	time_windows {
-		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
 	}
 	labels {
 		id = ["${%s.id}"]
@@ -259,13 +237,12 @@ resource "%s" "%s" {
 }
 		`,
 		// resource variables
-		resourcetype.FirewallFilteringRules,
+		resourcetype.ForwardingControlRule,
 		generatedName,
 		name,
 		description,
-		action,
+		ruleType,
 		state,
-		strconv.FormatBool(enableLogging),
 		ruleLabelTypeAndName,
 		sourceIPGroupTypeAndName,
 		dstIPGroupTypeAndName,
@@ -274,4 +251,3 @@ resource "%s" "%s" {
 		dstIPGroupTypeAndName,
 	)
 }
-*/
