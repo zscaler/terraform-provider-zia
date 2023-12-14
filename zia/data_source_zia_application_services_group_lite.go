@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/applicationservicesgroup"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/appservicegroups"
 )
 
 func dataSourceFWApplicationServicesGroupLite() *schema.Resource {
@@ -34,11 +34,11 @@ func dataSourceFWApplicationServicesGroupLite() *schema.Resource {
 func dataSourceFWApplicationServicesGroupLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *applicationservicesgroup.ApplicationServicesGroupLite
+	var resp *appservicegroups.ApplicationServicesGroupLite
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for application services group id: %d\n", id)
-		res, err := zClient.applicationservicesgroup.Get(id)
+		res, err := zClient.appservicegroups.Get(id)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func dataSourceFWApplicationServicesGroupLiteRead(d *schema.ResourceData, m inte
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for application services group: %s\n", name)
-		res, err := zClient.applicationservicesgroup.GetByName(name)
+		res, err := zClient.appservicegroups.GetByName(name)
 		if err != nil {
 			return err
 		}

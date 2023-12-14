@@ -21,10 +21,6 @@ var (
 	firewallFilteringStartingOrder int
 )
 
-func intPtr(n int) *int {
-	return &n
-}
-
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceFirewallFilteringRulesCreate,
@@ -155,7 +151,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
-			"dest_countries":        getCloudFirewallDstCountries(),
+			"dest_countries":        getDestinationCountries(),
 			"nw_applications":       getCloudFirewallNwApplications(),
 		},
 	}

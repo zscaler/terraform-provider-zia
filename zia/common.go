@@ -66,6 +66,59 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 	}
 }
 
+func setIdNameSchemaCustom(maxItems int, description string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		Description: description,
+		MaxItems:    maxItems,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:        schema.TypeInt,
+					Required:    true,
+					Description: "The unique identifier for the resource.",
+				},
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "The name of the resource.",
+				},
+			},
+		},
+	}
+}
+
+func setExtIDNameSchemaCustom(maxItems *int, description string) *schema.Schema {
+	schema := &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		Description: description,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Name of the application segment.",
+				},
+				"external_id": {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "External ID of the application segment.",
+				},
+			},
+		},
+	}
+
+	if maxItems != nil && *maxItems > 0 {
+		schema.MaxItems = *maxItems
+	}
+
+	return schema
+}
+
 func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.IDNameExtensions {
 	setInterface, ok := m[key]
 	if ok {
@@ -117,52 +170,26 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 }
 
 /*
-func expandIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	idNameExtObj, ok := d.GetOk(key)
-	if !ok {
-		return nil
-	}
-	idNameExt, ok := idNameExtObj.(*schema.Set)
-	if !ok {
-		return nil
-	}
-	if len(idNameExt.List()) > 0 {
-		lastModifiedByObj := idNameExt.List()[0]
-		lastMofied, ok := lastModifiedByObj.(map[string]interface{})
-		if !ok {
-			return nil
-		}
-		return &common.IDNameExtensions{
-			ID:         lastMofied["id"].(int),
-			Name:       lastMofied["name"].(string),
-			Extensions: lastMofied["extensions"].(map[string]interface{}),
-		}
-	}
-	return nil
-}
-*/
-/*
-	func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
-		setInterface, ok := d.GetOk(key)
-		if !ok {
-			return []common.UserGroups{}
-		}
-		set := setInterface.(*schema.Set)
-		var result []common.UserGroups
-		for _, groupObj := range set.List() {
-			group, ok := groupObj.(map[string]interface{})
-			if ok {
-				result = append(result, common.UserGroups{
-					ID:       group["id"].(int),
-					Name:     group["name"].(string),
-					IdpID:    group["idp_id"].(int),
-					Comments: group["comments"].(string),
-				})
+// Deprecated common helper function
+
+	func expandIDSet(d *schema.ResourceData, key string) []int {
+		var ids []int
+
+		if v, ok := d.GetOk(key); ok {
+			set := v.(*schema.Set)
+			list := set.List()
+			for _, item := range list {
+				if idMap, ok := item.(map[string]interface{}); ok {
+					if id, ok := idMap["id"].(int); ok {
+						ids = append(ids, id)
+					}
+				}
 			}
 		}
-		return result
+		return ids
 	}
 */
+
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
 	departmentObj, ok := d.GetOk("department")
 	if !ok {
@@ -269,6 +296,38 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 	}
 }
 
+// Flattening function used in the Forwarding Control Policy Resource
+func flattenIDNameSet(idName *common.IDName) []interface{} {
+	idNameSet := make([]interface{}, 0)
+	if idName != nil {
+		idNameSet = append(idNameSet, map[string]interface{}{
+			"id":   idName.ID,
+			"name": idName.Name,
+		})
+	}
+	return idNameSet
+}
+
+// expandIDNameSet takes a Terraform set as input and returns a pointer to a common.IDName struct.
+func expandIDNameSet(d *schema.ResourceData, key string) *common.IDName {
+	idNameList, ok := d.Get(key).(*schema.Set)
+	if !ok || idNameList.Len() == 0 {
+		return nil
+	}
+
+	// Assuming each set can only have one item as per your JSON structure.
+	// If it can have multiple, this needs to be adjusted accordingly.
+	for _, v := range idNameList.List() {
+		item := v.(map[string]interface{})
+		return &common.IDName{
+			ID:   item["id"].(int),
+			Name: item["name"].(string),
+		}
+	}
+
+	return nil
+}
+
 func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{} {
 	lastModified := make([]interface{}, 0)
 	if lastModifiedBy != nil {
@@ -292,28 +351,6 @@ func flattenCreatedBy(createdBy *common.IDNameExtensions) []interface{} {
 	}
 	return created
 }
-
-/*
-func flattenUserGroupSet(list []common.UserGroups) []interface{} {
-	var result []interface{}
-	for _, group := range list {
-		obj := map[string]interface{}{
-			"id": group.ID,
-		}
-		if group.Name != "" {
-			obj["name"] = group.Name
-		}
-		if group.IdpID != 0 {
-			obj["idp_id"] = group.IdpID
-		}
-		if group.Comments != "" {
-			obj["comments"] = group.Comments
-		}
-		result = append(result, obj)
-	}
-	return result
-}
-*/
 
 func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} {
 	department := make([]interface{}, 0)
@@ -488,13 +525,13 @@ func getLocationManagementTimeZones() *schema.Schema {
 	}
 }
 
-func getCloudFirewallDstCountries() *schema.Schema {
+func getDestinationCountries() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.",
 		Elem: &schema.Schema{
 			Type:         schema.TypeString,
-			ValidateFunc: validateCloudFirewallDstCountries,
+			ValidateFunc: validateDestinationCountries,
 		},
 		Optional: true,
 		Computed: true,

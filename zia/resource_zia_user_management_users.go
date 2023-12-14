@@ -10,7 +10,7 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/usermanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
 )
 
 func resourceUserManagement() *schema.Resource {
@@ -28,7 +28,7 @@ func resourceUserManagement() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("user_id", idInt)
 				} else {
-					resp, err := zClient.usermanagement.GetUserByName(id)
+					resp, err := zClient.users.GetUserByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("user_id", resp.ID)
@@ -137,14 +137,14 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 	req := expandUsers(d)
 	log.Printf("[INFO] Creating zia user with request\n%+v\n", req)
 
-	resp, err := zClient.usermanagement.Create(&req)
+	resp, err := zClient.users.Create(&req)
 	if err != nil {
 		return err
 	}
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
 	authMethods := SetToStringList(d, "auth_methods")
 	if len(authMethods) > 0 {
-		_, err = zClient.usermanagement.EnrollUser(resp.ID, usermanagement.EnrollUserRequest{
+		_, err = zClient.users.EnrollUser(resp.ID, users.EnrollUserRequest{
 			AuthMethods: authMethods,
 			Password:    resp.Password,
 		})
@@ -164,7 +164,7 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		return fmt.Errorf("no users id is set")
 	}
-	resp, err := zClient.usermanagement.Get(id)
+	resp, err := zClient.users.Get(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing user %s from state because it no longer exists in ZIA", d.Id())
@@ -203,18 +203,18 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Updating users ID: %v\n", id)
 	req := expandUsers(d)
-	if _, err := zClient.usermanagement.Get(id); err != nil {
+	if _, err := zClient.users.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.usermanagement.Update(id, &req); err != nil {
+	if _, _, err := zClient.users.Update(id, &req); err != nil {
 		return err
 	}
 	authMethods := SetToStringList(d, "auth_methods")
 	if (d.HasChange("password") || d.HasChange("auth_methods")) && len(authMethods) > 0 {
-		_, err := zClient.usermanagement.EnrollUser(id, usermanagement.EnrollUserRequest{
+		_, err := zClient.users.EnrollUser(id, users.EnrollUserRequest{
 			AuthMethods: authMethods,
 			Password:    req.Password,
 		})
@@ -248,7 +248,7 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.usermanagement.Delete(id); err != nil {
+	if _, err := zClient.users.Delete(id); err != nil {
 		return err
 	}
 
@@ -257,9 +257,9 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func expandUsers(d *schema.ResourceData) usermanagement.Users {
+func expandUsers(d *schema.ResourceData) users.Users {
 	id, _ := getIntFromResourceData(d, "user_id")
-	result := usermanagement.Users{
+	result := users.Users{
 		ID:            id,
 		Name:          d.Get("name").(string),
 		Email:         d.Get("email").(string),

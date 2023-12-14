@@ -43,7 +43,6 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
-				// ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
@@ -63,7 +62,12 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
-				// ExpectNonEmptyPlan: true,
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

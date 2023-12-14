@@ -31,5 +31,4 @@ resource "zia_firewall_filtering_destination_groups" "example_dstn_other" {
   description   = "Example Destination Other"
   type          = "DSTN_OTHER"
   countries     = ["COUNTRY_CA"]
-  categories    = ["CUSTOM_02"]
 }

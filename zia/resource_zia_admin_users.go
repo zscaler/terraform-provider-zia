@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 )
 
 func resourceAdminUsers() *schema.Resource {
@@ -26,7 +26,7 @@ func resourceAdminUsers() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("admin_id", idInt)
 				} else {
-					resp, err := zClient.adminuserrolemgmt.GetAdminUsersByLoginName(id)
+					resp, err := zClient.admins.GetAdminUsersByLoginName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("admin_id", resp.ID)
@@ -149,7 +149,7 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	if err := checkAdminScopeType(req); err != nil {
 		return err
 	}
-	resp, err := zClient.adminuserrolemgmt.CreateAdminUser(req)
+	resp, err := zClient.admins.CreateAdminUser(req)
 	if err != nil {
 		return err
 	}
@@ -160,14 +160,14 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	return resourceAdminUsersRead(d, m)
 }
 
-func checkPasswordAllowed(pass adminuserrolemgmt.AdminUsers) error {
+func checkPasswordAllowed(pass admins.AdminUsers) error {
 	if pass.IsPasswordLoginAllowed && pass.Password == "" {
 		return fmt.Errorf("enter a password for the admin. It can be 8 to 100 characters and must contain at least one number, one special character, and one upper-case letter")
 	}
 	return nil
 }
 
-func checkAdminScopeType(scopeType adminuserrolemgmt.AdminUsers) error {
+func checkAdminScopeType(scopeType admins.AdminUsers) error {
 	if scopeType.IsExecMobileAppEnabled && scopeType.AdminScopeType != "ORGANIZATION" {
 		return fmt.Errorf("mobile app access can only be enabled for an admin with organization scope")
 	}
@@ -181,7 +181,7 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	if !ok {
 		return fmt.Errorf("no admin users id is set")
 	}
-	resp, err := zClient.adminuserrolemgmt.GetAdminUsers(id)
+	resp, err := zClient.admins.GetAdminUsers(id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing admin user %s from state because it no longer exists in ZIA", d.Id())
@@ -234,7 +234,7 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	req := expandAdminUsers(d)
 	log.Printf("[DEBUG] Update request data: %+v", req)
 
-	if _, err := zClient.adminuserrolemgmt.GetAdminUsers(id); err != nil {
+	if _, err := zClient.admins.GetAdminUsers(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[INFO] Admin user %d not found. Removing from state", id)
 			d.SetId("")
@@ -244,7 +244,7 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if _, err := zClient.adminuserrolemgmt.UpdateAdminUser(id, req); err != nil {
+	if _, err := zClient.admins.UpdateAdminUser(id, req); err != nil {
 		log.Printf("[ERROR] Error updating admin user: %s", err)
 		return err
 	}
@@ -260,7 +260,7 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Deleting admin user ID: %v\n", id)
 
-	if _, err := zClient.adminuserrolemgmt.DeleteAdminUser(id); err != nil {
+	if _, err := zClient.admins.DeleteAdminUser(id); err != nil {
 		return err
 	}
 
@@ -269,9 +269,9 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
+func expandAdminUsers(d *schema.ResourceData) admins.AdminUsers {
 	id, _ := getIntFromResourceData(d, "admin_id")
-	result := adminuserrolemgmt.AdminUsers{
+	result := admins.AdminUsers{
 		ID:                          id,
 		LoginName:                   d.Get("login_name").(string),
 		UserName:                    d.Get("username").(string),
@@ -297,7 +297,7 @@ func expandAdminUsers(d *schema.ResourceData) adminuserrolemgmt.AdminUsers {
 	return result
 }
 
-func flattenAdminUserRoleSimple(role *adminuserrolemgmt.Role) []interface{} {
+func flattenAdminUserRoleSimple(role *admins.Role) []interface{} {
 	if role == nil {
 		return []interface{}{}
 	}
@@ -307,12 +307,12 @@ func flattenAdminUserRoleSimple(role *adminuserrolemgmt.Role) []interface{} {
 	return []interface{}{roleMap}
 }
 
-func expandAdminUserRoles(d *schema.ResourceData) *adminuserrolemgmt.Role {
+func expandAdminUserRoles(d *schema.ResourceData) *admins.Role {
 	if v, ok := d.GetOk("role"); ok {
 		roles := v.(*schema.Set).List()
 		if len(roles) > 0 {
 			roleMap := roles[0].(map[string]interface{})
-			return &adminuserrolemgmt.Role{
+			return &admins.Role{
 				ID: roleMap["id"].(int),
 			}
 		}

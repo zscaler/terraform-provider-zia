@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplicationgroups"
 )
 
 func dataSourceFWNetworkApplicationGroups() *schema.Resource {
@@ -38,11 +38,11 @@ func dataSourceFWNetworkApplicationGroups() *schema.Resource {
 func dataSourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *networkapplications.NetworkApplicationGroups
+	var resp *networkapplicationgroups.NetworkApplicationGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network application group id: %d\n", id)
-		res, err := zClient.networkapplications.GetNetworkApplicationGroups(id)
+		res, err := zClient.networkapplicationgroups.GetNetworkApplicationGroups(id)
 		if err != nil {
 			return err
 		}
@@ -51,7 +51,7 @@ func dataSourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interfac
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network application group : %s\n", name)
-		res, err := zClient.networkapplications.GetNetworkApplicationGroupsByName(name)
+		res, err := zClient.networkapplicationgroups.GetNetworkApplicationGroupsByName(name)
 		if err != nil {
 			return err
 		}

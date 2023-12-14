@@ -10,7 +10,7 @@ import (
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
 )
 
 func resourceLocationManagement() *schema.Resource {
@@ -524,7 +524,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		DnBandwidth:                         d.Get("dn_bandwidth").(int),
 		Country:                             d.Get("country").(string),
 		TZ:                                  d.Get("tz").(string),
-		IPAddresses:                         SetToStringList(d, "ip_addresses"), //removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
+		IPAddresses:                         SetToStringList(d, "ip_addresses"), // removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),

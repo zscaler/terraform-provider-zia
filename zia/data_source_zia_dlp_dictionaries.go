@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlpdictionaries"
 )
 
 func dataSourceDLPDictionaries() *schema.Resource {

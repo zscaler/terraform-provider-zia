@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddresslist"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
@@ -66,11 +66,11 @@ func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
 func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *virtualipaddresslist.ZscalerVIPs
+	var resp *virtualipaddress.ZscalerVIPs
 	datacenter, _ := d.Get("datacenter").(string)
 	if resp == nil && datacenter != "" {
 		log.Printf("[INFO] Getting data for datacenter name: %s\n", datacenter)
-		res, err := zClient.virtualipaddresslist.GetZscalerVIPs(datacenter)
+		res, err := zClient.virtualipaddress.GetZscalerVIPs(datacenter)
 		if err != nil {
 			return err
 		}
