@@ -27,10 +27,10 @@ func dataSourceDLPEDMSchema() *schema.Resource {
 				Computed:    true,
 				Description: "The revision number of the CSV file upload to the Index Tool. This attribute is required by PUT requests.",
 			},
-			"filename": {
+			"file_name": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The generated filename, excluding the extention.",
+				Description: "The generated filename, excluding the extention",
 			},
 			"original_file_name": {
 				Type:        schema.TypeString,
