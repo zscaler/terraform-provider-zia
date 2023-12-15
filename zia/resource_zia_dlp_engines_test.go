@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 	var engine dlp_engines.DLPEngines
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPEngines)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDLPEnginesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPCustomEngine),
+				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, initialName, generatedName, variable.DLPCustomEngine),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPEnginesExists(resourceTypeAndName, &engine),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_dlp_engine", strconv.FormatBool(variable.DLPCustomEngine)),
 				),
@@ -35,10 +39,10 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, generatedName, generatedName, variable.DLPCustomEngine),
+				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, updatedName, generatedName, variable.DLPCustomEngine),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPEnginesExists(resourceTypeAndName, &engine),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_dlp_engine", strconv.FormatBool(variable.DLPCustomEngine)),
 				),
@@ -109,6 +113,8 @@ func testAccCheckDLPEnginesExists(resource string, engine *dlp_engines.DLPEngine
 }
 
 func testAccCheckDLPEnginesConfigure(resourceTypeAndName, generatedName, description string, customEngine bool) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "tf-acc-test-%s"
@@ -118,20 +124,20 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
-
+	id = "${%s.%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.DLPEngines,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 		strconv.FormatBool(customEngine),
 
 		// data source variables
 		resourcetype.DLPEngines,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+		resourcetype.DLPEngines,
+		resourceName,
 	)
 }

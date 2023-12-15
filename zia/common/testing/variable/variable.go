@@ -5,7 +5,9 @@ const (
 	URLFilteringRuleResourceName = "testAcc_url_filtering_rule"
 	URLFilteringRuleDescription  = "testAcc_url_filtering_rule"
 	URLFilteringRuleAction       = "ALLOW"
+	URLFilteringRuleActionUpdate = "BLOCK"
 	URLFilteringRuleState        = "ENABLED"
+	URLFilteringRuleStateUpdate  = "DISABLED"
 )
 
 // Custom URL Categories resource/datasource
@@ -19,6 +21,7 @@ const (
 	FWRuleResourceDescription = "this is an acceptance test"
 	FWRuleResourceAction      = "ALLOW"
 	FWRuleResourceState       = "ENABLED"
+	FWRuleResourceStateUpdate = "DISABLED"
 	FWRuleEnableLogging       = false
 )
 
@@ -62,7 +65,7 @@ const (
 	FowardingControlState       = "ENABLED"
 )
 
-// Forwarding Control ZPA Gateway
+// Forwarding Control Rule
 const (
 	FowardingControlUpdateDescription = "this is an updated acceptance test"
 	FowardingControlUpdateState       = "ENABLED"
@@ -89,7 +92,9 @@ const (
 	LocSurrogateIP  = true
 	LocXFF          = true
 	LocOFW          = true
+	LocOFWUpdate    = false
 	LocIPS          = true
+	LocIPSUpdate    = false
 )
 
 // Traffic Forwarding GRE resource/datasource
@@ -129,15 +134,15 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "testAcc@bd-hashicorp.com"
-	AdminUserName      = "Test Acc"
-	AdminUserEmail     = "testAcc@bd-hashicorp.com"
+	AdminUserLoginName = "tf-acc-test-@bd-hashicorp.com"
+	AdminUserName      = "tf-acc-test-admin"
+	AdminUserEmail     = "tf-acc-test-@bd-hashicorp.com"
 	AdminUserPassword  = "Password@123!"
 )
 
 // User Management
 const (
-	UserName = "testAcc TF User"
+	UserName = "tf-acc-test-user"
 )
 
 // Rule Labels

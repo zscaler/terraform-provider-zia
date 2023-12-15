@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 	var dlpTemplates dlp_notification_templates.DlpNotificationTemplates
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPNotificationTemplates)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDLPNotificationTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, generatedName),
+				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPNotificationTemplateExists(resourceTypeAndName, &dlpTemplates),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "plain_text_message"),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "html_message"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "attach_content", strconv.FormatBool(variable.DLPNoticationTemplateAttachContent)),
@@ -37,10 +41,10 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, generatedName),
+				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPNotificationTemplateExists(resourceTypeAndName, &dlpTemplates),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "plain_text_message"),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "html_message"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "attach_content", strconv.FormatBool(variable.DLPNoticationTemplateAttachContent)),
@@ -113,6 +117,8 @@ func testAccCheckDLPNotificationTemplateExists(resource string, dlpTemplate *dlp
 }
 
 func testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, generatedName string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name               = "tf-acc-test-%s"
@@ -180,18 +186,18 @@ locals {
 	}
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
-
+	id = "${%s.%s.id}"
+	}
 `,
 		// resource variables
 		resourcetype.DLPNotificationTemplates,
-		generatedName,
+		resourceName,
 		generatedName,
 
 		// data source variables
 		resourcetype.DLPNotificationTemplates,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+		resourcetype.DLPNotificationTemplates,
+		resourceName,
 	)
 }

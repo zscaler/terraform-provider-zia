@@ -53,7 +53,7 @@ func Provider() *schema.Provider {
 			"api_token": {
 				Type:        schema.TypeString,
 				DefaultFunc: envDefaultFunc("ZIA_SANDBOX_TOKEN"),
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
 			},
 		},

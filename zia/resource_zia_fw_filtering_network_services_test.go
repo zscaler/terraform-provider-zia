@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 	var services networkservices.NetworkServices
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServices)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFWNetworkServicesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
+				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, initialName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -37,10 +41,10 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
+				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, updatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -113,6 +117,8 @@ func testAccCheckFWNetworkServicesExists(resource string, rule *networkservices.
 }
 
 func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, description, svc_type string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "tf-acc-test-%s"
@@ -140,20 +146,23 @@ resource "%s" "%s" {
 	}
   }
 
-data "%s" "%s" {
-	id = "${%s.id}"
+  data "%s" "%s" {
+	id = "${%s.%s.id}"
   }
 `,
-		// resource variables
+		// Resource type and name for the network services
 		resourcetype.FWFilteringNetworkServices,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 		svc_type,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.FWFilteringNetworkServices,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.FWFilteringNetworkServices,
+		resourceName,
 	)
 }

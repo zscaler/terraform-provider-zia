@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -21,7 +22,8 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 	rComments := acctest.RandomWithPrefix("tf-acc-test")
 
 	rPassword := acctest.RandString(10)
-	name := "testAcc TF User " + generatedName
+	rPasswordUpdate := acctest.RandString(10)
+	name := "tf-acc-test " + generatedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -42,12 +44,12 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPasswordUpdate, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPasswordUpdate+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
@@ -113,6 +115,8 @@ func testAccCheckUserManagementExists(resource string, users *users.Users) resou
 }
 
 func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 
 data "zia_group_management" "marketing" {
@@ -143,12 +147,12 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
+	id = "${%s.%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.Users,
-		generatedName,
+		resourceName,
 		name,
 		rEmail,
 		rPassword,
@@ -156,7 +160,9 @@ data "%s" "%s" {
 
 		// data source variables
 		resourcetype.Users,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		resourcetype.Users,
+		resourceName,
 	)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,26 +19,29 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 	var labels rule_labels.RuleLabels
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRuleLabelsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
+				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, initialName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
 
 			// Update test
 			{
-				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, variable.RuleLabelDescription),
+				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, updatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -107,25 +111,28 @@ func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels)
 }
 
 func testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, description string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
 	return fmt.Sprintf(`
+
 resource "%s" "%s" {
     name = "tf-acc-test-%s"
     description = "%s"
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
+	id = "${%s.%s.id}"
   }
 `,
 		// resource variables
 		resourcetype.RuleLabels,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 
 		// data source variables
 		resourcetype.RuleLabels,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+		// Reference to the resource
+		resourcetype.RuleLabels, resourceName,
 	)
 }

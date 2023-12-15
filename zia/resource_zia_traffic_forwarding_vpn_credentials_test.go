@@ -20,6 +20,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
 	rSharedKey := acctest.RandString(20)
+	rSharedKeyUpdate := acctest.RandString(20)
 
 	rIP, _ := acctest.RandIpAddress("121.234.54.0/25")
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
@@ -44,11 +45,11 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 
 			// update pre-shared-key and comments vpn credential type ufqdn
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsUFQDNConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKey),
+				Config: testAccCheckTrafficForwardingVPNCredentialsUFQDNConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKeyUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKeyUpdate),
 				),
 			},
 			{
@@ -65,11 +66,11 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 
 			// update pre-shared-key and comments vpn credential type IP
 			{
-				Config: testAccCheckTrafficForwardingVPNCredentialsIPConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, rSharedKey),
+				Config: testAccCheckTrafficForwardingVPNCredentialsIPConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, rSharedKeyUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKeyUpdate),
 				),
 			},
 		},

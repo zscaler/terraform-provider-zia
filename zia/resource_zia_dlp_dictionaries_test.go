@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 	var dictionary dlpdictionaries.DlpDictionary
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDLPDictionariesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, initialName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -36,10 +40,10 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, updatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -111,6 +115,8 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 }
 
 func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, description string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "tf-acc-test-%s"
@@ -136,19 +142,19 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
-
+	id = "${%s.%s.id}"
+  }
 `,
 		// resource variables
 		resourcetype.DLPDictionaries,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 
 		// data source variables
 		resourcetype.DLPDictionaries,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+		resourcetype.DLPDictionaries,
+		resourceName,
 	)
 }
