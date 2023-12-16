@@ -59,9 +59,8 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				// ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
 				Description: "The DLP policy rule name.",
 			},
 			"description": {
@@ -92,12 +91,51 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The rule order of execution for the DLP policy rule with respect to other rules.",
 			},
+			"severity": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates the severity selected for the DLP rule violation",
+				ValidateFunc: validation.StringInSlice([]string{
+					"RULE_SEVERITY_HIGH",
+					"RULE_SEVERITY_MEDIUM",
+					"RULE_SEVERITY_LOW",
+					"RULE_SEVERITY_INFO",
+				}, false),
+			},
+			"parent_rule": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Computed:    true,
+				Description: "The unique identifier of the parent rule under which an exception rule is added",
+			},
+			"sub_rules": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "The list of exception rules added to a parent rule",
+			},
+			"user_risk_score_levels": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "",
+			},
 			"cloud_applications": {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
+			},
+			"file_types": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "The list of file types for which the DLP policy rule must be applied.",
 			},
 			"min_size": {
 				Type:         schema.TypeInt,
@@ -171,7 +209,6 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
-			"file_types":            getDLPRuleFileTypes("The list of file types to which the DLP policy rule must be applied."),
 			"locations":             setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
 			"location_groups":       setIDsSchemaTypeCustom(intPtr(32), "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
 			"users":                 setIDsSchemaTypeCustom(intPtr(4), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
@@ -194,10 +231,17 @@ func resourceDlpWebRules() *schema.Resource {
 func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 	req := expandDlpWebRules(d)
-	errValidation := validateDlpWebRules(req)
-	if errValidation != nil {
-		return errValidation
+
+	// Validate file types
+	if err := validateDLPRuleFileTypes(req); err != nil {
+		return err
 	}
+
+	// Validate the OCR DLP web rules (assuming this is another validation function you have)
+	if err := validateOCRDlpWebRules(req); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
 
 	timeout := d.Timeout(schema.TimeoutCreate)
@@ -225,7 +269,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
-					time.Sleep(10 * time.Second) // Wait before retrying
+					time.Sleep(5 * time.Second) // Wait before retrying
 					continue
 				}
 			}
@@ -295,9 +339,13 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("file_types", resp.FileTypes)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
+	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
 	_ = d.Set("state", resp.State)
 	_ = d.Set("min_size", resp.MinSize)
 	_ = d.Set("action", resp.Action)
+	_ = d.Set("severity", resp.Severity)
+	_ = d.Set("parent_rule", resp.ParentRule)
+	_ = d.Set("sub_rules", resp.SubRules)
 	_ = d.Set("match_only", resp.MatchOnly)
 	_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 	_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
@@ -375,10 +423,16 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating web dlp rule ID: %v\n", id)
 	req := expandDlpWebRules(d)
-	errValidation := validateDlpWebRules(req)
-	if errValidation != nil {
-		return errValidation
+	// Validate file types
+	if err := validateDLPRuleFileTypes(req); err != nil {
+		return err
 	}
+
+	// Validate the OCR DLP web rules (assuming this is another validation function you have)
+	if err := validateOCRDlpWebRules(req); err != nil {
+		return err
+	}
+
 	if _, err := zClient.dlp_web_rules.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
@@ -417,7 +471,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		err = resourceDlpWebRulesRead(d, m)
 		if err != nil {
 			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
+				time.Sleep(5 * time.Second) // Wait before retrying
 				continue
 			}
 			return err
@@ -447,26 +501,6 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func validateDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
-	fileTypes := []string{"BITMAP", "PNG", "JPEG", "TIFF", "WINDOWS_META_FORMAT"}
-	if dlp.OcrEnabled {
-		// dlp.FileTypes must be a subset of fileTypes
-		for _, t1 := range dlp.FileTypes {
-			found := false
-			for _, t2 := range fileTypes {
-				if t1 == t2 {
-					found = true
-					break
-				}
-			}
-			if !found {
-				return fmt.Errorf("web dlp rule file types must be a subset of %v when OcrEnabled is disabled", fileTypes)
-			}
-		}
-	}
-	return nil
-}
-
 func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 	result := dlp_web_rules.WebDLPRules{
@@ -477,6 +511,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		Description:              d.Get("description").(string),
 		Action:                   d.Get("action").(string),
 		State:                    d.Get("state").(string),
+		Severity:                 d.Get("severity").(string),
 		ExternalAuditorEmail:     d.Get("external_auditor_email").(string),
 		MatchOnly:                d.Get("match_only").(bool),
 		WithoutContentInspection: d.Get("without_content_inspection").(bool),
@@ -485,9 +520,12 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		ZCCNotificationsEnabled:  d.Get("zcc_notifications_enabled").(bool),
 		ZscalerIncidentReceiver:  d.Get("zscaler_incident_receiver").(bool),
 		MinSize:                  d.Get("min_size").(int),
+		ParentRule:               d.Get("parent_rule").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
+		UserRiskScoreLevels:      SetToStringList(d, "user_risk_score_levels"),
+		SubRules:                 SetToStringList(d, "sub_rules"),
 		Auditor:                  expandIDNameExtensionsListSingle(d, "auditor"),
 		NotificationTemplate:     expandIDNameExtensionsListSingle(d, "notification_template"),
 		IcapServer:               expandIDNameExtensionsListSingle(d, "icap_server"),

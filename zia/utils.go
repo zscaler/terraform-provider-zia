@@ -173,3 +173,13 @@ func DiffSuppressFuncCoordinate(_, old, new string, _ *schema.ResourceData) bool
 func createValidResourceName(name string) string {
 	return strings.ReplaceAll(name, " ", "_")
 }
+
+// contains checks if a slice contains a specific element
+func contains(slice []string, element string) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
+}

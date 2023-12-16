@@ -560,19 +560,6 @@ func getCloudFirewallNwServicesTag() *schema.Schema {
 	}
 }
 
-func getDLPRuleFileTypes(desc string) *schema.Schema {
-	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Description: "The list of file types to which the DLP policy rule must be applied.",
-		Elem: &schema.Schema{
-			Type:             schema.TypeString,
-			ValidateDiagFunc: validateDLPRuleFileTypes(),
-		},
-		Optional: true,
-		Computed: true,
-	}
-}
-
 func sortOrders(ruleOrderMap map[int]orderWithState) RuleIDOrderPairList {
 	pl := make(RuleIDOrderPairList, len(ruleOrderMap))
 	i := 0

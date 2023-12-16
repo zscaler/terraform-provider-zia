@@ -12,7 +12,7 @@ The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP
 
 ⚠️ **WARNING:** Zscaler Internet Access DLP supports a maximum of 127 Web DLP Rules to be created via API.
 
-## Example Usage
+## Example Usage - OCR ENABLED
 
 ```hcl
 resource "zia_dlp_web_rules" "test" {
@@ -27,9 +27,36 @@ resource "zia_dlp_web_rules" "test" {
     without_content_inspection  = false
     match_only                  = false
     ocr_enabled                 = true
-    file_types                = [ "WINDOWS_META_FORMAT", "BITMAP", "JPEG", "PNG", "TIFF"]
+    file_types                = [ "BITMAP", "JPEG", "PNG", "TIFF"]
     min_size                    = 20
     zscaler_incident_receiver   = true
+}
+```
+
+## Example Usage - "ALL_OUTBOUND" File Type
+
+```hcl
+data "zia_dlp_engines" "this" {
+  predefined_engine_name = "EXTERNAL"
+}
+
+resource "zia_dlp_web_rules" "this" {
+  name                       = "Example"
+  description                = "Example"
+  action                     = "BLOCK"
+  order                      = 1
+  rank                       = 7
+  state                      = "ENABLED"
+  # ocr_enabled              = true
+  protocols                  = [ "FTP_RULE", "HTTPS_RULE", "HTTP_RULE" ]
+  file_types                 = [ "ALL_OUTBOUND" ]
+  zscaler_incident_receiver  = true
+  without_content_inspection = false
+  user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
+  severity                   = "RULE_SEVERITY_HIGH"
+  dlp_engines {
+    id = [ data.zia_dlp_engines.this.id ]
+  }
 }
 ```
 
@@ -48,6 +75,8 @@ The following arguments are supported:
 * `external_auditor_email` - (Optional) The email address of an external auditor to whom DLP email notifications are sent.
 * `match_only` - (Optional) The match only criteria for DLP engines.
 * `without_content_inspection` - (Optional) Indicates a DLP policy rule without content inspection, when the value is set to true.
+  * `without_content_inspection` must be set to false if `file_types` is not defined.
+
 * `ocr_enabled` - (Optional) Enables or disables image file scanning. When OCR is enabled only the following ``file_types`` are supported: ``WINDOWS_META_FORMAT``, ``BITMAP``, ``JPEG``, ``PNG``, ``TIFF``
 * `zscaler_incident_receiver` - (Optional) Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.
 
@@ -63,7 +92,22 @@ The following arguments are supported:
   * `ENABLED`
 
 * `file_types` - (Optional) The list of file types to which the DLP policy rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
-* `cloud_applications` - (Optional) The list of cloud applications to which the DLP policy rule must be applied. For the complete list of supported cloud applications refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
+
+  * ~> Note: `BITMAP`, `JPEG`, `PNG`, and `TIFF` file types are exclusively supported when optical character recognition `ocr_enabled` is set to `true` for DLP rules with content inspection.
+
+  * ~> Note: `ALL_OUTBOUND` file type is applicable only when the predefined DLP engine called `EXTERNAL` is used and when the attribute `without_content_inspection` is set to `false`.
+
+  * ~> Note: `ALL_OUTBOUND` file type cannot be used alongside any any other file type.
+
+* `severity` - (String) Indicates the severity selected for the DLP rule violation: Returned values are:  `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
+
+* `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+* `parent_rule`(Optional) - The unique identifier of the parent rule under which an exception rule is added.
+ ~> Note: Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
+
+* `sub_rules`(List) - The list of exception rules added to a parent rule.
+ ~> Note: All attributes within the WebDlpRule model are applicable to the sub-rules. Values for each rule are specified by using the WebDlpRule object Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
 
 * `notification_template` - (Optional) The template used for DLP notification emails.
   * `id` - (Optional) Identifier that uniquely identifies an entity

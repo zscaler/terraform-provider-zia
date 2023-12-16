@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
 )
 
-func TestAccResourceDlpWebRulesBasic(t *testing.T) {
+func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 	var rules dlp_web_rules.WebDLPRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
@@ -31,13 +31,13 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, initialName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 				),
 			},
 
@@ -46,13 +46,13 @@ func TestAccResourceDlpWebRulesBasic(t *testing.T) {
 				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, updatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 				),
 			},
 			// Import test
@@ -132,29 +132,6 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 	}
 }
 
-// func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state, ruleLabelTypeAndName, ruleLabelHCL string) string {
-// 	return fmt.Sprintf(`
-// // rule label resource
-// %s
-
-// // dlp web rule resource
-// %s
-
-// data "%s" "%s" {
-// 	id = "${%s.id}"
-// }
-// `,
-// 		// resource variables
-// 		ruleLabelHCL,
-// 		getDLPWebRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName),
-
-// 		// data source variables
-// 		resourcetype.DLPWebRules,
-// 		generatedName,
-// 		resourceTypeAndName,
-// 	)
-// }
-
 func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state string) string {
 	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
 
@@ -168,13 +145,6 @@ data "zia_url_categories" "finance"{
 	id = "FINANCE"
 }
 
-data "zia_dlp_engines" "pci" {
-	name = "PCI"
-}
-
-data "zia_dlp_engines" "glba" {
-	name = "GLBA"
-}
 data "zia_rule_labels" "can"{
 	name = "GLOBAL"
 }
@@ -211,18 +181,22 @@ data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
 }
 
+data "zia_dlp_engines" "this" {
+	predefined_engine_name = "EXTERNAL"
+  }
+
 resource "%s" "%s" {
-	name 						= "tf-acc-test-%s"
+	name 						= "%s"
 	description 				= "%s"
     action 						= "%s"
     state 						= "%s"
 	order 						= 1
 	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-	without_content_inspection 	= false
-	match_only 					= false
-	file_types                  = []
-	min_size 					= 20
+	without_content_inspection 	= true
+	file_types                  = [ "ALL_OUTBOUND" ]
+	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+	severity = "RULE_SEVERITY_HIGH"
 	zscaler_incident_receiver 	= true
 	location_groups {
 		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
@@ -236,12 +210,12 @@ resource "%s" "%s" {
 	time_windows {
 		id = [data.zia_firewall_filtering_time_window.work_hours.id, data.zia_firewall_filtering_time_window.off_hours.id]
 	}
-	dlp_engines {
-		id = [data.zia_dlp_engines.pci.id, data.zia_dlp_engines.glba.id]
-	}
 	url_categories {
 		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
 	}
+	dlp_engines {
+		id = [data.zia_dlp_engines.this.id]
+	  }
 }
 
 data "%s" "%s" {

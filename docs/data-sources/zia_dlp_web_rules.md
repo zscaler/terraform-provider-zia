@@ -55,8 +55,23 @@ rules.
   * `DISABLED`
   * `ENABLED`
 
-* `file_types` - (String) The list of file types to which the DLP policy rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
+* `file_types` - (List) The list of file types to which the DLP policy rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
+
+  * ~> Note: `BITMAP`, `JPEG`, `PNG`, and `TIFF` file types are exclusively supported when optical character recognition `ocr_enabled` is set to `true` for DLP rules with content inspection.
+
+  * ~> Note: `ALL_OUTBOUND` file type is applicable only when the predefined DLP engine called `EXTERNAL` is used and when the attribute `without_content_inspection` is set to `true`. For `EXTERNAL` DLP Engine See the [zia_dlp_engine](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_dlp_engines) data source documentation
+
 * `cloud_applications` - (Optional) The list of cloud applications to which the DLP policy rule must be applied. For the complete list of supported cloud applications refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
+
+* `severity` - (String) Indicates the severity selected for the DLP rule violation: Returned values are:  `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
+
+* `user_risk_score_levels` (List) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+* `parent_rule`(Number) - The unique identifier of the parent rule under which an exception rule is added.
+ ~> Note: Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
+
+* `sub_rules`(List) - The list of exception rules added to a parent rule.
+ ~> Note: All attributes within the WebDlpRule model are applicable to the sub-rules. Values for each rule are specified by using the WebDlpRule object Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
 
 * `last_modified_by` - (Number)  The admin that modified the DLP policy rule last.
   * `id` - (Number) Identifier that uniquely identifies an entity

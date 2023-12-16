@@ -24,7 +24,7 @@ func dataSourceDLPEngines() *schema.Resource {
 			},
 			"predefined_engine_name": {
 				Type:        schema.TypeString,
-				Computed:    true,
+				Optional:    true,
 				Description: "The name of the predefined DLP engine.",
 			},
 			"engine_expression": {
@@ -63,6 +63,16 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp engine name: %s\n", name)
 		res, err := zClient.dlp_engines.GetByName(name)
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
+
+	predefined, _ := d.Get("predefined_engine_name").(string)
+	if resp == nil && predefined != "" {
+		log.Printf("[INFO] Getting data for predefined dlp engine name: %s\n", predefined)
+		res, err := zClient.dlp_engines.GetByPredefinedEngine(predefined)
 		if err != nil {
 			return err
 		}
