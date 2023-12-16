@@ -156,10 +156,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			// "cbi_profile_id": {
-			// 	Type:     schema.TypeInt,
-			// 	Optional: true,
-			// },
+			"cbi_profile_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"cbi_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -178,6 +178,11 @@ func resourceURLFilteringRules() *schema.Resource {
 						},
 						"url": {
 							Type:     schema.TypeString,
+							Optional: true,
+							// Computed: true,
+						},
+						"default_profile": {
+							Type:     schema.TypeBool,
 							Optional: true,
 							// Computed: true,
 						},
@@ -340,7 +345,12 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 	_ = d.Set("order", resp.Order)
-	// _ = d.Set("cbi_profile_id", resp.CBIProfileID)
+	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
+
+	// Update the cbi_profile block in the state
+	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
+		return err
+	}
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
 		return err
@@ -383,10 +393,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
-		return err
-	}
-
-	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
 		return err
 	}
 
@@ -489,6 +495,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
+		CBIProfileID:           d.Get("cbi_profile_id").(int),
 		Locations:              expandIDNameExtensionsSet(d, "locations"),
 		Groups:                 expandIDNameExtensionsSet(d, "groups"),
 		Departments:            expandIDNameExtensionsSet(d, "departments"),
@@ -514,9 +521,10 @@ func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
 		}
 		cbiProfileData := cbiProfileList[0].(map[string]interface{})
 		return &urlfilteringpolicies.CBIProfile{
-			ID:   cbiProfileData["id"].(string),
-			Name: cbiProfileData["name"].(string),
-			URL:  cbiProfileData["url"].(string),
+			ID:             cbiProfileData["id"].(string),
+			Name:           cbiProfileData["name"].(string),
+			URL:            cbiProfileData["url"].(string),
+			DefaultProfile: cbiProfileData["default_profile"].(bool),
 		}
 	}
 	return nil
@@ -526,10 +534,12 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 	if cbiProfile == nil {
 		return []interface{}{}
 	}
-	m := map[string]interface{}{
-		"id":   cbiProfile.ID,
-		"name": cbiProfile.Name,
-		"url":  cbiProfile.URL,
+	return []interface{}{
+		map[string]interface{}{
+			"id":              cbiProfile.ID,
+			"name":            cbiProfile.Name,
+			"url":             cbiProfile.URL,
+			"default_profile": cbiProfile.DefaultProfile,
+		},
 	}
-	return []interface{}{m}
 }

@@ -12,10 +12,6 @@ func dataSourceCBIProfile() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceCBIProfileRead,
 		Schema: map[string]*schema.Schema{
-			"profile_seq": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"id": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -67,7 +63,6 @@ func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("url", resp.URL)
 		_ = d.Set("default_profile", resp.DefaultProfile)
-		_ = d.Set("profile_seq", resp.ProfileSeq)
 
 	} else {
 		return fmt.Errorf("couldn't find any cloud browser isolation profile with name '%s' or id '%s'", name, id)

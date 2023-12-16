@@ -369,21 +369,25 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"profile_seq": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The universally unique identifier (UUID) for the browser isolation profile",
 						},
 						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Name of the browser isolation profile",
 						},
 						"url": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The browser isolation profile URL",
+						},
+						"default_profile": {
+							Type:        schema.TypeBool,
+							Computed:    true,
+							Description: "(Optional) Indicates whether this is a default browser isolation profile. Zscaler sets this field.",
 						},
 					},
 				},
@@ -396,10 +400,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"cbi_profile_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"action": {
 				Type:     schema.TypeString,
@@ -459,7 +459,6 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("ciparule", resp.Ciparule)
 		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
-		_ = d.Set("cbi_profile_id", resp.CBIProfileID)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
@@ -533,9 +532,9 @@ func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]i
 	}
 
 	return map[string]interface{}{
-		// "profile_seq": cbiProfile.ProfileSeq,
-		"id":   cbiProfile.ID,
-		"name": cbiProfile.Name,
-		"url":  cbiProfile.URL,
+		"id":             cbiProfile.ID,
+		"name":           cbiProfile.Name,
+		"url":            cbiProfile.URL,
+		"default_profle": cbiProfile.DefaultProfile,
 	}
 }

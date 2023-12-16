@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_idm_profiles"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_idm_profile_lite"
 )
 
 func dataSourceDLPIDMProfileLite() *schema.Resource {
@@ -84,6 +84,12 @@ func dataSourceDLPIDMProfileLite() *schema.Resource {
 					},
 				},
 			},
+			"active_only": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: "Filter to include only active IDM profiles",
+			},
 		},
 	}
 }
@@ -91,26 +97,28 @@ func dataSourceDLPIDMProfileLite() *schema.Resource {
 func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	var resp *dlp_idm_profiles.DLPIDMProfileLite
+	var resp *dlp_idm_profile_lite.DLPIDMProfileLite
+	activeOnly := d.Get("active_only").(bool) // Retrieve the active_only value
+
 	profileLiteID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp idm profile id: %d\n", profileLiteID)
-		res, err := zClient.dlp_idm_profiles.GetDLPProfileLiteID(profileLiteID)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-	profileLiteName, _ := d.Get("template_name").(string)
-	if resp == nil && profileLiteName != "" {
-		log.Printf("[INFO] Getting data for dlp idm template name: %s\n", profileLiteName)
-		res, err := zClient.dlp_idm_profiles.GetDLPProfileLiteByName(profileLiteName)
+		res, err := zClient.dlp_idm_profile_lite.GetDLPProfileLiteID(profileLiteID, activeOnly) // Use activeOnly here
 		if err != nil {
 			return err
 		}
 		resp = res
 	}
 
+	profileLiteName, _ := d.Get("template_name").(string)
+	if resp == nil && profileLiteName != "" {
+		log.Printf("[INFO] Getting data for dlp idm template name: %s\n", profileLiteName)
+		res, err := zClient.dlp_idm_profile_lite.GetDLPProfileLiteByName(profileLiteName, activeOnly) // Use activeOnly here
+		if err != nil {
+			return err
+		}
+		resp = res
+	}
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ProfileID))
 		_ = d.Set("profile_id", resp.ProfileID)
