@@ -463,6 +463,18 @@ func getURLRequestMethods() *schema.Schema {
 	}
 }
 
+func getUserRiskScoreLevels() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateUserRiskScoreLevels(),
+		},
+		Optional: true,
+	}
+}
+
 func getURLProtocols() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -471,7 +483,20 @@ func getURLProtocols() *schema.Schema {
 		MinItems:    1,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
-			ValidateDiagFunc: validateURLFilteringProtocols(), // Use ValidateDiagFunc here
+			ValidateDiagFunc: validateURLFilteringProtocols(),
+		},
+	}
+}
+
+func getUserAgentTypes() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Supported User Agent Types",
+		Required:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateUserAgentTypes(),
 		},
 	}
 }

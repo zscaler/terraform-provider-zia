@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -77,6 +78,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"order": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
@@ -135,11 +137,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
-			"user_agent_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"action": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -163,47 +160,45 @@ func resourceURLFilteringRules() *schema.Resource {
 			"cbi_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
-				// Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"profile_seq": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// Computed: true,
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// Computed: true,
 						},
 						"url": {
 							Type:     schema.TypeString,
 							Optional: true,
-							// Computed: true,
-						},
-						"default_profile": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							// Computed: true,
 						},
 					},
 				},
 			},
-			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
-			"groups":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
-			"departments":         setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
-			"users":               setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
-			"time_windows":        setIDsSchemaTypeCustom(nil, "Name-ID pairs of time interval during which rule must be enforced."),
-			"override_users":      setIDsSchemaTypeCustom(nil, "Name-ID pairs of users for which this rule can be overridden."),
-			"override_groups":     setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which this rule can be overridden."),
-			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
-			"location_groups":     setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of the location groups to which the rule must be applied."),
-			"labels":              setIDsSchemaTypeCustom(nil, "The URL Filtering rule's label."),
-			"device_trust_levels": getDeviceTrustLevels(),
-			"url_categories":      getURLCategories(),
-			"request_methods":     getURLRequestMethods(),
-			"protocols":           getURLProtocols(),
+			"locations":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
+			"groups":                 setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
+			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
+			"users":                  setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
+			"time_windows":           setIDsSchemaTypeCustom(nil, "Name-ID pairs of time interval during which rule must be enforced."),
+			"override_users":         setIDsSchemaTypeCustom(nil, "Name-ID pairs of users for which this rule can be overridden."),
+			"override_groups":        setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which this rule can be overridden."),
+			"device_groups":          setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":                setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"location_groups":        setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of the location groups to which the rule must be applied."),
+			"labels":                 setIDsSchemaTypeCustom(nil, "The URL Filtering rule's label."),
+			"device_trust_levels":    getDeviceTrustLevels(),
+			"user_risk_score_levels": getUserRiskScoreLevels(),
+			"url_categories":         getURLCategories(),
+			"request_methods":        getURLRequestMethods(),
+			"protocols":              getURLProtocols(),
+			"user_agent_types":       getUserAgentTypes(),
 		},
 	}
 }
@@ -229,6 +224,11 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
+
+	// Validate URL Filtering Actions
+	if err := validateURLFilteringActions(req); err != nil {
+		return err
+	}
 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
@@ -333,6 +333,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
 	_ = d.Set("request_methods", resp.RequestMethods)
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
@@ -345,11 +346,15 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 	_ = d.Set("order", resp.Order)
-	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
+	if resp.CBIProfileID > 0 {
+		_ = d.Set("cbi_profile_id", resp.CBIProfileID)
+	}
 
 	// Update the cbi_profile block in the state
-	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
-		return err
+	if resp.CBIProfile.ID != "" {
+		if err := d.Set("cbi_profile", flattenCBIProfileSimple(&resp.CBIProfile)); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
@@ -408,6 +413,11 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
 	req := expandURLFilteringRules(d)
+
+	// Validate URL Filtering Actions
+	if err := validateURLFilteringActions(req); err != nil {
+		return err
+	}
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
@@ -480,6 +490,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Order:                  d.Get("order").(int),
 		Protocols:              SetToStringList(d, "protocols"),
 		URLCategories:          SetToStringList(d, "url_categories"),
+		UserRiskScoreLevels:    SetToStringList(d, "user_risk_score_levels"),
 		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
 		RequestMethods:         SetToStringList(d, "request_methods"),
 		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
@@ -513,21 +524,20 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
-func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
+func expandCBIProfile(d *schema.ResourceData) urlfilteringpolicies.CBIProfile {
 	if v, ok := d.GetOk("cbi_profile"); ok {
 		cbiProfileList := v.([]interface{})
-		if len(cbiProfileList) == 0 {
-			return nil
-		}
-		cbiProfileData := cbiProfileList[0].(map[string]interface{})
-		return &urlfilteringpolicies.CBIProfile{
-			ID:             cbiProfileData["id"].(string),
-			Name:           cbiProfileData["name"].(string),
-			URL:            cbiProfileData["url"].(string),
-			DefaultProfile: cbiProfileData["default_profile"].(bool),
+		if len(cbiProfileList) > 0 {
+			cbiProfileData := cbiProfileList[0].(map[string]interface{})
+			return urlfilteringpolicies.CBIProfile{
+				ProfileSeq: cbiProfileData["profile_seq"].(int),
+				ID:         cbiProfileData["id"].(string),
+				Name:       cbiProfileData["name"].(string),
+				URL:        cbiProfileData["url"].(string),
+			}
 		}
 	}
-	return nil
+	return urlfilteringpolicies.CBIProfile{}
 }
 
 func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
@@ -536,10 +546,46 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"id":              cbiProfile.ID,
-			"name":            cbiProfile.Name,
-			"url":             cbiProfile.URL,
-			"default_profile": cbiProfile.DefaultProfile,
+			"id":          cbiProfile.ID,
+			"name":        cbiProfile.Name,
+			"url":         cbiProfile.URL,
+			"profile_seq": cbiProfile.ProfileSeq,
 		},
 	}
+}
+
+func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) error {
+	switch rule.Action {
+	case "ISOLATE":
+		// Validation 1: Check if any field in CBIProfile is set
+		if rule.CBIProfile.ID == "" && rule.CBIProfile.Name == "" && rule.CBIProfile.URL == "" {
+			return errors.New("cbi_profile attribute is required when action is ISOLATE")
+		}
+
+		// Validation 2: Check user_agent_types does not contain "OTHER"
+		for _, userAgent := range rule.UserAgentTypes {
+			if userAgent == "OTHER" {
+				return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
+			}
+		}
+
+		// Validation 3: Check Protocols should be HTTP or HTTPS
+		validProtocols := map[string]bool{"HTTP": true, "HTTPS": true}
+		for _, protocol := range rule.Protocols {
+			if !validProtocols[strings.ToUpper(protocol)] {
+				return errors.New("when action is ISOLATE, valid options for protocols are: HTTP and/or HTTPS")
+			}
+		}
+
+	case "CAUTION":
+		// Validation 4: Ensure request_methods only contain CONNECT, GET, HEAD
+		validMethods := map[string]bool{"CONNECT": true, "GET": true, "HEAD": true}
+		for _, method := range rule.RequestMethods { // Assuming RequestMethods is the correct field
+			if !validMethods[strings.ToUpper(method)] {
+				return errors.New("'CAUTION' action is allowed only for CONNECT/GET/HEAD request methods")
+			}
+		}
+	}
+
+	return nil
 }

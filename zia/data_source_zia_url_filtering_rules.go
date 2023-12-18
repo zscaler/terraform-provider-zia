@@ -384,11 +384,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Computed:    true,
 							Description: "The browser isolation profile URL",
 						},
-						"default_profile": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Description: "(Optional) Indicates whether this is a default browser isolation profile. Zscaler sets this field.",
-						},
 					},
 				},
 			},
@@ -514,9 +509,10 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
 			return err
 		}
-
-		if err := d.Set("cbi_profile", flattenCBIProfile(resp.CBIProfile)); err != nil {
-			return err
+		if resp.CBIProfile.ID != "" {
+			if err := d.Set("cbi_profile", flattenCBIProfile(&resp.CBIProfile)); err != nil {
+				return err
+			}
 		}
 
 	} else {
@@ -532,9 +528,9 @@ func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]i
 	}
 
 	return map[string]interface{}{
-		"id":             cbiProfile.ID,
-		"name":           cbiProfile.Name,
-		"url":            cbiProfile.URL,
-		"default_profle": cbiProfile.DefaultProfile,
+		"id":          cbiProfile.ID,
+		"name":        cbiProfile.Name,
+		"url":         cbiProfile.URL,
+		"profile_seq": cbiProfile.ProfileSeq,
 	}
 }
