@@ -364,6 +364,29 @@ func dataSourceURLFilteringRules() *schema.Resource {
 					},
 				},
 			},
+			"cbi_profile": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The universally unique identifier (UUID) for the browser isolation profile",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Name of the browser isolation profile",
+						},
+						"url": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The browser isolation profile URL",
+						},
+					},
+				},
+			},
 			"enforce_time_validity": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -372,10 +395,6 @@ func dataSourceURLFilteringRules() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"cbi_profile_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"action": {
 				Type:     schema.TypeString,
@@ -490,10 +509,28 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
 			return err
 		}
+		if resp.CBIProfile.ID != "" {
+			if err := d.Set("cbi_profile", flattenCBIProfile(&resp.CBIProfile)); err != nil {
+				return err
+			}
+		}
 
 	} else {
 		return fmt.Errorf("couldn't find any url filtering rule with name '%s' or id '%d'", name, id)
 	}
 
 	return nil
+}
+
+func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]interface{} {
+	if cbiProfile == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"id":          cbiProfile.ID,
+		"name":        cbiProfile.Name,
+		"url":         cbiProfile.URL,
+		"profile_seq": cbiProfile.ProfileSeq,
+	}
 }

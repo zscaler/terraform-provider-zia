@@ -134,6 +134,7 @@ func Provider() *schema.Provider {
 			"zia_sandbox_behavioral_analysis":                   dataSourceSandboxSettings(),
 			"zia_sandbox_report":                                dataSourceSandboxReport(),
 			"zia_forwarding_control_zpa_gateway":                dataSourceForwardingControlZPAGateway(),
+			"zia_cloud_browser_isolation_profile":               dataSourceCBIProfile(),
 		},
 	}
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {

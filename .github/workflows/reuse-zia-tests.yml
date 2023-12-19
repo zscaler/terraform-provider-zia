@@ -64,10 +64,10 @@ jobs:
         uses: nick-invision/retry@v2
         with:
           max_attempts: 3
-          timeout_minutes: 120
+          timeout_minutes: 60
           command: |
             make sweep
-            go test -v -cover ./zia -v -parallel 30 -timeout 120m
+            go test -v -cover ./zia -v -parallel 30 -timeout 60m
             make sweep
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}

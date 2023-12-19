@@ -116,6 +116,69 @@ var supportedURLSuperCategories = []string{
 	"ANY", "NONE", "ADVANCED_SECURITY", "ENTERTAINMENT_AND_RECREATION", "NEWS_AND_MEDIA", "USER_DEFINED", "EDUCATION", "BUSINESS_AND_ECONOMY", "JOB_SEARCH", "INFORMATION_TECHNOLOGY", "INTERNET_COMMUNICATION", "OFFICE_365", "CUSTOM_SUPERCATEGORY", "CUSTOM_BP", "CUSTOM_BW", "MISCELLANEOUS", "TRAVEL", "VEHICLES", "GOVERNMENT_AND_POLITICS", "GLOBAL_INT", "GLOBAL_INT_BP", "GLOBAL_INT_BW", "GLOBAL_INT_OFC365", "ADULT_MATERIAL", "DRUGS", "GAMBLING", "VIOLENCE", "WEAPONS_AND_BOMBS", "TASTELESS", "MILITANCY_HATE_AND_EXTREMISM", "ILLEGAL_OR_QUESTIONABLE", "SOCIETY_AND_LIFESTYLE", "HEALTH", "SPORTS", "SPECIAL_INTERESTS_SOCIAL_ORGANIZATIONS", "GAMES", "SHOPPING_AND_AUCTIONS", "SOCIAL_AND_FAMILY_ISSUES", "RELIGION", "SECURITY",
 }
 
+var supportedUserRiskScoreLevels = []string{
+	"LOW", "MEDIUM", "HIGH", "CRITICAL",
+}
+
+func validateUserRiskScoreLevels() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for User Risk Score levels",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedUserRiskScoreLevels, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var supportedUserAgentTypes = []string{
+	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER",
+}
+
+func validateUserAgentTypes() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for User Agent Types",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedUserAgentTypes, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
 func validateURLSuperCategories() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {
 		value, ok := i.(string)
