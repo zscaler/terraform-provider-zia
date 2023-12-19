@@ -2,7 +2,6 @@ package zia
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -51,9 +50,4 @@ data "zia_cloud_browser_isolation_profile" "%s" {
 `, resourceName, name)
 	}
 	return configs
-}
-
-// createValidResourceName converts the given name to a valid Terraform resource name
-func createValidResourceName(name string) string {
-	return strings.ReplaceAll(name, " ", "_")
 }

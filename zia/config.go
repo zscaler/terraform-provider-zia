@@ -153,7 +153,6 @@ func (c *Config) Client() (*Client, error) {
 		dlp_engines:                   dlp_engines.New(cli),
 		dlp_idm_profile_lite:          dlp_idm_profile_lite.New(cli),
 		dlp_idm_profiles:              dlp_idm_profiles.New(cli),
-		dlp_idm_profile_lite:          dlp_idm_profile_lite.New(cli),
 		dlp_exact_data_match:          dlp_exact_data_match.New(cli),
 		dlp_icap_servers:              dlp_icap_servers.New(cli),
 		dlp_incident_receiver_servers: dlp_incident_receiver_servers.New(cli),
