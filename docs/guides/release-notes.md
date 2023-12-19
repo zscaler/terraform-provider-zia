@@ -16,11 +16,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 2.7.0 (December, 18 2023)
+## 2.7.0 (December, 19 2023)
 
 ### Notes
 
-- Release date: **(December, 18 2023)**
+- Release date: **(December, 19 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
@@ -45,9 +45,9 @@ NEW - RESOURCES, DATA SOURCES
   - `parent_rule`
   - `sub_rules`
 
-- [PR #303](https://github.com/zscaler/terraform-provider-zia/pull/303) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
 
-- [PR #303](https://github.com/zscaler/terraform-provider-zia/pull/303) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
 
 ### Fixes
 
