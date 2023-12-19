@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -17,17 +18,20 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 	var categories urlcategories.URLCategory
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLCategories)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, initialName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
@@ -35,11 +39,11 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, updatedName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+generatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
@@ -92,6 +96,8 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 }
 
 func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName string, custom_category bool) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	super_category 		= "USER_DEFINED"
@@ -104,19 +110,22 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
+	id = "${%s.%s.id}"
   }
 `,
-		// resource variables
+		// Resource type and name for the url category
 		resourcetype.URLCategories,
-		generatedName,
+		resourceName,
 		generatedName,
 		generatedName,
 		strconv.FormatBool(custom_category),
 
-		// data source variables
+		// Data source type and name
 		resourcetype.URLCategories,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.URLCategories,
+		resourceName,
 	)
 }

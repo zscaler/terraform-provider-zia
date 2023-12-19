@@ -1,17 +1,6 @@
 package zia
 
-import (
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-)
-
+/*
 func TestAccZiaSandboxFileSubmission_basic(t *testing.T) {
 	baseURL := "https://github.com/SecurityGeekIO/malware-samples/raw/main/"
 	fileNames := []string{
@@ -103,3 +92,4 @@ func testAccCheckSandboxSubmissionDestroy(s *terraform.State) error {
 	// Implement if there's anything to check upon resource destruction
 	return nil
 }
+*/

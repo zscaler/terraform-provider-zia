@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -166,4 +167,9 @@ func DiffSuppressFuncCoordinate(_, old, new string, _ *schema.ResourceData) bool
 		return false
 	}
 	return math.Round(o*1000000)/1000000 == math.Round(n*1000000)/1000000
+}
+
+// createValidResourceName converts the given name to a valid Terraform resource name
+func createValidResourceName(name string) string {
+	return strings.ReplaceAll(name, " ", "_")
 }

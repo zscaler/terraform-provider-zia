@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 	var groups ipsourcegroups.IPSourceGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringSourceGroup)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFWIPSourceGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWSRCGroupDescription),
+				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, initialName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
@@ -35,10 +39,10 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWSRCGroupDescription),
+				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, updatedName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
@@ -109,6 +113,8 @@ func testAccCheckFWIPSourceGroupsExists(resource string, rule *ipsourcegroups.IP
 }
 
 func testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	name        = "tf-acc-test-%s"
@@ -116,20 +122,22 @@ resource "%s" "%s" {
     ip_addresses = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
   }
 
-  data "%s" "%s" {
-	id = "${%s.id}"
-  }
-
+data "%s" "%s" {
+id = "${%s.%s.id}"
+}
 `,
-		// resource variables
+		// Resource type and name for the ip source group
 		resourcetype.FWFilteringSourceGroup,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.FWFilteringSourceGroup,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.FWFilteringSourceGroup,
+		resourceName,
 	)
 }

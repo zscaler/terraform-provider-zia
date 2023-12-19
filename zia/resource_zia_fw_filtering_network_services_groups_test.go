@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 	var services networkservicegroups.NetworkServiceGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFWNetworkServiceGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
+				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, initialName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
@@ -35,10 +39,10 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, variable.FWNetworkServicesGroupDescription),
+				Config: testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, updatedName, variable.FWNetworkServicesGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServiceGroupsExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "services.#", "1"),
 				),
@@ -103,6 +107,8 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 }
 
 func testAccCheckFWNetworkServiceGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 
 data "zia_firewall_filtering_network_service" "example1" {
@@ -125,18 +131,21 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
+	id = "${%s.%s.id}"
   }
 `,
-		// resource variables
+		// Resource type and name for the network services group
 		resourcetype.FWFilteringNetworkServiceGroups,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.FWFilteringNetworkServiceGroups,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.FWFilteringNetworkServiceGroups,
+		resourceName,
 	)
 }

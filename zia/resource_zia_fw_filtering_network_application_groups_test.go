@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -18,16 +19,19 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 	var appGroups networkapplicationgroups.NetworkApplicationGroups
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkAppGroups)
 
+	initialName := "tf-acc-test-" + generatedName
+	updatedName := "updated-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckFWNetworkApplicationGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
+				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, initialName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -35,10 +39,10 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, variable.FWAppGroupDescription),
+				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, updatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -103,6 +107,8 @@ func testAccCheckFWNetworkApplicationGroupsExists(resource string, rule *network
 }
 
 func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, generatedName, description string) string {
+	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
+
 	return fmt.Sprintf(`
 resource "%s" "%s" {
     name = "tf-acc-test-%s"
@@ -123,18 +129,21 @@ resource "%s" "%s" {
 }
 
 data "%s" "%s" {
-	id = "${%s.id}"
-}
+	id = "${%s.%s.id}"
+  }
 `,
-		// resource variables
+		// Resource type and name for the network application group
 		resourcetype.FWFilteringNetworkAppGroups,
-		generatedName,
+		resourceName,
 		generatedName,
 		description,
 
-		// data source variables
+		// Data source type and name
 		resourcetype.FWFilteringNetworkAppGroups,
-		generatedName,
-		resourceTypeAndName,
+		resourceName,
+
+		// Reference to the resource
+		resourcetype.FWFilteringNetworkAppGroups,
+		resourceName,
 	)
 }

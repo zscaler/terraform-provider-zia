@@ -3,13 +3,13 @@ module github.com/zscaler/terraform-provider-zia/v2
 go 1.20
 
 require (
-	github.com/biter777/countries v1.6.6
+	github.com/biter777/countries v1.7.2
 	github.com/fabiotavarespr/iso3166 v0.0.2
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
-	github.com/hashicorp/go-hclog v1.5.0
+	github.com/hashicorp/go-hclog v1.6.2
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.31.0
-	github.com/zscaler/zscaler-sdk-go/v2 v2.3.3
+  github.com/zscaler/zscaler-sdk-go/v2 v2.3.3
 )
 
 require (
@@ -53,7 +53,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/zclconf/go-cty v1.14.1 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+  golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.18.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect

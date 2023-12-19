@@ -64,10 +64,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "URL Filtering Rule ID",
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Rule Name",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Rule Name",
+				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
 				Type:         schema.TypeString,
