@@ -14,15 +14,22 @@ Use the **zia_dlp_engines** data source to get information about a ZIA DLP Engin
 
 ```hcl
 # Retrieve a DLP Engine by name
-data "zia_dlp_engines" "example"{
+data "zia_dlp_engines" "this"{
     name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a DLP Engine by ID
-data "zia_dlp_engines" "example"{
+data "zia_dlp_engines" "this"{
     id = 1234567890
+}
+```
+
+```hcl
+# Retrieve a Predefined DLP Engine
+data "zia_dlp_engines" "this"{
+    predefined = "EXTERNAL"
 }
 ```
 

@@ -254,6 +254,22 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Enables or disables the DLP policy rule.",
 			},
+			"severity": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Indicates the severity selected for the DLP rule violation",
+			},
+			"parent_rule": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The unique identifier of the parent rule under which an exception rule is added.",
+			},
+			"sub_rules": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "The list of exception rules added to a parent rule",
+			},
 			"time_windows": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -554,12 +570,17 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("state", resp.State)
 		_ = d.Set("min_size", resp.MinSize)
 		_ = d.Set("action", resp.Action)
+		_ = d.Set("severity", resp.Severity)
+		_ = d.Set("parent_rule", resp.ParentRule)
+		_ = d.Set("sub_rules", resp.SubRules)
 		_ = d.Set("match_only", resp.MatchOnly)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 		_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 		_ = d.Set("ocr_enabled", resp.OcrEnabled)
 		_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
+		_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
+		_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 
 		if err := d.Set("locations", flattenIDExtensions(resp.Locations)); err != nil {
 			return err

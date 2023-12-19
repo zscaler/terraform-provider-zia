@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
 )
 
 // Validate URL Filtering Category Options
@@ -299,38 +300,96 @@ func validateCloudFirewallNwServicesTag() schema.SchemaValidateDiagFunc {
 	}
 }
 
-func validateDLPRuleFileTypes() schema.SchemaValidateDiagFunc {
-	return func(i interface{}, path cty.Path) diag.Diagnostics {
-		value, ok := i.(string)
-		if !ok {
-			return diag.Diagnostics{
-				{
-					Severity: diag.Error,
-					Summary:  "Expected type to be string",
-					Detail:   "Type assertion failed, expected string type for DLP Rule File Types validation",
-				},
+func validateOCRDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
+	// Define supported file types for OCR enabled scenarios
+	supportedFileTypesWithOCREnabled := []string{"BITMAP", "PNG", "JPEG", "TIFF"}
+
+	// Check if OCR is enabled
+	if dlp.OcrEnabled {
+		// Validate that dlp.FileTypes must be a subset of supportedFileTypesWithOCREnabled
+		for _, fileType := range dlp.FileTypes {
+			if !contains(supportedFileTypesWithOCREnabled, fileType) {
+				return fmt.Errorf("web dlp rule file type '%s' is not supported when OCR is enabled. Supported types: %v", fileType, supportedFileTypesWithOCREnabled)
 			}
 		}
-
-		// Convert the cty.Path to a string representation
-		pathStr := fmt.Sprintf("%+v", path)
-
-		// Use StringInSlice from helper/validation package
-		var diags diag.Diagnostics
-		if _, errs := validation.StringInSlice(supportedDLPRuleFileTypes, false)(value, pathStr); len(errs) > 0 {
-			for _, err := range errs {
-				diags = append(diags, diag.FromErr(err)...)
-			}
-		}
-
-		return diags
 	}
+
+	return nil
 }
 
-var supportedDLPRuleFileTypes = []string{
-	"ANY", "CHEMDRAW_FILES", "BITMAP", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES",
-	"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF",
+func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
+	// New check: If FileTypes is not defined, WithoutContentInspection must be false
+	if len(dlp.FileTypes) == 0 && dlp.WithoutContentInspection {
+		return fmt.Errorf("without_content_inspection must be set to false when no file types are defined")
+	}
+
+	var allowedFileTypes []string
+
+	allOutboundSelected := contains(dlp.FileTypes, "ALL_OUTBOUND")
+
+	// If ALL_OUTBOUND is selected and withoutContentInspection is true, it should not trigger an error.
+	if allOutboundSelected && len(dlp.FileTypes) == 1 && dlp.WithoutContentInspection {
+		return nil
+	}
+
+	if allOutboundSelected && len(dlp.FileTypes) > 1 {
+		return fmt.Errorf("cannot have other file types when ALL_OUTBOUND is selected")
+	}
+
+	if dlp.WithoutContentInspection {
+		// Define allowed file types when without_content_inspection is true
+		allowedFileTypes = []string{
+			"ACCDB", "APPLE_DOCUMENTS", "APPX", "ASM", "AU3", "BASH_SCRIPTS", "BASIC_SOURCE_CODE", "BCP", "BORLAND_CPP_FILES", "C_FILES", "CHEMDRAW_FILES", "CML", "COBOL", "COMPILED_HTML_HELP", "CP", "CSV", "CSX", "DAT", "DELPHI", "DMD", "DSP", "EML_FILES", "F_FILES", "FOR", "FORM_DATA_POST", "GO_FILES", "IFC", "INCLUDE_FILES", "INF", "JAVA_FILES", "LOG_FILES", "MAKE_FILES", "MATLAB_FILES", "MM", "MS_CPP_FILES", "MS_EXCEL", "MS_MDB", "MS_MSG", "MS_POWERPOINT", "MS_RTF", "MS_WORD", "MSC", "NATVIS", "OAB", "PDF_DOCUMENT", "PERL_FILES", "POD", "POSTSCRIPT", "POWERSHELL", "PYTHON", "QLIKVIEW_FILES", "RES_FILES", "RPY", "RSP", "RUBY_FILES", "SAS", "SC", "SCALA", "SCT", "SCZIP", "SHELL_SCRAP", "SQL", "TABLEAU_FILES", "TLH", "TLI", "TXT", "VISUAL_BASIC_FILES", "VISUAL_BASIC_SCRIPT", "VISUAL_CPP_FILES", "VSDX", "WINDOWS_META_FORMAT", "WINDOWS_SCRIPT_FILES", "X1B", "XAML", "YAML_FILES", "JAVA_APPLET", "JAVASCRIPT",
+		}
+	} else {
+		// Define allowed file types when without_content_inspection is false
+		allowedFileTypes = []string{
+			"A_FILE", "ACCDB", "ADE", "APPLE_DOCUMENTS", "APPX", "ASM", "AU3", "AUTOCAD", "BASH_SCRIPTS", "BASIC_SOURCE_CODE", "BCP", "BGI", "BITMAP", "BORLAND_CPP_FILES", "BZIP2", "C_FILES", "CAB", "CER", "CERT", "CHEMDRAW_FILES", "CML", "COBOL", "COMPILED_HTML_HELP", "CP", "CSV", "CSX", "DAT", "DB", "DB2", "DBF", "DELPHI", "DER", "DMD", "DRV", "DSP", "EML_FILES", "ENCRYPT", "F_FILES", "FOR", "FORM_DATA_POST", "GIF", "GO_FILES", "GZIP", "IFC", "INCLUDE_FILES", "INF", "INI", "INTEGRATED_CIRCUIT_FILES", "ISO", "JAVA_FILES", "JKS", "JPEG", "KEY", "LOG_FILES", "MAKE_FILES", "MANIFEST", "MATLAB_FILES", "MM", "MS_CPP_FILES", "MS_EXCEL", "MS_MDB", "MS_MSG", "MS_POWERPOINT", "MS_RTF", "MS_WORD", "MSC", "NATVIS", "NCB", "NFM", "NLS", "OAB", "ONENOTE", "P12", "P7B", "P7Z", "PCAP", "PDF_DOCUMENT", "PEM", "PERL_FILES", "PHOTOSHOP", "PNG", "POD", "POSTSCRIPT", "POWERSHELL", "PYTHON", "QLIKVIEW_FILES", "RAR", "RES_FILES", "RPY", "RSP", "RUBY_FILES", "SAS", "SC", "SCALA", "SCT", "SCZIP", "SHELL_SCRAP", "SQL", "STL", "STUFFIT", "TABLEAU_FILES", "TAR", "TIFF", "TLH", "TLI", "TXT", "VISUAL_BASIC_FILES", "VISUAL_BASIC_SCRIPT", "VISUAL_CPP_FILES", "VSDX", "WINDOWS_META_FORMAT", "WINDOWS_SCRIPT_FILES", "X1B", "XAML", "YAML_FILES", "ZIP", "FLASH", "JAVA_APPLET", "JAVASCRIPT",
+		}
+	}
+	for _, fileType := range dlp.FileTypes {
+		if !contains(allowedFileTypes, fileType) {
+			return fmt.Errorf("the file_type '%s' is not accepted when without_content_inspection is false", fileType)
+		}
+	}
+
+	return nil
 }
+
+/*
+	func validateDLPRuleFileTypes() schema.SchemaValidateDiagFunc {
+		return func(i interface{}, path cty.Path) diag.Diagnostics {
+			value, ok := i.(string)
+			if !ok {
+				return diag.Diagnostics{
+					{
+						Severity: diag.Error,
+						Summary:  "Expected type to be string",
+						Detail:   "Type assertion failed, expected string type for DLP Rule File Types validation",
+					},
+				}
+			}
+
+			// Convert the cty.Path to a string representation
+			pathStr := fmt.Sprintf("%+v", path)
+
+			// Use StringInSlice from helper/validation package
+			var diags diag.Diagnostics
+			if _, errs := validation.StringInSlice(supportedDLPRuleFileTypes, false)(value, pathStr); len(errs) > 0 {
+				for _, err := range errs {
+					diags = append(diags, diag.FromErr(err)...)
+				}
+			}
+
+			return diags
+		}
+	}
+
+	var supportedDLPRuleFileTypes = []string{
+		"ANY", "CHEMDRAW_FILES", "BITMAP", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES",
+		"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF",
+	}
+*/
 
 func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {

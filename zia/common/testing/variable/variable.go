@@ -110,9 +110,8 @@ const (
 	DLPWebRuleDesc           = "this is an acceptance test"
 	DLPRuleResourceAction    = "ALLOW"
 	DLPRuleResourceState     = "ENABLED"
-	DLPRuleContentInspection = false
+	DLPRuleContentInspection = true
 	DLPMatchOnly             = false
-	DLPOCREnabled            = false
 )
 
 // DLP Dictionaries resource/datasource

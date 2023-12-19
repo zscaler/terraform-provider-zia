@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.7.0 (December, 13 2023)
+## 2.7.0 (December, 19 2023)
 
 ### Notes
 
-- Release date: **(December, 13 2023)**
+- Release date: **(December, 19 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
@@ -23,9 +23,20 @@ NEW - RESOURCES, DATA SOURCES
   - **Sandbox Submission** - `zia_sandbox_file_submission` -  Submits raw or archive files (e.g., ZIP) to the Zscaler service for out-of-band file inspection to generate real-time verdicts for known and unknown files. It leverages capabilities such as Malware Prevention, Advanced Threat Prevention, Sandbox cloud effect, AI/ML-driven file analysis, and integrated third-party threat intelligence feeds to inspect files and classify them as benign or malicious instantaneously.
     ⚠️ **Note:**: The ZIA Terraform provider requires both the `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` in order to authenticate to the Zscaler Cloud Sandbox environment. For details on how obtain the API Token visit the Zscaler help portal [About Sandbox API Token](https://help.zscaler.com/zia/about-sandbox-api-token)
 
+- [PR #302](https://github.com/zscaler/terraform-provider-zia/pull/302) - Added new `zia_dlp_web_rules` attributes:
+  - `severity` - Supported values: `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
+  - `user_risk_score_levels` - Supported values: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+  - `parent_rule`
+  - `sub_rules`
+
+- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+
+- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+
 ### Fixes
 
 - [PR #299](https://github.com/zscaler/terraform-provider-zia/pull/299) - Fixed panic with ``zia_url_categories``.
+- [PR #302](https://github.com/zscaler/terraform-provider-zia/pull/302) - Fixed `zia_dlp_web_rules` File Types validation function.
 
 ## 2.6.6 (November, 23 2023)
 
