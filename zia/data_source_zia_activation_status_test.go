@@ -1,6 +1,11 @@
 package zia
 
-/*
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+)
+
 func TestAccDataSourceActivationStatus_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -26,4 +31,3 @@ var testAccCheckDataSourceActivationStatusConfig_basic = `
 data "zia_activation_status" "status" {
 }
 `
-*/
