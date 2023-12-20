@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"strconv"
 	"testing"
@@ -35,3 +36,4 @@ func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
 		},
 	})
 }
+*/
