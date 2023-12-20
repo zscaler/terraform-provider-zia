@@ -144,6 +144,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"departments":           setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
 			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
 			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"device_groups":         setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":               setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"src_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
 			"dest_ip_groups":        setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
 			"app_service_groups":    setIDsSchemaTypeCustom(nil, "list of application service groups"),
@@ -151,8 +153,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
+			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"dest_countries":        getDestinationCountries(),
 			"nw_applications":       getCloudFirewallNwApplications(),
+			"device_trust_levels":   getDeviceTrustLevels(),
 		},
 	}
 }
@@ -280,6 +284,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("enable_full_logging", resp.EnableFullLogging)
+	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("state", resp.State)
 	_ = d.Set("description", resp.Description)
@@ -346,6 +351,17 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		return err
 	}
 
+	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+		return err
+	}
+
+	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+		return err
+	}
+
+	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -445,17 +461,17 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	}
 
 	result := filteringrules.FirewallFilteringRules{
-		ID:               id,
-		Name:             d.Get("name").(string),
-		Order:            d.Get("order").(int),
-		Rank:             d.Get("rank").(int),
-		Action:           d.Get("action").(string),
-		State:            d.Get("state").(string),
-		Description:      d.Get("description").(string),
-		SrcIps:           SetToStringList(d, "src_ips"),
-		DestAddresses:    SetToStringList(d, "dest_addresses"),
-		DestIpCategories: SetToStringList(d, "dest_ip_categories"),
-		// DestCountries:    SetToStringList(d, "dest_countries"),
+		ID:                  id,
+		Name:                d.Get("name").(string),
+		Order:               d.Get("order").(int),
+		Rank:                d.Get("rank").(int),
+		Action:              d.Get("action").(string),
+		State:               d.Get("state").(string),
+		Description:         d.Get("description").(string),
+		SrcIps:              SetToStringList(d, "src_ips"),
+		DestAddresses:       SetToStringList(d, "dest_addresses"),
+		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
+		DeviceTrustLevels:   SetToStringList(d, "device_trust_levels"),
 		DestCountries:       processedDestCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),
@@ -475,6 +491,9 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		AppServices:         expandIDNameExtensionsSet(d, "app_services"),
 		AppServiceGroups:    expandIDNameExtensionsSet(d, "app_service_groups"),
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:             expandIDNameExtensionsSet(d, "devices"),
+		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result
 }

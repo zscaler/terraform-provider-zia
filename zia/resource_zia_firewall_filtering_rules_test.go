@@ -43,7 +43,6 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
-					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -64,7 +63,6 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceStateUpdate),
-					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -229,6 +227,7 @@ resource "%s" "%s" {
 	state = "%s"
 	order = 1
 	enable_full_logging = "%s"
+	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
 	}

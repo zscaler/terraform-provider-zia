@@ -31,7 +31,11 @@ NEW - RESOURCES, DATA SOURCES
 
 - [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
 
-- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+- [PR #309](https://github.com/zscaler/terraform-provider-zia/pull/309) - ✨ Added 🆕 support to the following attributes within the `zia_firewall_filtering_rule`:
+  - `device_trust_levels` - Supported values: `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
+  - `user_risk_score_levels` - Supported values: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+  - `devices`
+  - `device_groups`
 
 ### Fixes
 

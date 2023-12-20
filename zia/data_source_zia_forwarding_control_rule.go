@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
@@ -672,7 +673,7 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 	return nil
 }
 
-func flattenZPAAppSegments(list []forwarding_rules.ZPAAppSegments) []interface{} {
+func flattenZPAAppSegments(list []common.ZPAAppSegments) []interface{} {
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
 		r := map[string]interface{}{

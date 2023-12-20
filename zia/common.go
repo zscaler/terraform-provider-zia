@@ -228,6 +228,38 @@ func flattenIDs(list []common.IDNameExtensions) []interface{} {
 	return result
 }
 
+func flattenZPAAppSegmentsSimple(list []common.ZPAAppSegments) []interface{} {
+	var flattenedList []interface{}
+	for _, segment := range list {
+		m := make(map[string]interface{})
+		m["name"] = segment.Name
+		m["external_id"] = segment.ExternalID
+
+		flattenedList = append(flattenedList, m)
+	}
+	return flattenedList
+}
+
+func expandZPAAppSegmentSet(d *schema.ResourceData, key string) []common.ZPAAppSegments {
+	setInterface, exists := d.GetOk(key)
+	if !exists {
+		return nil
+	}
+
+	inputSet := setInterface.(*schema.Set).List()
+	var result []common.ZPAAppSegments
+	for _, item := range inputSet {
+		itemMap := item.(map[string]interface{})
+		segment := common.ZPAAppSegments{
+			Name:       itemMap["name"].(string),
+			ExternalID: itemMap["external_id"].(string),
+		}
+
+		result = append(result, segment)
+	}
+	return result
+}
+
 func flattenIDNameExtensions(list []common.IDNameExtensions) []interface{} {
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
@@ -476,7 +508,6 @@ func getDeviceTrustLevels() *schema.Schema {
 			ValidateDiagFunc: validateDeviceTrustLevels(),
 		},
 		Optional: true,
-		ForceNew: true,
 	}
 }
 
@@ -492,6 +523,19 @@ func getURLRequestMethods() *schema.Schema {
 	}
 }
 
+func getURLProtocols() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Supported Protocol criteria",
+		Required:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateURLFilteringProtocols(), // Use ValidateDiagFunc here
+		},
+	}
+}
+
 func getUserRiskScoreLevels() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -501,19 +545,6 @@ func getUserRiskScoreLevels() *schema.Schema {
 			ValidateDiagFunc: validateUserRiskScoreLevels(),
 		},
 		Optional: true,
-	}
-}
-
-func getURLProtocols() *schema.Schema {
-	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Description: "Supported Protocol criteria",
-		Required:    true,
-		MinItems:    1,
-		Elem: &schema.Schema{
-			Type:             schema.TypeString,
-			ValidateDiagFunc: validateURLFilteringProtocols(),
-		},
 	}
 }
 
@@ -529,7 +560,6 @@ func getUserAgentTypes() *schema.Schema {
 		},
 	}
 }
-
 func getLocationManagementCountries() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeString,
