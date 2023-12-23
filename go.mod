@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.31.0
-	github.com/zscaler/zscaler-sdk-go/v2 v2.3.4
+	github.com/zscaler/zscaler-sdk-go/v2 v2.3.5
 )
 
 require (

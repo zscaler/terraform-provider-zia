@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.7.0 (December, 19 2023)
+## 2.7.0 (January, 15 2023)
 
 ### Notes
 
-- Release date: **(December, 19 2023)**
+- Release date: **(January, 15 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
@@ -36,6 +36,8 @@ NEW - RESOURCES, DATA SOURCES
   - `user_risk_score_levels` - Supported values: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
   - `devices`
   - `device_groups`
+
+- [PR #309](https://github.com/zscaler/terraform-provider-zia/pull/309) - ✨ Added new attribute `zpa_app_segments` to `zia_firewall_filtering_rule` to support ZPA Application Segments. Only ZPA application segments that have the Source IP Anchor option enabled are supported.
 
 ### Fixes
 
