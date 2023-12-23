@@ -179,6 +179,7 @@ func validateUserAgentTypes() schema.SchemaValidateDiagFunc {
 		return diags
 	}
 }
+
 func validateURLSuperCategories() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {
 		value, ok := i.(string)
@@ -483,5 +484,5 @@ func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {
 }
 
 var supportedDeviceTrustLevels = []string{
-	"ANY", "UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
+	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
 }

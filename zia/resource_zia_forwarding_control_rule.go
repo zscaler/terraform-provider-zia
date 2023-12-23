@@ -448,35 +448,3 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 
 	return result
 }
-
-func expandZPAAppSegmentSet(d *schema.ResourceData, key string) []forwarding_rules.ZPAAppSegments {
-	setInterface, exists := d.GetOk(key)
-	if !exists {
-		return nil
-	}
-
-	inputSet := setInterface.(*schema.Set).List()
-	var result []forwarding_rules.ZPAAppSegments
-	for _, item := range inputSet {
-		itemMap := item.(map[string]interface{})
-		segment := forwarding_rules.ZPAAppSegments{
-			Name:       itemMap["name"].(string),
-			ExternalID: itemMap["external_id"].(string),
-		}
-
-		result = append(result, segment)
-	}
-	return result
-}
-
-func flattenZPAAppSegmentsSimple(list []forwarding_rules.ZPAAppSegments) []interface{} {
-	var flattenedList []interface{}
-	for _, segment := range list {
-		m := make(map[string]interface{})
-		m["name"] = segment.Name
-		m["external_id"] = segment.ExternalID
-
-		flattenedList = append(flattenedList, m)
-	}
-	return flattenedList
-}

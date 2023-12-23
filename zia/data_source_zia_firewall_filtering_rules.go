@@ -422,6 +422,81 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 					},
 				},
 			},
+			"device_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"devices": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"device_trust_levels": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"zpa_app_segments": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "A unique identifier assigned to the Application Segment",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the Application Segment",
+						},
+						"external_id": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Indicates the external ID. Applicable only when this reference is of an external entity.",
+						},
+					},
+				},
+			},
 			"default_rule": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -475,6 +550,7 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("nw_applications", resp.NwApplications)
 		_ = d.Set("default_rule", resp.DefaultRule)
 		_ = d.Set("predefined", resp.Predefined)
+		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
@@ -533,6 +609,18 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 		}
 
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
+			return err
+		}
+
+		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
+			return err
+		}
+
+		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
+			return err
+		}
+
+		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return err
 		}
 	} else {

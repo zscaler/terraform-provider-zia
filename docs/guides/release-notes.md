@@ -16,11 +16,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 2.7.0 (December, 19 2023)
+## 2.7.0 (January, 15 2023)
 
 ### Notes
 
-- Release date: **(December, 19 2023)**
+- Release date: **(January, 15 2023)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
@@ -47,7 +47,13 @@ NEW - RESOURCES, DATA SOURCES
 
 - [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
 
-- [PR #308](https://github.com/zscaler/terraform-provider-zia/pull/308) - ✨ Added 🆕 Cloud Browser Isolation Profile data source. The data source can be used to associate a CBI profile with the `zia_url_filtering_rules` resource when the action is set to `ISOLATE`
+- [PR #309](https://github.com/zscaler/terraform-provider-zia/pull/309) - ✨ Added 🆕 support to the following attributes within the `zia_firewall_filtering_rule`:
+  - `device_trust_levels` - Supported values: `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
+  - `user_risk_score_levels` - Supported values: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+  - `devices`
+  - `device_groups`
+
+- [PR #309](https://github.com/zscaler/terraform-provider-zia/pull/309) - ✨ Added new attribute `zpa_app_segments` to `zia_firewall_filtering_rule` to support ZPA Application Segments. Only ZPA application segments that have the Source IP Anchor option enabled are supported.
 
 ### Fixes
 

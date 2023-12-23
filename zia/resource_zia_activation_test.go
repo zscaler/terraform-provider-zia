@@ -1,6 +1,12 @@
 package zia
 
-/*
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+)
+
 func TestAccResourceActivationStatus(t *testing.T) {
 	resourceName := "zia_activation_status.test"
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,4 +52,3 @@ resource "zia_activation_status" "test" {
 	status = "` + status + `"
 }`
 }
-*/
