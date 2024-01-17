@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -271,3 +272,4 @@ resource "%s" "%s" {
 		dstIPGroupTypeAndName,
 	)
 }
+*/
