@@ -20,7 +20,7 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPEngines)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, initialName, generatedName, variable.DLPCustomEngine),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPEnginesExists(resourceTypeAndName, &engine),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_dlp_engine", strconv.FormatBool(variable.DLPCustomEngine)),
 				),
@@ -42,7 +42,7 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 				Config: testAccCheckDLPEnginesConfigure(resourceTypeAndName, updatedName, generatedName, variable.DLPCustomEngine),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPEnginesExists(resourceTypeAndName, &engine),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_dlp_engine", strconv.FormatBool(variable.DLPCustomEngine)),
 				),
@@ -117,7 +117,7 @@ func testAccCheckDLPEnginesConfigure(resourceTypeAndName, generatedName, descrip
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
+    name = "%s"
 	description = "tf-acc-test-%s"
 	engine_expression = "((D63.S > 1))"
 	custom_dlp_engine = "%s"

@@ -38,6 +38,7 @@ type testClient struct {
 }
 
 var testResourcePrefix = "tf-acc-test-"
+var updateResourcePrefix = "tf-updated-"
 
 func TestRunForcedSweeper(t *testing.T) {
 	if os.Getenv("ZIA_VCR_TF_ACC") != "" {
@@ -113,7 +114,7 @@ func sweepTestRuleLabels(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(labels)))
 	for _, b := range labels {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.rule_labels.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -140,7 +141,7 @@ func sweepTestSourceIPGroup(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(ipSourceGroup)))
 	for _, b := range ipSourceGroup {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.ipsourcegroups.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -167,7 +168,7 @@ func sweepTestDestinationIPGroup(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(ipDestGroup)))
 	for _, b := range ipDestGroup {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.ipdestinationgroups.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -194,7 +195,7 @@ func sweepTestNetworkServices(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(services)))
 	for _, b := range services {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.networkservices.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -221,8 +222,8 @@ func sweepTestNetworkServicesGroup(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(groups)))
 	for _, b := range groups {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
-			if _, err := client.sdkClient.networkservices.Delete(b.ID); err != nil {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := client.sdkClient.networkservicegroups.DeleteNetworkServiceGroups(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -248,7 +249,7 @@ func sweepTestNetworkAppGroups(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(groups)))
 	for _, b := range groups {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.networkapplicationgroups.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -275,7 +276,7 @@ func sweepTestLocationManagement(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(locationManagement)))
 	for _, b := range locationManagement {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.locationmanagement.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -302,7 +303,7 @@ func sweepTestGRETunnels(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(greTunnel)))
 	for _, b := range greTunnel {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Comment, testResourcePrefix) {
+		if strings.HasPrefix(b.Comment, testResourcePrefix) || strings.HasPrefix(b.Comment, updateResourcePrefix) {
 			if _, err := client.sdkClient.gretunnels.DeleteGreTunnels(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -329,7 +330,7 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.filteringrules.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -356,7 +357,7 @@ func sweepTestForwardingControlRule(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.forwarding_rules.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -384,7 +385,7 @@ func sweepTestURLFilteringRule(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.urlfilteringpolicies.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -411,7 +412,7 @@ func sweepTestDLPWebRule(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.dlp_web_rules.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -438,7 +439,7 @@ func sweepTestDLPDictionary(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.dlpdictionaries.DeleteDlpDictionary(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -468,7 +469,7 @@ func sweepTestDLPEngines(client *testClient) error {
 
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.dlp_engines.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -497,7 +498,7 @@ func sweepTestDLPTemplates(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.dlp_notification_templates.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -525,7 +526,7 @@ func sweepTestStaticIP(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Comment, testResourcePrefix) {
+		if strings.HasPrefix(b.Comment, testResourcePrefix) || strings.HasPrefix(b.Comment, updateResourcePrefix) {
 			if _, err := client.sdkClient.staticips.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -554,7 +555,7 @@ func sweepTestVPNCredentials(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Comments, testResourcePrefix) {
+		if strings.HasPrefix(b.Comments, testResourcePrefix) || strings.HasPrefix(b.Comments, updateResourcePrefix) {
 			if err := client.sdkClient.vpncredentials.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -584,7 +585,7 @@ func sweepTestURLCategories(client *testClient) error {
 
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.ConfiguredName, testResourcePrefix) {
+		if strings.HasPrefix(b.ConfiguredName, testResourcePrefix) || strings.HasPrefix(b.ConfiguredName, updateResourcePrefix) {
 			if _, err := client.sdkClient.urlcategories.DeleteURLCategories(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -612,7 +613,7 @@ func sweepTestAdminUser(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.UserName, testResourcePrefix) {
+		if strings.HasPrefix(b.UserName, testResourcePrefix) || strings.HasPrefix(b.UserName, updateResourcePrefix) {
 			if _, err := client.sdkClient.admins.DeleteAdminUser(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
@@ -640,7 +641,7 @@ func sweepTestUsers(client *testClient) error {
 	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
-		if strings.HasPrefix(b.Name, testResourcePrefix) {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := client.sdkClient.users.Delete(b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue

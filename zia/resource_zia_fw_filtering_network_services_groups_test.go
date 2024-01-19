@@ -20,7 +20,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServiceGroups)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -55,7 +55,7 @@ func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != resourcetype.FWFilteringNetworkAppGroups {
+		if rs.Type != resourcetype.FWFilteringNetworkServiceGroups {
 			continue
 		}
 

@@ -20,7 +20,7 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

@@ -22,7 +22,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

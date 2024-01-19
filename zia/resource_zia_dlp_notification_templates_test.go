@@ -20,7 +20,7 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPNotificationTemplates)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, initialName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPNotificationTemplateExists(resourceTypeAndName, &dlpTemplates),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "plain_text_message"),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "html_message"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "attach_content", strconv.FormatBool(variable.DLPNoticationTemplateAttachContent)),
@@ -44,7 +44,7 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 				Config: testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPNotificationTemplateExists(resourceTypeAndName, &dlpTemplates),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "plain_text_message"),
 					resource.TestCheckResourceAttrSet(resourceTypeAndName, "html_message"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "attach_content", strconv.FormatBool(variable.DLPNoticationTemplateAttachContent)),
@@ -121,7 +121,7 @@ func testAccCheckDLPNotificationTemplateConfigure(resourceTypeAndName, generated
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name               = "tf-acc-test-%s"
+	name               = "%s"
 	attach_content     = true
 	tls_enabled        = true
 	subject            = local.subject

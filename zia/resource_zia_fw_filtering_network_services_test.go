@@ -20,7 +20,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FWFilteringNetworkServices)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, initialName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -44,7 +44,7 @@ func TestAccResourceFWNetworkServicesBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, updatedName, variable.FWNetworkServicesDescription, variable.FWNetworkServicesType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkServicesExists(resourceTypeAndName, &services),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWNetworkServicesDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWNetworkServicesType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_tcp_ports.#", "3"),
@@ -121,7 +121,7 @@ func testAccCheckFWNetworkServicesConfigure(resourceTypeAndName, generatedName, 
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name        = "tf-acc-test-%s"
+	name        = "%s"
 	description = "%s"
 	type 		= "%s"
 	src_tcp_ports {

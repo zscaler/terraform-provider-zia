@@ -20,7 +20,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, initialName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -43,7 +43,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, updatedName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDLPDictionariesExists(resourceTypeAndName, &dictionary),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPDictionaryDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "phrases.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "patterns.#", "2"),
@@ -119,7 +119,7 @@ func testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, de
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
+    name = "%s"
 	description = "%s"
     phrases {
         action = "PHRASE_COUNT_TYPE_ALL"

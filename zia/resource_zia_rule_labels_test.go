@@ -20,7 +20,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
 
 	initialName := "tf-acc-test-" + generatedName
-	updatedName := "updated-" + generatedName
+	updatedName := "tf-updated-" + generatedName
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,7 +31,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, initialName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -41,7 +41,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 				Config: testAccCheckRuleLabelsConfigure(resourceTypeAndName, updatedName, variable.RuleLabelDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleLabelsExists(resourceTypeAndName, &labels),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.RuleLabelDescription),
 				),
 			},
@@ -115,7 +115,7 @@ func testAccCheckRuleLabelsConfigure(resourceTypeAndName, generatedName, descrip
 	return fmt.Sprintf(`
 
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
+    name = "%s"
     description = "%s"
 }
 
