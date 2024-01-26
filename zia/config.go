@@ -50,6 +50,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/departments"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/groups"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/workloadgroups"
 )
 
 func init() {
@@ -104,6 +105,7 @@ type Client struct {
 	sandbox_report                *sandbox_report.Service
 	sandbox_submission            *sandbox_submission.Service
 	cloudbrowserisolation         *cloudbrowserisolation.Service
+	workloadgroups                *workloadgroups.Service
 }
 
 type Config struct {
@@ -167,6 +169,7 @@ func (c *Config) Client() (*Client, error) {
 		sandbox_report:                sandbox_report.New(cli),
 		sandbox_submission:            sandbox_submission.New(cli),
 		cloudbrowserisolation:         cloudbrowserisolation.New(cli),
+		workloadgroups:                workloadgroups.New(cli),
 	}
 
 	log.Println("[INFO] initialized ZIA client")
