@@ -1,5 +1,14 @@
 # Changelog
 
+# 2.7.1 (January 26, 2024)
+
+## Notes
+- Golang: **v1.19**
+
+### Enhacements
+
+- [PR #313](https://github.com/zscaler/terraform-provider-zia/pull/313) - Added support for ZIA Workload Groups Tagging
+
 ## 2.7.0 (January, 15 2023)
 
 ### Notes

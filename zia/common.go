@@ -552,7 +552,7 @@ func getUserAgentTypes() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "Supported User Agent Types",
-		Required:    true,
+		Optional:    true,
 		MinItems:    1,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
