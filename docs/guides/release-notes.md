@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.7.1``
+``Last updated: v2.7.2``
 
 ---
+
+# 2.7.2 (January 31, 2024)
+
+## Notes
+- Golang: **v1.19**
+
+### Fixes
+
+- [PR #315](https://github.com/zscaler/terraform-provider-zia/pull/315) - Fixed panic within the resource ``zia_location_management`` when setting the attribute ``ip_addresses`` in a sub-location. The provider now supports and validates the following ``ip_addresses`` formats:
+  - `10.0.0.0-10.0.0.255`
+  - `10.0.0.1`
+
+  ~> **NOTE** CIDR notation is currently not supported due to API response incosistencies that may introduce drifts in the Terraform execution. This issue will be addressed in the future.
 
 # 2.7.1 (January 26, 2024)
 

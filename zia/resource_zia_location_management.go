@@ -88,6 +88,8 @@ func resourceLocationManagement() *schema.Resource {
 					ValidateFunc: validation.Any(
 						validation.IsIPv4Address,
 						validation.IsIPv4Range,
+						validation.IsIPAddress,
+						validation.IsCIDRNetwork(0, 32),
 					),
 				},
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
@@ -316,8 +318,8 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	zClient := m.(*Client)
 
 	if parentIDInt, ok := d.GetOk("parent_id"); ok && parentIDInt.(int) != 0 {
-		ipInter, ipSet := d.GetOk("ip_addresses")
-		if !ipSet || len(removeEmpty(ListToStringSlice(ipInter.([]interface{})))) == 0 {
+		ipAddresses := d.Get("ip_addresses").(*schema.Set)
+		if len(removeEmpty(ListToStringSlice(ipAddresses.List()))) == 0 {
 			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty: %v", d.Get("name"))
 		}
 	}
