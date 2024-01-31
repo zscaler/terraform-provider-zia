@@ -153,3 +153,7 @@ The following arguments are supported:
 
 * `icap_server` The DLP server, using ICAP, to which the transaction content is forwarded.
   * `id` - (Optional) Identifier that uniquely identifies an entity
+
+* `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
+  * `id` - (Optional) A unique identifier assigned to the workload group
+  * `name` - (Optional) The name of the workload group

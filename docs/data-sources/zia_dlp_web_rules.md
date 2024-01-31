@@ -120,3 +120,7 @@ rules.
 
 * `icap_server` - (Optional) The DLP server, using ICAP, to which the transaction content is forwarded.
   * `id` - (Number) Identifier that uniquely identifies an entity
+
+* `workload_groups` (List) The list of preconfigured workload groups to which the policy must be applied
+  * `id` - (Number) A unique identifier assigned to the workload group
+  * `name` - (String) The name of the workload group

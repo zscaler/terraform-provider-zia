@@ -193,6 +193,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"devices":                setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"location_groups":        setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of the location groups to which the rule must be applied."),
 			"labels":                 setIDsSchemaTypeCustom(nil, "The URL Filtering rule's label."),
+			"workload_groups":        setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"device_trust_levels":    getDeviceTrustLevels(),
 			"user_risk_score_levels": getUserRiskScoreLevels(),
 			"url_categories":         getURLCategories(),
@@ -400,7 +401,9 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
 		return err
 	}
-
+	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
+		return fmt.Errorf("error setting workload_groups: %s", err)
+	}
 	return nil
 }
 
@@ -518,6 +521,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Labels:                 expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:                expandIDNameExtensionsSet(d, "devices"),
+		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
 		CBIProfile:             expandCBIProfile(d),
 	}
 

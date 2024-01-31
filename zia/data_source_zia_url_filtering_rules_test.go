@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"testing"
 
@@ -39,4 +38,3 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 		},
 	})
 }
-*/

@@ -116,6 +116,10 @@ The following arguments are supported:
 * `labels` Labels that are applicable to the rule.
       - `id` - (String) Identifier that uniquely identifies an entity
 
+* `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
+  * `id` - (Optional) A unique identifier assigned to the workload group
+  * `name` - (Optional) The name of the workload group
+
 * `Other Exported Arguments`
   * `enable_full_logging` (Boolean)
   * `predefined` - (Boolean) If set to true, a predefined rule is applied

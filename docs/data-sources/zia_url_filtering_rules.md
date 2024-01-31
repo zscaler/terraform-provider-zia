@@ -105,3 +105,7 @@ In addition to all arguments above, the following attributes are exported:
   * `id` - (Number) Identifier that uniquely identifies an entity
   * `name` -(String) The configured name of the entity
   * `extensions` - (Map of String)
+
+* `workload_groups` (List) The list of preconfigured workload groups to which the policy must be applied
+  * `id` - (Number) A unique identifier assigned to the workload group
+  * `name` - (String) The name of the workload group

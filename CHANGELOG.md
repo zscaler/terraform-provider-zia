@@ -5,6 +5,13 @@
 ## Notes
 - Golang: **v1.19**
 
+### Enhacements
+
+- [PR #315](https://github.com/zscaler/terraform-provider-zia/pull/315) - Added support to new `workload_groups` attributes to the following resources:
+  - ``zia_firewall_filtering_rule``
+  - ``zia_url_filtering_rules``
+  - ``zia_dlp_web_rules``
+
 ### Fixes
 
 - [PR #315](https://github.com/zscaler/terraform-provider-zia/pull/315) - Fixed panic within the resource ``zia_location_management`` when setting the attribute ``ip_addresses`` in a sub-location. The provider now supports and validates the following ``ip_addresses`` formats:

@@ -142,7 +142,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"users":                 setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
 			"groups":                setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
 			"departments":           setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
-			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
+			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
 			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"device_groups":         setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"devices":               setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
@@ -152,6 +152,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"app_services":          setIDsSchemaTypeCustom(nil, "list of application services"),
 			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
+			"workload_groups":       setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
 			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"dest_countries":        getDestinationCountries(),
@@ -358,7 +359,9 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
 		return err
 	}
-
+	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
+		return fmt.Errorf("error setting workload_groups: %s", err)
+	}
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
 		return err
 	}
@@ -493,6 +496,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
+		WorkloadGroups:      expandWorkloadGroups(d, "workload_groups"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result

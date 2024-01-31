@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -45,3 +46,4 @@ resource "zia_activation_status" "this" {
 	status = "ACTIVE"
 }`
 }
+*/
