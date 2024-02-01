@@ -25,8 +25,6 @@ func resourceActivationStatus() *schema.Resource {
 				Description: "Organization Policy Edit/Update Activation status",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ACTIVE",
-					"PENDING",
-					"INPROGRESS",
 				}, false),
 			},
 		},

@@ -145,10 +145,6 @@ data "zia_url_categories" "finance"{
 	id = "FINANCE"
 }
 
-data "zia_rule_labels" "can"{
-	name = "GLOBAL"
-}
-
 data "zia_firewall_filtering_time_window" "work_hours" {
 	name = "Work Hours"
 }

@@ -497,6 +497,114 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 					},
 				},
 			},
+			"workload_groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of preconfigured workload groups to which the policy must be applied",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "A unique identifier assigned to the workload group",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the workload group",
+						},
+						"description": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The description of the workload group",
+						},
+						"expression_json": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"expression_containers": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"tag_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"operator": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"tag_container": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"tags": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"key": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"operator": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"expression": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The description of the workload group",
+						},
+						"last_modified_time": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"last_modified_by": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"default_rule": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -619,7 +727,9 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
 			return err
 		}
-
+		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
+			return fmt.Errorf("error setting workload_groups: %s", err)
+		}
 		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return err
 		}

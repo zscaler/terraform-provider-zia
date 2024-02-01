@@ -30,8 +30,6 @@ The following arguments are supported:
 
 * `status` - (Required) Activates configuration changes.
   * ``0`` = ``ACTIVE``
-  * ``1`` = ``PENDING``
-  * ``2`` = ``INPROGRESS``
 
 ## Attributes Reference
 

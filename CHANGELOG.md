@@ -1,5 +1,25 @@
 # Changelog
 
+# 2.7.2 (January 31, 2024)
+
+## Notes
+- Golang: **v1.19**
+
+### Enhacements
+
+- [PR #315](https://github.com/zscaler/terraform-provider-zia/pull/315) - Added support to new `workload_groups` attributes to the following resources:
+  - ``zia_firewall_filtering_rule``
+  - ``zia_url_filtering_rules``
+  - ``zia_dlp_web_rules``
+
+### Fixes
+
+- [PR #315](https://github.com/zscaler/terraform-provider-zia/pull/315) - Fixed panic within the resource ``zia_location_management`` when setting the attribute ``ip_addresses`` in a sub-location. The provider now supports and validates the following ``ip_addresses`` formats:
+  - `10.0.0.0-10.0.0.255`
+  - `10.0.0.1`
+
+  ~> **NOTE** CIDR notation is currently not supported due to API response incosistencies that may introduce drifts in the Terraform execution. This issue will be addressed in the future.
+
 # 2.7.1 (January 26, 2024)
 
 ## Notes

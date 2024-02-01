@@ -169,27 +169,6 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 	return []common.IDNameExtensions{}
 }
 
-/*
-// Deprecated common helper function
-
-	func expandIDSet(d *schema.ResourceData, key string) []int {
-		var ids []int
-
-		if v, ok := d.GetOk(key); ok {
-			set := v.(*schema.Set)
-			list := set.List()
-			for _, item := range list {
-				if idMap, ok := item.(map[string]interface{}); ok {
-					if id, ok := idMap["id"].(int); ok {
-						ids = append(ids, id)
-					}
-				}
-			}
-		}
-		return ids
-	}
-*/
-
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
 	departmentObj, ok := d.GetOk("department")
 	if !ok {
@@ -358,6 +337,48 @@ func expandIDNameSet(d *schema.ResourceData, key string) *common.IDName {
 	}
 
 	return nil
+}
+
+// Common Flattening function to support Workload Groups across other resources
+func flattenWorkloadGroups(workloadGroups []common.IDName) []interface{} {
+	if workloadGroups == nil {
+		return nil
+	}
+
+	wgList := make([]interface{}, len(workloadGroups))
+	for i, wg := range workloadGroups {
+		wgMap := make(map[string]interface{})
+		wgMap["id"] = wg.ID
+		wgMap["name"] = wg.Name
+		wgList[i] = wgMap
+	}
+
+	return wgList
+}
+
+// Common expand function to support Workload Groups across other resources
+func expandWorkloadGroups(d *schema.ResourceData, key string) []common.IDName {
+	// Retrieve the set from the resource data
+	if v, ok := d.GetOk(key); ok {
+		workloadGroupsSet := v.(*schema.Set)
+		// Initialize the slice to hold the expanded workload groups
+		workloadGroups := make([]common.IDName, 0, workloadGroupsSet.Len())
+
+		// Iterate over the set and construct the slice of common.IDName
+		for _, wgMapInterface := range workloadGroupsSet.List() {
+			wgMap := wgMapInterface.(map[string]interface{})
+			wg := common.IDName{
+				ID:   wgMap["id"].(int),
+				Name: wgMap["name"].(string),
+			}
+			workloadGroups = append(workloadGroups, wg)
+		}
+
+		return workloadGroups
+	}
+
+	// Return an empty slice if the key is not set
+	return []common.IDName{}
 }
 
 func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{} {
