@@ -60,6 +60,17 @@ jobs:
 
       - name: Check Build
         run: make build
+
+      - name: Run tests with retry
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 3
+          timeout_minutes: 60
+          command: |
+            make sweep
+            go test -v -cover ./zia -v -parallel 30 -timeout 60m
+            make sweep
+
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
           ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}

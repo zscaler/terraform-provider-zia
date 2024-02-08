@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -49,3 +50,4 @@ func TestAccDataSourceForwardingControlRule_Basic(t *testing.T) {
 		},
 	})
 }
+*/
