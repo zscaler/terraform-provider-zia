@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"testing"
@@ -44,4 +43,3 @@ data "zia_sandbox_report" "summary" {
 }
 `, md5Hash, md5Hash)
 }
-*/
