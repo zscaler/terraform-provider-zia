@@ -30,8 +30,8 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, initialName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+initialName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
@@ -42,8 +42,8 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, updatedName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckURLCategoriesExists(resourceTypeAndName, &categories),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", "tf-acc-test-"+updatedName),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "description", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "configured_name", updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "description", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
@@ -101,8 +101,8 @@ func testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName strin
 	return fmt.Sprintf(`
 resource "%s" "%s" {
 	super_category 		= "USER_DEFINED"
-	configured_name 	= "tf-acc-test-%s"
-	description 		= "tf-acc-test-%s"
+	configured_name 	= "%s"
+	description 		= "%s"
 	custom_category     = "%s"
 	keywords            = ["microsoft"]
 	db_categorized_urls = [".creditkarma.com", ".youku.com"]
