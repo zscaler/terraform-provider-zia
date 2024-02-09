@@ -31,7 +31,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, initialName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -43,7 +43,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, updatedName, variable.FWDSTGroupDescription, variable.FWDSTGroupTypeDSTNFQDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPDestinationGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWDSTGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FWDSTGroupTypeDSTNFQDN),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "addresses.#", "3"),
@@ -119,7 +119,7 @@ func testAccCheckFWIPDestinationGroupsConfigure(resourceTypeAndName, generatedNa
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name        = "tf-acc-test-%s"
+	name        = "%s"
 	description = "%s"
 	type        = "%s"
 	addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]

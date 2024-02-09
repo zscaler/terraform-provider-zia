@@ -225,7 +225,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 3
+	order = 4
 	enable_full_logging = "%s"
 	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	nw_services {

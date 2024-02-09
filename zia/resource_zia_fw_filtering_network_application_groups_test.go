@@ -31,7 +31,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, initialName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -42,7 +42,7 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, updatedName, variable.FWAppGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWNetworkApplicationGroupsExists(resourceTypeAndName, &appGroups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWAppGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
@@ -111,7 +111,7 @@ func testAccCheckFWNetworkApplicationGroupsConfigure(resourceTypeAndName, genera
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-    name = "tf-acc-test-%s"
+    name = "%s"
     description = "%s"
     network_applications = [
             "YAMMER",
