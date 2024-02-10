@@ -33,7 +33,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, initialName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
@@ -45,7 +45,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, updatedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingStaticIPExists(resourceTypeAndName, &static),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_address", rIP),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "routable_ip", strconv.FormatBool(variable.StaticRoutableIP)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "geo_override", strconv.FormatBool(variable.StaticGeoOverride)),
@@ -136,7 +136,7 @@ func testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generat
 	return fmt.Sprintf(`
 
 resource "%s" "%s" {
-	comment = "tf-acc-test-%s"
+	comment = "%s"
     ip_address =  "%s"
     routable_ip = "%s"
     geo_override = "%s"

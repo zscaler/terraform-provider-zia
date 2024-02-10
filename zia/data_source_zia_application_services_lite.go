@@ -46,7 +46,7 @@ func dataSourceFWApplicationServicesLiteRead(d *schema.ResourceData, m interface
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
+		log.Printf("[INFO] Getting data for application service name: %s\n", name)
 		res, err := zClient.applicationservices.GetByName(name)
 		if err != nil {
 			return err
@@ -60,7 +60,7 @@ func dataSourceFWApplicationServicesLiteRead(d *schema.ResourceData, m interface
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 
 	} else {
-		return fmt.Errorf("couldn't find any device name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any application service name '%s' or id '%d'", name, id)
 	}
 
 	return nil

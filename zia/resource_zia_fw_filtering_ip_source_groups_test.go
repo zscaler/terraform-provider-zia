@@ -31,7 +31,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, initialName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
@@ -42,7 +42,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 				Config: testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, updatedName, variable.FWSRCGroupDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFWIPSourceGroupsExists(resourceTypeAndName, &groups),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWSRCGroupDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_addresses.#", "3"),
 				),
@@ -117,7 +117,7 @@ func testAccCheckFWIPSourceGroupsConfigure(resourceTypeAndName, generatedName, d
 
 	return fmt.Sprintf(`
 resource "%s" "%s" {
-	name        = "tf-acc-test-%s"
+	name        = "%s"
 	description = "%s"
     ip_addresses = ["192.168.1.1", "192.168.1.2", "192.168.1.3"]
   }

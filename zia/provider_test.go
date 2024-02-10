@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.TrafficForwardingGRETunnel, sweepTestGRETunnels)
 		setupSweeper(resourcetype.TrafficForwardingStaticIP, sweepTestStaticIP)
 		setupSweeper(resourcetype.TrafficForwardingVPNCredentials, sweepTestVPNCredentials)
-		setupSweeper(resourcetype.ForwardingControlRule, sweepTestForwardingControlRule)
+		// setupSweeper(resourcetype.ForwardingControlRule, sweepTestForwardingControlRule)
 		setupSweeper(resourcetype.FirewallFilteringRules, sweepTestFirewallFilteringRule)
 		setupSweeper(resourcetype.FWFilteringSourceGroup, sweepTestSourceIPGroup)
 		setupSweeper(resourcetype.FWFilteringDestinationGroup, sweepTestDestinationIPGroup)

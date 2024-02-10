@@ -75,7 +75,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestNetworkAppGroups(testClient)
 	sweepTestLocationManagement(testClient)
 	sweepTestGRETunnels(testClient)
-	sweepTestForwardingControlRule(testClient)
+	// sweepTestForwardingControlRule(testClient)
 	sweepTestFirewallFilteringRule(testClient)
 	sweepTestURLFilteringRule(testClient)
 	sweepTestDLPWebRule(testClient)
@@ -347,6 +347,7 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 	return condenseError(errorList)
 }
 
+/*
 func sweepTestForwardingControlRule(client *testClient) error {
 	var errorList []error
 	rule, err := client.sdkClient.forwarding_rules.GetAll()
@@ -373,6 +374,7 @@ func sweepTestForwardingControlRule(client *testClient) error {
 	}
 	return condenseError(errorList)
 }
+*/
 
 func sweepTestURLFilteringRule(client *testClient) error {
 	var errorList []error

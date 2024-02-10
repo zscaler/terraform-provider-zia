@@ -1,13 +1,6 @@
 package zia
 
 /*
-import (
-	"fmt"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-)
-
 func TestAccDataSourceSandboxReport_Basic(t *testing.T) {
 	md5Hash := "F5E282A09B60748513270A7415E3B526" // Example MD5 hash
 
