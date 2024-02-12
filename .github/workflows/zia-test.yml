@@ -133,7 +133,7 @@ jobs:
         run: make build
 
       - name: Run tests with retry on Ubuntu
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           timeout_minutes: 60 # Adjust as needed
@@ -202,7 +202,7 @@ jobs:
         run: make build
 
       - name: Run tests with retry on Ubuntu
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 3
           timeout_minutes: 60 # Adjust as needed
