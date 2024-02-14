@@ -28,10 +28,12 @@ func TestAccDataSourceTrafficForwardingGreTunnels_Basic(t *testing.T) {
 				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "source_ip", resourceTypeAndName, "source_ip"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "comment", resourceTypeAndName, "comment"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

@@ -115,6 +115,77 @@ test\:integration\:zscalerone:
 	@echo "Running integration tests for ZscalerOne..."
 	@TF_ACC=1 go test -v -cover ./zia -timeout 120m -run ^$(integration_tests)$$
 
+# Default set of integration tests to run for ZscalerOne
+ZS2_INTEGRATION_TESTS?=\
+  TestAccDataSourceActivationStatus_Basic \
+  TestAccDataSourceAdminRoles_Basic \
+  TestAccDataSourceAdminUsers_Basic \
+  TestAccDataSourceFWApplicationServicesGroupLite_Basic \
+  TestAccDataSourceFWApplicationServicesLite_Basic \
+  TestAccDataSourceAuthSettingsUrls_Basic \
+  TestAccDataSourceCBIProfile_Basic \
+  TestAccDataSourceDeviceGroups_Basic \
+  TestAccDataSourceDLPDictionaries_Basic \
+  TestAccDataSourceDLPEngines_Basic \
+  TestAccDataSourceDLPICAPServers_Basic \
+  TestAccDataSourceDLPIncidentReceiverServers_Basic \
+  TestAccDataSourceDLPNotificationTemplates_Basic \
+  TestAccDataSourceDlpWebRules_Basic \
+  TestAccDataSourceFWIPDestinationGroups_Basic \
+  TestAccDataSourceFWIPSourceGroups_Basic \
+  TestAccDataSourceFWNetworkApplicationGroups_Basic \
+  TestAccDataSourceFWNetworkServiceGroups_Basic \
+  TestAccResourceFWNetworkServicesBasic \
+  TestAccDataSourceFWTimeWindow_Basic \
+  TestAccDataSourceLocationGroup_Basic \
+  TestAccDataSourceLocationLite_Basic \
+  TestAccDataSourceLocationManagement_Basic \
+  TestAccDataSourceRuleLabels_Basic \
+  TestResourceSandboxSettings_basic \
+  TestAccDataSourceTrafficGreInternalIPRangeList_Basic \
+  TestAccDataSourceTrafficForwardingStaticIP_Basic \
+  TestAccDataSourceTrafficForwardingVPNCredentials_Basic \
+  TestAccDataSourceTrafficForwardingGreTunnels_Basic \
+  TestAccDataSourceURLCategories_Basic \
+  TestAccDataSourceURLFilteringRules_Basic \
+  TestAccDataSourceDepartmentManagement_Basic \
+  TestAccDataSourceGroupManagement_Basic \
+  TestAccDataSourceUserManagement_Basic \
+  TestAccResourceAdminUsersBasic \
+  TestAccResourceAuthSettingsUrls_basic \
+  TestAccResourceDLPDictionariesBasic \
+  TestAccResourceDLPEnginesBasic \
+  TestAccResourceDLPNotificationTemplatesBasic \
+  TestAccResourceDlpWebRules_Basic \
+  TestAccResourceFWIPDestinationGroupsBasic \
+  TestAccResourceFWIPSourceGroupsBasic \
+  TestAccResourceFWNetworkApplicationGroupsBasic \
+  TestAccResourceFWNetworkServiceGroupsBasic \
+  TestAccResourceFWNetworkServicesBasic \
+  TestAccResourceLocationManagementBasic \
+  TestAccResourceRuleLabelsBasic \
+  TestAccZiaSandboxFileSubmission_basic \
+  TestResourceSandboxSettings_basic \
+  TestAccResourceSecurityPolicySettings_basic \
+  TestAccResourceTrafficForwardingStaticIPBasic \
+  TestAccResourceTrafficForwardingVPNCredentialsBasic \
+  TestAccResourceTrafficForwardingGRETunnelBasic \
+  TestAccResourceURLCategoriesBasic \
+  TestAccResourceURLFilteringRulesBasic \
+  TestAccResourceUserManagementBasic
+
+ifeq ($(strip $(ZS_INTEGRATION_TESTS)),)
+  ZS_INTEGRATION_TESTS = $(ZS2_INTEGRATION_TESTS)
+endif
+
+space := $(subst ,, )
+integration_zs2_tests := $(subst $(space),\|,$(ZS_INTEGRATION_TESTS))
+
+# Target to run integration tests for ZscalerTwo
+test\:integration\:zscalertwo:
+	@echo "Running integration tests for ZscalerTwo..."
+	@TF_ACC=1 go test -v -cover ./zia -timeout 120m -run ^$(integration_zs2_tests)$$
+
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
