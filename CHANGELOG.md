@@ -1,5 +1,18 @@
 # Changelog
 
+# 2.7.3 (February 14, 2024)
+
+## Notes
+- Golang: **v1.19**
+
+### Enhacements
+
+- [PR #319](https://github.com/zscaler/terraform-provider-zia/pull/319) - Implemented validation to the following resources:
+  - `zia_firewall_filtering_destination_groups`
+  - `zia_firewall_filtering_rule`
+  - `zia_forwarding_control_zpa_gateway`
+  - `zia_forwarding_control_policy`
+
 # 2.7.2 (January 31, 2024)
 
 ## Notes
