@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -90,8 +91,16 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 }
 
 func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+	groupType := d.Get("type").(string)
+	if groupType == "DSTN_OTHER" {
+		ipCategories, ipCategoriesOk := d.GetOk("ip_categories")
+		countries, countriesOk := d.GetOk("countries")
+		if (!ipCategoriesOk || ipCategories.(*schema.Set).Len() == 0) && (!countriesOk || countries.(*schema.Set).Len() == 0) {
+			return fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set")
+		}
+	}
 
+	zClient := m.(*Client)
 	req := expandIPDestinationGroups(d)
 	log.Printf("[INFO] Creating zia ip destination groups\n%+v\n", req)
 
@@ -99,6 +108,7 @@ func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) 
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[INFO] Created zia ip destination groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("ip_destination_id", resp.ID)
@@ -123,6 +133,11 @@ func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 		return err
 	}
 
+	processedCountries := make([]string, len(resp.Countries))
+	for i, country := range resp.Countries {
+		processedCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
+	}
+
 	log.Printf("[INFO] Getting zia ip destination groups:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
@@ -132,27 +147,34 @@ func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	_ = d.Set("addresses", resp.Addresses)
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("ip_categories", resp.IPCategories)
-	_ = d.Set("countries", resp.Countries)
+	_ = d.Set("countries", processedCountries)
 
 	return nil
 }
 
 func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+	groupType := d.Get("type").(string)
 
-	id, ok := getIntFromResourceData(d, "ip_destination_id")
-	if !ok {
-		log.Printf("[ERROR] ip destination groups  ID not set: %v\n", id)
-	}
-	log.Printf("[INFO] Updating zia ip destination groups ID: %v\n", id)
-	req := expandIPDestinationGroups(d)
-	if _, err := zClient.ipdestinationgroups.Get(id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			d.SetId("")
-			return nil
+	if groupType == "DSTN_OTHER" || d.HasChange("countries") || d.HasChange("ip_categories") {
+		ipCategories, ipCategoriesOk := d.GetOk("ip_categories")
+		countries, countriesOk := d.GetOk("countries")
+
+		if (!ipCategoriesOk || ipCategories.(*schema.Set).Len() == 0) && (!countriesOk || countries.(*schema.Set).Len() == 0) {
+			return fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set")
 		}
 	}
-	if _, _, err := zClient.ipdestinationgroups.Update(id, &req); err != nil {
+
+	zClient := m.(*Client)
+	id, ok := getIntFromResourceData(d, "ip_destination_id")
+	if !ok {
+		return fmt.Errorf("[ERROR] IP destination groups ID not set: %v", id)
+	}
+
+	log.Printf("[INFO] Updating ZIA IP destination groups ID: %v", id)
+	req := expandIPDestinationGroups(d)
+
+	_, _, err := zClient.ipdestinationgroups.Update(id, &req)
+	if err != nil {
 		return err
 	}
 
@@ -190,12 +212,25 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 }
 
 func expandIPDestinationGroups(d *schema.ResourceData) ipdestinationgroups.IPDestinationGroups {
+	name := d.Get("name").(string)
+	groupType := d.Get("type").(string)
+	description := d.Get("description").(string)
+	addresses := SetToStringList(d, "addresses")
+	ipCategories := SetToStringList(d, "ip_categories")
+
+	// Process countries to prepend "COUNTRY_"
+	rawCountries := SetToStringList(d, "countries")
+	countries := make([]string, len(rawCountries))
+	for i, code := range rawCountries {
+		countries[i] = "COUNTRY_" + code
+	}
+
 	return ipdestinationgroups.IPDestinationGroups{
-		Name:         d.Get("name").(string),
-		Type:         d.Get("type").(string),
-		Description:  d.Get("description").(string),
-		Addresses:    SetToStringList(d, "addresses"),
-		IPCategories: SetToStringList(d, "ip_categories"),
-		Countries:    SetToStringList(d, "countries"),
+		Name:         name,
+		Type:         groupType,
+		Description:  description,
+		Addresses:    addresses,
+		IPCategories: ipCategories,
+		Countries:    countries,
 	}
 }
