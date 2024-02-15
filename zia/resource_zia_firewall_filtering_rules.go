@@ -1,7 +1,6 @@
 package zia
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -162,15 +161,15 @@ func resourceFirewallFilteringRules() *schema.Resource {
 	}
 }
 
-func validatRule(req filteringrules.FirewallFilteringRules) error {
+func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
-		return errors.New("predefined rule cannot be deleted")
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
 	}
-	if req.Name == "Block All IPv6" {
-		return errors.New("predefined rule cannot be deleted")
+	if req.Name == "Block All IPv6" || req.Name == "Block malicious IPs and domains" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
 	}
 	if req.Name == "Default Firewall Filtering Rule" {
-		return errors.New("default rule cannot be deleted")
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
 	}
 	return nil
 }
@@ -180,7 +179,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
-	if err := validatRule(req); err != nil {
+	if err := validateFirewallRule(req); err != nil {
 		return err
 	}
 
@@ -378,7 +377,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
-	if err := validatRule(req); err != nil {
+	if err := validateFirewallRule(req); err != nil {
 		return err
 	}
 	if _, err := zClient.filteringrules.Get(id); err != nil {
@@ -439,8 +438,19 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	if !ok {
 		log.Printf("[ERROR] firewall filtering rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
 
+	// Retrieve the rule to check if it's a predefined one
+	rule, err := zClient.filteringrules.Get(id)
+	if err != nil {
+		return fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err)
+	}
+
+	// Validate if the rule can be deleted
+	if err := validateFirewallRule(*rule); err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
 	if _, err := zClient.filteringrules.Delete(id); err != nil {
 		return err
 	}

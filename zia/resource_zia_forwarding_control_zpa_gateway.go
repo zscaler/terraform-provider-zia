@@ -109,11 +109,22 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 	}
 }
 
+func validatePredefinedObject(req zpa_gateways.ZPAGateways) error {
+	if req.Name == "Auto ZPA Gateway" {
+		return fmt.Errorf("predefined zpa gateway '%s' cannot be deleted", req.Name)
+	}
+	return nil
+}
+
 func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	req := expandForwardingControlZPAGateway(d)
 	log.Printf("[INFO] Creating forwarding control zpa gateway\n%+v\n", req)
+
+	if err := validatePredefinedObject(req); err != nil {
+		return err
+	}
 
 	resp, err := zClient.zpa_gateways.Create(&req)
 	if err != nil {
@@ -179,8 +190,13 @@ func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interfa
 	if !d.HasChange("type") || d.Get("type") == "" {
 		d.Set("type", "ZPA")
 	}
+
 	log.Printf("[INFO] Updating zia forwarding control zpa gateway ID: %v\n", id)
 	req := expandForwardingControlZPAGateway(d)
+
+	if err := validatePredefinedObject(req); err != nil {
+		return err
+	}
 	if _, err := zClient.zpa_gateways.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
@@ -201,6 +217,17 @@ func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interfa
 	if !ok {
 		log.Printf("[ERROR] forwarding control zpa gateway not set: %v\n", id)
 	}
+	// Retrieve the rule to check if it's a predefined one
+	gwObj, err := zClient.zpa_gateways.Get(id)
+	if err != nil {
+		return fmt.Errorf("error retrieving zpa gateway object %d: %v", id, err)
+	}
+
+	// Validate if the rule can be deleted
+	if err := validatePredefinedObject(*gwObj); err != nil {
+		return err
+	}
+
 	log.Printf("[INFO] Deleting forwarding control zpa gateway ID: %v\n", (d.Id()))
 
 	if _, err := zClient.zpa_gateways.Delete(id); err != nil {

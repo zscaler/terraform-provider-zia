@@ -214,7 +214,17 @@ func validateForwardingRuleConstraints(d *schema.ResourceData) error {
 		}
 	}
 
-	return nil // Return nil to indicate no error
+	return nil
+}
+
+func validatePredefinedRules(req forwarding_rules.ForwardingRules) error {
+	if req.Name == "Client Connector Traffic Direct" || req.Name == "ZPA Pool For Stray Traffic" {
+		return fmt.Errorf("predefined rule '%s' cannot be deleted", req.Name)
+	}
+	if req.Name == "ZIA Inspected ZPA Apps" || req.Name == "Fallback mode of ZPA Forwarding" {
+		return fmt.Errorf("predefined rule '%s' cannot be deleted", req.Name)
+	}
+	return nil
 }
 
 func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) error {
@@ -226,6 +236,10 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 	zClient := m.(*Client)
 	req := expandForwardingControlRule(d)
 	log.Printf("[INFO] Creating zia forwarding control rule\n%+v\n", req)
+
+	if err := validatePredefinedRules(req); err != nil {
+		return err
+	}
 
 	resp, err := zClient.forwarding_rules.Create(&req)
 	if err != nil {
@@ -370,6 +384,11 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 
 	log.Printf("[INFO] Updating zia forwarding control rule ID: %v\n", id)
 	req := expandForwardingControlRule(d)
+
+	if err := validatePredefinedRules(req); err != nil {
+		return err
+	}
+
 	if _, err := zClient.forwarding_rules.Get(id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
@@ -388,15 +407,27 @@ func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) 
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] forwarding control rule not set: %v\n", id)
+		return fmt.Errorf("forwarding control rule ID not set: %v", id)
 	}
-	log.Printf("[INFO] Deleting forwarding control rule ID: %v\n", (d.Id()))
 
-	if _, err := zClient.forwarding_rules.Delete(id); err != nil {
+	// Retrieve the rule to check if it's a predefined one
+	rule, err := zClient.forwarding_rules.Get(id)
+	if err != nil {
+		return fmt.Errorf("error retrieving forwarding control rule %d: %v", id, err)
+	}
+
+	// Validate if the rule can be deleted
+	if err := validatePredefinedRules(*rule); err != nil {
 		return err
 	}
+
+	log.Printf("[INFO] Deleting forwarding control rule ID: %v", id)
+	if _, err := zClient.forwarding_rules.Delete(id); err != nil {
+		return fmt.Errorf("error deleting forwarding control rule %d: %v", id, err)
+	}
+
 	d.SetId("")
-	log.Printf("[INFO] forwarding control rule deleted")
+	log.Printf("[INFO] Forwarding control rule deleted")
 	return nil
 }
 
