@@ -81,7 +81,8 @@ func validateURLFilteringRequestMethods() schema.SchemaValidateDiagFunc {
 
 var supportedURLFilteringProtocols = []string{
 	"SMRULEF_ZPA_BROKERS_RULE", "ANY_RULE", "TCP_RULE", "UDP_RULE", "DOHTTPS_RULE", "TUNNELSSL_RULE",
-	"HTTP_PROXY", "FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE", "SSL_RULE", "TUNNEL_RULE",
+	"HTTP_PROXY", "FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE", "SSL_RULE", "TUNNEL_RULE", "WEBSOCKETSSL_RULE",
+	"WEBSOCKET_RULE",
 }
 
 func validateURLFilteringProtocols() schema.SchemaValidateDiagFunc {
