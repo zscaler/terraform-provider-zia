@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.7.31 (February, 28 2024)
+
+### Notes
+
+- Release date: **(February, 28 2024)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #321](https://github.com/zscaler/terraform-provider-zia/pull/321) - Fixed validation function in the resource `zia_url_filtering_rules` for the attribute `protocols`. The provider now validates the following API supported values: `SMRULEF_ZPA_BROKERS_RULE`, `ANY_RULE`, `TCP_RULE`, `UDP_RULE`, `DOHTTPS_RULE`, `TUNNELSSL_RULE`, `HTTP_PROXY`, `FOHTTP_RULE`, `FTP_RULE`, `HTTPS_RULE`, `HTTP_RULE`, `SSL_RULE`, `TUNNEL_RULE`, `WEBSOCKETSSL_RULE`, `WEBSOCKET_RULE`,
+
 # 2.7.3 (February 14, 2024)
 
 ## Notes
