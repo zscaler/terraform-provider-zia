@@ -148,6 +148,9 @@ func filePropertiesSchema() *schema.Resource {
 
 // Helper function to create schema for SandboxRSS fields
 func commonSandboxRSSSchema(fieldName string) *schema.Schema {
+	// No-op use of fieldName to avoid unused parameter warning
+	_ = fieldName
+
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Computed: true,

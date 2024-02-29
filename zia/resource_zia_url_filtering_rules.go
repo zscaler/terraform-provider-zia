@@ -153,20 +153,19 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			"cbi_profile_id": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+			// "cbi_profile_id": {
+			// 	Type:     schema.TypeInt,
+			// 	Computed: true,
+			// },
 			"cbi_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"profile_seq": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
+						// "profile_seq": {
+						// 	Type:     schema.TypeInt,
+						// 	Computed: true,
+						// },
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -347,9 +346,9 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 	_ = d.Set("order", resp.Order)
-	if resp.CBIProfileID > 0 {
-		_ = d.Set("cbi_profile_id", resp.CBIProfileID)
-	}
+	// if resp.CBIProfileID > 0 {
+	// 	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
+	// }
 
 	// Update the cbi_profile block in the state
 	if resp.CBIProfile.ID != "" {
@@ -509,20 +508,20 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
-		CBIProfileID:           d.Get("cbi_profile_id").(int),
-		Locations:              expandIDNameExtensionsSet(d, "locations"),
-		Groups:                 expandIDNameExtensionsSet(d, "groups"),
-		Departments:            expandIDNameExtensionsSet(d, "departments"),
-		Users:                  expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
-		OverrideUsers:          expandIDNameExtensionsSet(d, "override_users"),
-		OverrideGroups:         expandIDNameExtensionsSet(d, "override_groups"),
-		LocationGroups:         expandIDNameExtensionsSet(d, "location_groups"),
-		Labels:                 expandIDNameExtensionsSet(d, "labels"),
-		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:                expandIDNameExtensionsSet(d, "devices"),
-		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
-		CBIProfile:             expandCBIProfile(d),
+		// CBIProfileID:           d.Get("cbi_profile_id").(int),
+		Locations:      expandIDNameExtensionsSet(d, "locations"),
+		Groups:         expandIDNameExtensionsSet(d, "groups"),
+		Departments:    expandIDNameExtensionsSet(d, "departments"),
+		Users:          expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:    expandIDNameExtensionsSet(d, "time_windows"),
+		OverrideUsers:  expandIDNameExtensionsSet(d, "override_users"),
+		OverrideGroups: expandIDNameExtensionsSet(d, "override_groups"),
+		LocationGroups: expandIDNameExtensionsSet(d, "location_groups"),
+		Labels:         expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:   expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:        expandIDNameExtensionsSet(d, "devices"),
+		WorkloadGroups: expandWorkloadGroups(d, "workload_groups"),
+		CBIProfile:     expandCBIProfile(d),
 	}
 
 	return result
@@ -534,10 +533,10 @@ func expandCBIProfile(d *schema.ResourceData) urlfilteringpolicies.CBIProfile {
 		if len(cbiProfileList) > 0 {
 			cbiProfileData := cbiProfileList[0].(map[string]interface{})
 			return urlfilteringpolicies.CBIProfile{
-				ProfileSeq: cbiProfileData["profile_seq"].(int),
-				ID:         cbiProfileData["id"].(string),
-				Name:       cbiProfileData["name"].(string),
-				URL:        cbiProfileData["url"].(string),
+				// ProfileSeq: cbiProfileData["profile_seq"].(int),
+				ID:   cbiProfileData["id"].(string),
+				Name: cbiProfileData["name"].(string),
+				URL:  cbiProfileData["url"].(string),
 			}
 		}
 	}
@@ -550,10 +549,10 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"id":          cbiProfile.ID,
-			"name":        cbiProfile.Name,
-			"url":         cbiProfile.URL,
-			"profile_seq": cbiProfile.ProfileSeq,
+			"id":   cbiProfile.ID,
+			"name": cbiProfile.Name,
+			"url":  cbiProfile.URL,
+			// "profile_seq": cbiProfile.ProfileSeq,
 		},
 	}
 }
@@ -574,7 +573,7 @@ func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) err
 		}
 
 		// Validation 3: Check Protocols should be HTTP or HTTPS
-		validProtocols := map[string]bool{"HTTP": true, "HTTPS": true}
+		validProtocols := map[string]bool{"HTTPS_RULE": true, "HTTP_RULE": true}
 		for _, protocol := range rule.Protocols {
 			if !validProtocols[strings.ToUpper(protocol)] {
 				return errors.New("when action is ISOLATE, valid options for protocols are: HTTP and/or HTTPS")

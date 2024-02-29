@@ -18,8 +18,8 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
 
-	vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
-	vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, "", "")
+	// vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
+	// vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, "", "")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,7 +27,7 @@ func TestAccDataSourceLocationManagement_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckLocationManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),

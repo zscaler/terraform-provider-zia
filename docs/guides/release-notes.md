@@ -12,9 +12,23 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.7.31``
+``Last updated: v2.7.32``
 
 ---
+
+## 2.7.32 (February, 28 2024)
+
+### Notes
+
+- Release date: **(February, 28 2024)**
+- Supported Terraform version: **v1.x**
+
+### Fixes
+
+- [PR #322](https://github.com/zscaler/terraform-provider-zia/pull/322) - Fixed validation `zia_url_filtering_rules` resource to validate `protocols` attribute to accept `HTTP_RULE` and `HTTPS_RULE`.
+- [PR #322](https://github.com/zscaler/terraform-provider-zia/pull/322) - Fixed validation `zia_url_filtering_rules` validations for rules with `action` configured as `ISOLATE`.
+- [PR #322](https://github.com/zscaler/terraform-provider-zia/pull/322) - Fixed linter issues across several acceptance tests resources and data sources.
+
 
 ## 2.7.31 (February, 28 2024)
 
