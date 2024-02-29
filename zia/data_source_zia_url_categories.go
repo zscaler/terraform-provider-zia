@@ -183,51 +183,51 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *urlcategories.URLCategory
+	var err error
+
 	id, _ := d.Get("id").(string)
-	if resp == nil && id != "" {
-		log.Printf("[INFO] Getting url categories : %s\n", id)
-		res, err := zClient.urlcategories.Get(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-
 	name, _ := d.Get("configured_name").(string)
-	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting url categories : %s\n", name)
-		res, err := zClient.urlcategories.GetCustomURLCategories(name)
+
+	if id != "" {
+		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
+		resp, err = zClient.urlcategories.Get(id)
 		if err != nil {
 			return err
 		}
-		resp = res
+	} else if name != "" {
+		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
+		resp, err = zClient.urlcategories.GetCustomURLCategories(name)
+		if err != nil {
+			return err
+		}
 	}
 
-	if resp != nil {
-		d.SetId(fmt.Sprintf(resp.ID))
-		_ = d.Set("configured_name", resp.ConfiguredName)
-		_ = d.Set("keywords", resp.Keywords)
-		_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
-		_ = d.Set("urls", resp.Urls)
-		_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
-		_ = d.Set("custom_category", resp.CustomCategory)
-		_ = d.Set("editable", resp.Editable)
-		_ = d.Set("description", resp.Description)
-		_ = d.Set("type", resp.Type)
-		_ = d.Set("val", resp.Val)
-		_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
-		_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
+	// After attempting to fetch, check if resp is still nil, indicating no data was found.
+	if resp == nil {
+		return fmt.Errorf("couldn't find any URL category with ID '%s' or name '%s'", id, name)
+	}
 
-		if err := d.Set("scopes", flattenScopes(resp)); err != nil {
-			return err
-		}
+	// Set the data source fields with the response
+	d.SetId(fmt.Sprintf(resp.ID))
+	_ = d.Set("configured_name", resp.ConfiguredName)
+	_ = d.Set("keywords", resp.Keywords)
+	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
+	_ = d.Set("urls", resp.Urls)
+	_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
+	_ = d.Set("custom_category", resp.CustomCategory)
+	_ = d.Set("editable", resp.Editable)
+	_ = d.Set("description", resp.Description)
+	_ = d.Set("type", resp.Type)
+	_ = d.Set("val", resp.Val)
+	_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
+	_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
 
-		if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
-			return err
-		}
+	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
+		return err
+	}
 
-	} else {
-		return fmt.Errorf("couldn't find any category or custom category with name '%s' or id '%s'", name, id)
+	if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
+		return err
 	}
 
 	return nil

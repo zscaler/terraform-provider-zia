@@ -22,7 +22,9 @@ func TestAccDataSourceAuthSettingsUrls_Basic(t *testing.T) {
 }
 
 func testAccDataSourceAuthSettingsUrlsCheck(name string) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc()
+	return resource.ComposeTestCheckFunc(
+		resource.TestCheckResourceAttrSet(name, "urls.#"),
+	)
 }
 
 var testAccCheckDataSourceAuthSettingsUrlsConfig_basic = `

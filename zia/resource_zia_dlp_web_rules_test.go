@@ -28,7 +28,7 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, initialName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, initialName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
@@ -43,7 +43,7 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, updatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, updatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
@@ -132,7 +132,7 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 	}
 }
 
-func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, name, description, action, state string) string {
+func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, name, description, action, state string) string {
 	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
 
 	return fmt.Sprintf(`

@@ -23,9 +23,9 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
 	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
 
-	rSharedKey := acctest.RandString(20)
-	vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
-	vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, rSharedKey)
+	// rSharedKey := acctest.RandString(20)
+	// vpnCredentialTypeAndName, _, vpnCredentialGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
+	// vpnCredentialResourceHCL := testAccCheckTrafficForwardingVPNCredentialsIPConfigure(vpnCredentialTypeAndName, vpnCredentialGeneratedName, vpnCredentialGeneratedName, variable.VPNCredentialTypeIP, rSharedKey)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -33,7 +33,7 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 		CheckDestroy: testAccCheckLocationManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -54,7 +54,7 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
+				Config: testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.LocAuthRequired, variable.LocSurrogateIP, variable.LocXFF, variable.LocOFW, variable.LocIPS),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationManagementExists(resourceTypeAndName, &locations),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
@@ -149,7 +149,7 @@ func testAccCheckLocationManagementExists(resource string, rule *locationmanagem
 	}
 }
 
-func testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, vpnCredentialResourceHCL, vpnCredentialTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
+func testAccCheckLocationManagementConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
 	return fmt.Sprintf(`
 
 // static ip resource
@@ -165,7 +165,7 @@ data "%s" "%s" {
 		// resource variables
 		staticIPResourceHCL,
 		// vpnCredentialResourceHCL,
-		getLocationManagementHCL(generatedName, staticIPTypeAndName, vpnCredentialTypeAndName, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled),
+		getLocationManagementHCL(generatedName, staticIPTypeAndName, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled),
 
 		// data source variables
 		resourcetype.TrafficForwardingLocManagement,
@@ -174,7 +174,7 @@ data "%s" "%s" {
 	)
 }
 
-func getLocationManagementHCL(generatedName, staticIPTypeAndName, vpnCredentialTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
+func getLocationManagementHCL(generatedName, staticIPTypeAndName string, authRequired, surrogateIP, xffEnabled, ofwEnabled, ipsEnabled bool) string {
 	return fmt.Sprintf(`
 
 

@@ -30,7 +30,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 		CheckDestroy: testAccCheckUserManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, name, rEmail, rPassword, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
@@ -44,7 +44,7 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPasswordUpdate, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, name, rEmail, rPasswordUpdate, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
@@ -114,7 +114,7 @@ func testAccCheckUserManagementExists(resource string, users *users.Users) resou
 	}
 }
 
-func testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, name, rEmail, rPassword, rComments string) string {
+func testAccCheckUserManagementConfigure(resourceTypeAndName, name, rEmail, rPassword, rComments string) string {
 	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name
 
 	return fmt.Sprintf(`

@@ -68,7 +68,7 @@ func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m int
 
 	var resp *virtualipaddress.ZscalerVIPs
 	datacenter, _ := d.Get("datacenter").(string)
-	if resp == nil && datacenter != "" {
+	if datacenter != "" {
 		log.Printf("[INFO] Getting data for datacenter name: %s\n", datacenter)
 		res, err := zClient.virtualipaddress.GetZscalerVIPs(datacenter)
 		if err != nil {
@@ -90,7 +90,6 @@ func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m int
 		_ = d.Set("gre_ips", resp.GREIPs)
 		_ = d.Set("pac_ips", resp.PACIPs)
 		_ = d.Set("pac_domain_name", resp.PACDomainName)
-
 	} else {
 		return fmt.Errorf("couldn't find any datacenter with name '%s'", datacenter)
 	}

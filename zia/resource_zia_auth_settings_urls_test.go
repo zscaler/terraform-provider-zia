@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -42,7 +43,14 @@ func testAccCheckAuthSettingsUrlsDestroy(s *terraform.State) error {
 
 func testAccCheckAuthSettingsUrlsExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// Implement this function to ensure the resource exists in the infrastructure
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Security Policy Settings ID is set")
+		}
 		return nil
 	}
 }

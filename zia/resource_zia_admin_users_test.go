@@ -32,7 +32,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(generatedName+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
@@ -46,7 +46,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPasswordUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", fmt.Sprintf(generatedName+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPasswordUpdate+"Super@Secret007")),
@@ -157,7 +157,7 @@ data "%s" "%s" {
 		// Resource type and name for the admin user
 		resourcetype.AdminUsers,
 		resourceName,
-		rEmail,
+		generatedName,
 		rEmail,
 		variable.AdminUserName,
 		rPassword,

@@ -21,7 +21,7 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckUserManagementDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, resourceTypeAndName, rEmail, rPassword, rComments),
+				Config: testAccCheckUserManagementConfigure(resourceTypeAndName, generatedName, rEmail, rPassword, rComments),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
