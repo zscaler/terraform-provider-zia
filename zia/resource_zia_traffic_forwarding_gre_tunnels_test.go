@@ -52,6 +52,12 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

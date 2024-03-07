@@ -42,7 +42,6 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
-
 			// update pre-shared-key and comments vpn credential type ufqdn
 			{
 				Config: testAccCheckTrafficForwardingVPNCredentialsUFQDNConfigure(resourceTypeAndName, generatedName, rEmail, rSharedKeyUpdate),
@@ -51,6 +50,15 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKeyUpdate),
 				),
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"pre_shared_key",
+				},
 			},
 			{
 				// creation vpn credential type IP
@@ -63,7 +71,6 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
-
 			// update pre-shared-key and comments vpn credential type IP
 			{
 				Config: testAccCheckTrafficForwardingVPNCredentialsIPConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, rSharedKeyUpdate),
@@ -72,6 +79,15 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKeyUpdate),
 				),
+			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"pre_shared_key",
+				},
 			},
 		},
 	})

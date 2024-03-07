@@ -32,6 +32,12 @@ func TestAccResourceAuthSettingsUrls_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "urls.0", ".newexample.com"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

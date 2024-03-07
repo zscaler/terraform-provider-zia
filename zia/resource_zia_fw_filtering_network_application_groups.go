@@ -106,6 +106,7 @@ func resourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("app_id", resp.ID)
+	_ = d.Set("name", resp.Name)
 	_ = d.Set("network_applications", resp.NetworkApplications)
 	_ = d.Set("description", resp.Description)
 

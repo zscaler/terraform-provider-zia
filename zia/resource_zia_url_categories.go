@@ -26,7 +26,7 @@ func resourceURLCategories() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("category_id", idInt)
 				} else {
-					resp, err := zClient.urlcategories.GetCustomURLCategories(id)
+					resp, err := zClient.urlcategories.Get(id)
 					if err == nil {
 						d.SetId(resp.ID)
 						_ = d.Set("category_id", resp.ID)

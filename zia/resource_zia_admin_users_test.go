@@ -54,6 +54,15 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "admin_scope_entities.#", "1"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
 		},
 	})
 }
