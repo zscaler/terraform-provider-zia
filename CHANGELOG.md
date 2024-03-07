@@ -9,6 +9,7 @@
 
 ### Enhacements
 
+- [PR #325](https://github.com/zscaler/terraform-provider-zia/325) Updated [support guide](/docs/guides/support.md) with new Zscaler support model.
 - [PR #325](https://github.com/zscaler/terraform-provider-zia/pull/325) - Added support to import of the following resources:
 - ``zia_auth_settings_urls``
 - ``zia_sandbox_behavioral_analysis``

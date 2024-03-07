@@ -31,7 +31,13 @@ func resourceURLCategories() *schema.Resource {
 						d.SetId(resp.ID)
 						_ = d.Set("category_id", resp.ID)
 					} else {
-						return []*schema.ResourceData{d}, err
+						// Input is assumed to be a custom name, use the GetCustomURLCategories method
+						resp, err := zClient.urlcategories.GetCustomURLCategories(id)
+						if err != nil {
+							return nil, fmt.Errorf("error fetching URL category by custom name: %s", err)
+						}
+						d.SetId(resp.ID)
+						_ = d.Set("category_id", resp.ID)
 					}
 				}
 				return []*schema.ResourceData{d}, nil
