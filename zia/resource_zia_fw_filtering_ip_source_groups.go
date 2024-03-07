@@ -26,12 +26,12 @@ func resourceFWIPSourceGroups() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					_ = d.Set("ip_source_group_id", idInt)
+					_ = d.Set("group_id", idInt)
 				} else {
 					resp, err := zClient.ipsourcegroups.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						_ = d.Set("ip_source_group_id", resp.ID)
+						_ = d.Set("group_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -45,7 +45,7 @@ func resourceFWIPSourceGroups() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_source_group_id": {
+			"group_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -80,14 +80,14 @@ func resourceFWIPSourceGroupsCreate(d *schema.ResourceData, m interface{}) error
 	}
 	log.Printf("[INFO] Created zia ip source groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("ip_source_group_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	return resourceFWIPSourceGroupsRead(d, m)
 }
 
 func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "ip_source_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		return fmt.Errorf("no ip source groups id is set")
 	}
@@ -105,7 +105,7 @@ func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Getting zia ip source groups:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("ip_source_group_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("description", resp.Description)
@@ -116,7 +116,7 @@ func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "ip_source_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		log.Printf("[ERROR] ip source groups ID not set: %v\n", id)
 	}
@@ -138,7 +138,7 @@ func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error
 func resourceFWIPSourceGroupsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "ip_source_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		log.Printf("[ERROR] ip source groups ID not set: %v\n", id)
 	}

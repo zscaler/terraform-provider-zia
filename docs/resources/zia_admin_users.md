@@ -158,3 +158,24 @@ The following arguments are supported:
 * `admin_scope_type` - (Optional) The admin's scope. A scope is required for admins, but not applicable to auditors. This attribute is subject to change. Support values are: `ORGANIZATION`, `DEPARTMENT`, `LOCATION`, `LOCATION_GROUP`
   * `admin_scope_entities` - (Optional) Based on the admin scope type, the entities can be the ID/name pair of departments, locations, or location groups.
     * `id` - (Optional) Identifier that uniquely identifies an entity
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_admin_users** can be imported by using `<ADMIN ID>` or `<LOGIN NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_admin_users.example <admin_id>
+```
+
+or
+
+```shell
+terraform import zia_admin_users.example <login_name>
+```
+
+⚠️ **NOTE :**:  This provider do not import the password attribute value during the importing process.

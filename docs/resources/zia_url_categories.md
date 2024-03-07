@@ -60,6 +60,8 @@ The following arguments are supported:
 * `custom_urls_count` - (Optional) The number of custom URLs associated to the URL category.
 * `db_categorized_urls` - (Optional) URLs added to a custom URL category are also retained under the original parent URL category (i.e., the predefined category the URL previously belonged to).
 * `ip_ranges` - (Optional) Custom IP address ranges associated to a URL category. Up to 2000 custom IP address ranges and retaining parent custom IP address ranges can be added, per organization, across all categories.
+⚠️ **NOTE :**: This field is available only if the option to configure custom IP ranges is enabled for your organization. To enable this option, contact Zscaler Support.
+
 * `ip_ranges_retaining_parent_category` - (Optional) The retaining parent custom IP address ranges associated to a URL category. Up to 2000 custom IP ranges and retaining parent custom IP address ranges can be added, per organization, across all categories.
 * `ip_ranges_retaining_parent_category_count` - (Optional) The number of custom IP address ranges associated to the URL category, that also need to be retained under the original parent category.
 * `custom_ip_ranges_count` - (Optional) The number of custom IP address ranges associated to the URL category.
@@ -80,3 +82,24 @@ The following arguments are supported:
   * `retain_parent_url_count` - (Optional) Count of URLs with retain parent category.
   * `total_keyword_count` - (Optional) Total keyword count for the category.
   * `retain_parent_keyword_count` - (Optional) Count of total keywords with retain parent category.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_url_categories** can be imported by using `<CATEGORY_ID>` or `<CATEGORY_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_url_categories.example <category_id>
+```
+
+or
+
+```shell
+terraform import zia_url_categories.example <category_name>
+```
+
+⚠️ **NOTE :**:  This provider only supports the importing of custom URL categories. The importing of built-in categories is not supported.

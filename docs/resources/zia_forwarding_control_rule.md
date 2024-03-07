@@ -198,3 +198,22 @@ In addition to all arguments above, the following attributes are exported:
 * `zpa_application_segment_groups` (set) List of ZPA Application Segment Groups for which this rule is applicable. This field is applicable only for the `ECZPA` forwarding method (used for Zscaler Cloud Connector).
       - `name` - (string) The configured name of the entity
       - `external_id` - (int) Identifier that uniquely identifies an entity
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_forwarding_control_rule** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_forwarding_control_rule.example <rule_id>
+```
+
+or
+
+```shell
+terraform import zia_forwarding_control_rule.example <rule_name>
+```

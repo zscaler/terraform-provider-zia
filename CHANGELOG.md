@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.7.33 (March, 6 2024)
+
+### Notes
+
+- Release date: **(March, 6 2024)**
+- Supported Terraform version: **v1.x**
+
+### Enhacements
+
+- [PR #325](https://github.com/zscaler/terraform-provider-zia/pull/325) - Added support to import of the following resources:
+- ``zia_auth_settings_urls``
+- ``zia_sandbox_behavioral_analysis``
+- ``zia_security_settings``
+
 ## 2.7.32 (February, 28 2024)
 
 ### Notes

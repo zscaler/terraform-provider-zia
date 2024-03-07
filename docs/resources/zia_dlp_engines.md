@@ -38,3 +38,22 @@ The following arguments are supported:
 ### Optional
 
 * `description` - (String) The DLP engine's description.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_dlp_engines** can be imported by using `<ENGINE_ID>` or `<ENGINE_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_dlp_engines.example <engine_id>
+```
+
+or
+
+```shell
+terraform import zia_dlp_engines.example <engine_name>
+```

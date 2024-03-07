@@ -24,12 +24,12 @@ func resourceURLCategories() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					_ = d.Set("url_category_id", idInt)
+					_ = d.Set("category_id", idInt)
 				} else {
 					resp, err := zClient.urlcategories.GetCustomURLCategories(id)
 					if err == nil {
 						d.SetId(resp.ID)
-						_ = d.Set("url_category_id", resp.ID)
+						_ = d.Set("category_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -39,7 +39,7 @@ func resourceURLCategories() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"url_category_id": {
+			"category_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,14 +197,14 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp)
 	d.SetId(resp.ID)
-	_ = d.Set("url_category_id", resp.ID)
+	_ = d.Set("category_id", resp.ID)
 	return resourceURLCategoriesRead(d, m)
 }
 
 func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getStringFromResourceData(d, "url_category_id")
+	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
 		return fmt.Errorf("no url category rule id is set")
 	}
@@ -223,7 +223,7 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf(resp.ID))
-	_ = d.Set("url_category_id", resp.ID)
+	_ = d.Set("category_id", resp.ID)
 	_ = d.Set("configured_name", resp.ConfiguredName)
 	_ = d.Set("keywords", resp.Keywords)
 	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
@@ -268,7 +268,7 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getStringFromResourceData(d, "url_category_id")
+	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
 		log.Printf("[ERROR] custom url category ID not set: %v\n", id)
 	}
@@ -290,7 +290,7 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "url_category_id")
+	id, ok := getIntFromResourceData(d, "category_id")
 	if !ok {
 		log.Printf("[ERROR] url category id ID not set: %v\n", id)
 	}
@@ -305,7 +305,7 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 }
 
 func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
-	id, _ := getStringFromResourceData(d, "url_category_id")
+	id, _ := getStringFromResourceData(d, "category_id")
 	result := urlcategories.URLCategory{
 		ID:                                   id,
 		ConfiguredName:                       d.Get("configured_name").(string),

@@ -47,3 +47,16 @@ The following arguments are supported:
 ### Optional
 
 There are no optional parameters supported by this resource.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_auth_settings_urls** can be imported by using `all_urls` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_auth_settings_urls.example all_urls
+```

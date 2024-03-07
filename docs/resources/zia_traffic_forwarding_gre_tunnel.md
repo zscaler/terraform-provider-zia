@@ -124,3 +124,22 @@ The following arguments are supported:
   * `virtual_ip` (Optional) GRE cluster virtual IP address (VIP)
 
 * `internal_ip_range` (Optional) The start of the internal IP address in /29 CIDR range. Automatically set by the provider if `ip_unnumbered` is set to `false`.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_traffic_forwarding_gre_tunnel** can be imported by using `<TUNNEL_ID>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_traffic_forwarding_gre_tunnel.example <tunnel_id>
+```
+
+or
+
+```shell
+terraform import zia_traffic_forwarding_gre_tunnel.example <engine_name>
+```

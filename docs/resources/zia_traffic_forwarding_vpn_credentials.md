@@ -66,14 +66,11 @@ The following arguments are supported:
 
 ## Import
 
-Static IP resources can be imported by using `<STATIC IP ID>` or `<IP ADDRESS>`as the import ID.
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_traffic_forwarding_vpn_credentials** can be imported by using `<VPN_ID>` as the import ID.
 
 ```shell
-terraform import zia_traffic_forwarding_static_ip.example <static_ip_id>
-```
-
-or
-
-```shell
-terraform import zpa_app_connector_group.example <ip_address>
+terraform import zia_traffic_forwarding_vpn_credentials.example <vpn_id>
 ```
