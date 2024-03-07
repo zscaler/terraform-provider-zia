@@ -157,3 +157,22 @@ The following arguments are supported:
 * `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_dlp_web_rules** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_dlp_web_rules.example <rule_id>
+```
+
+or
+
+```shell
+terraform import zia_dlp_web_rules.example <rule_name>
+```

@@ -55,6 +55,15 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+				},
+			},
 		},
 	})
 }

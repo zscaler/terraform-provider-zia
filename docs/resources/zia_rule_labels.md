@@ -29,3 +29,22 @@ The following arguments are supported:
 ### Optional
 
 * `description` - (String) The rule label description.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_rule_labels** can be imported by using `<LABEL_ID>` or `<LABEL_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_rule_labels.example <label_id>
+```
+
+or
+
+```shell
+terraform import zia_rule_labels.example <label_name>
+```

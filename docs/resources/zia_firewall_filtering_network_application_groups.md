@@ -35,3 +35,22 @@ The following arguments are supported:
 ### Optional
 
 * `description` (Optional) - Description of the network application group
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_firewall_filtering_network_application_groups** can be imported by using `<GROUP_ID>` or `<GROUP_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_firewall_filtering_network_application_groups.example <group_id>
+```
+
+or
+
+```shell
+terraform import zia_firewall_filtering_network_application_groups.example <group_name>
+```

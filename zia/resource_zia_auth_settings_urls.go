@@ -1,6 +1,8 @@
 package zia
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/user_authentication_settings"
 )
@@ -11,6 +13,26 @@ func resourceAuthSettingsUrls() *schema.Resource {
 		Create: resourceAuthSettingsUrlsCreate,
 		Update: resourceAuthSettingsUrlsUpdate,
 		Delete: resourceAuthSettingsUrlsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				urls, err := zClient.user_authentication_settings.Get()
+				if err != nil {
+					return nil, fmt.Errorf("error fetching urls from exception list: %s", err)
+				}
+
+				if urls != nil {
+					if err := d.Set("urls", urls.URLs); err != nil {
+						return nil, fmt.Errorf("error setting urls: %s", err)
+					}
+				}
+
+				d.SetId("all_urls")
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"urls": {
 				Type:     schema.TypeSet,

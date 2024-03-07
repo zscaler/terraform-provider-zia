@@ -26,12 +26,12 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					_ = d.Set("network_service_group_id", idInt)
+					_ = d.Set("group_id", idInt)
 				} else {
 					resp, err := zClient.networkservicegroups.GetNetworkServiceGroupsByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						_ = d.Set("network_service_group_id", resp.ID)
+						_ = d.Set("group_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -45,7 +45,7 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_service_group_id": {
+			"group_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -92,14 +92,14 @@ func resourceFWNetworkServiceGroupsCreate(d *schema.ResourceData, m interface{})
 	}
 	log.Printf("[INFO] Created zia network service groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("network_service_group_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	return resourceFWNetworkServiceGroupsRead(d, m)
 }
 
 func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "network_service_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		return fmt.Errorf("no network service groups id is set")
 	}
@@ -117,7 +117,7 @@ func resourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) e
 	log.Printf("[INFO] Getting network service groups :\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("network_service_group_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
 
@@ -143,7 +143,7 @@ func flattenServicesSimple(list []networkservicegroups.Services) []interface{} {
 func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "network_service_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		log.Printf("[ERROR] network service groups ID not set: %v\n", id)
 	}
@@ -165,7 +165,7 @@ func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{})
 func resourceFWNetworkServiceGroupsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "network_service_group_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		log.Printf("[ERROR] network service groups ID not set: %v\n", id)
 	}
@@ -193,7 +193,7 @@ func resourceFWNetworkServiceGroupsDelete(d *schema.ResourceData, m interface{})
 }
 
 func expandNetworkServiceGroups(d *schema.ResourceData) networkservicegroups.NetworkServiceGroups {
-	id, _ := getIntFromResourceData(d, "network_service_group_id")
+	id, _ := getIntFromResourceData(d, "group_id")
 	result := networkservicegroups.NetworkServiceGroups{
 		ID:          id,
 		Name:        d.Get("name").(string),

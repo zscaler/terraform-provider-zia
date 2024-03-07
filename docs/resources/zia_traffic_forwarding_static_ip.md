@@ -47,6 +47,9 @@ The following arguments are supported:
 
 ## Import
 
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
 Static IP resources can be imported by using `<STATIC IP ID>` or `<IP ADDRESS>`as the import ID.
 
 ```shell

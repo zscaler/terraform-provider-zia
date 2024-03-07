@@ -77,6 +77,12 @@ func TestResourceSandboxSettings_basic(t *testing.T) {
 					time.Sleep(10 * time.Second)
 				},
 			},
+			// Import test
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

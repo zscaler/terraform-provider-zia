@@ -65,3 +65,22 @@ In addition to all arguments above, the following attributes are exported:
 
 * `description` - (string) - Additional details about the ZPA gateway
 * `type` - (string) - Indicates whether the ZPA gateway is configured for Zscaler Internet Access (using option ZPA) or Zscaler Cloud Connector (using option ECZPA). Supported values: ``ZPA`` and ``ECZPA``
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**forwarding_control_zpa_gateway** can be imported by using `<GATEWAY_ID>` or `<GATEWAY_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import forwarding_control_zpa_gateway.example <gateway_id>
+```
+
+or
+
+```shell
+terraform import forwarding_control_zpa_gateway.example <gateway_name>
+```

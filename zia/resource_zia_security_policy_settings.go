@@ -13,6 +13,31 @@ func resourceSecurityPolicySettings() *schema.Resource {
 		Create: resourceSecurityPolicySettingsCreate,
 		Update: resourceSecurityPolicySettingsUpdate,
 		Delete: resourceSecurityPolicySettingsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				// Use the GetListUrls method to fetch both whitelist and blacklist URLs.
+				resp, err := zClient.security_policy_settings.GetListUrls()
+				if err != nil {
+					return []*schema.ResourceData{}, err
+				}
+
+				// Set the whitelist and blacklist URLs in the Terraform state.
+				if err := d.Set("whitelist_urls", resp.White); err != nil {
+					return []*schema.ResourceData{}, fmt.Errorf("error setting whitelist_urls: %s", err)
+				}
+				if err := d.Set("blacklist_urls", resp.Black); err != nil {
+					return []*schema.ResourceData{}, fmt.Errorf("error setting blacklist_urls: %s", err)
+				}
+
+				// Set a generic ID since we're not differentiating based on import type.
+				d.SetId("all_urls")
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"whitelist_urls": {
 				Type:        schema.TypeSet,

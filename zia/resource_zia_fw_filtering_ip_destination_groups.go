@@ -27,12 +27,12 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
-					_ = d.Set("ip_destination_id", idInt)
+					_ = d.Set("group_id", idInt)
 				} else {
 					resp, err := zClient.ipdestinationgroups.GetByName(id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
-						_ = d.Set("ip_destination_id", resp.ID)
+						_ = d.Set("group_id", resp.ID)
 					} else {
 						return []*schema.ResourceData{d}, err
 					}
@@ -47,7 +47,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Computed:    true,
 				Description: "Unique identifer for the destination IP group",
 			},
-			"ip_destination_id": {
+			"group_id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "Unique identifer for the destination IP group",
@@ -111,14 +111,14 @@ func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) 
 
 	log.Printf("[INFO] Created zia ip destination groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("ip_destination_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	return resourceFWIPDestinationGroupsRead(d, m)
 }
 
 func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "ip_destination_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		return fmt.Errorf("no ip destination groups id is set")
 	}
@@ -141,7 +141,7 @@ func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	log.Printf("[INFO] Getting zia ip destination groups:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("ip_destination_id", resp.ID)
+	_ = d.Set("group_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("addresses", resp.Addresses)
@@ -165,7 +165,7 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 	}
 
 	zClient := m.(*Client)
-	id, ok := getIntFromResourceData(d, "ip_destination_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		return fmt.Errorf("[ERROR] IP destination groups ID not set: %v", id)
 	}
@@ -184,7 +184,7 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
-	id, ok := getIntFromResourceData(d, "ip_destination_id")
+	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		log.Printf("[ERROR] ip destination groups ID not set: %v\n", id)
 	}

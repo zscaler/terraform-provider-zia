@@ -35,6 +35,12 @@ func TestAccResourceSecurityPolicySettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "blacklist_urls.0", ".blocknew.com"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

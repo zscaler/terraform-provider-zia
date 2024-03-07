@@ -15,6 +15,31 @@ func resourceSandboxSettings() *schema.Resource {
 		Read:   resourceSandboxSettingsRead,
 		Update: resourceSandboxSettingsUpdate,
 		Delete: resourceSandboxSettingsDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+				zClient := m.(*Client)
+
+				// Use the Get method from the SDK to fetch the MD5 file hashes
+				hashes, err := zClient.sandbox_settings.Get()
+				if err != nil {
+					return nil, fmt.Errorf("error fetching MD5 file hashes: %s", err)
+				}
+
+				// Assuming BaAdvancedSettings struct contains a slice of MD5 hashes under the attribute name "FileHashesToBeBlocked"
+				if hashes != nil {
+					if err := d.Set("file_hashes_to_be_blocked", hashes.FileHashesToBeBlocked); err != nil {
+						return nil, fmt.Errorf("error setting file_hashes_to_be_blocked: %s", err)
+					}
+				}
+
+				// Set an ID for the imported resource. Since this resource seems to encompass a global setting rather than individual items,
+				// a static ID like "sandbox_settings" could be used. Adjust if your use case requires.
+				d.SetId("sandbox_settings")
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"file_hashes_to_be_blocked": {
 				Type:        schema.TypeSet,

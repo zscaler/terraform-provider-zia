@@ -123,3 +123,22 @@ The following arguments are supported:
 * `Other Exported Arguments`
   * `enable_full_logging` (Boolean)
   * `predefined` - (Boolean) If set to true, a predefined rule is applied
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_firewall_filtering_rule** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_firewall_filtering_rule.example <rule_id>
+```
+
+or
+
+```shell
+terraform import zia_firewall_filtering_rule.example <rule_name>
+```

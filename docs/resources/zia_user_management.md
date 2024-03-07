@@ -60,3 +60,24 @@ The following attributes are supported:
 * `comments` - (Optional) Additional information about this user.
 * `temp_auth_email` - (Optional) Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.
 * `auth_methods` - (Optional) Type of authentication method to be enabled. Supported values are: ``BASIC`` and ``DIGEST``
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_user_management** can be imported by using `<USER_ID>` or `<USERNAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_user_management.example <user_id>
+```
+
+or
+
+```shell
+terraform import zia_user_management.example <name>
+```
+
+⚠️ **NOTE :**:  This provider do not import the password attribute value during the importing process.

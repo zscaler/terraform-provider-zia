@@ -106,3 +106,22 @@ The following arguments are supported:
   * `id` - (Optional) Identifier that uniquely identifies an entity
   * `name` - (Optional) The configured name of the entity
   * `extensions` - (Optional)
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_location_management** can be imported by using `<LOCATION_ID>` or `<LOCATION_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_location_management.example <location_id>
+```
+
+or
+
+```shell
+terraform import zia_location_management.example <location_name>
+```

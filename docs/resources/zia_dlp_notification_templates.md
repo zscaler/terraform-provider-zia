@@ -38,3 +38,22 @@ The following arguments are supported:
 * `subject` - (Optional) The Subject line that is displayed within the DLP notification email.
 * `attach_content` - (Optional) If set to true, the content that is violation is attached to the DLP notification email.
 * `tls_enabled` - (Optional) If set to true, the content that is violation is attached to the DLP notification email.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_dlp_notification_templates** can be imported by using `<TEMPLATE ID>` or `<TEMPLATE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_dlp_notification_templates.example <template_id>
+```
+
+or
+
+```shell
+terraform import zia_dlp_notification_templates.example <template_name>
+```

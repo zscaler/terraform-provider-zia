@@ -47,6 +47,12 @@ func TestAccResourceFWNetworkApplicationGroupsBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "network_applications.#", "11"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

@@ -48,6 +48,12 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
 				),
 			},
+			// Import test
+			{
+				ResourceName:      resourceTypeAndName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

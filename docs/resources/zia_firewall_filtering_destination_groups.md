@@ -76,3 +76,22 @@ The following arguments are supported:
 * `description` (Optional) Additional information about the destination IP group
 * `ip_categories` (Optional) Destination IP address URL categories. You can identify destinations based on the URL category of the domain. See list of all IP Categories [Here](https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-get)
   * !> **WARNING:** The `ip_categories` attribute only accepts custom URL categories.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_firewall_filtering_destination_groups** can be imported by using `<GROUP_ID>` or `<GROUP_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_firewall_filtering_destination_groups.example <group_id>
+```
+
+or
+
+```shell
+terraform import zia_firewall_filtering_destination_groups.example <group_name>
+```

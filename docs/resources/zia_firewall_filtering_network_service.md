@@ -71,3 +71,22 @@ The following arguments are supported:
 * `description` - (Optional) Description of the service
 * `is_name_l10n_tag` - (Optional
 * `tag` - (Optional) The following values are supported: `"ICMP_ANY`, `"UDP_ANY"`, `"TCP_ANY"`, `"OTHER_NETWORK_SERVICE"`, `"DNS"`, `"NETBIOS"`, `"FTP"`, `"GNUTELLA"`, `"H_323"`, `"HTTP"`, `"HTTPS"`, `"IKE"`, `"IMAP"`, `"ILS"`, `"IKE_NAT"`, `"IRC"`, `"LDAP"`, `"QUIC"`, `"TDS"`, `"NETMEETING"`, `"NFS"`, `"NTP"`, `"SIP"`, `"SNMP"`, `"SMB"`, `"SMTP"`, `"SSH"`, `"SYSLOG"`, `"TELNET"`, `"TRACEROUTE"`, `"POP3"`, `"PPTP"`, `"RADIUS"`, `"REAL_MEDIA"`, `"RTSP"`, `"VNC"`, `"WHOIS"`, `"KERBEROS_SEC"`, `"TACACS"`, `"SNMPTRAP"`, `"NMAP"`, `"RSYNC"`, `"L2TP"`, `"HTTP_PROXY"`, `"PC_ANYWHERE"`, `"MSN"`, `"ECHO"`, `"AIM"`, `"IDENT"`, `"YMSG"`, `"SCCP"`, `"MGCP_UA"`, `"MGCP_CA"`, `"VDO_LIVE"`, `"OPENVPN"`, `"TFTP"`, `"FTPS_IMPLICIT"`, `"ZSCALER_PROXY_NW_SERVICES"`, `"GRE_PROTOCOL"`, `"ESP_PROTOCOL"`, `"DHCP"`
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_firewall_filtering_network_service** can be imported by using `<SERVICE_ID>` or `<SERVICE_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_firewall_filtering_network_service.example <service_id>
+```
+
+or
+
+```shell
+terraform import zia_firewall_filtering_network_service.example <service_name>
+```
