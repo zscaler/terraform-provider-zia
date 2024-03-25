@@ -97,6 +97,11 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("vpn_id", resp.ID)
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceTrafficForwardingVPNCredentialsRead(d, m)
 }
 
@@ -160,6 +165,11 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 		return err
 	}
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceTrafficForwardingVPNCredentialsRead(d, m)
 }
 
@@ -177,6 +187,12 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 	}
 	d.SetId("")
 	log.Printf("[INFO] vpn credentials deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return nil
 }
 

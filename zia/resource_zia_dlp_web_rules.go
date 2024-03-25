@@ -307,7 +307,9 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 			break
 		}
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -483,7 +485,9 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 			break
 		}
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -501,6 +505,10 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId("")
 	log.Printf("[INFO] web dlp rule deleted")
+
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

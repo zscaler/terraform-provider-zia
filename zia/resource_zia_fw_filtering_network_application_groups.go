@@ -81,6 +81,10 @@ func resourceFWNetworkApplicationGroupsCreate(d *schema.ResourceData, m interfac
 	log.Printf("[INFO] Created zia network application groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("app_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWNetworkApplicationGroupsRead(d, m)
 }
 
@@ -131,7 +135,10 @@ func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interfac
 	if _, _, err := zClient.networkapplicationgroups.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWNetworkApplicationGroupsRead(d, m)
 }
 
@@ -162,6 +169,11 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 	}
 	d.SetId("")
 	log.Printf("[INFO] network application groups deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

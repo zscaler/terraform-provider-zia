@@ -296,7 +296,9 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
 		break
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -461,7 +463,9 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		markOrderRuleAsDone(req.ID, "url_filtering_rules")
 		break
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -480,6 +484,9 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 
 	d.SetId("")
 	log.Printf("[INFO] url filtering rule deleted")
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

@@ -81,6 +81,11 @@ func resourceFWIPSourceGroupsCreate(d *schema.ResourceData, m interface{}) error
 	log.Printf("[INFO] Created zia ip source groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("group_id", resp.ID)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWIPSourceGroupsRead(d, m)
 }
 
@@ -131,7 +136,10 @@ func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error
 	if _, err := zClient.ipsourcegroups.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWIPSourceGroupsRead(d, m)
 }
 
@@ -162,6 +170,10 @@ func resourceFWIPSourceGroupsDelete(d *schema.ResourceData, m interface{}) error
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia ip source groups deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

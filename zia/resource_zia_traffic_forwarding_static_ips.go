@@ -105,6 +105,11 @@ func resourceTrafficForwardingStaticIPCreate(d *schema.ResourceData, m interface
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("static_ip_id", resp.ID)
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceTrafficForwardingStaticIPRead(d, m)
 }
 
@@ -162,6 +167,11 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 		return err
 	}
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceTrafficForwardingStaticIPRead(d, m)
 }
 
@@ -195,6 +205,12 @@ func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface
 	}
 	d.SetId("")
 	log.Printf("[INFO] static ip deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return nil
 }
 

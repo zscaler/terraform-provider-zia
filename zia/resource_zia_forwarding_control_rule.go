@@ -249,6 +249,10 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 	log.Printf("[INFO] Created zia ip source groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("rule_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceForwardingControlRuleRead(d, m)
 }
 
@@ -398,7 +402,10 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 	if _, err := zClient.forwarding_rules.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceForwardingControlRuleRead(d, m)
 }
 
@@ -428,6 +435,10 @@ func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) 
 
 	d.SetId("")
 	log.Printf("[INFO] Forwarding control rule deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

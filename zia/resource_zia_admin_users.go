@@ -157,6 +157,9 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("admin_id", resp.ID)
 
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceAdminUsersRead(d, m)
 }
 
@@ -248,6 +251,10 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[ERROR] Error updating admin user: %s", err)
 		return err
 	}
+
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceAdminUsersRead(d, m)
 }
 
@@ -266,6 +273,10 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId("")
 	log.Printf("[INFO] admin user deleted")
+
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

@@ -340,6 +340,11 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("location_id", resp.ID)
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceLocationManagementRead(d, m)
 }
 
@@ -472,6 +477,11 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceLocationManagementRead(d, m)
 }
 
@@ -502,6 +512,11 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	}
 	d.SetId("")
 	log.Printf("[INFO] location deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

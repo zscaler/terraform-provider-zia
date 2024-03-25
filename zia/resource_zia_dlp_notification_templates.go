@@ -97,7 +97,10 @@ func resourceDLPNotificationTemplatesCreate(d *schema.ResourceData, m interface{
 	log.Printf("[INFO] Created zia dlp notification templates request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("template_id", resp.ID)
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPNotificationTemplatesRead(d, m)
 }
 
@@ -152,7 +155,10 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 	if _, _, err := zClient.dlp_notification_templates.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPNotificationTemplatesRead(d, m)
 }
 
@@ -170,6 +176,10 @@ func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{
 	}
 	d.SetId("")
 	log.Printf("[INFO] dlp notification template deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

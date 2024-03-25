@@ -21,14 +21,14 @@ resource "zia_location_management" "usa_sjc37"{
 
 resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     type        = "IP"
-    ip_address  =  zia_traffic_forwarding_static_ip.usa_sjc37.ip_address 
+    ip_address  =  zia_traffic_forwarding_static_ip.usa_sjc37.ip_address
     depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37 ]
     comments    = "Created via Terraform"
     pre_shared_key = "newPassword123!"
 }
 
 resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
-    ip_address =  "1.1.1.1"
+    ip_address =  "185.211.32.39"
     routable_ip = true
     comment = "SJC37 - Static IP"
     geo_override = false

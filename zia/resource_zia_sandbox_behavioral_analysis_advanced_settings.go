@@ -11,10 +11,10 @@ import (
 
 func resourceSandboxSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSandboxSettingsCreate,
-		Read:   resourceSandboxSettingsRead,
-		Update: resourceSandboxSettingsUpdate,
-		Delete: resourceSandboxSettingsDelete,
+		Create:        resourceSandboxSettingsCreate,
+		Read:          resourceSandboxSettingsRead,
+		Update:        resourceSandboxSettingsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -91,6 +91,10 @@ func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 	d.SetId("hash_list")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceSandboxSettingsRead(d, m)
 }
 
@@ -135,12 +139,11 @@ func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error 
 			return err
 		}
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceSandboxSettingsRead(d, m)
-}
-
-func resourceSandboxSettingsDelete(d *schema.ResourceData, m interface{}) error {
-	return nil // Since there is no DELETE method for this API.
 }
 
 func expandAndSortSandboxSettings(d *schema.ResourceData) sandbox_settings.BaAdvancedSettings {

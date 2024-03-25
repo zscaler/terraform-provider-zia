@@ -248,7 +248,9 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
 		break
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -427,7 +429,9 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
 		break
 	}
-
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
@@ -456,6 +460,10 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	}
 	d.SetId("")
 	log.Printf("[INFO] firewall filtering rule deleted")
+
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

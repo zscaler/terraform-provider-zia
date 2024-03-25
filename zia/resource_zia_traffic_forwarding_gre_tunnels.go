@@ -172,6 +172,10 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 	log.Printf("[INFO] Created zia gre tunnel request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("tunnel_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
@@ -288,7 +292,10 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	if _, _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceTrafficForwardingGRETunnelRead(d, m)
 }
 
@@ -305,6 +312,10 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 	}
 	d.SetId("")
 	log.Printf("[INFO] gre tunnel deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

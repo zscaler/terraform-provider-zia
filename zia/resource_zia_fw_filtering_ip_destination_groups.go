@@ -112,6 +112,10 @@ func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) 
 	log.Printf("[INFO] Created zia ip destination groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("group_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWIPDestinationGroupsRead(d, m)
 }
 
@@ -177,7 +181,10 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 	if err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWIPDestinationGroupsRead(d, m)
 }
 
@@ -208,6 +215,10 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia ip destination groups deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

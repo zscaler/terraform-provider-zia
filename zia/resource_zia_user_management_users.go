@@ -154,6 +154,7 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("user_id", resp.ID)
+
 	return resourceUserManagementRead(d, m)
 }
 
