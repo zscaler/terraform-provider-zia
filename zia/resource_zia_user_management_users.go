@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -155,6 +156,13 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("user_id", resp.ID)
 
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceUserManagementRead(d, m)
 }
 
@@ -223,6 +231,15 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 			log.Printf("[ERROR] enrolling user failed: %v\n", err)
 		}
 	}
+
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceUserManagementRead(d, m)
 }
 

@@ -18,7 +18,7 @@ import (
 func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 	var credentials vpncredentials.VPNCredentials
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
-	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
+	rEmail := acctest.RandomWithPrefix("tf-acc-test")
 	rSharedKey := acctest.RandString(20)
 	rSharedKeyUpdate := acctest.RandString(20)
 

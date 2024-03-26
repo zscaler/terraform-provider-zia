@@ -192,7 +192,6 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 	if activationErr := triggerActivation(zClient); activationErr != nil {
 		return activationErr
 	}
-
 	return nil
 }
 
