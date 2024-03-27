@@ -43,7 +43,7 @@ test:
 		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=10
 
 testacc:
-	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
+	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 30m
 
 # Default set of integration tests to run for ZscalerOne
 DEFAULT_INTEGRATION_TESTS?=\
@@ -113,7 +113,7 @@ integration_tests := $(subst $(space),\|,$(INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerOne
 test\:integration\:zscalerone:
 	@echo "Running integration tests for ZscalerOne..."
-	@TF_ACC=1 go test -v -cover ./zia -timeout 120m -run ^$(integration_tests)$$
+	@TF_ACC=1 go test -v -cover ./zia -timeout 30m -run ^$(integration_tests)$$
 
 # Default set of integration tests to run for ZscalerOne
 ZS2_INTEGRATION_TESTS?=\
@@ -184,7 +184,7 @@ integration_zs2_tests := $(subst $(space),\|,$(ZS_INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerTwo
 test\:integration\:zscalertwo:
 	@echo "Running integration tests for ZscalerTwo..."
-	@TF_ACC=1 go test -v -cover ./zia -timeout 120m -run ^$(integration_zs2_tests)$$
+	@TF_ACC=1 go test -v -cover ./zia -timeout 30m -run ^$(integration_zs2_tests)$$
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
