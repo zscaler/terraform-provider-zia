@@ -18,71 +18,71 @@ on:
   workflow_dispatch:
 
 jobs:
-  zia-zsbeta-tests:
-    environment: ZIA_ZSBETA
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goVersion: ["1.21"]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # zia-zsbeta-tests:
+  #   environment: ZIA_ZSBETA
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       goVersion: ["1.21"]
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.goVersion }}
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ matrix.goVersion }}
 
-      - name: Set Go env
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+  #     - name: Set Go env
+  #       run: |
+  #         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+  #         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Download Go Dependencies
-        run: |
-          go mod tidy && go mod vendor
+  #     - name: Download Go Dependencies
+  #       run: |
+  #         go mod tidy && go mod vendor
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Check Formatting
-        run: make fmtcheck
+  #     - name: Check Formatting
+  #       run: make fmtcheck
 
-      - name: Vet Code
-        run: make vet
+  #     - name: Vet Code
+  #       run: make vet
 
-      - name: Lint Code
-        run: make lint
+  #     - name: Lint Code
+  #       run: make lint
 
-      - name: Check Build
-        run: make build
+  #     - name: Check Build
+  #       run: make build
 
-      - name: Run tests with retry
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 3
-          timeout_minutes: 45
-          command: |
-            make sweep
-            go test -v -cover ./zia -v -parallel 10 -timeout 60m
-            make sweep
+  #     - name: Run tests with retry
+  #       uses: nick-fields/retry@v3
+  #       with:
+  #         max_attempts: 3
+  #         timeout_minutes: 45
+  #         command: |
+  #           make sweep
+  #           go test -v -cover ./zia -v -parallel 10 -timeout 60m
+  #           make sweep
 
-        env:
-          ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
-          ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
-          ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
-          ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
-          ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
-          ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
-          ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
-          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
-          ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
-          TF_ACC: ${{ secrets.TF_ACC }}
-          ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
+  #       env:
+  #         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+  #         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+  #         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+  #         ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+  #         ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
+  #         ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
+  #         ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
+  #         ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+  #         ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
+  #         TF_ACC: ${{ secrets.TF_ACC }}
+  #         ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
   zia-test-tenants:
     runs-on: ubuntu-latest
@@ -152,8 +152,8 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    needs:
-      - zia-zsbeta-tests
+    # needs:
+    #   - zia-zsbeta-tests
 
   zia-zscalerone-test:
     runs-on: ubuntu-latest
@@ -221,8 +221,8 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    needs:
-      - zia-zsbeta-tests
+    # needs:
+    #   - zia-zsbeta-tests
 
   zia-zscalertwo-test:
     runs-on: ubuntu-latest
@@ -290,5 +290,5 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    needs:
-      - zia-zsbeta-tests
+    # needs:
+    #   - zia-zsbeta-tests

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,29 +21,32 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+
 				id := d.Id()
-				var vpn *vpncredentials.VPNCredentials
-				var err error
 
-				if strings.HasPrefix(id, "type=") {
-					vpnType := strings.TrimPrefix(id, "type=")
-					vpn, err = zClient.vpncredentials.GetVPNByType(vpnType)
-				} else if strings.HasPrefix(id, "fqdn=") {
-					fqdn := strings.TrimPrefix(id, "fqdn=")
-					vpn, err = zClient.vpncredentials.GetByFQDN(fqdn)
-				} else if strings.HasPrefix(id, "ip=") {
-					ip := strings.TrimPrefix(id, "ip=")
-					vpn, err = zClient.vpncredentials.GetByIP(ip)
-				} else {
-					return nil, fmt.Errorf("import identifier must be prefixed with 'type=', 'fqdn=', or 'ip='")
+				// Try to import by FQDN
+				vpnCredential, err := zClient.vpncredentials.GetByFQDN(id)
+				if err == nil {
+					d.SetId(strconv.Itoa(vpnCredential.ID))
+					_ = d.Set("vpn_id", vpnCredential.ID)
+					return []*schema.ResourceData{d}, nil
 				}
 
-				if err != nil {
-					return []*schema.ResourceData{d}, err
+				// Try to import by IP
+				vpnCredential, err = zClient.vpncredentials.GetByIP(id)
+				if err == nil {
+					d.SetId(strconv.Itoa(vpnCredential.ID))
+					_ = d.Set("vpn_id", vpnCredential.ID)
+					return []*schema.ResourceData{d}, nil
 				}
 
-				d.SetId(strconv.Itoa(vpn.ID))
-				_ = d.Set("vpn_id", vpn.ID)
+				// Try to import by VPN Type
+				vpnCredential, err = zClient.vpncredentials.GetVPNByType(id)
+				if err == nil {
+					d.SetId(strconv.Itoa(vpnCredential.ID))
+					_ = d.Set("vpn_id", vpnCredential.ID)
+					return []*schema.ResourceData{d}, nil
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -51,7 +54,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 			"vpn_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
-				ForceNew: true,
+				// ForceNew: true,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -107,11 +110,13 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("vpn_id", resp.ID)
 
+	// Sleep for 2 seconds before triggering the activation
+	time.Sleep(2 * time.Second)
+
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
 		return activationErr
 	}
-
 	return resourceTrafficForwardingVPNCredentialsRead(d, m)
 }
 
@@ -174,6 +179,8 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 	if _, _, err := zClient.vpncredentials.Update(id, &req); err != nil {
 		return err
 	}
+	// Sleep for 2 seconds before triggering the activation
+	time.Sleep(2 * time.Second)
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {

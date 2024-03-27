@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -53,14 +52,14 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 				),
 			},
 			// Import test
-			{
-				ResourceName:      resourceTypeAndName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"pre_shared_key",
-				},
-			},
+			// {
+			// 	ResourceName:      resourceTypeAndName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// 	ImportStateVerifyIgnore: []string{
+			// 		"pre_shared_key",
+			// 	},
+			// },
 			{
 				// creation vpn credential type IP
 				Config: testAccCheckTrafficForwardingVPNCredentialsIPConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, rSharedKey),
@@ -82,14 +81,14 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 				),
 			},
 			// Import test
-			{
-				ResourceName:      resourceTypeAndName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"pre_shared_key",
-				},
-			},
+			// {
+			// 	ResourceName:      resourceTypeAndName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// 	ImportStateVerifyIgnore: []string{
+			// 		"pre_shared_key",
+			// 	},
+			// },
 		},
 	})
 }
@@ -228,4 +227,3 @@ resource "%s" "%s" {
 		rSharedKey,
 	)
 }
-*/

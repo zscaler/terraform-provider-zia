@@ -71,26 +71,26 @@ Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automate
 
 **zia_traffic_forwarding_vpn_credentials** can be imported by using one of the following prefixes as the import ID:
 
-* `type='IP'` - Imports all VPN Credentials of type IP
+* `'IP'` - Imports all VPN Credentials of type IP
 
 ```shell
-$ terraform import zia_traffic_forwarding_vpn_credentials.example type='IP'
+$ terraform import zia_traffic_forwarding_vpn_credentials.example 'IP'
 ```
 
-* `type='UFQDN'` - Imports all VPN Credentials of type UFQDN
+* `'UFQDN'` - Imports all VPN Credentials of type UFQDN
 
 ```shell
-$ terraform import zia_traffic_forwarding_vpn_credentials.this type='UFQDN'
+$ terraform import zia_traffic_forwarding_vpn_credentials.this 'UFQDN'
 ```
 
-* `fqdn='testvpn@example.com'` - Imports a VPN Credentials of type UFQDN containing a specific UFQDN address
+* `UFQDN'` - Imports a VPN Credentials of type UFQDN containing a specific UFQDN address
 
 ```shell
-$ terraform import zia_traffic_forwarding_vpn_credentials.example fqdn='testvpn@example.com'
+$ terraform import zia_traffic_forwarding_vpn_credentials.example 'testvpn@example.com'
 ```
 
-* `ip='1.1.1.1'` - Imports a VPN Credentials of type IP containing a specific IP address
+* `IP Address'` - Imports a VPN Credentials of type IP containing a specific IP address
 
 ```shell
-$ terraform import zia_traffic_forwarding_vpn_credentials.example ip='1.1.1.1'
+$ terraform import zia_traffic_forwarding_vpn_credentials.example '1.1.1.1'
 ```
