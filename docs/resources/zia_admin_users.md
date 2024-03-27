@@ -13,12 +13,13 @@ The **zia_admin_users** resource allows the creation and management of ZIA admin
 ## Example Usage - Organization Scope
 
 ```hcl
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "AeQ9E5w8B$"
+  password                        = "<YOURPASSWORDHERE>"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -37,12 +38,13 @@ data "zia_admin_roles" "super_admin" {
 ## Example Usage - Department Scope
 
 ```hcl
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "AeQ9E5w8B$"
+  password                        = "<YOURPASSWORDHERE>"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -68,12 +70,13 @@ data "zia_department_management" "engineering" {
 ## Example Usage - Location Scope
 
 ```hcl
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "AeQ9E5w8B$"
+  password                        = "<YOURPASSWORDHERE>"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -99,12 +102,13 @@ data "zia_location_management" "au_sydney_branch01" {
 ## Example Usage - Location Group Scope
 
 ```hcl
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_admin_users" "john_smith" {
   login_name                      = "john.smith@acme.com"
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "AeQ9E5w8B$"
+  password                        = "<YOURPASSWORDHERE>"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
