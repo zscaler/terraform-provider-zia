@@ -27,7 +27,7 @@ resource "zia_user_management" "john_ashcroft" {
  name         = "John Ashcroft"
  email        = "john.ashcroft@acme.com"
  password     = "P@ssw0rd123*"
- auth_methods = ["BASIC", "DIGEST"]
+ auth_methods = ["BASIC"]
  groups {
   id = data.zia_group_management.normal_internet.id
   }
@@ -59,7 +59,7 @@ The following attributes are supported:
 
 * `comments` - (Optional) Additional information about this user.
 * `temp_auth_email` - (Optional) Temporary Authentication Email. If you enabled one-time tokens or links, enter the email address to which the Zscaler service sends the tokens or links. If this is empty, the service will send the email to the User email.
-* `auth_methods` - (Optional) Type of authentication method to be enabled. Supported values are: ``BASIC`` and ``DIGEST``
+* `auth_methods` - (Optional) Type of authentication method to be enabled. Supported values is: ``BASIC``
 
 ## Import
 

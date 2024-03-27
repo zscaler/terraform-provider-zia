@@ -16,16 +16,20 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 2.8.0 (March, xx 2024)
+## 2.8.0 (March, 27 2024)
 
 ### Notes
 
-- Release date: **(March, xx 2024)**
+- Release date: **(March, 27 2024)**
 - Supported Terraform version: **v1.x**
 
 ### Enhacements
 
 - [PR #330](https://github.com/zscaler/terraform-provider-zia/330) - Implemented auto activation functionality to all supported resources. Configurations will now be activated during `CREATE`, `UPDATE` AND `DELETE` actions when executing `terraform apply` or `terraform destroy`, which removes the need of out of band activation or the use of the resource: `zia_activation_status`.
+
+### Fixes
+
+- [PR #330](https://github.com/zscaler/terraform-provider-zia/330) - Fixed `zia_user_management` resource to support activation pre and post user enrolment using `BASIC` authentication method.
 
 ## 2.7.33 (March, 6 2024)
 
