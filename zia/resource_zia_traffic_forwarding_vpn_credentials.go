@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,20 +21,29 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
-
 				id := d.Id()
-				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
-				if parseIDErr == nil {
-					_ = d.Set("vpn_id", idInt)
+				var vpn *vpncredentials.VPNCredentials
+				var err error
+
+				if strings.HasPrefix(id, "type=") {
+					vpnType := strings.TrimPrefix(id, "type=")
+					vpn, err = zClient.vpncredentials.GetVPNByType(vpnType)
+				} else if strings.HasPrefix(id, "fqdn=") {
+					fqdn := strings.TrimPrefix(id, "fqdn=")
+					vpn, err = zClient.vpncredentials.GetByFQDN(fqdn)
+				} else if strings.HasPrefix(id, "ip=") {
+					ip := strings.TrimPrefix(id, "ip=")
+					vpn, err = zClient.vpncredentials.GetByIP(ip)
 				} else {
-					fqdn, err := zClient.vpncredentials.GetByFQDN(id)
-					if err == nil {
-						d.SetId(strconv.Itoa(fqdn.ID))
-						_ = d.Set("vpn_id", fqdn.ID)
-					} else {
-						return []*schema.ResourceData{d}, err
-					}
+					return nil, fmt.Errorf("import identifier must be prefixed with 'type=', 'fqdn=', or 'ip='")
 				}
+
+				if err != nil {
+					return []*schema.ResourceData{d}, err
+				}
+
+				d.SetId(strconv.Itoa(vpn.ID))
+				_ = d.Set("vpn_id", vpn.ID)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
