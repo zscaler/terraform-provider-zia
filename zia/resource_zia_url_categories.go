@@ -204,6 +204,11 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp)
 	d.SetId(resp.ID)
 	_ = d.Set("category_id", resp.ID)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceURLCategoriesRead(d, m)
 }
 
@@ -290,6 +295,10 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceURLCategoriesRead(d, m)
 }
 
@@ -307,6 +316,11 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId("")
 	log.Printf("[INFO] custom url category deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

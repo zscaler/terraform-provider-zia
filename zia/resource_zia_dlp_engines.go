@@ -83,6 +83,10 @@ func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Created zia dlp engine request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("engine_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPEnginesRead(d, m)
 }
 
@@ -134,7 +138,10 @@ func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	if _, _, err := zClient.dlp_engines.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPEnginesRead(d, m)
 }
 
@@ -152,6 +159,10 @@ func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia dlp engine deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

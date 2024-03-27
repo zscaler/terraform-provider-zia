@@ -9,10 +9,10 @@ import (
 
 func resourceSecurityPolicySettings() *schema.Resource {
 	return &schema.Resource{
-		Read:   resourceSecurityPolicySettingsRead,
-		Create: resourceSecurityPolicySettingsCreate,
-		Update: resourceSecurityPolicySettingsUpdate,
-		Delete: resourceSecurityPolicySettingsDelete,
+		Read:          resourceSecurityPolicySettingsRead,
+		Create:        resourceSecurityPolicySettingsCreate,
+		Update:        resourceSecurityPolicySettingsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -78,6 +78,12 @@ func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{})
 		return err
 	}
 	d.SetId("url_list")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceSecurityPolicySettingsRead(d, m)
 }
 
@@ -89,6 +95,12 @@ func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{})
 	if err != nil {
 		return err
 	}
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceSecurityPolicySettingsRead(d, m)
 }
 
@@ -109,9 +121,5 @@ func resourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) e
 		return fmt.Errorf("couldn't read urls")
 	}
 
-	return nil
-}
-
-func resourceSecurityPolicySettingsDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }

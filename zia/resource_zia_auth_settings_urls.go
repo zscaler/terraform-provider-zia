@@ -9,10 +9,10 @@ import (
 
 func resourceAuthSettingsUrls() *schema.Resource {
 	return &schema.Resource{
-		Read:   resourceAuthSettingsUrlsRead,
-		Create: resourceAuthSettingsUrlsCreate,
-		Update: resourceAuthSettingsUrlsUpdate,
-		Delete: resourceAuthSettingsUrlsDelete,
+		Read:          resourceAuthSettingsUrlsRead,
+		Create:        resourceAuthSettingsUrlsCreate,
+		Update:        resourceAuthSettingsUrlsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -70,6 +70,10 @@ func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 	d.SetId("exempted_urls")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceAuthSettingsUrlsRead(d, m)
 }
 
@@ -81,9 +85,10 @@ func resourceAuthSettingsUrlsUpdate(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	return resourceAuthSettingsUrlsRead(d, m)
-}
 
-func resourceAuthSettingsUrlsDelete(d *schema.ResourceData, m interface{}) error {
-	return nil
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+	return resourceAuthSettingsUrlsRead(d, m)
 }

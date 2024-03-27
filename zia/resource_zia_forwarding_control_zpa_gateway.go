@@ -133,6 +133,10 @@ func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interfa
 	log.Printf("[INFO] Created forwarding control zpa gateway request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("gateway_id", resp.ID)
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceForwardingControlZPAGatewayRead(d, m)
 }
 
@@ -206,7 +210,10 @@ func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interfa
 	if _, err := zClient.zpa_gateways.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceForwardingControlZPAGatewayRead(d, m)
 }
 
@@ -235,6 +242,10 @@ func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interfa
 	}
 	d.SetId("")
 	log.Printf("[INFO] forwarding control zpa gateway deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

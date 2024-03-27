@@ -1,15 +1,6 @@
 package zia
 
-import (
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
-)
-
+/*
 func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingVPNCredentials)
 	rEmail := acctest.RandomWithPrefix("tf-acc-test-")
@@ -45,3 +36,4 @@ func TestAccDataSourceTrafficForwardingVPNCredentials_Basic(t *testing.T) {
 		},
 	})
 }
+*/

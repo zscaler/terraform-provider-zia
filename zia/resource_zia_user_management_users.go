@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -80,7 +81,6 @@ func resourceUserManagement() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
 						"BASIC",
-						"DIGEST",
 					}, false),
 				},
 			},
@@ -141,6 +141,14 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
 	authMethods := SetToStringList(d, "auth_methods")
 	if len(authMethods) > 0 {
@@ -154,6 +162,13 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("user_id", resp.ID)
+
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceUserManagementRead(d, m)
 }
 
@@ -212,6 +227,15 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 	if _, _, err := zClient.users.Update(id, &req); err != nil {
 		return err
 	}
+
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	authMethods := SetToStringList(d, "auth_methods")
 	if (d.HasChange("password") || d.HasChange("auth_methods")) && len(authMethods) > 0 {
 		_, err := zClient.users.EnrollUser(id, users.EnrollUserRequest{
@@ -222,6 +246,15 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 			log.Printf("[ERROR] enrolling user failed: %v\n", err)
 		}
 	}
+
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceUserManagementRead(d, m)
 }
 
@@ -254,6 +287,15 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 
 	d.SetId("")
 	log.Printf("[INFO] user deleted")
+
+	// Sleep for 5 seconds before triggering the activation
+	time.Sleep(5 * time.Second)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return nil
 }
 

@@ -76,6 +76,12 @@ func resourceRuleLabelsCreate(d *schema.ResourceData, m interface{}) error {
 	log.Printf("[INFO] Created zia rule labels request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("rule_label_id", resp.ID)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceRuleLabelsRead(d, m)
 }
 
@@ -126,6 +132,11 @@ func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return resourceRuleLabelsRead(d, m)
 }
 
@@ -156,6 +167,12 @@ func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia rule label deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
+
 	return nil
 }
 

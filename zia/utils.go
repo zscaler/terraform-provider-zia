@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
@@ -182,4 +183,19 @@ func contains(slice []string, element string) bool {
 		}
 	}
 	return false
+}
+
+// Helper function to trigger configuration activation
+func triggerActivation(zClient *Client) error {
+	// Assuming the activation request doesn't need specific details from the rule labels
+	req := activation.Activation{Status: "ACTIVE"}
+	log.Printf("[INFO] Triggering configuration activation\n%+v\n", req)
+
+	_, err := zClient.activation.CreateActivation(req)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[INFO] Configuration activation triggered successfully.")
+	return nil
 }

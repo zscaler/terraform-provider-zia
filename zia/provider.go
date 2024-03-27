@@ -184,3 +184,7 @@ func envDefaultFunc(k string) schema.SchemaDefaultFunc {
 		return nil, nil
 	}
 }
+
+func resourceFuncNoOp(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
+	return nil
+}

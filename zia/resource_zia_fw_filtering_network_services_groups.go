@@ -93,6 +93,11 @@ func resourceFWNetworkServiceGroupsCreate(d *schema.ResourceData, m interface{})
 	log.Printf("[INFO] Created zia network service groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("group_id", resp.ID)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWNetworkServiceGroupsRead(d, m)
 }
 
@@ -158,7 +163,10 @@ func resourceFWNetworkServiceGroupsUpdate(d *schema.ResourceData, m interface{})
 	if _, _, err := zClient.networkservicegroups.UpdateNetworkServiceGroups(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceFWNetworkServiceGroupsRead(d, m)
 }
 
@@ -189,6 +197,11 @@ func resourceFWNetworkServiceGroupsDelete(d *schema.ResourceData, m interface{})
 	}
 	d.SetId("")
 	log.Printf("[INFO] network service groups deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

@@ -69,8 +69,28 @@ The following arguments are supported:
 Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
 [Visit](https://github.com/zscaler/zscaler-terraformer)
 
-**zia_traffic_forwarding_vpn_credentials** can be imported by using `<VPN_ID>` as the import ID.
+**zia_traffic_forwarding_vpn_credentials** can be imported by using one of the following prefixes as the import ID:
+
+* `'IP'` - Imports all VPN Credentials of type IP
 
 ```shell
-terraform import zia_traffic_forwarding_vpn_credentials.example <vpn_id>
+$ terraform import zia_traffic_forwarding_vpn_credentials.example 'IP'
+```
+
+* `'UFQDN'` - Imports all VPN Credentials of type UFQDN
+
+```shell
+$ terraform import zia_traffic_forwarding_vpn_credentials.this 'UFQDN'
+```
+
+* `UFQDN'` - Imports a VPN Credentials of type UFQDN containing a specific UFQDN address
+
+```shell
+$ terraform import zia_traffic_forwarding_vpn_credentials.example 'testvpn@example.com'
+```
+
+* `IP Address'` - Imports a VPN Credentials of type IP containing a specific IP address
+
+```shell
+$ terraform import zia_traffic_forwarding_vpn_credentials.example '1.1.1.1'
 ```

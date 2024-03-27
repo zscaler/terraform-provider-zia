@@ -19,5 +19,5 @@ Urgent, production related Terraform issues can be resolved via direct interacti
 
 ## Contact
 
-For questions or requests that cannot be submitted via GitHub Issues, please contact zscaler-partner-labs@z-bd.com with zia-terraform-provider" in the subject line.
+For questions or requests that cannot be submitted via GitHub Issues, please contact devrel@zscaler.com with zia-terraform-provider" in the subject line.
 We also provide a [private Slack channel](https://docs.google.com/forms/d/e/1FAIpQLSfkd3EMkLQdIWMNQ7QCr8TrH_xVSwSYcQshfBPDEZFOaF28qA/viewform?usp=sf_link) where you can submit your questions to the provider maintainers. Notice that this form will be reviewed and approved by Zscaler Technology Alliances team.

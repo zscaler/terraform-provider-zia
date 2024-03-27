@@ -95,6 +95,11 @@ func resourceNetworkServicesCreate(d *schema.ResourceData, m interface{}) error 
 	log.Printf("[INFO] Created zia network services request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("network_service_id", resp.ID)
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceNetworkServicesRead(d, m)
 }
 
@@ -162,7 +167,10 @@ func resourceNetworkServicesUpdate(d *schema.ResourceData, m interface{}) error 
 	if _, _, err := zClient.networkservices.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceNetworkServicesRead(d, m)
 }
 
@@ -193,6 +201,11 @@ func resourceNetworkServicesDelete(d *schema.ResourceData, m interface{}) error 
 	}
 	d.SetId("")
 	log.Printf("[INFO] network service deleted")
+
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 

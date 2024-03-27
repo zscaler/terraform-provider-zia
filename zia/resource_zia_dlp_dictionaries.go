@@ -259,7 +259,10 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 	log.Printf("[INFO] Created zia dlp dictionaries request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("dictionary_id", resp.ID)
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPDictionariesRead(d, m)
 }
 
@@ -368,7 +371,10 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
 	}
-
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return resourceDLPDictionariesRead(d, m)
 }
 
@@ -386,6 +392,10 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	}
 	d.SetId("")
 	log.Printf("[INFO] dlp dictionary deleted")
+	// Trigger activation after creating the rule label
+	if activationErr := triggerActivation(zClient); activationErr != nil {
+		return activationErr
+	}
 	return nil
 }
 
