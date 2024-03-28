@@ -23,7 +23,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type            = "UFQDN"
     fqdn            = "sjc-1-37@acme.com"
     comments        = "Example"
-    pre_shared_key = "newPassword123!"
+    pre_shared_key = "*********************"
 }
 ```
 
@@ -33,7 +33,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type            = "IP"
     ip_address      = zia_traffic_forwarding_static_ip.example.ip_address
     comments        = "Example"
-    pre_shared_key  = "newPassword123!"
+    pre_shared_key  = "*********************"
     depends_on = [ zia_traffic_forwarding_static_ip.example ]
 }
 

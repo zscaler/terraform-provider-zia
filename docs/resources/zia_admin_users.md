@@ -19,7 +19,7 @@ resource "zia_admin_users" "john_smith" {
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "<YOURPASSWORDHERE>"
+  password                        = "*********************"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -44,7 +44,7 @@ resource "zia_admin_users" "john_smith" {
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "<YOURPASSWORDHERE>"
+  password                        = "*********************"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -76,7 +76,7 @@ resource "zia_admin_users" "john_smith" {
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "<YOURPASSWORDHERE>"
+  password                        = "*********************"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -108,7 +108,7 @@ resource "zia_admin_users" "john_smith" {
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
-  password                        = "<YOURPASSWORDHERE>"
+ password                         = "*********************"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true

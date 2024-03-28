@@ -10,7 +10,9 @@ description: |-
 
 The **zia_activation_status** resource allows the activation of ZIA pending configurations. This resource must always be executed after the resource creation for successfully policy/configuration activation to occur.
 
-~> As of right now, Terraform does not provide native support for commits or post-activation configuration, so configuration and policy activations are handled out-of-band. In order to handle the activation as part of the provider, a separate source code have been developed to generate a CLI binary.
+~> **NOTE** As of right now, Terraform does not provide native support for commits or post-activation configuration, so configuration and policy activations are handled out-of-band. In order to handle the activation as part of the provider, a separate source code have been developed to generate a CLI binary.
+
+~> **NOTE** As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the activation is performed as part of the `terraform apply` during the creation or update of a resource or during the `terraform destroy` during the deletion of a resource. With this improvement the objective is to deprecate the dedicated `zia_activation_status` resource.
 
 ## Example Usage
 
