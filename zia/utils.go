@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -198,4 +199,18 @@ func triggerActivation(zClient *Client) error {
 
 	log.Printf("[INFO] Configuration activation triggered successfully.")
 	return nil
+}
+
+// Helper function to check if we should activate based on the ZIA_ACTIVATION environment variable
+func shouldActivate() bool {
+	activationEnv, exists := os.LookupEnv("ZIA_ACTIVATION")
+	if !exists {
+		return false
+	}
+	activationBool, err := strconv.ParseBool(activationEnv)
+	if err != nil {
+		log.Printf("[WARN] Error parsing ZIA_ACTIVATION env var as bool: %v", err)
+		return false
+	}
+	return activationBool
 }
