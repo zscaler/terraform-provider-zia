@@ -13,16 +13,17 @@ resource "zia_location_management" "usa_sjc37"{
     ip_addresses = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
     depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37, zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
     vpn_credentials {
-       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.vpn_credental_id
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
        type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
     }
 }
 
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     type = "UFQDN"
     fqdn = "usa_sjc37@acme.com"
     comments = "USA - San Jose IPSec Tunnel"
-    pre_shared_key = "P@ass0rd123!"
+    pre_shared_key = "*************"
 }
 
 resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{

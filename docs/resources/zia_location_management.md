@@ -33,7 +33,7 @@ resource "zia_location_management" "usa_sjc37"{
     ips_control                 = true
     ip_addresses                = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
     vpn_credentials {
-       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.vpn_credental_id
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
        type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
     }
     depends_on = [zia_traffic_forwarding_vpn_credentials.usa_sjc37, zia_traffic_forwarding_static_ip.usa_sjc37 ]

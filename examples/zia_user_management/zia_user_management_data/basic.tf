@@ -2,7 +2,7 @@
 resource "zia_user_management" "john_ashcroft" {
  name = "John Ashcroft"
  email = "john.ashcroft@acme.com"
- password = "<YOURPASSWORDHERE>"
+ password = "********************"
  auth_methods = ["BASIC"]
  groups {
   id = [ data.zia_group_management.normal_internet.id,

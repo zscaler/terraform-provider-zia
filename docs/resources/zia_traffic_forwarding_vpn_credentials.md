@@ -18,6 +18,7 @@ The **zia_traffic_forwarding_vpn_credentials** creates and manages VPN credentia
 ## Example Usage
 
 ```hcl
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 # ZIA Traffic Forwarding - VPN Credentials (UFQDN)
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type            = "UFQDN"
@@ -29,6 +30,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "example"{
 
 ```hcl
 # ZIA Traffic Forwarding - VPN Credentials (IP)
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_traffic_forwarding_vpn_credentials" "example"{
     type            = "IP"
     ip_address      = zia_traffic_forwarding_static_ip.example.ip_address

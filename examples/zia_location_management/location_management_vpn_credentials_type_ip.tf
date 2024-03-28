@@ -13,18 +13,19 @@ resource "zia_location_management" "usa_sjc37"{
     ip_addresses = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
     depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37, zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
     vpn_credentials {
-       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.vpn_credental_id
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
        type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
        ip_address = zia_traffic_forwarding_static_ip.usa_sjc37.ip_address
     }
 }
 
+######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     type        = "IP"
     ip_address  =  zia_traffic_forwarding_static_ip.usa_sjc37.ip_address
     depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37 ]
     comments    = "Created via Terraform"
-    pre_shared_key = "newPassword123!"
+    pre_shared_key = "******************"
 }
 
 resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
