@@ -158,7 +158,7 @@ In addition to all arguments above, the following attributes are exported:
 `destinations` supports the following attributes:
 
 * `dest_addresses`** - (list) -  IP addresses and fully qualified domain names (FQDNs), if the domain has multiple destination IP addresses or if its IP addresses may change. For IP addresses, you can enter individual IP addresses, subnets, or address ranges. If adding multiple items, hit Enter after each entry.
-* `dest_countries`** - (list) estination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries. Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes).
+* `dest_countries`** - (list) destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries. Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes).
 * `res_categories`** - (list) List of destination domain categories to which the rule applies.
 * `dest_ip_categories`** - (list) identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
       - `id` - (int) Identifier that uniquely identifies an entity

@@ -296,62 +296,10 @@ func dataSourceDlpWebRules() *schema.Resource {
 					},
 				},
 			},
-			"auditor": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The auditor to which the DLP policy rule must be applied.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"external_auditor_email": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The email address of an external auditor to whom DLP email notifications are sent.",
-			},
-			"notification_template": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The template used for DLP notification emails.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
 			},
 			"match_only": {
 				Type:        schema.TypeBool,
@@ -367,32 +315,6 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "The admin that modified the DLP policy rule last.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Identifier that uniquely identifies an entity",
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"icap_server": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The DLP server, using ICAP, to which the transaction content is forwarded.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -722,23 +644,7 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 
-		if err := d.Set("auditor", flattenIDExtensionsList(resp.Auditor)); err != nil {
-			return err
-		}
-
-		if err := d.Set("auditor", flattenIDExtensionsList(resp.Auditor)); err != nil {
-			return err
-		}
-
-		if err := d.Set("notification_template", flattenIDExtensionsList(resp.NotificationTemplate)); err != nil {
-			return err
-		}
-
 		if err := d.Set("last_modified_by", flattenIDExtensionsList(resp.LastModifiedBy)); err != nil {
-			return err
-		}
-
-		if err := d.Set("icap_server", flattenIDExtensionsList(resp.IcapServer)); err != nil {
 			return err
 		}
 

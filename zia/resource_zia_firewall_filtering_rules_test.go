@@ -52,6 +52,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 
 			// Update test
@@ -72,6 +73,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 			// Import test
 			{
@@ -225,7 +227,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 1
+	order = 4
 	enable_full_logging = "%s"
 	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	nw_services {
