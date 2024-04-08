@@ -21,6 +21,7 @@ const (
 	FWRuleResourceDescription = "this is an acceptance test"
 	FWRuleResourceAction      = "ALLOW"
 	FWRuleResourceState       = "ENABLED"
+	FWRuleOrder               = "1"
 	FWRuleResourceStateUpdate = "DISABLED"
 	FWRuleEnableLogging       = false
 )

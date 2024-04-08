@@ -702,7 +702,7 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 15) // create a ticker that ticks every half minute
+	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -736,7 +736,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 10)
+			time.Sleep(time.Second * 5)
 		}
 	}
 }

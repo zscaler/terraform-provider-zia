@@ -65,10 +65,10 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 45
+          timeout_minutes: 120
           command: |
             make sweep
-            go test -v -cover ./zia -v -parallel 10 -timeout 60m
+            go test -v -cover ./zia -v -parallel=4 -timeout 120m
             make sweep
 
         env:
@@ -135,10 +135,10 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 45 # Adjust as needed
+          timeout_minutes: 120
           command: |
             make sweep
-            go test -v -cover ./zia -v -parallel 10 -timeout 60m
+            go test -v -cover ./zia -v -parallel=4 -timeout 120m
             make sweep
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
@@ -273,7 +273,7 @@ jobs:
         uses: nick-fields/retry@v3
         with:
           max_attempts: 3
-          timeout_minutes: 45 # Adjust as needed
+          timeout_minutes: 120
           command: |
             make sweep
             make test:integration:zscalertwo

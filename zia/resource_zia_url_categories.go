@@ -226,7 +226,7 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
-		return fmt.Errorf("no url category rule id is set")
+		return fmt.Errorf("no url category id is set")
 	}
 	resp, err := zClient.urlcategories.Get(id)
 

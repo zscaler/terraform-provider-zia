@@ -75,6 +75,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"order": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "Rule order number of the Firewall Filtering policy rule",
 			},
 			"rank": {

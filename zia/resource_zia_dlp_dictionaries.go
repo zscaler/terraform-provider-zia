@@ -70,15 +70,24 @@ func resourceDLPDictionaries() *schema.Resource {
 			"phrases": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
+				MaxItems: 256,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"PHRASE_COUNT_TYPE_UNIQUE",
+								"PHRASE_COUNT_TYPE_ALL",
+							}, false),
 						},
 						"phrase": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 					},
 				},
@@ -96,6 +105,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
+				MaxItems:    8,
 				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -104,13 +114,17 @@ func resourceDLPDictionaries() *schema.Resource {
 							Optional:    true,
 							Computed:    true,
 							Description: "The action applied to a DLP dictionary using patterns",
+							ValidateFunc: validation.StringInSlice([]string{
+								"PATTERN_COUNT_TYPE_ALL",
+								"PATTERN_COUNT_TYPE_UNIQUE",
+							}, false),
 						},
 						"pattern": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							Description:  "DLP dictionary pattern",
-							ValidateFunc: validation.StringLenBetween(0, 128),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
 				},

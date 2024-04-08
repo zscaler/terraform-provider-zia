@@ -43,6 +43,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceState),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "order", variable.FWRuleOrder),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -52,9 +53,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
-
 			// Update test
 			{
 				Config: testAccCheckFirewallFilteringRuleConfigure(resourceTypeAndName, generatedName, generatedName, variable.FWRuleResourceDescription, variable.FWRuleResourceAction, variable.FWRuleResourceStateUpdate, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL),
@@ -64,6 +63,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FWRuleResourceDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.FWRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FWRuleResourceStateUpdate),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "order", variable.FWRuleOrder),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -73,7 +73,6 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			// Import test
 			{
@@ -227,7 +226,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 4
+	order = 1
 	enable_full_logging = "%s"
 	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	nw_services {
