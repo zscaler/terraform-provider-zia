@@ -66,6 +66,24 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 	}
 }
 
+func setSingleIDSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		Computed:    true,
+		MaxItems:    maxItems,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+			},
+		},
+	}
+}
+
 func setIdNameSchemaCustom(maxItems int, description string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -139,11 +157,16 @@ func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.ID
 	return []common.IDNameExtensions{}
 }
 
-func expandIDNameExtensionsListSingle(d *schema.ResourceData, key string) *common.IDNameExtensions {
-	l := expandIDNameExtensionsSet(d, key)
-	if len(l) > 0 {
-		r := l[0]
-		return &r
+func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common.IDCustom {
+	if v, ok := d.GetOk(key); ok {
+		setList := v.(*schema.Set).List()
+		if len(setList) > 0 {
+			if idMap, ok := setList[0].(map[string]interface{}); ok {
+				return &common.IDCustom{
+					ID: idMap["id"].(int),
+				}
+			}
+		}
 	}
 	return nil
 }
@@ -278,13 +301,13 @@ func flattenIDExtensionsList(idNameExtension *common.IDNameExtensions) []interfa
 	return flattenedList
 }
 
-func flattenIDExtensionListIDs(idNameExtensions *common.IDNameExtensions) []interface{} {
-	if idNameExtensions == nil || idNameExtensions.ID == 0 && idNameExtensions.Name == "" {
+func flattenCustomIDSet(customID *common.IDCustom) []interface{} {
+	if customID == nil || customID.ID == 0 {
 		return nil
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"id": []int{idNameExtensions.ID},
+			"id": customID.ID,
 		},
 	}
 }
@@ -679,7 +702,7 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 15) // create a ticker that ticks every half minute
+	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -713,7 +736,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 10)
+			time.Sleep(time.Second * 5)
 		}
 	}
 }

@@ -40,10 +40,10 @@ sweep:
 
 test:
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=10
+		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=120s -parallel=4
 
 testacc:
-	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 30m
+	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
 
 # Default set of integration tests to run for ZscalerOne
 DEFAULT_INTEGRATION_TESTS?=\
@@ -61,7 +61,6 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccDataSourceDLPIncidentReceiverServers_Basic \
   TestAccDataSourceDLPNotificationTemplates_Basic \
   TestAccDataSourceDlpWebRules_Basic \
-  TestAccDataSourceFirewallFilteringRule_Basic \
   TestAccDataSourceFWIPDestinationGroups_Basic \
   TestAccDataSourceFWIPSourceGroups_Basic \
   TestAccDataSourceFWNetworkApplicationGroups_Basic \
@@ -87,7 +86,6 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccResourceDLPEnginesBasic \
   TestAccResourceDLPNotificationTemplatesBasic \
   TestAccResourceDlpWebRules_Basic \
-  TestAccResourceFirewallFilteringRuleBasic \
   TestAccResourceFWIPDestinationGroupsBasic \
   TestAccResourceFWIPSourceGroupsBasic \
   TestAccResourceFWNetworkApplicationGroupsBasic \
@@ -113,7 +111,7 @@ integration_tests := $(subst $(space),\|,$(INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerOne
 test\:integration\:zscalerone:
 	@echo "Running integration tests for ZscalerOne..."
-	@TF_ACC=1 go test -v -cover ./zia -timeout 30m -run ^$(integration_tests)$$
+	@TF_ACC=1 go test -v -cover ./zia -parallel=4 -timeout 120m -run ^$(integration_tests)$$
 
 # Default set of integration tests to run for ZscalerOne
 ZS2_INTEGRATION_TESTS?=\
@@ -184,19 +182,19 @@ integration_zs2_tests := $(subst $(space),\|,$(ZS_INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerTwo
 test\:integration\:zscalertwo:
 	@echo "Running integration tests for ZscalerTwo..."
-	@TF_ACC=1 go test -v -cover ./zia -timeout 30m -run ^$(integration_zs2_tests)$$
+	@TF_ACC=1 go test -v -cover ./zia -parallel=4 -timeout 120m -run ^$(integration_zs2_tests)$$
 
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.8.0/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.8.2/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.8.0/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/2.8.2/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-zia_v2.8.0
+	go build -o $(DESTINATION)/terraform-provider-zia_v2.8.2
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."

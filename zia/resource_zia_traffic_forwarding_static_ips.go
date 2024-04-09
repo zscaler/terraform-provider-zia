@@ -106,12 +106,16 @@ func resourceTrafficForwardingStaticIPCreate(d *schema.ResourceData, m interface
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("static_ip_id", resp.ID)
 
-	// Sleep for 2 seconds before triggering the activation
+	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	//Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return resourceTrafficForwardingStaticIPRead(d, m)
@@ -170,12 +174,16 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 	if _, _, err := zClient.staticips.Update(id, &req); err != nil {
 		return err
 	}
-	// Sleep for 2 seconds before triggering the activation
+	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	//Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return resourceTrafficForwardingStaticIPRead(d, m)
@@ -212,9 +220,16 @@ func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface
 	d.SetId("")
 	log.Printf("[INFO] static ip deleted")
 
-	//Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return nil

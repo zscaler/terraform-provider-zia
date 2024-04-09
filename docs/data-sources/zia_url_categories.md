@@ -11,7 +11,15 @@ description: |-
 Use the **zia_url_categories** data source to get information about all or custom URL categories. By default, the response includes keywords.
 
 ```hcl
-data "zia_url_categories" "example"{
+// Query a URL Category by Name
+data "zia_url_categories" "this"{
+    configured_name = "Example"
+}
+```
+
+```hcl
+// Query a URL Category by its Custom ID
+data "zia_url_categories" "this"{
     id = "CUSTOM_08"
 }
 ```
@@ -37,7 +45,7 @@ In addition to all arguments above, the following attributes are exported:
 * `type` - (String) Type of the custom categories. `URL_CATEGORY`, `TLD_CATEGORY`, `ALL`
 * `urls` - (List of String) Custom URLs to add to a URL category. Up to 25,000 custom URLs can be added per organization across all categories (including bandwidth classes).
 * `urls_retaining_parent_category_count` - (Number) The number of custom URLs associated to the URL category, that also need to be retained under the original parent category.
-* `val` - (Number)
+* `val` - (Number) The unique ID for the URL category.
 
 * `scopes` - (List of Object) Scope of the custom categories.
   * `scope_group_member_entities` - (List of Object) Only applicable for the LOCATION_GROUP admin scope type, in which case this attribute gives the list of ID/name pairs of locations within the location group. The attribute name is subject to change.

@@ -296,9 +296,18 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
 		break
 	}
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 
@@ -463,9 +472,18 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		markOrderRuleAsDone(req.ID, "url_filtering_rules")
 		break
 	}
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 
@@ -484,9 +502,18 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 
 	d.SetId("")
 	log.Printf("[INFO] url filtering rule deleted")
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 

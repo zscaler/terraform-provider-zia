@@ -222,9 +222,9 @@ func resourceDlpWebRules() *schema.Resource {
 			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
 			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"url_categories":        setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied."),
-			"auditor":               setIDsSchemaTypeCustom(intPtr(1), "The auditor to which the DLP policy rule must be applied."),
-			"notification_template": setIDsSchemaTypeCustom(intPtr(1), "The template used for DLP notification emails."),
-			"icap_server":           setIDsSchemaTypeCustom(intPtr(1), "The DLP server, using ICAP, to which the transaction content is forwarded."),
+			"auditor":               setSingleIDSchemaTypeCustom(1, "The auditor to which the DLP policy rule must be applied."),
+			"notification_template": setSingleIDSchemaTypeCustom(1, "The template used for DLP notification emails."),
+			"icap_server":           setSingleIDSchemaTypeCustom(1, "The DLP server, using ICAP, to which the transaction content is forwarded."),
 		},
 	}
 }
@@ -307,9 +307,18 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 			break
 		}
 	}
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 
@@ -389,15 +398,15 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if err := d.Set("auditor", flattenIDExtensionListIDs(resp.Auditor)); err != nil {
+	if err := d.Set("auditor", flattenCustomIDSet(resp.Auditor)); err != nil {
 		return err
 	}
 
-	if err := d.Set("notification_template", flattenIDExtensionListIDs(resp.NotificationTemplate)); err != nil {
+	if err := d.Set("notification_template", flattenCustomIDSet(resp.NotificationTemplate)); err != nil {
 		return err
 	}
 
-	if err := d.Set("icap_server", flattenIDExtensionListIDs(resp.IcapServer)); err != nil {
+	if err := d.Set("icap_server", flattenCustomIDSet(resp.IcapServer)); err != nil {
 		return err
 	}
 
@@ -485,9 +494,18 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 			break
 		}
 	}
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 
@@ -506,9 +524,18 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	d.SetId("")
 	log.Printf("[INFO] web dlp rule deleted")
 
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 
@@ -537,9 +564,9 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
 		UserRiskScoreLevels:      SetToStringList(d, "user_risk_score_levels"),
 		SubRules:                 SetToStringList(d, "sub_rules"),
-		Auditor:                  expandIDNameExtensionsListSingle(d, "auditor"),
-		NotificationTemplate:     expandIDNameExtensionsListSingle(d, "notification_template"),
-		IcapServer:               expandIDNameExtensionsListSingle(d, "icap_server"),
+		Auditor:                  expandIDNameExtensionsSetSingle(d, "auditor"),
+		NotificationTemplate:     expandIDNameExtensionsSetSingle(d, "notification_template"),
+		IcapServer:               expandIDNameExtensionsSetSingle(d, "icap_server"),
 		Locations:                expandIDNameExtensionsSet(d, "locations"),
 		LocationGroups:           expandIDNameExtensionsSet(d, "location_groups"),
 		Groups:                   expandIDNameExtensionsSet(d, "groups"),

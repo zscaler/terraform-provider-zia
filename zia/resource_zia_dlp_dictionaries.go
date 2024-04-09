@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -69,15 +70,24 @@ func resourceDLPDictionaries() *schema.Resource {
 			"phrases": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
+				MaxItems: 256,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"PHRASE_COUNT_TYPE_UNIQUE",
+								"PHRASE_COUNT_TYPE_ALL",
+							}, false),
 						},
 						"phrase": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
 					},
 				},
@@ -95,6 +105,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
+				MaxItems:    8,
 				Description: "List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -103,13 +114,17 @@ func resourceDLPDictionaries() *schema.Resource {
 							Optional:    true,
 							Computed:    true,
 							Description: "The action applied to a DLP dictionary using patterns",
+							ValidateFunc: validation.StringInSlice([]string{
+								"PATTERN_COUNT_TYPE_ALL",
+								"PATTERN_COUNT_TYPE_UNIQUE",
+							}, false),
 						},
 						"pattern": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							Description:  "DLP dictionary pattern",
-							ValidateFunc: validation.StringLenBetween(0, 128),
+							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 					},
 				},
@@ -259,10 +274,18 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 	log.Printf("[INFO] Created zia dlp dictionaries request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("dictionary_id", resp.ID)
-	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return resourceDLPDictionariesRead(d, m)
 }
 
@@ -371,10 +394,18 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
 		return err
 	}
-	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return resourceDLPDictionariesRead(d, m)
 }
 
@@ -392,10 +423,18 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	}
 	d.SetId("")
 	log.Printf("[INFO] dlp dictionary deleted")
-	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	if shouldActivate() {
+		if activationErr := triggerActivation(zClient); activationErr != nil {
+			return activationErr
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
+
 	return nil
 }
 

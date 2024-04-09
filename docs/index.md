@@ -105,6 +105,11 @@ $env:zia_cloud  = '<zscaler_cloud_name>'
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>
 
+### ZIA Configuration Activation
+
+The ZIA platform requires every configuration to be activated. As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the provider supports implicit activation. In order to make this process more flexible, we have implemented a dedicated environment variable `ZIA_ACTIVATION`, which when set to `true` will implicitly activate the changes as resources are configured.
+If the environment variable `ZIA_ACTIVATION` is not set, you must then use the out of band activation method described here [zia activator](guides/zia-activator-overview.md) or leverage the dedicated activation resource `zia_activation_status`.
+
 ### Zscaler Sandbox Authentication
 
 The ZIA Terraform provider requires both the `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` in order to authenticate to the Zscaler Cloud Sandbox environment. For details on how obtain the API Token visit the Zscaler help portal [About Sandbox API Token](https://help.zscaler.com/zia/about-sandbox-api-token)
@@ -115,11 +120,11 @@ Terraform uses goroutines to speed up deployment, but the number of parallel
 operations is launches exceeds
 [what is recommended](https://help.zscaler.com/zia/about-rate-limiting):
 
-⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests ONE, when configuring the following resources rules:
+⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests to ONE, when configuring the following resources rules:
     - ``zia_dlp_web_rules``
     - ``zia_url_filtering_rules``
     - ``zia_firewall_filtering_rule``
-    - ``zia_firewall_filtering_rule``
+    - ``zia_forwarding_control_rule``
 
 In order to accomplish this, make sure you set the [parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or below this limit to prevent performance impacts.
 
