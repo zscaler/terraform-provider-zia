@@ -16,16 +16,16 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 2.8.2 (March, 28 2024)
+## 2.8.2 (April, 8 2024)
 
 ### Notes
 
-- Release date: **(March, 28 2024)**
+- Release date: **(April, 8 2024)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
 
-- [PR #331](https://github.com/zscaler/terraform-provider-zia/331) - Implemented optional environment variable `ZIA_ACTIVATION` for optional configuration activation. This is an improved version of the initial release [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) where activations were done implicitly for every resource. With this enhancement the activation will only occur when this environment variable is set to true.
+- [PR #332](https://github.com/zscaler/terraform-provider-zia/332) - Implemented optional environment variable `ZIA_ACTIVATION` for optional configuration activation. This is an improved version of the initial release [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) where activations were done implicitly for every resource. With this enhancement the activation will only occur when this environment variable is set to true.
 
 ## 2.8.1 (March, 27 2024)
 

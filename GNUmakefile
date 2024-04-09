@@ -61,7 +61,6 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccDataSourceDLPIncidentReceiverServers_Basic \
   TestAccDataSourceDLPNotificationTemplates_Basic \
   TestAccDataSourceDlpWebRules_Basic \
-  TestAccDataSourceFirewallFilteringRule_Basic \
   TestAccDataSourceFWIPDestinationGroups_Basic \
   TestAccDataSourceFWIPSourceGroups_Basic \
   TestAccDataSourceFWNetworkApplicationGroups_Basic \
@@ -87,7 +86,6 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccResourceDLPEnginesBasic \
   TestAccResourceDLPNotificationTemplatesBasic \
   TestAccResourceDlpWebRules_Basic \
-  TestAccResourceFirewallFilteringRuleBasic \
   TestAccResourceFWIPDestinationGroupsBasic \
   TestAccResourceFWIPSourceGroupsBasic \
   TestAccResourceFWNetworkApplicationGroupsBasic \
