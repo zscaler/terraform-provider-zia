@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.8.21 (April, 8 2024)
+
+### Notes
+
+- Release date: **(April, 8 2024)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #336](https://github.com/zscaler/terraform-provider-zia/336) - Upgraded provider to [Zscaler-SDK-GO v2.4.35](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.4.35)
+
+## 2.8.2 (April, 8 2024)
+
+### Notes
+
+- Release date: **(April, 8 2024)**
+- Supported Terraform version: **v1.x**
+
 ## 2.8.2 (April, 8 2024)
 
 ### Notes
