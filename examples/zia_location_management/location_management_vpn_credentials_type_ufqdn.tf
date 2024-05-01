@@ -10,8 +10,7 @@ resource "zia_location_management" "usa_sjc37"{
     xff_forward_enabled = true
     ofw_enabled = true
     ips_control = true
-    ip_addresses = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
-    depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37, zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
+    depends_on = [ zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
        type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
@@ -24,11 +23,4 @@ resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     fqdn = "usa_sjc37@acme.com"
     comments = "USA - San Jose IPSec Tunnel"
     pre_shared_key = "*************"
-}
-
-resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
-    ip_address =  "1.1.1.1"
-    routable_ip = true
-    comment = "SJC37 - Static IP"
-    geo_override = false
 }

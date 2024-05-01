@@ -68,7 +68,7 @@ jobs:
           timeout_minutes: 120
           command: |
             make sweep
-            go test -v -cover ./zia -v -parallel=4 -timeout 120m
+            make test:integration:zia
             make sweep
 
         env:
@@ -83,6 +83,13 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.out
+          fail_ci_if_error: true
 
   zia-test-tenants:
     runs-on: ubuntu-latest
@@ -138,7 +145,7 @@ jobs:
           timeout_minutes: 120
           command: |
             make sweep
-            go test -v -cover ./zia -v -parallel=4 -timeout 120m
+            make test:integration:zia
             make sweep
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
@@ -152,8 +159,13 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    # needs:
-    #   - zia-zsbeta-tests
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.out
+          fail_ci_if_error: true
 
   zia-zscalerone-test:
     runs-on: ubuntu-latest
@@ -221,8 +233,13 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    # needs:
-    #   - zia-zsbeta-tests
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.out
+          fail_ci_if_error: true
 
   zia-zscalertwo-test:
     runs-on: ubuntu-latest
@@ -290,5 +307,10 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-    # needs:
-    #   - zia-zsbeta-tests
+
+      - name: Publish test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.out
+          fail_ci_if_error: true
