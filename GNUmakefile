@@ -40,14 +40,14 @@ sweep:
 
 test:
 	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=120s -parallel=4
+		xargs -t -n4 go test $(TESTARGS) $(TEST_FILTER) -timeout=30s -parallel=10
 
 testacc:
 	TF_ACC=1 go test $(TEST) $(TESTARGS) $(TEST_FILTER) -timeout 120m
 
 test\:integration\:zia:
 	@echo "$(COLOR_ZSCALER)Running zia integration tests...$(COLOR_NONE)"
-	go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel 20 -timeout 60m
+	@TF_ACC=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel 20 -timeout 120m
 	go tool cover -html=coverage.out -o coverage.html
 
 # Default set of integration tests to run for ZscalerOne
@@ -116,8 +116,8 @@ integration_tests := $(subst $(space),\|,$(INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerOne
 test\:integration\:zscalerone:
 	@echo "Running integration tests for ZscalerOne..."
-	@TF_ACC=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel 4 -timeout 120m -run ^$(integration_tests)$$
-  go tool cover -html=coverage.out -o coverage.html
+	@TF_ACC=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel 20 -timeout 120m -run ^$(integration_tests)$$
+	go tool cover -html=coverage.out -o coverage.html
 
 # Default set of integration tests to run for ZscalerOne
 ZS2_INTEGRATION_TESTS?=\
@@ -188,7 +188,7 @@ integration_zs2_tests := $(subst $(space),\|,$(ZS_INTEGRATION_TESTS))
 # Target to run integration tests for ZscalerTwo
 test\:integration\:zscalertwo:
 	@echo "Running integration tests for ZscalerTwo..."
-	@TF_ACC=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel=4 -timeout 120m -run ^$(integration_zs2_tests)$$
+	@TF_ACC=1 go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./zia -parallel 20 -timeout 120m -run ^$(integration_zs2_tests)$$
 	go tool cover -html=coverage.out -o coverage.html
 
 build13: GOOS=$(shell go env GOOS)
