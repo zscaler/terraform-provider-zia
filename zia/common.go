@@ -66,12 +66,11 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 	}
 }
 
-func setSingleIDSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
+func setSingleIDSchemaTypeCustom(desc string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Optional:    true,
 		Computed:    true,
-		MaxItems:    maxItems,
 		Description: desc,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{

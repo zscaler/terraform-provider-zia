@@ -29,7 +29,7 @@ resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
 }
 
 resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
-    ip_address =  "185.211.32.39"
+    ip_address =  "1.1.1.1"
     routable_ip = true
     comment = "SJC37 - Static IP"
     geo_override = false

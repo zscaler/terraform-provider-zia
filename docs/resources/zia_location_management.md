@@ -18,7 +18,7 @@ The **zia_location_management** resource allows the creation and management of Z
 ## Example Usage
 
 ```hcl
-# ZIA Location Management
+# ZIA Location Management with UFQDN VPN Credential
 resource "zia_location_management" "usa_sjc37"{
     name                        = "USA_SJC_37"
     description                 = "Created with Terraform"
@@ -31,26 +31,57 @@ resource "zia_location_management" "usa_sjc37"{
     xff_forward_enabled         = true
     ofw_enabled                 = true
     ips_control                 = true
-    ip_addresses                = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
     vpn_credentials {
        id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
        type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
     }
-    depends_on = [zia_traffic_forwarding_vpn_credentials.usa_sjc37, zia_traffic_forwarding_static_ip.usa_sjc37 ]
+    depends_on = [zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
 }
 
 resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     type            = "UFQDN"
     fqdn            = "usa_sjc37@acme.com"
     comments        = "USA - San Jose IPSec Tunnel"
-    pre_shared_key  = "P@ass0rd123!"
+    pre_shared_key  = "***************"
+}
+```
+
+```hcl
+# ZIA Location Management with IP VPN Credential
+resource "zia_location_management" "usa_sjc37"{
+    name = "USA_SJC_37"
+    description = "Created with Terraform"
+    country = "UNITED_STATES"
+    tz = "UNITED_STATES_AMERICA_LOS_ANGELES"
+    auth_required = true
+    idle_time_in_minutes = 720
+    display_time_unit = "HOUR"
+    surrogate_ip = true
+    xff_forward_enabled = true
+    ofw_enabled = true
+    ips_control = true
+    ip_addresses = [ zia_traffic_forwarding_static_ip.usa_sjc37.ip_address ]
+    depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37, zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
+    vpn_credentials {
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
+       type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
+       ip_address = zia_traffic_forwarding_static_ip.usa_sjc37.ip_address
+    }
+}
+
+resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
+    type        = "IP"
+    ip_address  =  zia_traffic_forwarding_static_ip.usa_sjc37.ip_address
+    depends_on = [ zia_traffic_forwarding_static_ip.usa_sjc37 ]
+    comments    = "Created via Terraform"
+    pre_shared_key = "******************"
 }
 
 resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
-    ip_address          =  "1.1.1.1"
-    routable_ip         = true
-    comment             = "SJC37 - Static IP"
-    geo_override        = false
+    ip_address =  "1.1.1.1"
+    routable_ip = true
+    comment = "SJC37 - Static IP"
+    geo_override = false
 }
 ```
 
