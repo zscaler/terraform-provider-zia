@@ -368,6 +368,32 @@ func dataSourceDlpWebRules() *schema.Resource {
 					},
 				},
 			},
+			"source_ip_groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The Name-ID pairs of Source IP Groups associated to the DLP policy rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"dlp_download_scan_enabled": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -649,6 +675,9 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		}
 
 		if err := d.Set("labels", flattenIDExtensions(resp.Labels)); err != nil {
+			return err
+		}
+		if err := d.Set("source_ip_groups", flattenIDExtensions(resp.SourceIpGroups)); err != nil {
 			return err
 		}
 		if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {

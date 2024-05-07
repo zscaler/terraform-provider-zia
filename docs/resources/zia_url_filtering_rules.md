@@ -110,11 +110,14 @@ The following arguments are supported:
 * `override_groups` - (List of Object) Name-ID pairs of users for which this rule can be overridden. Applicable only if blockOverride is set to `true`, action is `BLOCK` and overrideGroups is not set.If this overrideUsers is not set, `BLOCK` action can be overridden for any group.
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
-* `location_groups` - (List of Object) The location groups to which the Firewall Filtering policy rule applies
+* `location_groups` - (List of Object) The location groups to which the URL Filtering policy rule applies
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
-* `labels`
+* `labels` - (List of Object) The rule labels to which the URL Filtering policy rule applies
   * `id` - (Optional) Identifier that uniquely identifies an entity
+
+* `source_ip_groups` - (List of Object) The source ip groups to which the URL Filtering policy rule applies
+  * `id` - (Optional) Source IP address groups for which the rule is applicable.
 
 * `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group
