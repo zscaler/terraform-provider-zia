@@ -1,8 +1,6 @@
 module github.com/zscaler/terraform-provider-zia/v2
 
-go 1.21
-
-toolchain go1.22.0
+go 1.20
 
 require (
 	github.com/biter777/countries v1.7.4
