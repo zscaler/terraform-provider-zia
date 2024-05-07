@@ -186,12 +186,13 @@ func resourceURLFilteringRules() *schema.Resource {
 			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
 			"users":                  setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
 			"time_windows":           setIDsSchemaTypeCustom(nil, "Name-ID pairs of time interval during which rule must be enforced."),
-			"override_users":         setIDsSchemaTypeCustom(nil, "Name-ID pairs of users for which this rule can be overridden."),
+			"override_users":         setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which this rule can be overridden."),
 			"override_groups":        setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which this rule can be overridden."),
 			"device_groups":          setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"devices":                setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"location_groups":        setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of the location groups to which the rule must be applied."),
 			"labels":                 setIDsSchemaTypeCustom(nil, "The URL Filtering rule's label."),
+			"source_ip_groups":       setIDsSchemaTypeCustom(nil, "list of source ip groups"),
 			"workload_groups":        setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"device_trust_levels":    getDeviceTrustLevels(),
 			"user_risk_score_levels": getUserRiskScoreLevels(),
@@ -411,6 +412,9 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
 		return err
 	}
+	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIPGroups)); err != nil {
+		return err
+	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return fmt.Errorf("error setting workload_groups: %s", err)
 	}
@@ -554,6 +558,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		Labels:         expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:   expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:        expandIDNameExtensionsSet(d, "devices"),
+		SourceIPGroups: expandIDNameExtensionsSet(d, "source_ip_groups"),
 		WorkloadGroups: expandWorkloadGroups(d, "workload_groups"),
 		CBIProfile:     expandCBIProfile(d),
 	}
