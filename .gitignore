@@ -53,3 +53,5 @@ goreleaser.sh
 local_dev/
 local_dev/*
 my.secrets
+coverage.out
+coverage.html

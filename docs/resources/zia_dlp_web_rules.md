@@ -208,8 +208,11 @@ The following arguments are supported:
 * `time_windows` - (Optional) The Name-ID pairs of time windows to which the DLP policy rule must be applied. Maximum of up to `2` time intervals. When not used it implies `always` to apply the rule to all time intervals.
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
-* `labels` The Name-ID pairs of rule labels associated to the DLP policy rule.
+* `labels` - (List of Object) The Name-ID pairs of rule labels associated to the DLP policy rule.
   * `id` - (Optional) Identifier that uniquely identifies an entity
+
+* `source_ip_groups` - (List of Object) The source ip groups to which the DLP policy rule applies
+  * `id` - (Optional) Source IP address groups for which the rule is applicable.
 
 * `icap_server` The DLP server, using ICAP, to which the transaction content is forwarded.
   * `id` - (Optional) Identifier that uniquely identifies an entity

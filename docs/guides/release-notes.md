@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.8.21``
+``Last updated: v2.8.3``
 
 ---
+
+## 2.8.3 (May, 7 2024)
+
+### Notes
+
+- Release date: **(May, 7 2024)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #340](https://github.com/zscaler/terraform-provider-zia/340) - Added new ZIA URL Filtering Rule attribute `source_ip_groups` to resources: `zia_url_filtering_rules` and `zia_dlp_web_rules`
+- [PR #340](https://github.com/zscaler/terraform-provider-zia/340) - Upgraded to [Zscaler-GO-SDK v2.5.0](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.0)
 
 ## 2.8.21 (April, 8 2024)
 

@@ -297,6 +297,29 @@ func dataSourceURLFilteringRules() *schema.Resource {
 					},
 				},
 			},
+			"source_ip_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"devices": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -606,7 +629,9 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
 			return err
 		}
-
+		if err := d.Set("source_ip_groups", flattenIDNameExtensions(resp.SourceIPGroups)); err != nil {
+			return err
+		}
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 			return err
 		}

@@ -217,6 +217,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"dlp_engines":              setIDsSchemaTypeCustom(intPtr(4), "The list of DLP engines to which the DLP policy rule must be applied."),
 			"time_windows":             setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
 			"labels":                   setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"source_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
 			"url_categories":           setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied."),
 			"auditor":                  setSingleIDSchemaTypeCustom("The auditor to which the DLP policy rule must be applied."),
 			"notification_template":    setSingleIDSchemaTypeCustom("The template used for DLP notification emails."),
@@ -425,6 +426,9 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
 		return err
 	}
+	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIpGroups)); err != nil {
+		return err
+	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return fmt.Errorf("error setting workload_groups: %s", err)
 	}
@@ -581,6 +585,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
 		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
 		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
+		SourceIpGroups:           expandIDNameExtensionsSet(d, "source_ip_groups"),
 		IncludedDomainProfiles:   expandIDNameExtensionsSet(d, "included_domain_profiles"),
 		ExcludedDomainProfiles:   expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
 		WorkloadGroups:           expandWorkloadGroups(d, "workload_groups"),
