@@ -24,7 +24,15 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 
 				id := d.Id()
 
-				// Try to import by FQDN
+				// First, try to parse the ID as an integer.
+				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
+				if parseIDErr == nil {
+					d.SetId(strconv.Itoa(int(idInt)))
+					_ = d.Set("vpn_id", int(idInt))
+					return []*schema.ResourceData{d}, nil
+				}
+
+				// If the ID is not an integer, try to import by FQDN.
 				vpnCredential, err := zClient.vpncredentials.GetByFQDN(id)
 				if err == nil {
 					d.SetId(strconv.Itoa(vpnCredential.ID))
@@ -32,7 +40,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 					return []*schema.ResourceData{d}, nil
 				}
 
-				// Try to import by IP
+				// If not found by FQDN, try to import by IP.
 				vpnCredential, err = zClient.vpncredentials.GetByIP(id)
 				if err == nil {
 					d.SetId(strconv.Itoa(vpnCredential.ID))
@@ -40,14 +48,16 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 					return []*schema.ResourceData{d}, nil
 				}
 
-				// Try to import by VPN Type
+				// Finally, try to import by VPN Type.
 				vpnCredential, err = zClient.vpncredentials.GetVPNByType(id)
 				if err == nil {
 					d.SetId(strconv.Itoa(vpnCredential.ID))
 					_ = d.Set("vpn_id", vpnCredential.ID)
 					return []*schema.ResourceData{d}, nil
 				}
-				return []*schema.ResourceData{d}, nil
+
+				// If all methods fail, return an error indicating the vpn_id could not be found.
+				return nil, fmt.Errorf("unable to find vpn credentials with ID or attributes provided")
 			},
 		},
 		Schema: map[string]*schema.Schema{
