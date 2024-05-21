@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.8.3``
+``Last updated: v2.8.31``
 
 ---
+
+## 2.8.31 (May, 21 2024)
+
+### Notes
+
+- Release date: **(May, 21 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Fixed `id` conversion for the resource `zia_traffic_forwarding_vpn_credentials` to ensure proper state file setting.
+
+- [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Upgraded to [Zscaler-SDK-GO v2.5.2](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.2)
 
 ## 2.8.3 (May, 7 2024)
 
