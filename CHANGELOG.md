@@ -11,6 +11,8 @@
 
 - [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Fixed `id` conversion for the resource `zia_traffic_forwarding_vpn_credentials` to ensure proper state file setting.
 
+- [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Upgraded to [Zscaler-SDK-GO v2.5.2](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.2)
+
 ## 2.8.3 (May, 7 2024)
 
 ### Notes
