@@ -60,17 +60,8 @@ func dataSourceDeviceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *devicegroups.DeviceGroups
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for device group id: %d\n", id)
-		res, err := zClient.devicegroups.GetDeviceGroups(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
+	name, ok := d.Get("name").(string)
+	if ok && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
 		res, err := zClient.devicegroups.GetDeviceGroupByName(name)
 		if err != nil {
@@ -90,7 +81,7 @@ func dataSourceDeviceGroupsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("device_count", resp.DeviceCount)
 
 	} else {
-		return fmt.Errorf("couldn't find any device group name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any device group name '%s'", name)
 	}
 
 	return nil
