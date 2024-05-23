@@ -63,6 +63,12 @@ func dataSourceDevices() *schema.Resource {
 				Computed:    true,
 				Description: "The device owner's user name.",
 			},
+			"hostname": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "The device owner's user name.",
+			},
 		},
 	}
 }
@@ -130,19 +136,33 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 		resp = res
 	}
 
+	// Check if no attributes are set and return all devices
+	if resp == nil && name == "" && model == "" && owner == "" && osType == "" && osVersion == "" {
+		log.Printf("[INFO] No specific attributes provided, getting all devices.")
+		allDevices, err := zClient.devicegroups.GetAllDevices()
+		if err != nil {
+			return err
+		}
+		if len(allDevices) > 0 {
+			resp = &allDevices[0]
+		} else {
+			return fmt.Errorf("no devices found")
+		}
+	}
+
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
+		_ = d.Set("description", resp.Description)
 		_ = d.Set("device_group_type", resp.DeviceGroupType)
 		_ = d.Set("device_model", resp.DeviceModel)
 		_ = d.Set("os_type", resp.OSType)
 		_ = d.Set("os_version", resp.OSVersion)
-		_ = d.Set("description", resp.Description)
 		_ = d.Set("owner_user_id", resp.OwnerUserId)
 		_ = d.Set("owner_name", resp.OwnerName)
-
+		_ = d.Set("hostname", resp.HostName)
 	} else {
-		return fmt.Errorf("couldn't find any device name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any device with the provided attributes")
 	}
 
 	return nil
