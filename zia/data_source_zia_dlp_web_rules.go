@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
@@ -404,11 +405,6 @@ func dataSourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
 			},
-			"ocr_enabled": {
-				Type:        schema.TypeBool,
-				Computed:    true,
-				Description: "Enables or disables image file scanning.",
-			},
 			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -498,63 +494,6 @@ func dataSourceDlpWebRules() *schema.Resource {
 							Computed:    true,
 							Description: "The description of the workload group",
 						},
-						"expression_json": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"expression_containers": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"tag_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"operator": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"tag_container": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"tags": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"key": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																		"value": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"operator": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"expression": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The description of the workload group",
-						},
 						"last_modified_time": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -628,15 +567,22 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("severity", resp.Severity)
 		_ = d.Set("parent_rule", resp.ParentRule)
-		_ = d.Set("sub_rules", resp.SubRules)
 		_ = d.Set("match_only", resp.MatchOnly)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 		_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
-		_ = d.Set("ocr_enabled", resp.OcrEnabled)
 		_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
 		_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
 		_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
+
+		// Flatten sub_rules
+		subRuleIDs := make([]interface{}, len(resp.SubRules))
+		for i, subRule := range resp.SubRules {
+			subRuleIDs[i] = strconv.Itoa(subRule.ID)
+		}
+		if err := d.Set("sub_rules", subRuleIDs); err != nil {
+			return fmt.Errorf("error setting sub_rules: %s", err)
+		}
 
 		if err := d.Set("locations", flattenIDExtensions(resp.Locations)); err != nil {
 			return err
