@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.9.0 (May, 22 2024) - BREAKING CHANGE
+
+### Notes
+
+- Release date: **(May, 22 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes - BREAKING CHANGE
+
+- [PR #345](https://github.com/zscaler/terraform-provider-zia/345) - The attribute `ocr_enabled` has been deprecated at the upstream API and is no longer accepted. The OCR feature must be enabled via the [DLP Advanced Settings](https://help.zscaler.com/zia/configuring-dlp-advanced-settings).
+  **NOTE** DLP engines support OCR scanning of `PNG`, `JPEG`, `TIFF`, and `BMP` files.
+
+- [PR #345](https://github.com/zscaler/terraform-provider-zia/345) - Implemented Fix for `zia_dlp_web_rules` for new attributes `parent_rule` and `sub_rules`. A parent rule must be configured with rank 0 and prior to any potential subrule. It is not possible to add existing rules as as subrules under the parent rule.
+
 ## 2.8.31 (May, 21 2024)
 
 ### Notes

@@ -41,17 +41,8 @@ func dataSourceFWTimeWindowRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *timewindow.TimeWindow
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting time window id: %d\n", id)
-		res, err := zClient.timewindow.GetTimeWindow(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
+	name, ok := d.Get("name").(string)
+	if ok && name != "" {
 		log.Printf("[INFO] Getting time window : %s\n", name)
 		res, err := zClient.timewindow.GetTimeWindowByName(name)
 		if err != nil {
@@ -68,7 +59,7 @@ func dataSourceFWTimeWindowRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("day_of_week", resp.DayOfWeek)
 
 	} else {
-		return fmt.Errorf("couldn't find any time window with name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any time window with name '%s'", name)
 	}
 
 	return nil

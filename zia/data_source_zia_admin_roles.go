@@ -91,17 +91,8 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *roles.AdminRoles
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for admin role id: %d\n", id)
-		res, err := zClient.roles.Get(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
+	name, ok := d.Get("name").(string)
+	if ok && name != "" {
 		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
 		res, err := zClient.roles.GetByName(name)
 		if err != nil {
@@ -128,7 +119,7 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("role_type", resp.RoleType)
 
 	} else {
-		return fmt.Errorf("couldn't find any admin role name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any admin role name '%s'", name)
 	}
 
 	return nil

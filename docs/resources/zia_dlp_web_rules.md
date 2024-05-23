@@ -12,28 +12,7 @@ The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP
 
 ⚠️ **WARNING:** Zscaler Internet Access DLP supports a maximum of 127 Web DLP Rules to be created via API.
 
-## Example Usage - OCR ENABLED
-
-```hcl
-resource "zia_dlp_web_rules" "test" {
-    name                        = "Test"
-    description                 = "Test"
-    action                      = "ALLOW"
-    state                       = "ENABLED"
-    order                       = 1
-    rank                        = 7
-    protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-    cloud_applications          = ["ZENDESK", "LUCKY_ORANGE", "MICROSOFT_POWERAPPS", "MICROSOFTLIVEMEETING"]
-    without_content_inspection  = false
-    match_only                  = false
-    ocr_enabled                 = true
-    file_types                = [ "BITMAP", "JPEG", "PNG", "TIFF"]
-    min_size                    = 20
-    zscaler_incident_receiver   = true
-}
-```
-
-## Example Usage - "ALL_OUTBOUND" File Type
+## Example Usage - "ALL_OUTBOUND" File Type"
 
 ```hcl
 data "zia_dlp_engines" "this" {
@@ -89,6 +68,8 @@ resource "zia_dlp_web_rules" "this" {
 }
 ```
 
+## Example Usage - "Specify Incident Receiver Setting"
+
 ```hcl
 // Retrieve a custom URL Category by Name
 data "zia_url_categories" "this"{
@@ -116,6 +97,45 @@ resource "zia_dlp_web_rules" "this" {
   icap_server {
     id = data.zia_dlp_incident_receiver_servers.this.id
   }
+}
+```
+
+## Example Usage - "Creating Parent Rules and SubRules"
+
+⚠️ **WARNING:** Destroying a parent rule will also destroy all subrules
+
+ **NOTE** Exception rules can be configured only when the inline DLP rule evaluation type is set
+ to evaluate all DLP rules in the DLP Advanced Settings.
+ To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
+
+```hcl
+resource "zia_dlp_web_rules" "parent_rule" {
+  name                       = "ParentRule1"
+  description                = "ParentRule1"
+  action                     = "ALLOW"
+  state                      = "ENABLED"
+  order                      = 1
+  rank                       = 0
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  cloud_applications         = ["GOOGLE_WEBMAIL", "WINDOWS_LIVE_HOTMAIL"]
+  without_content_inspection = false
+  match_only                 = false
+  min_size                   = 20
+  zscaler_incident_receiver  = true
+}
+
+resource "zia_dlp_web_rules" "subrule1" {
+  name                       = "SubRule1"
+  description                = "SubRule1"
+  action                     = "ALLOW"
+  state                      = "ENABLED"
+  order                      = 1
+  rank                       = 0
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  cloud_applications         = ["GOOGLE_WEBMAIL", "WINDOWS_LIVE_HOTMAIL"]
+  without_content_inspection = false
+  match_only                 = false
+  parent_rule = zia_dlp_web_rules.parent_rule.id
 }
 ```
 
@@ -162,11 +182,15 @@ The following arguments are supported:
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
-* `parent_rule`(Optional) - The unique identifier of the parent rule under which an exception rule is added.
- ~> Note: Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
+* `parent_rule`(Optional) - The unique identifier of the parent rule under which an exception rule is added. The rule rank must be set to `0`
 
-* `sub_rules`(List) - The list of exception rules added to a parent rule.
- ~> Note: All attributes within the WebDlpRule model are applicable to the sub-rules. Values for each rule are specified by using the WebDlpRule object Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings.
+    ~> **Note**: Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings. To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
+
+    ~> **Note**: It is not possible to add existing rules as as subrules under the parent rule.
+
+* `sub_rules`(List) - The list of exception rules added to a parent rule. The rule rank must be set to `0`
+
+    ~> **Note**: All attributes within the WebDlpRule model are applicable to the sub-rules. Values for each rule are specified by using the WebDlpRule object Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings. To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
 
 * `notification_template` - (Optional) The template used for DLP notification emails.
   * `id` - (Optional) Identifier that uniquely identifies an entity

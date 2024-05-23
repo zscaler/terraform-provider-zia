@@ -81,8 +81,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"rank": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      7,
-				ValidateFunc: validation.IntBetween(1, 7),
+				ValidateFunc: validation.IntBetween(0, 7),
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
@@ -354,13 +353,21 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("severity", resp.Severity)
 	_ = d.Set("parent_rule", resp.ParentRule)
-	_ = d.Set("sub_rules", resp.SubRules)
 	_ = d.Set("match_only", resp.MatchOnly)
 	_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 	_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 	_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
 	_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
+
+	// Flatten sub_rules
+	subRuleIDs := make([]interface{}, len(resp.SubRules))
+	for i, subRule := range resp.SubRules {
+		subRuleIDs[i] = strconv.Itoa(subRule.ID)
+	}
+	if err := d.Set("sub_rules", subRuleIDs); err != nil {
+		return fmt.Errorf("error setting sub_rules: %s", err)
+	}
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return err
@@ -569,26 +576,38 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		FileTypes:                SetToStringList(d, "file_types"),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
 		UserRiskScoreLevels:      SetToStringList(d, "user_risk_score_levels"),
-		SubRules:                 SetToStringList(d, "sub_rules"),
-		Auditor:                  expandIDNameExtensionsSetSingle(d, "auditor"),
-		NotificationTemplate:     expandIDNameExtensionsSetSingle(d, "notification_template"),
-		IcapServer:               expandIDNameExtensionsSetSingle(d, "icap_server"),
-		Locations:                expandIDNameExtensionsSet(d, "locations"),
-		LocationGroups:           expandIDNameExtensionsSet(d, "location_groups"),
-		Groups:                   expandIDNameExtensionsSet(d, "groups"),
-		Departments:              expandIDNameExtensionsSet(d, "departments"),
-		Users:                    expandIDNameExtensionsSet(d, "users"),
-		URLCategories:            expandIDNameExtensionsSet(d, "url_categories"),
-		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
-		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
-		Labels:                   expandIDNameExtensionsSet(d, "labels"),
-		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
-		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
-		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
-		SourceIpGroups:           expandIDNameExtensionsSet(d, "source_ip_groups"),
-		IncludedDomainProfiles:   expandIDNameExtensionsSet(d, "included_domain_profiles"),
-		ExcludedDomainProfiles:   expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
-		WorkloadGroups:           expandWorkloadGroups(d, "workload_groups"),
+		SubRules:                 expandSubRules(d.Get("sub_rules").(*schema.Set)),
+		// SubRules:                 SetToStringList(d, "sub_rules"),
+		Auditor:                expandIDNameExtensionsSetSingle(d, "auditor"),
+		NotificationTemplate:   expandIDNameExtensionsSetSingle(d, "notification_template"),
+		IcapServer:             expandIDNameExtensionsSetSingle(d, "icap_server"),
+		Locations:              expandIDNameExtensionsSet(d, "locations"),
+		LocationGroups:         expandIDNameExtensionsSet(d, "location_groups"),
+		Groups:                 expandIDNameExtensionsSet(d, "groups"),
+		Departments:            expandIDNameExtensionsSet(d, "departments"),
+		Users:                  expandIDNameExtensionsSet(d, "users"),
+		URLCategories:          expandIDNameExtensionsSet(d, "url_categories"),
+		DLPEngines:             expandIDNameExtensionsSet(d, "dlp_engines"),
+		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
+		Labels:                 expandIDNameExtensionsSet(d, "labels"),
+		ExcludedUsers:          expandIDNameExtensionsSet(d, "excluded_groups"),
+		ExcludedGroups:         expandIDNameExtensionsSet(d, "excluded_departments"),
+		ExcludedDepartments:    expandIDNameExtensionsSet(d, "excluded_users"),
+		SourceIpGroups:         expandIDNameExtensionsSet(d, "source_ip_groups"),
+		IncludedDomainProfiles: expandIDNameExtensionsSet(d, "included_domain_profiles"),
+		ExcludedDomainProfiles: expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
+		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
 	}
 	return result
+}
+
+func expandSubRules(set *schema.Set) []dlp_web_rules.SubRule {
+	var subRules []dlp_web_rules.SubRule
+	for _, item := range set.List() {
+		subRuleID, err := strconv.Atoi(item.(string))
+		if err == nil {
+			subRules = append(subRules, dlp_web_rules.SubRule{ID: subRuleID})
+		}
+	}
+	return subRules
 }

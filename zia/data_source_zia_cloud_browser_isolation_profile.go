@@ -40,17 +40,8 @@ func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
 
 	var resp *cloudbrowserisolation.IsolationProfile
-	id, ok := d.Get("id").(string)
-	if ok && id != "" {
-		log.Printf("[INFO] Getting data for cloud browser isolation profile %s\n", id)
-		res, err := zClient.cloudbrowserisolation.Get(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
 	name, ok := d.Get("name").(string)
-	if id == "" && ok && name != "" {
+	if ok && name != "" {
 		log.Printf("[INFO] Getting data for cloud browser isolation profile name %s\n", name)
 		res, err := zClient.cloudbrowserisolation.GetByName(name)
 		if err != nil {
@@ -65,7 +56,7 @@ func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("default_profile", resp.DefaultProfile)
 
 	} else {
-		return fmt.Errorf("couldn't find any cloud browser isolation profile with name '%s' or id '%s'", name, id)
+		return fmt.Errorf("couldn't find any cloud browser isolation profile with name '%s'", name)
 	}
 
 	return nil

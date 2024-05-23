@@ -35,17 +35,8 @@ func dataSourceFWApplicationServicesGroupLiteRead(d *schema.ResourceData, m inte
 	zClient := m.(*Client)
 
 	var resp *appservicegroups.ApplicationServicesGroupLite
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for application services group id: %d\n", id)
-		res, err := zClient.appservicegroups.Get(id)
-		if err != nil {
-			return err
-		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
+	name, ok := d.Get("name").(string)
+	if ok && name != "" {
 		log.Printf("[INFO] Getting data for application services group: %s\n", name)
 		res, err := zClient.appservicegroups.GetByName(name)
 		if err != nil {
@@ -60,7 +51,7 @@ func dataSourceFWApplicationServicesGroupLiteRead(d *schema.ResourceData, m inte
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 
 	} else {
-		return fmt.Errorf("couldn't find any device name '%s' or id '%d'", name, id)
+		return fmt.Errorf("couldn't find any device name '%s'", name)
 	}
 
 	return nil
