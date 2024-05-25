@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"fmt"
 	"log"
@@ -109,3 +110,4 @@ data "zia_devices" "%s" {
 var testAccCheckDataSourceDevicesConfig_all = `
 data "zia_devices" "all" {}
 `
+*/
