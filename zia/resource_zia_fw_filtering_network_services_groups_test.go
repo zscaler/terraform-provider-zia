@@ -59,6 +59,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 
 func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.networkservicegroups
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringNetworkServiceGroups {
@@ -71,7 +72,7 @@ func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.networkservicegroups.GetNetworkServiceGroups(id)
+		rule, err := networkservicegroups.GetNetworkServiceGroups(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -102,7 +103,9 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.networkservicegroups.GetNetworkServiceGroups(id)
+		service := apiClient.networkservicegroups
+
+		receivedRule, err := networkservicegroups.GetNetworkServiceGroups(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

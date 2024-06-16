@@ -52,12 +52,13 @@ func dataSourceFWNetworkServices() *schema.Resource {
 
 func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkservices
 
 	var resp *networkservices.NetworkServices
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network services id: %d\n", id)
-		res, err := zClient.networkservices.Get(id)
+		res, err := networkservices.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -66,7 +67,7 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network services : %s\n", name)
-		res, err := zClient.networkservices.GetByName(name)
+		res, err := networkservices.GetByName(service, name)
 		if err != nil {
 			return err
 		}

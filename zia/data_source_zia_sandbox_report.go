@@ -230,11 +230,12 @@ func systemSummaryDetailSchema() *schema.Schema {
 // dataSourceSandboxReportRead reads the sandbox report data source.
 func dataSourceSandboxReportRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.sandbox_report
 
 	md5Hash := d.Get("md5_hash").(string)
 	details := d.Get("details").(string)
 
-	resp, err := zClient.sandbox_report.GetReportMD5Hash(md5Hash, details)
+	resp, err := sandbox_report.GetReportMD5Hash(service, md5Hash, details)
 	if err != nil {
 		return err
 	}

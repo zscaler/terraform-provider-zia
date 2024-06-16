@@ -554,12 +554,13 @@ func dataSourceForwardingControlRule() *schema.Resource {
 
 func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.forwarding_rules
 
 	var resp *forwarding_rules.ForwardingRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for forwarding control rule id: %d\n", id)
-		res, err := zClient.forwarding_rules.Get(id)
+		res, err := forwarding_rules.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -568,7 +569,7 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for forwarding control rule : %s\n", name)
-		res, err := zClient.forwarding_rules.GetByName(name)
+		res, err := forwarding_rules.GetByName(service, name)
 		if err != nil {
 			return err
 		}

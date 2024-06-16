@@ -36,11 +36,12 @@ func resourceActivationStatus() *schema.Resource {
 
 func resourceActivationCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.activation
 
 	req := expandActivation(d)
 	log.Printf("[INFO] Performing configuration activation\n%+v\n", req)
 
-	resp, err := zClient.activation.CreateActivation(req)
+	resp, err := activation.CreateActivation(service, req)
 	if err != nil {
 		return err
 	}
@@ -52,8 +53,9 @@ func resourceActivationCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceActivationRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.activation
 
-	resp, err := zClient.activation.GetActivationStatus()
+	resp, err := activation.GetActivationStatus(service)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Cannot obtain activation %s from ZIA", d.Id())

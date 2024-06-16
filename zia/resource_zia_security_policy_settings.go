@@ -18,9 +18,10 @@ func resourceSecurityPolicySettings() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.security_policy_settings
 
 				// Use the GetListUrls method to fetch both whitelist and blacklist URLs.
-				resp, err := zClient.security_policy_settings.GetListUrls()
+				resp, err := security_policy_settings.GetListUrls(service)
 				if err != nil {
 					return []*schema.ResourceData{}, err
 				}
@@ -74,8 +75,9 @@ func expandSecurityPolicySettings(d *schema.ResourceData) security_policy_settin
 
 func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.security_policy_settings
 	listUrls := expandSecurityPolicySettings(d)
-	_, err := zClient.security_policy_settings.UpdateListUrls(listUrls)
+	_, err := security_policy_settings.UpdateListUrls(service, listUrls)
 	if err != nil {
 		return err
 	}
@@ -98,9 +100,10 @@ func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{})
 
 func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.security_policy_settings
 	listUrls := expandSecurityPolicySettings(d)
 
-	_, err := zClient.security_policy_settings.UpdateListUrls(listUrls)
+	_, err := security_policy_settings.UpdateListUrls(service, listUrls)
 	if err != nil {
 		return err
 	}
@@ -122,8 +125,9 @@ func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{})
 
 func resourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.security_policy_settings
 
-	resp, err := zClient.security_policy_settings.GetListUrls()
+	resp, err := security_policy_settings.GetListUrls(service)
 	if err != nil {
 		return nil
 	}

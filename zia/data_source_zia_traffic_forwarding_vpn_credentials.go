@@ -91,12 +91,13 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 
 func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.vpncredentials
 
 	var resp *vpncredentials.VPNCredentials
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
-		res, err := zClient.vpncredentials.Get(id)
+		res, err := vpncredentials.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -106,7 +107,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	fqdn, _ := d.Get("fqdn").(string)
 	if resp == nil && fqdn != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", fqdn)
-		res, err := zClient.vpncredentials.GetByFQDN(fqdn)
+		res, err := vpncredentials.GetByFQDN(service, fqdn)
 		if err != nil {
 			return err
 		}
@@ -115,7 +116,7 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	vpnType, _ := d.Get("type").(string)
 	if resp == nil && vpnType != "" {
 		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
-		res, err := zClient.vpncredentials.GetVPNByType(vpnType)
+		res, err := vpncredentials.GetVPNByType(service, vpnType)
 		if err != nil {
 			return err
 		}

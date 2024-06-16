@@ -189,12 +189,13 @@ func dataSourceLocationGroup() *schema.Resource {
 
 func dataSourceLocationGroupRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationgroups
 
 	var resp *locationgroups.LocationGroup
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting time window id: %d\n", id)
-		res, err := zClient.locationgroups.GetLocationGroup(id)
+		res, err := locationgroups.GetLocationGroup(service, id)
 		if err != nil {
 			return err
 		}
@@ -204,7 +205,7 @@ func dataSourceLocationGroupRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationgroups.GetLocationGroupByName(name)
+		res, err := locationgroups.GetLocationGroupByName(service, name)
 		if err != nil {
 			return err
 		}

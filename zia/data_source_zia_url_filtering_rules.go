@@ -541,12 +541,13 @@ func dataSourceURLFilteringRules() *schema.Resource {
 
 func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlfilteringpolicies
 
 	var resp *urlfilteringpolicies.URLFilteringRule
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data url filtering policy id: %d\n", id)
-		res, err := zClient.urlfilteringpolicies.Get(id)
+		res, err := urlfilteringpolicies.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -556,7 +557,7 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting url filtering policy : %s\n", name)
-		res, err := zClient.urlfilteringpolicies.GetByName(name)
+		res, err := urlfilteringpolicies.GetByName(service, name)
 		if err != nil {
 			return err
 		}

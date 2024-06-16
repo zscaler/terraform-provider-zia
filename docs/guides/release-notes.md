@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.9.0``
+``Last updated: v2.9.1``
 
 ---
+
+## 2.9.1 (June, 14 2024)
+
+### Notes
+
+- Release date: **(June, 14  2024)**
+- Supported Terraform version: **v1.x**
+
+### Internal Changes
+
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
+- [PR #350](https://github.com/zscaler/terraform-provider-zpa/pull/350) Upgraded ``releaser.yml`` to [GoReleaser v6](https://github.com/goreleaser/goreleaser-action/releases/tag/v6.0.0)
 
 ## 2.9.0 (May, 22 2024) - BREAKING CHANGE
 

@@ -70,6 +70,8 @@ func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 
 func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.virtualipaddress
+
 	count, ok := getIntFromResourceData(d, "required_count")
 	if !ok {
 		count = 1
@@ -78,7 +80,7 @@ func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData
 	if !ok {
 		return fmt.Errorf("please provide a source_ip for the vips list")
 	}
-	resp, err := zClient.virtualipaddress.GetZSGREVirtualIPList(sourceIP, count)
+	resp, err := virtualipaddress.GetZSGREVirtualIPList(service, sourceIP, count)
 	if err != nil {
 		return err
 	}

@@ -61,6 +61,7 @@ func TestAccResourceDLPDictionariesBasic(t *testing.T) {
 
 func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.dlpdictionaries
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPDictionaries {
@@ -73,7 +74,7 @@ func testAccCheckDLPDictionariesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.dlpdictionaries.Get(id)
+		rule, err := dlpdictionaries.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -104,7 +105,9 @@ func testAccCheckDLPDictionariesExists(resource string, dictionary *dlpdictionar
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.dlpdictionaries.Get(id)
+		service := apiClient.dlpdictionaries
+
+		receivedRule, err := dlpdictionaries.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

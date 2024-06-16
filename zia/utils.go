@@ -68,8 +68,10 @@ func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool
 
 // avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
 func DetachRuleIDNameExtensions(client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
+	service := client.filteringrules
+
 	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
-	rules, err := client.filteringrules.GetAll()
+	rules, err := filteringrules.GetAll(service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -88,9 +90,9 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = client.filteringrules.Get(rule.ID)
+			_, err = filteringrules.Get(service, rule.ID)
 			if err == nil {
-				_, err = client.filteringrules.Update(rule.ID, &rule)
+				_, err = filteringrules.Update(service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -101,8 +103,10 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 }
 
 func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
+	service := client.dlp_web_rules
+
 	log.Printf("[INFO] Detaching dlp engine from %s: %d\n", resource, id)
-	rules, err := client.dlp_web_rules.GetAll()
+	rules, err := dlp_web_rules.GetAll(service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -121,9 +125,9 @@ func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, ge
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = client.dlp_web_rules.Get(rule.ID)
+			_, err = dlp_web_rules.Get(service, rule.ID)
 			if err == nil {
-				_, err = client.dlp_web_rules.Update(rule.ID, &rule)
+				_, err = dlp_web_rules.Update(service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -188,11 +192,13 @@ func contains(slice []string, element string) bool {
 
 // Helper function to trigger configuration activation
 func triggerActivation(zClient *Client) error {
+	service := zClient.activation
+
 	// Assuming the activation request doesn't need specific details from the rule labels
 	req := activation.Activation{Status: "ACTIVE"}
 	log.Printf("[INFO] Triggering configuration activation\n%+v\n", req)
 
-	_, err := zClient.activation.CreateActivation(req)
+	_, err := activation.CreateActivation(service, req)
 	if err != nil {
 		return err
 	}

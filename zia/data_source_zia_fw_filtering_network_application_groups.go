@@ -37,12 +37,13 @@ func dataSourceFWNetworkApplicationGroups() *schema.Resource {
 
 func dataSourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkapplicationgroups
 
 	var resp *networkapplicationgroups.NetworkApplicationGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network application group id: %d\n", id)
-		res, err := zClient.networkapplicationgroups.GetNetworkApplicationGroups(id)
+		res, err := networkapplicationgroups.GetNetworkApplicationGroups(service, id)
 		if err != nil {
 			return err
 		}
@@ -51,7 +52,7 @@ func dataSourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interfac
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network application group : %s\n", name)
-		res, err := zClient.networkapplicationgroups.GetNetworkApplicationGroupsByName(name)
+		res, err := networkapplicationgroups.GetNetworkApplicationGroupsByName(service, name)
 		if err != nil {
 			return err
 		}

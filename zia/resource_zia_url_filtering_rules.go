@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -27,6 +28,99 @@ func resourceURLFilteringRules() *schema.Resource {
 		Read:   resourceURLFilteringRulesRead,
 		Update: resourceURLFilteringRulesUpdate,
 		Delete: resourceURLFilteringRulesDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			action := d.Get("action").(string)
+
+			switch action {
+			case "ISOLATE":
+				// Validation for ISOLATE action
+				cbiProfile, ok := d.GetOk("cbi_profile")
+				if !ok || len(cbiProfile.([]interface{})) == 0 {
+					return errors.New("cbi_profile attribute is required when action is ISOLATE")
+				}
+
+				cbiProfileMap := cbiProfile.([]interface{})[0].(map[string]interface{})
+				if cbiProfileMap["id"] == "" && cbiProfileMap["name"] == "" && cbiProfileMap["url"] == "" {
+					return errors.New("cbi_profile attribute is required when action is ISOLATE")
+				}
+
+				userAgentTypes := d.Get("user_agent_types").(*schema.Set).List()
+				for _, userAgent := range userAgentTypes {
+					if userAgent.(string) == "OTHER" {
+						return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
+					}
+				}
+
+				validProtocols := map[string]bool{"HTTPS_RULE": true, "HTTP_RULE": true}
+				protocols := d.Get("protocols").(*schema.Set).List()
+				for _, protocol := range protocols {
+					if !validProtocols[strings.ToUpper(protocol.(string))] {
+						return errors.New("when action is ISOLATE, valid options for protocols are: HTTP and/or HTTPS")
+					}
+				}
+
+			case "CAUTION":
+				// Validation for CAUTION action
+				validMethods := map[string]bool{"CONNECT": true, "GET": true, "HEAD": true}
+				requestMethods, ok := d.GetOk("request_methods")
+				if !ok {
+					return errors.New("request_methods attribute is required when action is CAUTION")
+				}
+				requestMethodsList := requestMethods.(*schema.Set).List()
+				for _, method := range requestMethodsList {
+					if !validMethods[strings.ToUpper(method.(string))] {
+						return errors.New("'CAUTION' action is allowed only for CONNECT/GET/HEAD request methods")
+					}
+				}
+
+				// Ensure BLOCK specific attributes are not set
+				if blockOverride, blockOverrideOk := d.GetOk("block_override"); blockOverrideOk && blockOverride.(bool) {
+					return errors.New("block_override can only be set when action is BLOCK")
+				}
+
+				if _, overrideUsersOk := d.GetOk("override_users"); overrideUsersOk {
+					return errors.New("override_users can only be set when action is BLOCK and block_override is true")
+				}
+
+				if _, overrideGroupsOk := d.GetOk("override_groups"); overrideGroupsOk {
+					return errors.New("override_groups can only be set when action is BLOCK and block_override is true")
+				}
+
+			case "BLOCK":
+				// Validation for BLOCK action
+				blockOverride, blockOverrideOk := d.GetOk("block_override")
+				if blockOverrideOk && blockOverride.(bool) {
+					overrideUsers, overrideUsersOk := d.GetOk("override_users")
+					if !overrideUsersOk || len(overrideUsers.(*schema.Set).List()) == 0 {
+						return errors.New("override_users must be set when block_override is true")
+					}
+
+					overrideGroups, overrideGroupsOk := d.GetOk("override_groups")
+					if !overrideGroupsOk || len(overrideGroups.(*schema.Set).List()) == 0 {
+						return errors.New("override_groups must be set when block_override is true")
+					}
+				} else {
+					if _, overrideUsersOk := d.GetOk("override_users"); overrideUsersOk {
+						return errors.New("override_users can only be set when block_override is true")
+					}
+
+					if _, overrideGroupsOk := d.GetOk("override_groups"); overrideGroupsOk {
+						return errors.New("override_groups can only be set when block_override is true")
+					}
+				}
+			}
+			// Validate enforce_time_validity, validity_start_time, and validity_end_time
+			if enforceTimeValidity, ok := d.GetOk("enforce_time_validity"); ok && enforceTimeValidity.(bool) {
+				if _, ok := d.GetOk("validity_start_time"); !ok {
+					return errors.New("validity_start_time must be set when enforce_time_validity is true")
+				}
+				if _, ok := d.GetOk("validity_end_time"); !ok {
+					return errors.New("validity_end_time must be set when enforce_time_validity is true")
+				}
+			}
+
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
@@ -34,13 +128,14 @@ func resourceURLFilteringRules() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.urlfilteringpolicies
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := zClient.urlfilteringpolicies.GetByName(id)
+					resp, err := urlfilteringpolicies.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -67,7 +162,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Rule Name",
-				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -117,25 +211,28 @@ func resourceURLFilteringRules() *schema.Resource {
 				ValidateFunc: validation.IntBetween(10, 100000),
 				Description:  "Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
 			},
-			"validity_start_time": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will be valid starting on this date and time.",
-			},
-			"validity_end_time": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "If enforceTimeValidity is set to true, the URL Filtering rule will cease to be valid on this end date and time.",
-			},
-			"validity_time_zone_id": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "If enforceTimeValidity is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.",
-			},
 			"enforce_time_validity": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
+			},
+			"validity_start_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "If enforceTimeValidity is set to true, the URL Filtering rule is valid starting on this date and time.",
+				ValidateFunc: validateTimesNotInPast,
+			},
+			"validity_end_time": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "If enforceTimeValidity is set to true, the URL Filtering rule ceases to be valid on this end date and time.",
+				ValidateFunc: validateTimesNotInPast,
+			},
+			"validity_time_zone_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validateTimeZone,
+				Description:  "If enforceTimeValidity is set to true, the URL Filtering rule date and time is valid based on this time zone ID. Use IANA Format TimeZone.",
 			},
 			"action": {
 				Type:        schema.TypeString,
@@ -153,19 +250,11 @@ func resourceURLFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
 			},
-			// "cbi_profile_id": {
-			// 	Type:     schema.TypeInt,
-			// 	Computed: true,
-			// },
 			"cbi_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// "profile_seq": {
-						// 	Type:     schema.TypeInt,
-						// 	Computed: true,
-						// },
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -205,7 +294,9 @@ func resourceURLFilteringRules() *schema.Resource {
 }
 
 func currentOrderVsRankWording(zClient *Client) string {
-	list, err := zClient.urlfilteringpolicies.GetAll()
+	service := zClient.urlfilteringpolicies
+
+	list, err := urlfilteringpolicies.GetAll(service)
 	if err != nil {
 		return ""
 	}
@@ -222,6 +313,7 @@ func currentOrderVsRankWording(zClient *Client) string {
 
 func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlfilteringpolicies
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
@@ -237,7 +329,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	for {
 		urlFilteringLock.Lock()
 		if urlFilteringStartingOrder == 0 {
-			list, _ := zClient.urlfilteringpolicies.GetAll()
+			list, _ := urlfilteringpolicies.GetAll(service)
 			for _, r := range list {
 				if r.Order > urlFilteringStartingOrder {
 					urlFilteringStartingOrder = r.Order
@@ -252,7 +344,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 		order := req.Order
 		req.Order = urlFilteringStartingOrder
-		resp, err := zClient.urlfilteringpolicies.Create(&req)
+		resp, err := urlfilteringpolicies.Create(service, &req)
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
@@ -271,15 +363,15 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
-			list, err := zClient.urlfilteringpolicies.GetAll()
+			list, err := urlfilteringpolicies.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.urlfilteringpolicies.Get(id)
+			rule, err := urlfilteringpolicies.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+			_, _, err = urlfilteringpolicies.Update(service, id, rule)
 			return err
 		})
 
@@ -314,12 +406,13 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlfilteringpolicies
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no url filtering rule id is set")
 	}
-	resp, err := zClient.urlfilteringpolicies.Get(id)
+	resp, err := urlfilteringpolicies.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
@@ -335,6 +428,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
+	_ = d.Set("order", resp.Order)
 	_ = d.Set("protocols", resp.Protocols)
 	if len(resp.URLCategories) == 0 {
 		_ = d.Set("url_categories", []string{"ANY"})
@@ -346,21 +440,20 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
-	_ = d.Set("request_methods", resp.RequestMethods)
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
 	_ = d.Set("time_quota", resp.TimeQuota)
 	_ = d.Set("size_quota", resp.SizeQuota)
-	_ = d.Set("validity_start_time", resp.ValidityStartTime)
-	_ = d.Set("validity_end_time", resp.ValidityEndTime)
+	_ = d.Set("request_methods", resp.RequestMethods)
+
+	// Convert epoch time back to RFC1123
+	_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
+	_ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
+
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
 	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
-	_ = d.Set("order", resp.Order)
-	// if resp.CBIProfileID > 0 {
-	// 	_ = d.Set("cbi_profile_id", resp.CBIProfileID)
-	// }
 
 	// Update the cbi_profile block in the state
 	if resp.CBIProfile.ID != "" {
@@ -423,6 +516,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 
 func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlfilteringpolicies
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -440,7 +534,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	start := time.Now()
 
 	for {
-		_, _, err := zClient.urlfilteringpolicies.Update(id, &req)
+		_, _, err := urlfilteringpolicies.Update(service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -453,15 +547,15 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 		}
 
 		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
-			list, err := zClient.urlfilteringpolicies.GetAll()
+			list, err := urlfilteringpolicies.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.urlfilteringpolicies.Get(id)
+			rule, err := urlfilteringpolicies.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, _, err = zClient.urlfilteringpolicies.Update(id, rule)
+			_, _, err = urlfilteringpolicies.Update(service, id, rule)
 			return err
 		})
 
@@ -493,6 +587,7 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 
 func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlfilteringpolicies
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -500,7 +595,7 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", (d.Id()))
 
-	if _, err := zClient.urlfilteringpolicies.Delete(id); err != nil {
+	if _, err := urlfilteringpolicies.Delete(service, id); err != nil {
 		return err
 	}
 
@@ -523,6 +618,21 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 
 func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFilteringRule {
 	id, _ := getIntFromResourceData(d, "rule_id")
+
+	validityStartTimeStr := d.Get("validity_start_time").(string)
+	validityEndTimeStr := d.Get("validity_end_time").(string)
+
+	validityStartTime, err := ConvertRFC1123ToEpoch(validityStartTimeStr)
+	if err != nil {
+		log.Printf("[ERROR] Invalid validity_start_time: %v", err)
+		// handle error appropriately
+	}
+	validityEndTime, err := ConvertRFC1123ToEpoch(validityEndTimeStr)
+	if err != nil {
+		log.Printf("[ERROR] Invalid validity_end_time: %v", err)
+		// handle error appropriately
+	}
+
 	result := urlfilteringpolicies.URLFilteringRule{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
@@ -540,8 +650,8 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		BlockOverride:          d.Get("block_override").(bool),
 		TimeQuota:              d.Get("time_quota").(int),
 		SizeQuota:              d.Get("size_quota").(int),
-		ValidityStartTime:      d.Get("validity_start_time").(int),
-		ValidityEndTime:        d.Get("validity_end_time").(int),
+		ValidityStartTime:      validityStartTime,
+		ValidityEndTime:        validityEndTime,
 		ValidityTimeZoneID:     d.Get("validity_time_zone_id").(string),
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
@@ -630,4 +740,40 @@ func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) err
 	}
 
 	return nil
+}
+
+func validateTimeZone(v interface{}, k string) (ws []string, errors []error) {
+	tzStr := v.(string)
+	_, err := time.LoadLocation(tzStr)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q is not a valid timezone. Visit https://nodatime.org/TimeZones for the valid IANA list", tzStr))
+	}
+
+	return
+}
+
+// ConvertRFC1123ToEpoch converts a time string in RFC1123 format to epoch time.
+func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
+	t, err := time.Parse(time.RFC1123, timeStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", err)
+	}
+	return int(t.Unix()), nil
+}
+
+func validateTimesNotInPast(val interface{}, key string) (warns []string, errs []error) {
+	timeStr := val.(string)
+	timeVal, err := ConvertRFC1123ToEpoch(timeStr)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("%q: invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", key, err))
+		return
+	}
+
+	now := time.Now().Unix()
+
+	if int64(timeVal) < now {
+		errs = append(errs, fmt.Errorf("%q: time cannot be in the past", key))
+	}
+
+	return
 }

@@ -92,12 +92,13 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 
 func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.staticips
 
 	var resp *staticips.StaticIP
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for static ip id: %d\n", id)
-		res, err := zClient.staticips.Get(id)
+		res, err := staticips.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -106,7 +107,7 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 	ipAddress, _ := d.Get("ip_address").(string)
 	if resp == nil && ipAddress != "" {
 		log.Printf("[INFO] Getting data for static ip : %s\n", ipAddress)
-		res, err := zClient.staticips.GetByIPAddress(ipAddress)
+		res, err := staticips.GetByIPAddress(service, ipAddress)
 		if err != nil {
 			return err
 		}

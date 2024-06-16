@@ -23,13 +23,14 @@ func resourceRuleLabels() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.rule_labels
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_label_id", idInt)
 				} else {
-					resp, err := zClient.rule_labels.GetRuleLabelByName(id)
+					resp, err := rule_labels.GetRuleLabelByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_label_id", resp.ID)
@@ -66,11 +67,12 @@ func resourceRuleLabels() *schema.Resource {
 
 func resourceRuleLabelsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.rule_labels
 
 	req := expandRuleLabels(d)
 	log.Printf("[INFO] Creating zia rule labels\n%+v\n", req)
 
-	resp, _, err := zClient.rule_labels.Create(&req)
+	resp, _, err := rule_labels.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -95,12 +97,13 @@ func resourceRuleLabelsCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.rule_labels
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
 		return fmt.Errorf("no rule labels id is set")
 	}
-	resp, err := zClient.rule_labels.Get(id)
+	resp, err := rule_labels.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia rule labels %s from state because it no longer exists in ZIA", d.Id())
@@ -123,6 +126,7 @@ func resourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.rule_labels
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
@@ -130,13 +134,13 @@ func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating zia rule label ID: %v\n", id)
 	req := expandRuleLabels(d)
-	if _, err := zClient.rule_labels.Get(id); err != nil {
+	if _, err := rule_labels.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.rule_labels.Update(id, &req); err != nil {
+	if _, _, err := rule_labels.Update(service, id, &req); err != nil {
 		return err
 	}
 
@@ -157,6 +161,7 @@ func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.rule_labels
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
@@ -177,7 +182,7 @@ func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.rule_labels.Delete(id); err != nil {
+	if _, err := rule_labels.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

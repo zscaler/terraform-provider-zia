@@ -50,12 +50,13 @@ func dataSourceTrafficForwardingIPGreTunnelInfo() *schema.Resource {
 
 func dataSourceTrafficForwardingIPGreTunnelInfoRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnelinfo
 
 	var resp *gretunnelinfo.GRETunnelInfo
 	id, ok := getStringFromResourceData(d, "ip_address")
 	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %s\n", id)
-		res, err := zClient.gretunnelinfo.GetGRETunnelInfo(id)
+		res, err := gretunnelinfo.GetGRETunnelInfo(service, id)
 		if err != nil {
 			return err
 		}

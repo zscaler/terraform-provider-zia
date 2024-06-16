@@ -33,13 +33,14 @@ func resourceFirewallFilteringRules() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.filteringrules
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := zClient.filteringrules.GetByName(id)
+					resp, err := filteringrules.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -177,6 +178,8 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 
 func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.filteringrules
+
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
@@ -190,7 +193,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	for {
 		firewallFilteringLock.Lock()
 		if firewallFilteringStartingOrder == 0 {
-			list, _ := zClient.filteringrules.GetAll()
+			list, _ := filteringrules.GetAll(service)
 			for _, r := range list {
 				if r.Order > firewallFilteringStartingOrder {
 					firewallFilteringStartingOrder = r.Order
@@ -205,7 +208,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 
 		order := req.Order
 		req.Order = firewallFilteringStartingOrder
-		resp, err := zClient.filteringrules.Create(&req)
+		resp, err := filteringrules.Create(service, &req)
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -223,15 +226,15 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := zClient.filteringrules.GetAll()
+			list, err := filteringrules.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.filteringrules.Get(id)
+			rule, err := filteringrules.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = zClient.filteringrules.Update(id, rule)
+			_, err = filteringrules.Update(service, id, rule)
 			return err
 		})
 
@@ -266,13 +269,14 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 
 func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.filteringrules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no zia firewall filtering rule id is set")
 	}
 
-	resp, err := zClient.filteringrules.Get(id)
+	resp, err := filteringrules.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
@@ -381,6 +385,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 
 func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.filteringrules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -392,7 +397,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	if err := validateFirewallRule(req); err != nil {
 		return err
 	}
-	if _, err := zClient.filteringrules.Get(id); err != nil {
+	if _, err := filteringrules.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
@@ -403,7 +408,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	start := time.Now()
 
 	for {
-		_, err := zClient.filteringrules.Update(id, &req)
+		_, err := filteringrules.Update(service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -416,15 +421,15 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 		}
 
 		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := zClient.filteringrules.GetAll()
+			list, err := filteringrules.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.filteringrules.Get(id)
+			rule, err := filteringrules.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = zClient.filteringrules.Update(id, rule)
+			_, err = filteringrules.Update(service, id, rule)
 			return err
 		})
 
@@ -456,6 +461,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 
 func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.filteringrules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -463,7 +469,7 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	}
 
 	// Retrieve the rule to check if it's a predefined one
-	rule, err := zClient.filteringrules.Get(id)
+	rule, err := filteringrules.Get(service, id)
 	if err != nil {
 		return fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err)
 	}
@@ -474,7 +480,7 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	}
 
 	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
-	if _, err := zClient.filteringrules.Delete(id); err != nil {
+	if _, err := filteringrules.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

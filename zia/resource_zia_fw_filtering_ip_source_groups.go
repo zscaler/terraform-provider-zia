@@ -23,13 +23,14 @@ func resourceFWIPSourceGroups() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.ipsourcegroups
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("group_id", idInt)
 				} else {
-					resp, err := zClient.ipsourcegroups.GetByName(id)
+					resp, err := ipsourcegroups.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("group_id", resp.ID)
@@ -71,11 +72,12 @@ func resourceFWIPSourceGroups() *schema.Resource {
 
 func resourceFWIPSourceGroupsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.ipsourcegroups
 
 	req := expandFWIPSourceGroups(d)
 	log.Printf("[INFO] Creating zia ip source groups\n%+v\n", req)
 
-	resp, err := zClient.ipsourcegroups.Create(&req)
+	resp, err := ipsourcegroups.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -100,12 +102,13 @@ func resourceFWIPSourceGroupsCreate(d *schema.ResourceData, m interface{}) error
 
 func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.ipsourcegroups
 
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
 		return fmt.Errorf("no ip source groups id is set")
 	}
-	resp, err := zClient.ipsourcegroups.Get(id)
+	resp, err := ipsourcegroups.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia ip source groups %s from state because it no longer exists in ZIA", d.Id())
@@ -129,6 +132,7 @@ func resourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.ipsourcegroups
 
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
@@ -136,13 +140,13 @@ func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error
 	}
 	log.Printf("[INFO] Updating zia ip source groups ID: %v\n", id)
 	req := expandFWIPSourceGroups(d)
-	if _, err := zClient.ipsourcegroups.Get(id); err != nil {
+	if _, err := ipsourcegroups.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, err := zClient.ipsourcegroups.Update(id, &req); err != nil {
+	if _, err := ipsourcegroups.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -162,6 +166,7 @@ func resourceFWIPSourceGroupsUpdate(d *schema.ResourceData, m interface{}) error
 
 func resourceFWIPSourceGroupsDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.ipsourcegroups
 
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
@@ -182,7 +187,7 @@ func resourceFWIPSourceGroupsDelete(d *schema.ResourceData, m interface{}) error
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.ipsourcegroups.Delete(id); err != nil {
+	if _, err := ipsourcegroups.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

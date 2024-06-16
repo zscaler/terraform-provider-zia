@@ -48,12 +48,13 @@ func dataSourceDLPEngines() *schema.Resource {
 
 func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_engines
 
 	var resp *dlp_engines.DLPEngines
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp engine id: %d\n", id)
-		res, err := zClient.dlp_engines.Get(id)
+		res, err := dlp_engines.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -62,7 +63,7 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp engine name: %s\n", name)
-		res, err := zClient.dlp_engines.GetByName(name)
+		res, err := dlp_engines.GetByName(service, name)
 		if err != nil {
 			return err
 		}
@@ -72,7 +73,7 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	predefined, _ := d.Get("predefined_engine_name").(string)
 	if resp == nil && predefined != "" {
 		log.Printf("[INFO] Getting data for predefined dlp engine name: %s\n", predefined)
-		res, err := zClient.dlp_engines.GetByPredefinedEngine(predefined)
+		res, err := dlp_engines.GetByPredefinedEngine(service, predefined)
 		if err != nil {
 			return err
 		}

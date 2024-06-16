@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 )
 
 func dataSourceActivationStatus() *schema.Resource {
@@ -20,8 +21,9 @@ func dataSourceActivationStatus() *schema.Resource {
 
 func dataSourceActivationStatusRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.activation
 
-	resp, err := zClient.activation.GetActivationStatus()
+	resp, err := activation.GetActivationStatus(service)
 	if err != nil {
 		return nil
 	}

@@ -57,6 +57,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 
 func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.rule_labels
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.RuleLabels {
@@ -69,7 +70,7 @@ func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.rule_labels.Get(id)
+		rule, err := rule_labels.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -100,7 +101,9 @@ func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels)
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.rule_labels.Get(id)
+		service := apiClient.rule_labels
+
+		receivedRule, err := rule_labels.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

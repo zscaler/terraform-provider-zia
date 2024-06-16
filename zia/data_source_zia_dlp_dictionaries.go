@@ -199,12 +199,13 @@ func dataSourceDLPDictionaries() *schema.Resource {
 
 func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlpdictionaries
 
 	var resp *dlpdictionaries.DlpDictionary
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp dictionary id: %d\n", id)
-		res, err := zClient.dlpdictionaries.Get(id)
+		res, err := dlpdictionaries.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -213,7 +214,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp dictionary: %s\n", name)
-		res, err := zClient.dlpdictionaries.GetByName(name)
+		res, err := dlpdictionaries.GetByName(service, name)
 		if err != nil {
 			return err
 		}

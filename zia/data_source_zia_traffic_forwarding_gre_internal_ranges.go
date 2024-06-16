@@ -36,11 +36,13 @@ func dataSourceTrafficForwardingGreInternalIPRangeList() *schema.Resource {
 
 func dataSourceTrafficForwardingGreInternalIPRangesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.greinternalipranges
+
 	count, ok := getIntFromResourceData(d, "required_count")
 	if !ok {
 		count = 1
 	}
-	ipRanges, err := zClient.greinternalipranges.GetGREInternalIPRange(count)
+	ipRanges, err := greinternalipranges.GetGREInternalIPRange(service, count)
 	if err != nil {
 		return err
 	}

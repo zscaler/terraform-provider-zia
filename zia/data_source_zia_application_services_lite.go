@@ -33,12 +33,13 @@ func dataSourceFWApplicationServicesLite() *schema.Resource {
 
 func dataSourceFWApplicationServicesLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.applicationservices
 
 	var resp *applicationservices.ApplicationServicesLite
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for application service name: %s\n", name)
-		res, err := zClient.applicationservices.GetByName(name)
+		res, err := applicationservices.GetByName(service, name)
 		if err != nil {
 			return err
 		}

@@ -226,12 +226,13 @@ func dataSourceDLPEDMSchema() *schema.Resource {
 
 func dataSourceDLPEDMSchemaRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_exact_data_match
 
 	var resp *dlp_exact_data_match.DLPEDMSchema
 	schemaID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp edm schema id: %d\n", schemaID)
-		res, err := zClient.dlp_exact_data_match.GetDLPEDMSchemaID(schemaID)
+		res, err := dlp_exact_data_match.GetDLPEDMSchemaID(service, schemaID)
 		if err != nil {
 			return err
 		}
@@ -240,7 +241,7 @@ func dataSourceDLPEDMSchemaRead(d *schema.ResourceData, m interface{}) error {
 	projectName, _ := d.Get("project_name").(string)
 	if resp == nil && projectName != "" {
 		log.Printf("[INFO] Getting data for dlp edm schema name: %s\n", projectName)
-		res, err := zClient.dlp_exact_data_match.GetDLPEDMByName(projectName)
+		res, err := dlp_exact_data_match.GetDLPEDMByName(service, projectName)
 		if err != nil {
 			return err
 		}

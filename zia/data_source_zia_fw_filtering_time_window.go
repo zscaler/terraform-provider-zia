@@ -39,12 +39,13 @@ func dataSourceFWTimeWindow() *schema.Resource {
 
 func dataSourceFWTimeWindowRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.timewindow
 
 	var resp *timewindow.TimeWindow
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting time window : %s\n", name)
-		res, err := zClient.timewindow.GetTimeWindowByName(name)
+		res, err := timewindow.GetTimeWindowByName(service, name)
 		if err != nil {
 			return err
 		}

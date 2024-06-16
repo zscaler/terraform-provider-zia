@@ -63,6 +63,7 @@ func TestAccResourceDLPNotificationTemplatesBasic(t *testing.T) {
 
 func testAccCheckDLPNotificationTemplateDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.dlp_notification_templates
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPNotificationTemplates {
@@ -75,7 +76,7 @@ func testAccCheckDLPNotificationTemplateDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.dlp_notification_templates.Get(id)
+		rule, err := dlp_notification_templates.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -106,7 +107,9 @@ func testAccCheckDLPNotificationTemplateExists(resource string, dlpTemplate *dlp
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedTemplate, err := apiClient.dlp_notification_templates.Get(id)
+		service := apiClient.dlp_notification_templates
+
+		receivedTemplate, err := dlp_notification_templates.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

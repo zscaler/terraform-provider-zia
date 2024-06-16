@@ -2,6 +2,7 @@ package zia
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/user_authentication_settings"
 )
 
 func dataSourceAuthSettingsUrls() *schema.Resource {
@@ -19,7 +20,9 @@ func dataSourceAuthSettingsUrls() *schema.Resource {
 
 func dataSourceAuthSettingsUrlsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-	res, err := zClient.user_authentication_settings.Get()
+	service := zClient.user_authentication_settings
+
+	res, err := user_authentication_settings.Get(service)
 	if err != nil {
 		return err
 	}

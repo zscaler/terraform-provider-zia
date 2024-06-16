@@ -75,12 +75,13 @@ func dataSourceDevices() *schema.Resource {
 
 func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.devicegroups
 
 	var resp *devicegroups.Devices
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for device group id: %d\n", id)
-		res, err := zClient.devicegroups.GetDevicesByID(id)
+		res, err := devicegroups.GetDevicesByID(service, id)
 		if err != nil {
 			return err
 		}
@@ -89,7 +90,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
-		res, err := zClient.devicegroups.GetDevicesByName(name)
+		res, err := devicegroups.GetDevicesByName(service, name)
 		if err != nil {
 			return err
 		}
@@ -99,7 +100,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	model, _ := d.Get("device_model").(string)
 	if resp == nil && model != "" {
 		log.Printf("[INFO] Getting data for device model : %s\n", model)
-		res, err := zClient.devicegroups.GetDevicesByModel(model)
+		res, err := devicegroups.GetDevicesByModel(service, model)
 		if err != nil {
 			return err
 		}
@@ -109,7 +110,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	owner, _ := d.Get("owner_name").(string)
 	if resp == nil && owner != "" {
 		log.Printf("[INFO] Getting data for owner : %s\n", owner)
-		res, err := zClient.devicegroups.GetDevicesByOwner(owner)
+		res, err := devicegroups.GetDevicesByOwner(service, owner)
 		if err != nil {
 			return err
 		}
@@ -119,7 +120,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	osType, _ := d.Get("os_type").(string)
 	if resp == nil && osType != "" {
 		log.Printf("[INFO] Getting data for OS Type : %s\n", osType)
-		res, err := zClient.devicegroups.GetDevicesByOSType(osType)
+		res, err := devicegroups.GetDevicesByOSType(service, osType)
 		if err != nil {
 			return err
 		}
@@ -129,7 +130,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	osVersion, _ := d.Get("os_version").(string)
 	if resp == nil && osVersion != "" {
 		log.Printf("[INFO] Getting data for OS Version : %s\n", osVersion)
-		res, err := zClient.devicegroups.GetDevicesByOSVersion(osVersion)
+		res, err := devicegroups.GetDevicesByOSVersion(service, osVersion)
 		if err != nil {
 			return err
 		}
@@ -139,7 +140,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	// Check if no attributes are set and return all devices
 	if resp == nil && name == "" && model == "" && owner == "" && osType == "" && osVersion == "" {
 		log.Printf("[INFO] No specific attributes provided, getting all devices.")
-		allDevices, err := zClient.devicegroups.GetAllDevices()
+		allDevices, err := devicegroups.GetAllDevices(service)
 		if err != nil {
 			return err
 		}

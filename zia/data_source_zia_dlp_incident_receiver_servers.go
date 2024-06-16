@@ -43,12 +43,13 @@ func dataSourceDLPIncidentReceiverServers() *schema.Resource {
 
 func dataSourceDLPIncidentReceiverServersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_incident_receiver_servers
 
 	var resp *dlp_incident_receiver_servers.IncidentReceiverServers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp incident receiver server id: %d\n", id)
-		res, err := zClient.dlp_incident_receiver_servers.Get(id)
+		res, err := dlp_incident_receiver_servers.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -57,7 +58,7 @@ func dataSourceDLPIncidentReceiverServersRead(d *schema.ResourceData, m interfac
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp incident receiver server name: %s\n", name)
-		res, err := zClient.dlp_incident_receiver_servers.GetByName(name)
+		res, err := dlp_incident_receiver_servers.GetByName(service, name)
 		if err != nil {
 			return err
 		}

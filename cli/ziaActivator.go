@@ -8,6 +8,7 @@ import (
 
 	"github.com/zscaler/terraform-provider-zia/v2/zia"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 )
 
@@ -32,8 +33,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("[ERROR] Failed Initializing ZIA client: %v\n", err)
 	}
-	activationService := activation.New(cli)
-	resp, err := activationService.CreateActivation(activation.Activation{
+	service := services.New(cli)
+	resp, err := activation.CreateActivation(service, activation.Activation{
 		Status: "active",
 	})
 	if err != nil {

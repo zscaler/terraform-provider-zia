@@ -18,8 +18,9 @@ func resourceAuthSettingsUrls() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.user_authentication_settings
 
-				urls, err := zClient.user_authentication_settings.Get()
+				urls, err := user_authentication_settings.Get(service)
 				if err != nil {
 					return nil, fmt.Errorf("error fetching urls from exception list: %s", err)
 				}
@@ -49,7 +50,9 @@ func resourceAuthSettingsUrls() *schema.Resource {
 
 func resourceAuthSettingsUrlsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-	res, err := zClient.user_authentication_settings.Get()
+	service := zClient.user_authentication_settings
+
+	res, err := user_authentication_settings.Get(service)
 	if err != nil {
 		return err
 	}
@@ -66,8 +69,10 @@ func expandAuthSettingsUrls(d *schema.ResourceData) user_authentication_settings
 
 func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.user_authentication_settings
+
 	urls := expandAuthSettingsUrls(d)
-	_, err := zClient.user_authentication_settings.Update(urls)
+	_, err := user_authentication_settings.Update(service, urls)
 	if err != nil {
 		return err
 	}
@@ -89,9 +94,11 @@ func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error
 
 func resourceAuthSettingsUrlsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.user_authentication_settings
+
 	urls := expandAuthSettingsUrls(d)
 
-	_, err := zClient.user_authentication_settings.Update(urls)
+	_, err := user_authentication_settings.Update(service, urls)
 	if err != nil {
 		return err
 	}

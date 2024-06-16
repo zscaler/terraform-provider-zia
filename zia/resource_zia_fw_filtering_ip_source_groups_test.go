@@ -59,6 +59,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 
 func testAccCheckFWIPSourceGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.ipsourcegroups
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringSourceGroup {
@@ -71,7 +72,7 @@ func testAccCheckFWIPSourceGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.ipsourcegroups.Get(id)
+		rule, err := ipsourcegroups.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -102,7 +103,9 @@ func testAccCheckFWIPSourceGroupsExists(resource string, rule *ipsourcegroups.IP
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.ipsourcegroups.Get(id)
+		service := apiClient.ipsourcegroups
+
+		receivedRule, err := ipsourcegroups.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

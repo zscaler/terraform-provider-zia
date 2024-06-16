@@ -31,13 +31,14 @@ func resourceForwardingControlRule() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.forwarding_rules
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := zClient.forwarding_rules.GetByName(id)
+					resp, err := forwarding_rules.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -234,6 +235,8 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 	}
 
 	zClient := m.(*Client)
+	service := zClient.forwarding_rules
+
 	req := expandForwardingControlRule(d)
 	log.Printf("[INFO] Creating zia forwarding control rule\n%+v\n", req)
 
@@ -241,7 +244,7 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
-	resp, err := zClient.forwarding_rules.Create(&req)
+	resp, err := forwarding_rules.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -266,12 +269,13 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 
 func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.forwarding_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no zia forwarding control rule id is set")
 	}
-	resp, err := zClient.forwarding_rules.Get(id)
+	resp, err := forwarding_rules.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing forwarding control rule %s from state because it no longer exists in ZIA", d.Id())
@@ -384,6 +388,7 @@ func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) er
 
 func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.forwarding_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -401,13 +406,13 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
-	if _, err := zClient.forwarding_rules.Get(id); err != nil {
+	if _, err := forwarding_rules.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, err := zClient.forwarding_rules.Update(id, &req); err != nil {
+	if _, err := forwarding_rules.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -427,6 +432,7 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 
 func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.forwarding_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -434,7 +440,7 @@ func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) 
 	}
 
 	// Retrieve the rule to check if it's a predefined one
-	rule, err := zClient.forwarding_rules.Get(id)
+	rule, err := forwarding_rules.Get(service, id)
 	if err != nil {
 		return fmt.Errorf("error retrieving forwarding control rule %d: %v", id, err)
 	}
@@ -445,7 +451,7 @@ func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) 
 	}
 
 	log.Printf("[INFO] Deleting forwarding control rule ID: %v", id)
-	if _, err := zClient.forwarding_rules.Delete(id); err != nil {
+	if _, err := forwarding_rules.Delete(service, id); err != nil {
 		return fmt.Errorf("error deleting forwarding control rule %d: %v", id, err)
 	}
 

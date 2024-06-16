@@ -60,13 +60,14 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 
 func testAccCheckURLCategoriesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.urlcategories
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.URLCategories {
 			continue
 		}
 
-		rule, err := apiClient.urlcategories.Get(rs.Primary.ID)
+		rule, err := urlcategories.Get(service, rs.Primary.ID)
 
 		if err == nil {
 			return fmt.Errorf("id %s already exists", rs.Primary.ID)
@@ -91,7 +92,9 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.urlcategories.Get(rs.Primary.ID)
+		service := apiClient.urlcategories
+
+		receivedRule, err := urlcategories.Get(service, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

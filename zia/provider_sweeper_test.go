@@ -11,6 +11,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipsourcegroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplicationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
 )
 
 var (
@@ -106,7 +125,7 @@ func setupSweeper(resourceType string, del func(*testClient) error) {
 
 func sweepTestRuleLabels(client *testClient) error {
 	var errorList []error
-	labels, err := client.sdkClient.rule_labels.GetAll()
+	labels, err := rule_labels.GetAll(client.sdkClient.rule_labels)
 	if err != nil {
 		return err
 	}
@@ -115,7 +134,7 @@ func sweepTestRuleLabels(client *testClient) error {
 	for _, b := range labels {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.rule_labels.Delete(b.ID); err != nil {
+			if _, err := rule_labels.Delete(client.sdkClient.rule_labels, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -133,7 +152,7 @@ func sweepTestRuleLabels(client *testClient) error {
 
 func sweepTestSourceIPGroup(client *testClient) error {
 	var errorList []error
-	ipSourceGroup, err := client.sdkClient.ipsourcegroups.GetAll()
+	ipSourceGroup, err := ipsourcegroups.GetAll(client.sdkClient.ipsourcegroups)
 	if err != nil {
 		return err
 	}
@@ -142,7 +161,7 @@ func sweepTestSourceIPGroup(client *testClient) error {
 	for _, b := range ipSourceGroup {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.ipsourcegroups.Delete(b.ID); err != nil {
+			if _, err := ipsourcegroups.Delete(client.sdkClient.ipsourcegroups, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -160,7 +179,7 @@ func sweepTestSourceIPGroup(client *testClient) error {
 
 func sweepTestDestinationIPGroup(client *testClient) error {
 	var errorList []error
-	ipDestGroup, err := client.sdkClient.ipdestinationgroups.GetAll()
+	ipDestGroup, err := ipdestinationgroups.GetAll(client.sdkClient.ipdestinationgroups)
 	if err != nil {
 		return err
 	}
@@ -169,7 +188,7 @@ func sweepTestDestinationIPGroup(client *testClient) error {
 	for _, b := range ipDestGroup {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.ipdestinationgroups.Delete(b.ID); err != nil {
+			if _, err := ipdestinationgroups.Delete(client.sdkClient.ipdestinationgroups, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -187,7 +206,7 @@ func sweepTestDestinationIPGroup(client *testClient) error {
 
 func sweepTestNetworkServices(client *testClient) error {
 	var errorList []error
-	services, err := client.sdkClient.networkservices.GetAllNetworkServices()
+	services, err := networkservices.GetAllNetworkServices(client.sdkClient.networkservices)
 	if err != nil {
 		return err
 	}
@@ -196,7 +215,7 @@ func sweepTestNetworkServices(client *testClient) error {
 	for _, b := range services {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.networkservices.Delete(b.ID); err != nil {
+			if _, err := networkservices.Delete(client.sdkClient.networkservices, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -214,7 +233,7 @@ func sweepTestNetworkServices(client *testClient) error {
 
 func sweepTestNetworkServicesGroup(client *testClient) error {
 	var errorList []error
-	groups, err := client.sdkClient.networkservicegroups.GetAllNetworkServiceGroups()
+	groups, err := networkservicegroups.GetAllNetworkServiceGroups(client.sdkClient.networkservicegroups)
 	if err != nil {
 		return err
 	}
@@ -223,7 +242,7 @@ func sweepTestNetworkServicesGroup(client *testClient) error {
 	for _, b := range groups {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.networkservicegroups.DeleteNetworkServiceGroups(b.ID); err != nil {
+			if _, err := networkservicegroups.DeleteNetworkServiceGroups(client.sdkClient.networkservicegroups, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -241,7 +260,7 @@ func sweepTestNetworkServicesGroup(client *testClient) error {
 
 func sweepTestNetworkAppGroups(client *testClient) error {
 	var errorList []error
-	groups, err := client.sdkClient.networkapplicationgroups.GetAllNetworkApplicationGroups()
+	groups, err := networkapplicationgroups.GetAllNetworkApplicationGroups(client.sdkClient.networkapplicationgroups)
 	if err != nil {
 		return err
 	}
@@ -250,7 +269,7 @@ func sweepTestNetworkAppGroups(client *testClient) error {
 	for _, b := range groups {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.networkapplicationgroups.Delete(b.ID); err != nil {
+			if _, err := networkapplicationgroups.Delete(client.sdkClient.networkapplicationgroups, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -268,7 +287,7 @@ func sweepTestNetworkAppGroups(client *testClient) error {
 
 func sweepTestLocationManagement(client *testClient) error {
 	var errorList []error
-	locationManagement, err := client.sdkClient.locationmanagement.GetAll()
+	locationManagement, err := locationmanagement.GetAll(client.sdkClient.locationmanagement)
 	if err != nil {
 		return err
 	}
@@ -277,7 +296,7 @@ func sweepTestLocationManagement(client *testClient) error {
 	for _, b := range locationManagement {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.locationmanagement.Delete(b.ID); err != nil {
+			if _, err := locationmanagement.Delete(client.sdkClient.locationmanagement, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -295,7 +314,7 @@ func sweepTestLocationManagement(client *testClient) error {
 
 func sweepTestGRETunnels(client *testClient) error {
 	var errorList []error
-	greTunnel, err := client.sdkClient.gretunnels.GetAll()
+	greTunnel, err := gretunnels.GetAll(client.sdkClient.gretunnels)
 	if err != nil {
 		return err
 	}
@@ -304,7 +323,7 @@ func sweepTestGRETunnels(client *testClient) error {
 	for _, b := range greTunnel {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Comment, testResourcePrefix) || strings.HasPrefix(b.Comment, updateResourcePrefix) {
-			if _, err := client.sdkClient.gretunnels.DeleteGreTunnels(b.ID); err != nil {
+			if _, err := gretunnels.DeleteGreTunnels(client.sdkClient.gretunnels, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -322,7 +341,7 @@ func sweepTestGRETunnels(client *testClient) error {
 
 func sweepTestFirewallFilteringRule(client *testClient) error {
 	var errorList []error
-	rule, err := client.sdkClient.filteringrules.GetAll()
+	rule, err := filteringrules.GetAll(client.sdkClient.filteringrules)
 	if err != nil {
 		return err
 	}
@@ -331,7 +350,7 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.filteringrules.Delete(b.ID); err != nil {
+			if _, err := filteringrules.Delete(client.sdkClient.filteringrules, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -347,10 +366,9 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 	return condenseError(errorList)
 }
 
-/*
 func sweepTestForwardingControlRule(client *testClient) error {
 	var errorList []error
-	rule, err := client.sdkClient.forwarding_rules.GetAll()
+	rule, err := forwarding_rules.GetAll(client.sdkClient.forwarding_rules)
 	if err != nil {
 		return err
 	}
@@ -359,7 +377,7 @@ func sweepTestForwardingControlRule(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.forwarding_rules.Delete(b.ID); err != nil {
+			if _, err := forwarding_rules.Delete(client.sdkClient.forwarding_rules, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -374,12 +392,11 @@ func sweepTestForwardingControlRule(client *testClient) error {
 	}
 	return condenseError(errorList)
 }
-*/
 
 func sweepTestURLFilteringRule(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.urlfilteringpolicies.GetAll()
+	rule, err := urlfilteringpolicies.GetAll(client.sdkClient.urlfilteringpolicies)
 	if err != nil {
 		return err
 	}
@@ -388,7 +405,7 @@ func sweepTestURLFilteringRule(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.urlfilteringpolicies.Delete(b.ID); err != nil {
+			if _, err := urlfilteringpolicies.Delete(client.sdkClient.urlfilteringpolicies, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -406,7 +423,7 @@ func sweepTestURLFilteringRule(client *testClient) error {
 
 func sweepTestDLPWebRule(client *testClient) error {
 	var errorList []error
-	rule, err := client.sdkClient.dlp_web_rules.GetAll()
+	rule, err := dlp_web_rules.GetAll(client.sdkClient.dlp_web_rules)
 	if err != nil {
 		return err
 	}
@@ -415,7 +432,7 @@ func sweepTestDLPWebRule(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.dlp_web_rules.Delete(b.ID); err != nil {
+			if _, err := dlp_web_rules.Delete(client.sdkClient.dlp_web_rules, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -433,7 +450,7 @@ func sweepTestDLPWebRule(client *testClient) error {
 
 func sweepTestDLPDictionary(client *testClient) error {
 	var errorList []error
-	rule, err := client.sdkClient.dlpdictionaries.GetAll()
+	rule, err := dlpdictionaries.GetAll(client.sdkClient.dlpdictionaries)
 	if err != nil {
 		return err
 	}
@@ -442,7 +459,7 @@ func sweepTestDLPDictionary(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.dlpdictionaries.DeleteDlpDictionary(b.ID); err != nil {
+			if _, err := dlpdictionaries.DeleteDlpDictionary(client.sdkClient.dlpdictionaries, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -461,7 +478,7 @@ func sweepTestDLPDictionary(client *testClient) error {
 func sweepTestDLPEngines(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.dlp_engines.GetAll()
+	rule, err := dlp_engines.GetAll(client.sdkClient.dlp_engines)
 	if err != nil {
 		return err
 	}
@@ -472,7 +489,7 @@ func sweepTestDLPEngines(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.dlp_engines.Delete(b.ID); err != nil {
+			if _, err := dlp_engines.Delete(client.sdkClient.dlp_engines, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -492,7 +509,7 @@ func sweepTestDLPEngines(client *testClient) error {
 
 func sweepTestDLPTemplates(client *testClient) error {
 	var errorList []error
-	rule, err := client.sdkClient.dlp_notification_templates.GetAll()
+	rule, err := dlp_notification_templates.GetAll(client.sdkClient.dlp_notification_templates)
 	if err != nil {
 		return err
 	}
@@ -501,7 +518,7 @@ func sweepTestDLPTemplates(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := client.sdkClient.dlp_notification_templates.Delete(b.ID); err != nil {
+			if _, err := dlp_notification_templates.Delete(client.sdkClient.dlp_notification_templates, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -520,7 +537,7 @@ func sweepTestDLPTemplates(client *testClient) error {
 func sweepTestStaticIP(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.staticips.GetAll()
+	rule, err := staticips.GetAll(client.sdkClient.staticips)
 	if err != nil {
 		return err
 	}
@@ -529,7 +546,7 @@ func sweepTestStaticIP(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Comment, testResourcePrefix) || strings.HasPrefix(b.Comment, updateResourcePrefix) {
-			if _, err := client.sdkClient.staticips.Delete(b.ID); err != nil {
+			if _, err := staticips.Delete(client.sdkClient.staticips, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -549,7 +566,7 @@ func sweepTestStaticIP(client *testClient) error {
 func sweepTestVPNCredentials(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.vpncredentials.GetAll()
+	rule, err := vpncredentials.GetAll(client.sdkClient.vpncredentials)
 	if err != nil {
 		return err
 	}
@@ -558,7 +575,7 @@ func sweepTestVPNCredentials(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Comments, testResourcePrefix) || strings.HasPrefix(b.Comments, updateResourcePrefix) {
-			if err := client.sdkClient.vpncredentials.Delete(b.ID); err != nil {
+			if err := vpncredentials.Delete(client.sdkClient.vpncredentials, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -577,7 +594,7 @@ func sweepTestVPNCredentials(client *testClient) error {
 func sweepTestURLCategories(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.urlcategories.GetAll()
+	rule, err := urlcategories.GetAll(client.sdkClient.urlcategories)
 	if err != nil {
 		return err
 	}
@@ -588,7 +605,7 @@ func sweepTestURLCategories(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.ConfiguredName, testResourcePrefix) || strings.HasPrefix(b.ConfiguredName, updateResourcePrefix) {
-			if _, err := client.sdkClient.urlcategories.DeleteURLCategories(b.ID); err != nil {
+			if _, err := urlcategories.DeleteURLCategories(client.sdkClient.urlcategories, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}
@@ -607,7 +624,7 @@ func sweepTestURLCategories(client *testClient) error {
 func sweepTestAdminUser(client *testClient) error {
 	var errorList []error
 
-	rule, err := client.sdkClient.admins.GetAllAdminUsers()
+	rule, err := admins.GetAllAdminUsers(client.sdkClient.admins)
 	if err != nil {
 		return err
 	}
@@ -616,7 +633,7 @@ func sweepTestAdminUser(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.UserName, testResourcePrefix) || strings.HasPrefix(b.UserName, updateResourcePrefix) {
-			if _, err := client.sdkClient.admins.DeleteAdminUser(b.ID); err != nil {
+			if _, err := admins.DeleteAdminUser(client.sdkClient.admins, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}

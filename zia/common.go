@@ -44,7 +44,7 @@ func listIDsSchemaType(desc string) *schema.Schema {
 func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 	ids := &schema.Schema{
 		Type:     schema.TypeSet,
-		Required: true,
+		Optional: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeInt,
 		},
@@ -529,7 +529,7 @@ func getURLCategories() *schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateURLFilteringCategories(),
 		},
-		Optional: true,
+		Required: true,
 	}
 }
 

@@ -83,6 +83,7 @@ func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
 
 func testAccCheckForwardingControlRuleDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.forwarding_rules
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.ForwardingControlRule {
@@ -95,7 +96,7 @@ func testAccCheckForwardingControlRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.forwarding_rules.Get(id)
+		rule, err := forwarding_rules.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -126,13 +127,14 @@ func testAccCheckForwardingControlRuleExists(resource string, rule *forwarding_r
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
+		service := apiClient.forwarding_rules
 
 		var receivedRule *forwarding_rules.ForwardingRules
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedRule, innerErr = apiClient.forwarding_rules.Get(id)
+			receivedRule, innerErr = forwarding_rules.Get(service, id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}

@@ -233,12 +233,13 @@ func dataSourceLocationManagement() *schema.Resource {
 // See SDK #PR93 https://github.com/zscaler/zscaler-sdk-go/pull/93
 func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationmanagement
 
 	var resp *locationmanagement.Locations
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.locationmanagement.GetLocationOrSublocationByID(id)
+		res, err := locationmanagement.GetLocationOrSublocationByID(service, id)
 		if err != nil {
 			return err
 		}
@@ -249,14 +250,14 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	if resp == nil && name != "" {
 		if parentName != "" {
 			log.Printf("[INFO] Getting data for location name: %s - parent name:%s\n", name, parentName)
-			res, err := zClient.locationmanagement.GetSubLocationByNames(parentName, name)
+			res, err := locationmanagement.GetSubLocationByNames(service, parentName, name)
 			if err != nil {
 				return err
 			}
 			resp = res
 		} else {
 			log.Printf("[INFO] Getting data for location name: %s\n", name)
-			res, err := zClient.locationmanagement.GetLocationOrSublocationByName(name)
+			res, err := locationmanagement.GetLocationOrSublocationByName(service, name)
 			if err != nil {
 				return err
 			}

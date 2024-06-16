@@ -206,12 +206,13 @@ func dataSourceAdminUsers() *schema.Resource {
 
 func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.admins
 
 	var resp *admins.AdminUsers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.admins.GetAdminUsers(id)
+		res, err := admins.GetAdminUsers(service, id)
 		if err != nil {
 			return err
 		}
@@ -220,7 +221,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	loginName, _ := d.Get("login_name").(string)
 	if resp == nil && loginName != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
-		res, err := zClient.admins.GetAdminUsersByLoginName(loginName)
+		res, err := admins.GetAdminUsersByLoginName(service, loginName)
 		if err != nil {
 			return err
 		}
@@ -230,7 +231,7 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	userName, _ := d.Get("username").(string)
 	if resp == nil && userName != "" {
 		log.Printf("[INFO] Getting data for admin username: %s\n", userName)
-		res, err := zClient.admins.GetAdminByUsername(userName)
+		res, err := admins.GetAdminByUsername(service, userName)
 		if err != nil {
 			return err
 		}

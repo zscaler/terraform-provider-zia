@@ -20,9 +20,10 @@ func resourceSandboxSettings() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.sandbox_settings
 
 				// Use the Get method from the SDK to fetch the MD5 file hashes
-				hashes, err := zClient.sandbox_settings.Get()
+				hashes, err := sandbox_settings.Get(service)
 				if err != nil {
 					return nil, fmt.Errorf("error fetching MD5 file hashes: %s", err)
 				}
@@ -80,6 +81,7 @@ func identifyHashType(hash string) string {
 
 func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.sandbox_settings
 	fileHashes := expandAndSortSandboxSettings(d)
 
 	// Validate hashes
@@ -88,7 +90,7 @@ func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	_, err = zClient.sandbox_settings.Update(fileHashes)
+	_, err = sandbox_settings.Update(service, fileHashes)
 	if err != nil {
 		return err
 	}
@@ -110,7 +112,8 @@ func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error 
 
 func resourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
-	resp, err := zClient.sandbox_settings.Get()
+	service := zClient.sandbox_settings
+	resp, err := sandbox_settings.Get(service)
 	if err != nil {
 		return err
 	}
@@ -130,6 +133,7 @@ func resourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.sandbox_settings
 
 	stateHashes := expandAndSortSandboxSettings(d)
 
@@ -138,13 +142,13 @@ func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	currentSettings, err := zClient.sandbox_settings.Get()
+	currentSettings, err := sandbox_settings.Get(service)
 	if err != nil {
 		return err
 	}
 
 	if !reflect.DeepEqual(stateHashes.FileHashesToBeBlocked, sortStringSlice(currentSettings.FileHashesToBeBlocked)) {
-		_, err := zClient.sandbox_settings.Update(stateHashes)
+		_, err := sandbox_settings.Update(service, stateHashes)
 		if err != nil {
 			return err
 		}

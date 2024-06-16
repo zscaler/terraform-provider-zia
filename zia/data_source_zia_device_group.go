@@ -58,12 +58,13 @@ func dataSourceDeviceGroups() *schema.Resource {
 
 func dataSourceDeviceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.devicegroups
 
 	var resp *devicegroups.DeviceGroups
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
-		res, err := zClient.devicegroups.GetDeviceGroupByName(name)
+		res, err := devicegroups.GetDeviceGroupByName(service, name)
 		if err != nil {
 			return err
 		}

@@ -34,6 +34,12 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
     id = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].id
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
   }
+
+  lifecycle {
+    ignore_changes = [
+      internal_ip_range,
+    ]
+  }
 }
 
 # Note: The attributes ``primary_dest_vip`` and ``secondary_dest_vip`` are considered optional

@@ -98,12 +98,13 @@ func dataSourceLocationLite() *schema.Resource {
 
 func dataSourceLocationLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationlite
 
 	var resp *locationlite.LocationLite
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := zClient.locationlite.GetLocationLiteID(id)
+		res, err := locationlite.GetLocationLiteID(service, id)
 		if err != nil {
 			return err
 		}
@@ -112,7 +113,7 @@ func dataSourceLocationLiteRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := zClient.locationlite.GetLocationLiteByName(name)
+		res, err := locationlite.GetLocationLiteByName(service, name)
 		if err != nil {
 			return err
 		}

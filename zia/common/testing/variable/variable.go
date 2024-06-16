@@ -101,7 +101,7 @@ const (
 // Traffic Forwarding GRE resource/datasource
 const (
 	GRETunnelComment       = "this is an acceptance test"
-	GRETunnelWithinCountry = false
+	GRETunnelWithinCountry = true
 	GRETunnelIPUnnumbered  = false
 )
 

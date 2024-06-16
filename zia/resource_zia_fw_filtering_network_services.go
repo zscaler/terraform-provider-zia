@@ -23,13 +23,14 @@ func resourceFWNetworkServices() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.networkservices
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("network_service_id", idInt)
 				} else {
-					resp, err := zClient.networkservices.GetByName(id)
+					resp, err := networkservices.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("network_service_id", resp.ID)
@@ -85,11 +86,12 @@ func resourceFWNetworkServices() *schema.Resource {
 
 func resourceNetworkServicesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkservices
 
 	req := expandNetworkServices(d)
 	log.Printf("[INFO] Creating network services\n%+v\n", req)
 
-	resp, err := zClient.networkservices.Create(&req)
+	resp, err := networkservices.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -114,12 +116,13 @@ func resourceNetworkServicesCreate(d *schema.ResourceData, m interface{}) error 
 
 func resourceNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkservices
 
 	id, ok := getIntFromResourceData(d, "network_service_id")
 	if !ok {
 		return fmt.Errorf("no network services id is set")
 	}
-	resp, err := zClient.networkservices.Get(id)
+	resp, err := networkservices.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia network services %s from state because it no longer exists in ZIA", d.Id())
@@ -160,6 +163,7 @@ func resourceNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceNetworkServicesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkservices
 
 	id, ok := getIntFromResourceData(d, "network_service_id")
 	if !ok {
@@ -167,13 +171,13 @@ func resourceNetworkServicesUpdate(d *schema.ResourceData, m interface{}) error 
 	}
 	log.Printf("[INFO] Updating network service ID: %v\n", id)
 	req := expandNetworkServices(d)
-	if _, err := zClient.networkservices.Get(req.ID); err != nil {
+	if _, err := networkservices.Get(service, req.ID); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.networkservices.Update(id, &req); err != nil {
+	if _, _, err := networkservices.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -193,6 +197,7 @@ func resourceNetworkServicesUpdate(d *schema.ResourceData, m interface{}) error 
 
 func resourceNetworkServicesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkservices
 
 	id, ok := getIntFromResourceData(d, "network_service_id")
 	if !ok {
@@ -213,7 +218,7 @@ func resourceNetworkServicesDelete(d *schema.ResourceData, m interface{}) error 
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.networkservices.Delete(id); err != nil {
+	if _, err := networkservices.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

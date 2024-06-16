@@ -166,12 +166,13 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 
 func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
 
 	var resp *gretunnels.GreTunnels
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
-		res, err := zClient.gretunnels.GetGreTunnels(id)
+		res, err := gretunnels.GetGreTunnels(service, id)
 		if err != nil {
 			return err
 		}

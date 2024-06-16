@@ -65,12 +65,13 @@ func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
 
 func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.virtualipaddress
 
 	var resp *virtualipaddress.ZscalerVIPs
 	datacenter, _ := d.Get("datacenter").(string)
 	if datacenter != "" {
 		log.Printf("[INFO] Getting data for datacenter name: %s\n", datacenter)
-		res, err := zClient.virtualipaddress.GetZscalerVIPs(datacenter)
+		res, err := virtualipaddress.GetZscalerVIPs(service, datacenter)
 		if err != nil {
 			return err
 		}

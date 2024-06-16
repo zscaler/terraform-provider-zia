@@ -95,6 +95,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 
 func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.vpncredentials
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingVPNCredentials {
@@ -107,7 +108,7 @@ func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) erro
 			return err
 		}
 
-		rule, err := apiClient.vpncredentials.Get(id)
+		rule, err := vpncredentials.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -138,7 +139,9 @@ func testAccCheckTrafficForwardingVPNCredentialsExists(resource string, rule *vp
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.vpncredentials.Get(id)
+		service := apiClient.vpncredentials
+
+		receivedRule, err := vpncredentials.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

@@ -181,6 +181,7 @@ func dataSourceURLCategories() *schema.Resource {
 
 func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	var resp *urlcategories.URLCategory
 	var err error
@@ -190,13 +191,13 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 
 	if id != "" {
 		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
-		resp, err = zClient.urlcategories.Get(id)
+		resp, err = urlcategories.Get(service, id)
 		if err != nil {
 			return err
 		}
 	} else if name != "" {
 		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = zClient.urlcategories.GetCustomURLCategories(name)
+		resp, err = urlcategories.GetCustomURLCategories(service, name, true, true)
 		if err != nil {
 			return err
 		}

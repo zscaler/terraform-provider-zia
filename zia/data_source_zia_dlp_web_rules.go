@@ -530,12 +530,13 @@ func dataSourceDlpWebRules() *schema.Resource {
 
 func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_web_rules
 
 	var resp *dlp_web_rules.WebDLPRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp web rule id: %d\n", id)
-		res, err := zClient.dlp_web_rules.Get(id)
+		res, err := dlp_web_rules.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -545,7 +546,7 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp web rule: %s\n", name)
-		res, err := zClient.dlp_web_rules.GetByName(name)
+		res, err := dlp_web_rules.GetByName(service, name)
 		if err != nil {
 			return err
 		}
