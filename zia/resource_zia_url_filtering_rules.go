@@ -448,7 +448,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("size_quota", sizeQuotaMB)
 	_ = d.Set("request_methods", resp.RequestMethods)
 
-	// Convert epoch time back to RFC1123
+	// Convert epoch time back to RFC1123 in UTC
 	_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
 	_ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
 
@@ -627,20 +627,18 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	validityStartTime, err := ConvertRFC1123ToEpoch(validityStartTimeStr)
 	if err != nil {
 		log.Printf("[ERROR] Invalid validity_start_time: %v", err)
-		// handle error appropriately
 	}
 	validityEndTime, err := ConvertRFC1123ToEpoch(validityEndTimeStr)
 	if err != nil {
 		log.Printf("[ERROR] Invalid validity_end_time: %v", err)
-		// handle error appropriately
 	}
 
 	sizeQuotaMB := d.Get("size_quota").(int)
 	sizeQuotaKB, err := convertAndValidateSizeQuota(sizeQuotaMB)
 	if err != nil {
 		log.Printf("[ERROR] Invalid size_quota: %v", err)
-		// handle error appropriately
 	}
+
 	result := urlfilteringpolicies.URLFilteringRule{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
@@ -664,21 +662,20 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
 		Ciparule:               d.Get("ciparule").(bool),
-		// CBIProfileID:           d.Get("cbi_profile_id").(int),
-		Locations:      expandIDNameExtensionsSet(d, "locations"),
-		Groups:         expandIDNameExtensionsSet(d, "groups"),
-		Departments:    expandIDNameExtensionsSet(d, "departments"),
-		Users:          expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:    expandIDNameExtensionsSet(d, "time_windows"),
-		OverrideUsers:  expandIDNameExtensionsSet(d, "override_users"),
-		OverrideGroups: expandIDNameExtensionsSet(d, "override_groups"),
-		LocationGroups: expandIDNameExtensionsSet(d, "location_groups"),
-		Labels:         expandIDNameExtensionsSet(d, "labels"),
-		DeviceGroups:   expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:        expandIDNameExtensionsSet(d, "devices"),
-		SourceIPGroups: expandIDNameExtensionsSet(d, "source_ip_groups"),
-		WorkloadGroups: expandWorkloadGroups(d, "workload_groups"),
-		CBIProfile:     expandCBIProfile(d),
+		Locations:              expandIDNameExtensionsSet(d, "locations"),
+		Groups:                 expandIDNameExtensionsSet(d, "groups"),
+		Departments:            expandIDNameExtensionsSet(d, "departments"),
+		Users:                  expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
+		OverrideUsers:          expandIDNameExtensionsSet(d, "override_users"),
+		OverrideGroups:         expandIDNameExtensionsSet(d, "override_groups"),
+		LocationGroups:         expandIDNameExtensionsSet(d, "location_groups"),
+		Labels:                 expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:                expandIDNameExtensionsSet(d, "devices"),
+		SourceIPGroups:         expandIDNameExtensionsSet(d, "source_ip_groups"),
+		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
+		CBIProfile:             expandCBIProfile(d),
 	}
 
 	return result
@@ -690,7 +687,6 @@ func expandCBIProfile(d *schema.ResourceData) urlfilteringpolicies.CBIProfile {
 		if len(cbiProfileList) > 0 {
 			cbiProfileData := cbiProfileList[0].(map[string]interface{})
 			return urlfilteringpolicies.CBIProfile{
-				// ProfileSeq: cbiProfileData["profile_seq"].(int),
 				ID:   cbiProfileData["id"].(string),
 				Name: cbiProfileData["name"].(string),
 				URL:  cbiProfileData["url"].(string),
@@ -760,7 +756,6 @@ func validateTimeZone(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
-// ConvertRFC1123ToEpoch converts a time string in RFC1123 format to epoch time.
 func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
 	t, err := time.Parse(time.RFC1123, timeStr)
 	if err != nil {

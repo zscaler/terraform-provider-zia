@@ -202,7 +202,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 		}
 	} else if name != "" {
 		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = urlcategories.GetCustomURLCategories(service, name, true, true)
+		resp, err = urlcategories.GetIncludeOnlyUrlKeyWordCounts(service, name, true, true)
 		if err != nil {
 			return err
 		}

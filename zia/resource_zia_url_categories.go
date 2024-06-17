@@ -34,7 +34,7 @@ func resourceURLCategories() *schema.Resource {
 						_ = d.Set("category_id", resp.ID)
 					} else {
 						// Input is assumed to be a custom name, use the GetCustomURLCategories method
-						resp, err := urlcategories.GetCustomURLCategories(service, id, true, true)
+						resp, err := urlcategories.GetIncludeOnlyUrlKeyWordCounts(service, id, true, true)
 						if err != nil {
 							return nil, fmt.Errorf("error fetching URL category by custom name: %s", err)
 						}
