@@ -443,7 +443,9 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
 	_ = d.Set("time_quota", resp.TimeQuota)
-	_ = d.Set("size_quota", resp.SizeQuota)
+	// Convert size_quota from KB back to MB
+	sizeQuotaMB := resp.SizeQuota / 1024
+	_ = d.Set("size_quota", sizeQuotaMB)
 	_ = d.Set("request_methods", resp.RequestMethods)
 
 	// Convert epoch time back to RFC1123
@@ -633,6 +635,12 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		// handle error appropriately
 	}
 
+	sizeQuotaMB := d.Get("size_quota").(int)
+	sizeQuotaKB, err := convertAndValidateSizeQuota(sizeQuotaMB)
+	if err != nil {
+		log.Printf("[ERROR] Invalid size_quota: %v", err)
+		// handle error appropriately
+	}
 	result := urlfilteringpolicies.URLFilteringRule{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
@@ -649,7 +657,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EndUserNotificationURL: d.Get("end_user_notification_url").(string),
 		BlockOverride:          d.Get("block_override").(bool),
 		TimeQuota:              d.Get("time_quota").(int),
-		SizeQuota:              d.Get("size_quota").(int),
+		SizeQuota:              sizeQuotaKB,
 		ValidityStartTime:      validityStartTime,
 		ValidityEndTime:        validityEndTime,
 		ValidityTimeZoneID:     d.Get("validity_time_zone_id").(string),
@@ -776,4 +784,17 @@ func validateTimesNotInPast(val interface{}, key string) (warns []string, errs [
 	}
 
 	return
+}
+
+func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {
+	const (
+		minMB = 10
+		maxMB = 100000
+	)
+	if sizeQuotaMB < minMB || sizeQuotaMB > maxMB {
+		return 0, fmt.Errorf("size_quota must be between %d MB and %d MB", minMB, maxMB)
+	}
+	// Convert MB to KB
+	sizeQuotaKB := sizeQuotaMB * 1024
+	return sizeQuotaKB, nil
 }
