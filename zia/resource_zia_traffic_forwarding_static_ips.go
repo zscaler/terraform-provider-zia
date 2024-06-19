@@ -84,6 +84,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 			"comment": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "Additional information about this static IP address",
 			},
 		},

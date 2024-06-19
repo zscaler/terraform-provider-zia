@@ -3,8 +3,8 @@ data "zia_cloud_browser_isolation_profile" "this" {
 }
 
 resource "zia_url_filtering_rules" "this" {
-    name = "Example"
-    description = "Example"
+    name = "ExampleIsolation"
+    description = "ExampleIsolation"
     state = "ENABLED"
     action = "ISOLATE"
     order = 1
@@ -16,7 +16,6 @@ resource "zia_url_filtering_rules" "this" {
         name = data.zia_cloud_browser_isolation_profile.this.name
         url = data.zia_cloud_browser_isolation_profile.this.url
     }
-    # cbi_profile_id = 17837904
     user_agent_types = [
         "OPERA",
         "FIREFOX",

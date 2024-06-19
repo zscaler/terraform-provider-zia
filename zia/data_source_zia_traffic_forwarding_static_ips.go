@@ -27,16 +27,32 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 				Computed: true,
 			},
 			"latitude": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"longitude": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"routable_ip": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"city": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"last_modification_time": {
 				Type:     schema.TypeInt,
@@ -83,7 +99,7 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 			},
 			"comment": {
 				Type:        schema.TypeString,
-				Optional:    true,
+				Computed:    true,
 				Description: "Additional information about this static IP address",
 			},
 		},
@@ -132,6 +148,10 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 			return err
 		}
 
+		if err := d.Set("city", flattenCity(resp.City)); err != nil {
+			return err
+		}
+
 	} else {
 		return fmt.Errorf("couldn't find any static ip address with id '%d'", id)
 	}
@@ -161,6 +181,18 @@ func flattenStaticLastModifiedBy(lastModifiedBy *staticips.LastModifiedBy) inter
 			"id":         lastModifiedBy.ID,
 			"name":       lastModifiedBy.Name,
 			"extensions": lastModifiedBy.Extensions,
+		},
+	}
+}
+
+func flattenCity(city *staticips.City) interface{} {
+	if city == nil {
+		return nil
+	}
+	return []map[string]interface{}{
+		{
+			"id":   city.ID,
+			"name": city.Name,
 		},
 	}
 }

@@ -69,6 +69,11 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
     datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].datacenter
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
   }
+  lifecycle {
+    ignore_changes = [
+      internal_ip_range,
+    ]
+  }
   depends_on     = [zia_traffic_forwarding_static_ip.this]
 }
 ```

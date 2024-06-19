@@ -3,55 +3,61 @@ subcategory: "Activation"
 layout: "zscaler"
 page_title: "ZIA Config Activation"
 subcategory: "Activation"
-description: |-
-  "Activates configuration changes".
 ---
 
-#
+# ZIA Activator Configuration
 
 ```go
 package main
 
 import (
- "log"
- "os"
+	"fmt"
+	"log"
+	"os"
+	"runtime"
 
- "github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
- client "github.com/zscaler/zscaler-sdk-go/v2/zia"
- "github.com/zscaler/terraform-provider-zia/v2/zia"
+	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
 )
 
 func getEnvVarOrFail(k string) string {
- if v := os.Getenv(k); v != "" {
-  return v
- }
- log.Fatalf("[ERROR] Couldn't find environment variable %s\n", k)
- return ""
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	log.Fatalf("[ERROR] Couldn't find environment variable %s\n", k)
+	return ""
 }
 
 func main() {
- log.Printf("[INFO] Initializing ZIA client\n")
- c := zia.Config{
-  Username:   getEnvVarOrFail("ZIA_USERNAME"),
-  Password:   getEnvVarOrFail("ZIA_PASSWORD"),
-  APIKey:     getEnvVarOrFail("ZIA_API_KEY"),
-  ZIABaseURL: getEnvVarOrFail("ZIA_CLOUD"),
- }
- cli, err := client.NewClientZIA(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
- if err != nil {
-  log.Fatalf("[ERROR] Failed Initializing ZIA client: %v\n", err)
- }
- activationService := activation.New(cli)
- resp, err := activationService.CreateActivation(activation.Activation{
-  Status: "active",
- })
- if err != nil {
-  log.Printf("[ERROR] Activation Failed: %v\n", err)
- } else {
-  log.Printf("[INFO] Activation succeded: %#v\n", resp)
- }
- log.Printf("[INFO] Destroying session: %#v\n", resp)
- _ = cli.Logout()
- os.Exit(0)
+	log.Printf("[INFO] Initializing ZIA client\n")
+
+	// Here, rather than setting up the client configuration from the external library,
+	// we'll simply gather the required details for initializing the client
+	username := getEnvVarOrFail("ZIA_USERNAME")
+	password := getEnvVarOrFail("ZIA_PASSWORD")
+	apiKey := getEnvVarOrFail("ZIA_API_KEY")
+	ziaCloud := getEnvVarOrFail("ZIA_CLOUD")
+	userAgent := fmt.Sprintf("(%s %s) cli/ziaActivator", runtime.GOOS, runtime.GOARCH)
+
+	// Now, we'll use the local SDK's NewClient method to get the client instance
+	cli, err := client.NewClient(username, password, apiKey, ziaCloud, userAgent)
+	if err != nil {
+		log.Fatalf("[ERROR] Failed Initializing ZIA client: %v\n", err)
+	}
+
+	service := services.New(cli)
+	resp, err := activation.CreateActivation(service, activation.Activation{
+		Status: "active",
+	})
+	if err != nil {
+		log.Printf("[ERROR] Activation Failed: %v\n", err)
+	} else {
+		log.Printf("[INFO] Activation succeeded: %#v\n", resp)
+	}
+
+	log.Printf("[INFO] Destroying session: %#v\n", resp)
+	_ = cli.Logout()
+	os.Exit(0)
 }
 ```

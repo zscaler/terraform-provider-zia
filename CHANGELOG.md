@@ -1,16 +1,26 @@
 # Changelog
 
-## 2.91.0 (June, 14 2024)
+## 2.91.0 (June, 19 2024)
 
 ### Notes
 
-- Release date: **(June, 14  2024)**
+- Release date: **(June, 19  2024)**
 - Supported Terraform version: **v1.x**
 
-### Enhancements
+### BREAKING CHANGES and ENHACEMENTS
 
 - [PR #350](https://github.com/zscaler/terraform-provider-zia/350)
-  - `zia_url_filtering_rules` - The provider now explicitly validates during the plan and apply stages which attributes can be set based on the `action` value. See documentation examples [here]()
+  - `zia_url_filtering_rules` - The provider now explicitly validates during the plan and apply stages which attributes can be set based on the `action` value.
+  - `zia_url_filtering_rules` - The provider now allows for the use of `RFC1123` date and time format i.e `Sun, 16 Jun 2024 15:04:05 UTC` when setting the attributes `validity_start_time` and `validity_end_time` instead of the native epoch unix format.
+
+    ~> **NOTE** This change is not backwards compatible.
+  - `zia_url_filtering_rules` - The provider now explicitly validates the attribute `validity_time_zone_id` against the official [IANA List](https://nodatime.org/TimeZones). The supported format is: `"US/Pacific"`
+
+    ~> **NOTE** This change is not backwards compatible.
+
+  - `ziaActivator` - The Out-of-band ZIA Activator has been updated to directly leverage the [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0).
+    ~> **NOTE** If you plan to update your provider installation to the latest v2.91.0, you must re-compile the utility program.
+    ~> **NOTE** Note that as of release [v2.8.2](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.2) the provider offers the option to trigger activation by setting the `ZIA_ACTIVATION` environment variable. With this enhancement the activation occurs only when this environment variable is set to `true`.
 
 ### Internal Changes
 

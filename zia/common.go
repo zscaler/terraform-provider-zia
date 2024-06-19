@@ -529,7 +529,7 @@ func getURLCategories() *schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateURLFilteringCategories(),
 		},
-		Required: true,
+		Optional: true,
 	}
 }
 

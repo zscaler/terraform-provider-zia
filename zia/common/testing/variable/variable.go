@@ -100,7 +100,7 @@ const (
 
 // Traffic Forwarding GRE resource/datasource
 const (
-	GRETunnelComment       = "this is an acceptance test"
+	GRETunnelComment       = "GRE Tunnel Created with Terraform"
 	GRETunnelWithinCountry = true
 	GRETunnelIPUnnumbered  = false
 )
