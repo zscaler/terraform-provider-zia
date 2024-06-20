@@ -96,6 +96,7 @@ func dataSourceDLPIDMProfileLite() *schema.Resource {
 
 func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_idm_profile_lite
 
 	var resp *dlp_idm_profile_lite.DLPIDMProfileLite
 	activeOnly := d.Get("active_only").(bool) // Retrieve the active_only value
@@ -103,7 +104,7 @@ func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) erro
 	profileLiteID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp idm profile id: %d\n", profileLiteID)
-		res, err := zClient.dlp_idm_profile_lite.GetDLPProfileLiteID(profileLiteID, activeOnly) // Use activeOnly here
+		res, err := dlp_idm_profile_lite.GetDLPProfileLiteID(service, profileLiteID, activeOnly) // Use activeOnly here
 		if err != nil {
 			return err
 		}
@@ -113,7 +114,7 @@ func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) erro
 	profileLiteName, _ := d.Get("template_name").(string)
 	if resp == nil && profileLiteName != "" {
 		log.Printf("[INFO] Getting data for dlp idm template name: %s\n", profileLiteName)
-		res, err := zClient.dlp_idm_profile_lite.GetDLPProfileLiteByName(profileLiteName, activeOnly) // Use activeOnly here
+		res, err := dlp_idm_profile_lite.GetDLPProfileLiteByName(service, profileLiteName, activeOnly) // Use activeOnly here
 		if err != nil {
 			return err
 		}

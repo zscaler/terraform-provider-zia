@@ -89,12 +89,13 @@ func dataSourceAdminRoles() *schema.Resource {
 
 func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.roles
 
 	var resp *roles.AdminRoles
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
-		res, err := zClient.roles.GetByName(name)
+		res, err := roles.GetByName(service, name)
 		if err != nil {
 			return err
 		}

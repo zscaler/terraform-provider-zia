@@ -97,12 +97,13 @@ func dataSourceRuleLabels() *schema.Resource {
 
 func dataSourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.rule_labels
 
 	var resp *rule_labels.RuleLabels
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for rule label id: %d\n", id)
-		res, err := zClient.rule_labels.Get(id)
+		res, err := rule_labels.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -111,7 +112,7 @@ func dataSourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for rule label name: %s\n", name)
-		res, err := zClient.rule_labels.GetRuleLabelByName(name)
+		res, err := rule_labels.GetRuleLabelByName(service, name)
 		if err != nil {
 			return err
 		}

@@ -181,6 +181,7 @@ func dataSourceURLCategories() *schema.Resource {
 
 func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	var resp *urlcategories.URLCategory
 	var err error
@@ -188,15 +189,20 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	id, _ := d.Get("id").(string)
 	name, _ := d.Get("configured_name").(string)
 
+	// Ensure either ID or name is provided
+	if id == "" && name == "" {
+		return fmt.Errorf("either 'id' or 'configured_name' must be specified")
+	}
+
 	if id != "" {
 		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
-		resp, err = zClient.urlcategories.Get(id)
+		resp, err = urlcategories.Get(service, id)
 		if err != nil {
 			return err
 		}
 	} else if name != "" {
 		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = zClient.urlcategories.GetCustomURLCategories(name)
+		resp, err = urlcategories.GetCustomURLCategories(service, name, true, true)
 		if err != nil {
 			return err
 		}
@@ -221,6 +227,10 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("val", resp.Val)
 	_ = d.Set("custom_urls_count", resp.CustomUrlsCount)
 	_ = d.Set("urls_retaining_parent_category_count", resp.UrlsRetainingParentCategoryCount)
+	_ = d.Set("ip_ranges", resp.IPRanges)
+	_ = d.Set("ip_ranges_retaining_parent_category", resp.IPRangesRetainingParentCategory)
+	_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
+	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 
 	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
 		return err

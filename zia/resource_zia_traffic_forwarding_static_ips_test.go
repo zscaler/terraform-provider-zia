@@ -63,6 +63,7 @@ func TestAccResourceTrafficForwardingStaticIPBasic(t *testing.T) {
 
 func testAccCheckTrafficForwardingStaticIPDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.staticips
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingStaticIP {
@@ -75,7 +76,7 @@ func testAccCheckTrafficForwardingStaticIPDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.staticips.Get(id)
+		rule, err := staticips.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -106,7 +107,9 @@ func testAccCheckTrafficForwardingStaticIPExists(resource string, rule *staticip
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.staticips.Get(id)
+		service := apiClient.staticips
+
+		receivedRule, err := staticips.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -115,26 +118,6 @@ func testAccCheckTrafficForwardingStaticIPExists(resource string, rule *staticip
 		return nil
 	}
 }
-
-// func testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, ipAddress string, routableIP, geoOverride bool) string {
-// 	return fmt.Sprintf(`
-
-// // location management resource
-// %s
-
-// data "%s" "%s" {
-//   id = "${%s.id}"
-// }
-// `,
-// 		// resource variables
-// 		getTrafficForwardingStaticIPConfigure(generatedName, ipAddress, routableIP, geoOverride),
-
-// 		// data source variables
-// 		resourcetype.TrafficForwardingStaticIP,
-// 		generatedName,
-// 		resourceTypeAndName,
-// 	)
-// }
 
 func testAccCheckTrafficForwardingStaticIPConfigure(resourceTypeAndName, generatedName, ipAddress string, routableIP, geoOverride bool) string {
 	resourceName := strings.Split(resourceTypeAndName, ".")[1] // Extract the resource name

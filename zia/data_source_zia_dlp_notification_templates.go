@@ -55,12 +55,13 @@ func dataSourceDLPNotificationTemplates() *schema.Resource {
 
 func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_notification_templates
 
 	var resp *dlp_notification_templates.DlpNotificationTemplates
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp notifiation template id: %d\n", id)
-		res, err := zClient.dlp_notification_templates.Get(id)
+		res, err := dlp_notification_templates.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -70,7 +71,7 @@ func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp notifiation template: %s\n", name)
-		res, err := zClient.dlp_notification_templates.GetByName(name)
+		res, err := dlp_notification_templates.GetByName(service, name)
 		if err != nil {
 			return err
 		}

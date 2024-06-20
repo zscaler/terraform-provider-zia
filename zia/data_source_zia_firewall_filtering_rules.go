@@ -619,12 +619,13 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 
 func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.filteringrules
 
 	var resp *filteringrules.FirewallFilteringRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for rule id: %d\n", id)
-		res, err := zClient.filteringrules.Get(id)
+		res, err := filteringrules.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -633,7 +634,7 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for rule : %s\n", name)
-		res, err := zClient.filteringrules.GetByName(name)
+		res, err := filteringrules.GetByName(service, name)
 		if err != nil {
 			return err
 		}

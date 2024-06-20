@@ -37,12 +37,13 @@ func dataSourceFWIPSourceGroups() *schema.Resource {
 
 func dataSourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.ipsourcegroups
 
 	var resp *ipsourcegroups.IPSourceGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting ip source group id: %d\n", id)
-		res, err := zClient.ipsourcegroups.Get(id)
+		res, err := ipsourcegroups.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -51,7 +52,7 @@ func dataSourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting ip source group : %s\n", name)
-		res, err := zClient.ipsourcegroups.GetByName(name)
+		res, err := ipsourcegroups.GetByName(service, name)
 		if err != nil {
 			return err
 		}

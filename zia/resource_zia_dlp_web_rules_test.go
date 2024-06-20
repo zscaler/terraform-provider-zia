@@ -67,6 +67,7 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 
 func testAccCheckDlpWebRulesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.dlp_web_rules
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPWebRules {
@@ -79,7 +80,7 @@ func testAccCheckDlpWebRulesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.filteringrules.Get(id)
+		rule, err := dlp_web_rules.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -110,13 +111,14 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
+		service := apiClient.dlp_web_rules
 
 		var receivedRule *dlp_web_rules.WebDLPRules
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedRule, innerErr = apiClient.dlp_web_rules.Get(id)
+			receivedRule, innerErr = dlp_web_rules.Get(service, id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}

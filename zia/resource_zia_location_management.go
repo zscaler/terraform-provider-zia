@@ -23,13 +23,14 @@ func resourceLocationManagement() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.locationmanagement
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("location_id", idInt)
 				} else {
-					resp, err := zClient.locationmanagement.GetLocationOrSublocationByName(id)
+					resp, err := locationmanagement.GetLocationOrSublocationByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("location_id", resp.ID)
@@ -317,6 +318,7 @@ func resourceLocationManagement() *schema.Resource {
 
 func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationmanagement
 
 	if parentIDInt, ok := d.GetOk("parent_id"); ok && parentIDInt.(int) != 0 {
 		ipAddresses := d.Get("ip_addresses").(*schema.Set)
@@ -333,7 +335,7 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	if err := checkVPNCredentials(req); err != nil {
 		return err
 	}
-	resp, err := zClient.locationmanagement.Create(&req)
+	resp, err := locationmanagement.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -383,12 +385,13 @@ func checkSurrogateIPDependencies(loc locationmanagement.Locations) error {
 
 func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationmanagement
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
 		return fmt.Errorf("no location management id is set")
 	}
-	resp, err := zClient.locationmanagement.GetLocationOrSublocationByID(id)
+	resp, err := locationmanagement.GetLocationOrSublocationByID(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing location management %s from state because it no longer exists in ZIA", d.Id())
@@ -464,6 +467,7 @@ func flattenLocationVPNCredentialsSimple(vpnCredential []locationmanagement.VPNC
 
 func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationmanagement
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
@@ -474,14 +478,14 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	if err := checkSurrogateIPDependencies(req); err != nil {
 		return err
 	}
-	if _, err := zClient.locationmanagement.GetLocationOrSublocationByID(id); err != nil {
+	if _, err := locationmanagement.GetLocationOrSublocationByID(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
 
-	if _, _, err := zClient.locationmanagement.Update(id, &req); err != nil {
+	if _, _, err := locationmanagement.Update(service, id, &req); err != nil {
 		return err
 	}
 
@@ -502,6 +506,7 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 
 func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.locationmanagement
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
@@ -522,7 +527,7 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.locationmanagement.Delete(id); err != nil {
+	if _, err := locationmanagement.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

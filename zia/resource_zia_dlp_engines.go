@@ -20,13 +20,14 @@ func resourceDLPEngines() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.dlp_engines
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("engine_id", idInt)
 				} else {
-					resp, err := zClient.dlp_engines.GetByName(id)
+					resp, err := dlp_engines.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("engine_id", resp.ID)
@@ -73,11 +74,12 @@ func resourceDLPEngines() *schema.Resource {
 
 func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_engines
 
 	req := expandDLPEngines(d)
 	log.Printf("[INFO] Creating zia dlp engine\n%+v\n", req)
 
-	resp, _, err := zClient.dlp_engines.Create(&req)
+	resp, _, err := dlp_engines.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -101,12 +103,13 @@ func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_engines
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
 		return fmt.Errorf("no dlp engine id is set")
 	}
-	resp, err := zClient.dlp_engines.Get(id)
+	resp, err := dlp_engines.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia dlp engine%s from state because it no longer exists in ZIA", d.Id())
@@ -131,6 +134,7 @@ func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_engines
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
@@ -138,13 +142,13 @@ func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating zia dlp engine ID: %v\n", id)
 	req := expandDLPEngines(d)
-	if _, err := zClient.dlp_engines.Get(id); err != nil {
+	if _, err := dlp_engines.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.dlp_engines.Update(id, &req); err != nil {
+	if _, _, err := dlp_engines.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -164,6 +168,7 @@ func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_engines
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
@@ -171,7 +176,7 @@ func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting zia dlp engine ID: %v\n", (d.Id()))
 
-	if _, err := zClient.dlp_engines.Delete(id); err != nil {
+	if _, err := dlp_engines.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

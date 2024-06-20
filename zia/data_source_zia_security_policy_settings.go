@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
 )
 
 func dataSourceSecurityPolicySettings() *schema.Resource {
@@ -30,8 +31,9 @@ func dataSourceSecurityPolicySettings() *schema.Resource {
 
 func dataSourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.security_policy_settings
 
-	resp, err := zClient.security_policy_settings.GetListUrls()
+	resp, err := security_policy_settings.GetListUrls(service)
 	if err != nil {
 		return nil
 	}

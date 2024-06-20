@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"strconv"
 	"testing"
@@ -14,10 +13,7 @@ import (
 
 func TestAccDataSourceTrafficForwardingGreTunnels_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingGRETunnel)
-
-	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
-	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
-	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
+	randomIP, _ := acctest.RandIpAddress("104.238.235.0/24")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,7 +21,7 @@ func TestAccDataSourceTrafficForwardingGreTunnels_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckTrafficForwardingGRETunnelDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
+				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, variable.GRETunnelComment, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered, randomIP),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "source_ip", resourceTypeAndName, "source_ip"),
@@ -33,9 +29,7 @@ func TestAccDataSourceTrafficForwardingGreTunnels_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
 }
-*/

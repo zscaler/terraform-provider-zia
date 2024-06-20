@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -75,6 +76,7 @@ func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
 
 func testAccCheckURLFilteringRulesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.urlfilteringpolicies
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.URLFilteringRules {
@@ -87,7 +89,7 @@ func testAccCheckURLFilteringRulesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.urlfilteringpolicies.Get(id)
+		rule, err := urlfilteringpolicies.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -118,7 +120,9 @@ func testAccCheckURLFilteringRulesExists(resource string, rule *urlfilteringpoli
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.urlfilteringpolicies.Get(id)
+		service := apiClient.urlfilteringpolicies
+
+		receivedRule, err := urlfilteringpolicies.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -152,8 +156,13 @@ data "%s" "%s" {
 }
 
 func getURLFilteringRuleResourceHCL(generatedName, name, description, action, state, ruleLabelTypeAndName string) string {
-	return fmt.Sprintf(`
+	// Generate current time + 5 minutes for validity_start_time
+	validityStartTime := time.Now().Add(5 * time.Minute).UTC().Format(time.RFC1123)
 
+	// Generate time 365 days + 5 minutes from now for validity_end_time
+	validityEndTime := time.Now().AddDate(1, 0, 0).Add(5 * time.Minute).UTC().Format(time.RFC1123)
+
+	return fmt.Sprintf(`
 data "zia_firewall_filtering_time_window" "work_hours" {
 	name = "Work Hours"
 }
@@ -213,6 +222,10 @@ resource "%s" "%s" {
 	labels {
 		id = ["${%s.id}"]
 	}
+	enforce_time_validity = true
+	validity_time_zone_id = "US/Pacific"
+    validity_start_time = "%s"
+    validity_end_time = "%s"
 }
 `,
 		// resource variables
@@ -223,5 +236,8 @@ resource "%s" "%s" {
 		action,
 		state,
 		ruleLabelTypeAndName,
+		// validity times
+		validityStartTime,
+		validityEndTime,
 	)
 }

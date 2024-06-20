@@ -167,12 +167,13 @@ func dataSourceDLPIDMProfiles() *schema.Resource {
 
 func dataSourceDLPIDMProfilesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_idm_profiles
 
 	var resp *dlp_idm_profiles.DLPIDMProfile
 	profileID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp idm profile id: %d\n", profileID)
-		res, err := zClient.dlp_idm_profiles.Get(profileID)
+		res, err := dlp_idm_profiles.Get(service, profileID)
 		if err != nil {
 			return err
 		}
@@ -181,7 +182,7 @@ func dataSourceDLPIDMProfilesRead(d *schema.ResourceData, m interface{}) error {
 	profileName, _ := d.Get("profile_name").(string)
 	if resp == nil && profileName != "" {
 		log.Printf("[INFO] Getting data for dlp idmp profile name: %s\n", profileName)
-		res, err := zClient.dlp_idm_profiles.GetByName(profileName)
+		res, err := dlp_idm_profiles.GetByName(service, profileName)
 		if err != nil {
 			return err
 		}

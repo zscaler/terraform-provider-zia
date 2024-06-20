@@ -84,6 +84,7 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 
 func testAccCheckLocationManagementDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.locationmanagement
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingLocManagement {
@@ -96,7 +97,7 @@ func testAccCheckLocationManagementDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.locationmanagement.GetLocation(id)
+		rule, err := locationmanagement.GetLocation(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -127,13 +128,14 @@ func testAccCheckLocationManagementExists(resource string, rule *locationmanagem
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
+		service := apiClient.locationmanagement
 
 		var receivedLoc *locationmanagement.Locations
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedLoc, innerErr = apiClient.locationmanagement.GetLocation(id)
+			receivedLoc, innerErr = locationmanagement.GetLocation(service, id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}

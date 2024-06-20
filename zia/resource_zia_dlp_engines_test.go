@@ -59,6 +59,7 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 
 func testAccCheckDLPEnginesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.dlp_engines
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPEngines {
@@ -71,7 +72,7 @@ func testAccCheckDLPEnginesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		engine, err := apiClient.dlp_engines.Get(id)
+		engine, err := dlp_engines.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -102,7 +103,9 @@ func testAccCheckDLPEnginesExists(resource string, engine *dlp_engines.DLPEngine
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedEngine, err := apiClient.dlp_engines.Get(id)
+		service := apiClient.dlp_engines
+
+		receivedEngine, err := dlp_engines.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

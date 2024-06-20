@@ -22,13 +22,14 @@ func resourceDLPDictionaries() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.dlpdictionaries
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("dictionary_id", idInt)
 				} else {
-					resp, err := zClient.dlpdictionaries.GetByName(id)
+					resp, err := dlpdictionaries.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("dictionary_id", resp.ID)
@@ -260,6 +261,7 @@ func resourceDLPDictionaries() *schema.Resource {
 
 func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlpdictionaries
 
 	req := expandDLPDictionaries(d)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
@@ -267,7 +269,7 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
 		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
 	}
-	resp, _, err := zClient.dlpdictionaries.Create(&req)
+	resp, _, err := dlpdictionaries.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -291,12 +293,13 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 
 func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlpdictionaries
 
 	id, ok := getIntFromResourceData(d, "dictionary_id")
 	if !ok {
 		return fmt.Errorf("no DLP dictionary id is set")
 	}
-	resp, err := zClient.dlpdictionaries.Get(id)
+	resp, err := dlpdictionaries.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing dlp dictionary %s from state because it no longer exists in ZIA", d.Id())
@@ -373,6 +376,7 @@ func flattenIDMProfileMatchAccuracySimple(edm *dlpdictionaries.DlpDictionary) []
 
 func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlpdictionaries
 
 	id, ok := getIntFromResourceData(d, "dictionary_id")
 	if !ok {
@@ -381,7 +385,7 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 
 	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
 	req := expandDLPDictionaries(d)
-	if _, err := zClient.dlpdictionaries.Get(id); err != nil {
+	if _, err := dlpdictionaries.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
@@ -391,7 +395,7 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
 		return fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
 	}
-	if _, _, err := zClient.dlpdictionaries.Update(id, &req); err != nil {
+	if _, _, err := dlpdictionaries.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -411,6 +415,7 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 
 func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlpdictionaries
 
 	id, ok := getIntFromResourceData(d, "dictionary_id")
 	if !ok {
@@ -418,7 +423,7 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	}
 	log.Printf("[INFO] Deleting dlp dictionary ID: %v\n", (d.Id()))
 
-	if _, err := zClient.dlpdictionaries.DeleteDlpDictionary(id); err != nil {
+	if _, err := dlpdictionaries.DeleteDlpDictionary(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

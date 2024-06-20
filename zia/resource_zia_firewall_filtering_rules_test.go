@@ -87,6 +87,7 @@ func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
 
 func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.filteringrules
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FirewallFilteringRules {
@@ -99,7 +100,7 @@ func testAccCheckFirewallFilteringRuleDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.filteringrules.Get(id)
+		rule, err := filteringrules.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -130,13 +131,14 @@ func testAccCheckFirewallFilteringRuleExists(resource string, rule *filteringrul
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
+		service := apiClient.filteringrules
 
 		var receivedRule *filteringrules.FirewallFilteringRules
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedRule, innerErr = apiClient.filteringrules.Get(id)
+			receivedRule, innerErr = filteringrules.Get(service, id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}

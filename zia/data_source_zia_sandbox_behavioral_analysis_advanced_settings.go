@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_settings"
 )
 
 func dataSourceSandboxSettings() *schema.Resource {
@@ -23,8 +24,9 @@ func dataSourceSandboxSettings() *schema.Resource {
 
 func dataSourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.sandbox_settings
 
-	resp, err := zClient.sandbox_settings.Get()
+	resp, err := sandbox_settings.Get(service)
 	if err != nil {
 		return nil
 	}

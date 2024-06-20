@@ -121,12 +121,13 @@ func dataSourceWorkloadGroup() *schema.Resource {
 
 func dataSourceWorkloadGroupRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.workloadgroups
 
 	var resp *workloadgroups.WorkloadGroup
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting workload group id: %d\n", id)
-		res, err := zClient.workloadgroups.Get(id)
+		res, err := workloadgroups.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -136,7 +137,7 @@ func dataSourceWorkloadGroupRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting Getting workload group : %s\n", name)
-		res, err := zClient.workloadgroups.GetByName(name)
+		res, err := workloadgroups.GetByName(service, name)
 		if err != nil {
 			return err
 		}

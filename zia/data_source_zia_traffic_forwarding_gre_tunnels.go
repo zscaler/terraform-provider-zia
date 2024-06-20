@@ -166,12 +166,13 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 
 func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
 
 	var resp *gretunnels.GreTunnels
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
-		res, err := zClient.gretunnels.GetGreTunnels(id)
+		res, err := gretunnels.GetGreTunnels(service, id)
 		if err != nil {
 			return err
 		}
@@ -215,15 +216,15 @@ func flattenGrePrimaryDestVip(primaryDestVip *gretunnels.PrimaryDestVip) interfa
 	}
 	return []map[string]interface{}{
 		{
-			"id":                   primaryDestVip.ID,
-			"virtual_ip":           primaryDestVip.VirtualIP,
-			"private_service_edge": primaryDestVip.PrivateServiceEdge,
-			"datacenter":           primaryDestVip.Datacenter,
-			"latitude":             primaryDestVip.Latitude,
-			"longitude":            primaryDestVip.Longitude,
-			"city":                 primaryDestVip.City,
-			"country_code":         primaryDestVip.CountryCode,
-			"region":               primaryDestVip.Region,
+			"id":         primaryDestVip.ID,
+			"virtual_ip": primaryDestVip.VirtualIP,
+			// "private_service_edge": primaryDestVip.PrivateServiceEdge,
+			"datacenter": primaryDestVip.Datacenter,
+			// "latitude":             primaryDestVip.Latitude,
+			// "longitude":            primaryDestVip.Longitude,
+			// "city":                 primaryDestVip.City,
+			// "country_code":         primaryDestVip.CountryCode,
+			// "region":               primaryDestVip.Region,
 		},
 	}
 }
@@ -234,15 +235,15 @@ func flattenGreSecondaryDestVip(secondaryDestVip *gretunnels.SecondaryDestVip) i
 	}
 	return []map[string]interface{}{
 		{
-			"id":                   secondaryDestVip.ID,
-			"virtual_ip":           secondaryDestVip.VirtualIP,
-			"private_service_edge": secondaryDestVip.PrivateServiceEdge,
-			"datacenter":           secondaryDestVip.Datacenter,
-			"latitude":             secondaryDestVip.Latitude,
-			"longitude":            secondaryDestVip.Longitude,
-			"city":                 secondaryDestVip.City,
-			"country_code":         secondaryDestVip.CountryCode,
-			"region":               secondaryDestVip.Region,
+			"id":         secondaryDestVip.ID,
+			"virtual_ip": secondaryDestVip.VirtualIP,
+			// "private_service_edge": secondaryDestVip.PrivateServiceEdge,
+			"datacenter": secondaryDestVip.Datacenter,
+			// "latitude":             secondaryDestVip.Latitude,
+			// "longitude":            secondaryDestVip.Longitude,
+			// "city":                 secondaryDestVip.City,
+			// "country_code":         secondaryDestVip.CountryCode,
+			// "region":               secondaryDestVip.Region,
 		},
 	}
 }

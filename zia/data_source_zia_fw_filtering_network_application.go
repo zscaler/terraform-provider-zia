@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
 )
 
 func dataSourceFWNetworkApplication() *schema.Resource {
@@ -38,6 +39,7 @@ func dataSourceFWNetworkApplication() *schema.Resource {
 
 func dataSourceFWNetworkApplicationRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.networkapplications
 
 	id, ok := getStringFromResourceData(d, "id")
 	if !ok {
@@ -45,7 +47,7 @@ func dataSourceFWNetworkApplicationRead(d *schema.ResourceData, m interface{}) e
 	}
 
 	log.Printf("[INFO] Getting network application group id: %s\n", id)
-	resp, err := zClient.networkapplications.GetNetworkApplication(id, d.Get("locale").(string))
+	resp, err := networkapplications.GetNetworkApplication(service, id, d.Get("locale").(string))
 	if err != nil {
 		return err
 	}

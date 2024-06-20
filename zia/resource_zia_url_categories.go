@@ -21,19 +21,20 @@ func resourceURLCategories() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.urlcategories
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("category_id", idInt)
 				} else {
-					resp, err := zClient.urlcategories.Get(id)
+					resp, err := urlcategories.Get(service, id)
 					if err == nil {
 						d.SetId(resp.ID)
 						_ = d.Set("category_id", resp.ID)
 					} else {
 						// Input is assumed to be a custom name, use the GetCustomURLCategories method
-						resp, err := zClient.urlcategories.GetCustomURLCategories(id)
+						resp, err := urlcategories.GetCustomURLCategories(service, id, true, true)
 						if err != nil {
 							return nil, fmt.Errorf("error fetching URL category by custom name: %s", err)
 						}
@@ -194,11 +195,12 @@ func resourceURLCategories() *schema.Resource {
 
 func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	req := expandURLCategory(d)
 	log.Printf("[INFO] Creating zia url category\n%+v\n", req)
 
-	resp, err := zClient.urlcategories.CreateURLCategories(&req)
+	resp, err := urlcategories.CreateURLCategories(service, &req)
 	if err != nil {
 		return err
 	}
@@ -223,12 +225,13 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
 		return fmt.Errorf("no url category id is set")
 	}
-	resp, err := zClient.urlcategories.Get(id)
+	resp, err := urlcategories.Get(service, id)
 
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -287,6 +290,7 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
@@ -294,13 +298,13 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)
-	if _, err := zClient.urlcategories.Get(id); err != nil {
+	if _, err := urlcategories.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.urlcategories.UpdateURLCategories(id, &req); err != nil {
+	if _, _, err := urlcategories.UpdateURLCategories(service, id, &req); err != nil {
 		return err
 	}
 
@@ -321,6 +325,7 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.urlcategories
 
 	id, ok := getIntFromResourceData(d, "category_id")
 	if !ok {
@@ -328,7 +333,7 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting custom url category ID: %v\n", (d.Id()))
 
-	if _, err := zClient.urlcategories.DeleteURLCategories(d.Id()); err != nil {
+	if _, err := urlcategories.DeleteURLCategories(service, d.Id()); err != nil {
 		return err
 	}
 	d.SetId("")

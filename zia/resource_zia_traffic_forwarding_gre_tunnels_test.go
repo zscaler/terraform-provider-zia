@@ -1,6 +1,5 @@
 package zia
 
-/*
 import (
 	"fmt"
 	"log"
@@ -20,9 +19,7 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 	var gretunnel gretunnels.GreTunnels
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingGRETunnel)
 
-	rIP, _ := acctest.RandIpAddress("104.238.235.0/24")
-	staticIPTypeAndName, _, staticIPGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.TrafficForwardingStaticIP)
-	staticIPResourceHCL := testAccCheckTrafficForwardingStaticIPConfigure(staticIPTypeAndName, staticIPGeneratedName, rIP, variable.StaticRoutableIP, variable.StaticGeoOverride)
+	randomIP, _ := acctest.RandIpAddress("104.238.235.0/24")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -31,32 +28,34 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// create gree tunnel
-				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
+				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, variable.GRETunnelComment, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered, randomIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", variable.GRETunnelComment),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 
 			// update
 			{
-				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered),
+				Config: testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, variable.GRETunnelComment, variable.GRETunnelWithinCountry, variable.GRETunnelIPUnnumbered, randomIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficForwardingGRETunnelExists(resourceTypeAndName, &gretunnel),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", generatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "comment", variable.GRETunnelComment),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "within_country", strconv.FormatBool(variable.GRETunnelWithinCountry)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "ip_unnumbered", strconv.FormatBool(variable.GRETunnelIPUnnumbered)),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 			// Import test
 			{
 				ResourceName:      resourceTypeAndName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"country_code",
+					"within_country",
+				},
 			},
 		},
 	})
@@ -64,6 +63,7 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 
 func testAccCheckTrafficForwardingGRETunnelDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.gretunnels
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingGRETunnel {
@@ -76,7 +76,7 @@ func testAccCheckTrafficForwardingGRETunnelDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.gretunnels.GetGreTunnels(id)
+		rule, err := gretunnels.GetGreTunnels(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -107,7 +107,9 @@ func testAccCheckTrafficForwardingGRETunnelExists(resource string, rule *gretunn
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedGRETunnel, err := apiClient.gretunnels.GetGreTunnels(id)
+		service := apiClient.gretunnels
+
+		receivedGRETunnel, err := gretunnels.GetGreTunnels(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -117,11 +119,8 @@ func testAccCheckTrafficForwardingGRETunnelExists(resource string, rule *gretunn
 	}
 }
 
-func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, staticIPResourceHCL, staticIPTypeAndName string, withinCountry, ipUnnumbered bool) string {
+func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, generatedName, comment string, withinCountry, ipUnnumbered bool, randomIP string) string {
 	return fmt.Sprintf(`
-
-	// static ip resource
-	%s
 
 	// gre tunnel resource
 	%s
@@ -131,8 +130,7 @@ func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, genera
 	}
 `,
 		// resource variables
-		staticIPResourceHCL,
-		getTrafficForwardingGRETunnel_HCL(generatedName, staticIPTypeAndName, withinCountry, ipUnnumbered),
+		getTrafficForwardingGRETunnel_HCL(generatedName, comment, withinCountry, ipUnnumbered, randomIP),
 
 		// data source variables
 		resourcetype.TrafficForwardingGRETunnel,
@@ -141,25 +139,43 @@ func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, genera
 	)
 }
 
-func getTrafficForwardingGRETunnel_HCL(generatedName, staticIPTypeAndName string, withinCountry, ipUnnumbered bool) string {
+func getTrafficForwardingGRETunnel_HCL(generatedName, comment string, withinCountry, ipUnnumbered bool, randomIP string) string {
 
 	return fmt.Sprintf(`
 
+data "zia_gre_internal_ip_range_list" "this"{
+    required_count = 1
+}
+resource "zia_traffic_forwarding_static_ip" "this"{
+    ip_address =  "%s"
+	comment        = "GRE Tunnel Created with Terraform"
+    routable_ip = true
+    geo_override = true
+    latitude = 43.7063
+    longitude = -79.4202
+}
+
 resource "%s" "%s" {
-	source_ip = "${%s.ip_address}"
-	comment = 	"%s"
+	comment        = "%s"
+	internal_ip_range = data.zia_gre_internal_ip_range_list.this.list[0].start_ip_address
+	source_ip = zia_traffic_forwarding_static_ip.this.ip_address
 	country_code   = "CA"
     within_country = "%s"
     ip_unnumbered  = "%s"
+	lifecycle {
+		ignore_changes = [
+		internal_ip_range,
+		]
+	}
+	depends_on = [zia_traffic_forwarding_static_ip.this]
 }
 `,
 		// resource variables
+		randomIP,
 		resourcetype.TrafficForwardingGRETunnel,
 		generatedName,
-		staticIPTypeAndName,
-		generatedName,
+		comment,
 		strconv.FormatBool(withinCountry),
 		strconv.FormatBool(ipUnnumbered),
 	)
 }
-*/

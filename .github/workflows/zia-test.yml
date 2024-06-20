@@ -84,13 +84,6 @@ jobs:
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
-      - name: Publish test coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.out
-          fail_ci_if_error: true
-
   zia-test-tenants:
     runs-on: ubuntu-latest
     strategy:
@@ -98,9 +91,9 @@ jobs:
       matrix:
         goVersion: ["1.21"]
         environment:
-          - ZIA_ZSCLOUD
+          # - ZIA_ZSCLOUD
           - ZIA_ZS0
-          # - ZIA_ZS3
+          - ZIA_ZS3
     environment: ${{ matrix.environment }}
     steps:
       - name: Checkout code
@@ -159,13 +152,6 @@ jobs:
           ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
-
-      - name: Publish test coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.out
-          fail_ci_if_error: true
 
   zia-zscalerone-test:
     runs-on: ubuntu-latest
@@ -234,13 +220,6 @@ jobs:
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
-      - name: Publish test coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.out
-          fail_ci_if_error: true
-
   zia-zscalertwo-test:
     runs-on: ubuntu-latest
     strategy:
@@ -293,7 +272,7 @@ jobs:
           timeout_minutes: 120
           command: |
             make sweep
-            make test:integration:zscalertwo
+            make test:integration:zia
             make sweep
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}

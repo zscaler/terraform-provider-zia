@@ -38,12 +38,13 @@ func dataSourceCBIProfile() *schema.Resource {
 
 func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.user_authentication_settings
 
 	var resp *cloudbrowserisolation.IsolationProfile
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for cloud browser isolation profile name %s\n", name)
-		res, err := zClient.cloudbrowserisolation.GetByName(name)
+		res, err := cloudbrowserisolation.GetByName(service, name)
 		if err != nil {
 			return err
 		}

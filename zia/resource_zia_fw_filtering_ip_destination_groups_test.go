@@ -61,6 +61,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 
 func testAccCheckFWIPDestinationGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.ipdestinationgroups
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringDestinationGroup {
@@ -73,7 +74,7 @@ func testAccCheckFWIPDestinationGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := apiClient.ipdestinationgroups.Get(id)
+		rule, err := ipdestinationgroups.Get(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -104,7 +105,9 @@ func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinatio
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.ipdestinationgroups.Get(id)
+		service := apiClient.ipdestinationgroups
+
+		receivedRule, err := ipdestinationgroups.Get(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

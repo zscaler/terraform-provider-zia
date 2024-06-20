@@ -38,12 +38,13 @@ func dataSourceDLPICAPServers() *schema.Resource {
 
 func dataSourceDLPICAPServersRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_icap_servers
 
 	var resp *dlp_icap_servers.DLPICAPServers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp icap server id: %d\n", id)
-		res, err := zClient.dlp_icap_servers.Get(id)
+		res, err := dlp_icap_servers.Get(service, id)
 		if err != nil {
 			return err
 		}
@@ -52,7 +53,7 @@ func dataSourceDLPICAPServersRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp icap server name: %s\n", name)
-		res, err := zClient.dlp_icap_servers.GetByName(name)
+		res, err := dlp_icap_servers.GetByName(service, name)
 		if err != nil {
 			return err
 		}

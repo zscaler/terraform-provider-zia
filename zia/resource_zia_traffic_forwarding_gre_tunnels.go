@@ -22,13 +22,14 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.gretunnels
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("tunnel_id", idInt)
 				} else {
-					resp, err := zClient.gretunnels.GetByIPAddress(id)
+					resp, err := gretunnels.GetByIPAddress(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("tunnel_id", resp.ID)
@@ -52,6 +53,12 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				Description:  "The source IP address of the GRE tunnel. This is typically a static IP address in the organization or SD-WAN.",
 				ValidateFunc: validation.IsIPAddress,
 			},
+			"within_country": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Restrict the data center virtual IP addresses (VIPs) only to those within the same country as the source IP address",
+			},
 			"primary_dest_vip": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -71,12 +78,6 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 							Computed:     true,
 							Description:  "GRE cluster virtual IP address (VIP)",
 							ValidateFunc: validation.IsIPAddress,
-						},
-						"private_service_edge": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Optional:    true,
-							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
 						},
 						"datacenter": {
 							Type:        schema.TypeString,
@@ -107,12 +108,6 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 							Description:  "GRE cluster virtual IP address (VIP)",
 							ValidateFunc: validation.IsIPAddress,
 						},
-						"private_service_edge": {
-							Type:        schema.TypeBool,
-							Computed:    true,
-							Optional:    true,
-							Description: "Set to true if the virtual IP address (VIP) is a ZIA Private Service Edge",
-						},
 						"datacenter": {
 							Type:        schema.TypeString,
 							Computed:    true,
@@ -123,17 +118,11 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 				},
 			},
 			"internal_ip_range": {
-				Type:         schema.TypeString,
-				Computed:     true,
+				Type: schema.TypeString,
+				// Computed:     true,
 				Optional:     true,
 				Description:  "The start of the internal IP address in /29 CIDR range",
 				ValidateFunc: validation.IsIPv4Address,
-			},
-			"within_country": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Computed:    true,
-				Description: "Restrict the data center virtual IP addresses (VIPs) only to those within the same country as the source IP address",
 			},
 			"country_code": {
 				Type:        schema.TypeString,
@@ -159,6 +148,7 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 
 func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
 
 	req := expandGRETunnel(d)
 	log.Printf("[INFO] Creating zia gre tunnel\n%+v\n", req)
@@ -166,7 +156,7 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 	if err != nil {
 		return err
 	}
-	resp, _, err := zClient.gretunnels.CreateGreTunnels(&req)
+	resp, _, err := gretunnels.CreateGreTunnels(service, &req)
 	if err != nil {
 		return err
 	}
@@ -189,41 +179,45 @@ func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interfac
 }
 
 func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnels.GreTunnels) error {
+	service := zClient.gretunnels
+
 	if (req.PrimaryDestVip == nil || (req.PrimaryDestVip.VirtualIP == "" && req.PrimaryDestVip.ID == 0)) ||
 		(req.SecondaryDestVip == nil || (req.SecondaryDestVip.VirtualIP == "" && req.SecondaryDestVip.ID == 0)) {
 		// one of the vips not set, pick 2 from the recommandedVips
 		countryCode, ok := getStringFromResourceData(d, "country_code")
 		var pair []virtualipaddress.GREVirtualIPList
 		if ok {
-			vips, err := zClient.virtualipaddress.GetPairZSGREVirtualIPsWithinCountry(req.SourceIP, countryCode)
+			vips, err := virtualipaddress.GetPairZSGREVirtualIPsWithinCountry(service, req.SourceIP, countryCode)
 			if err != nil {
 				log.Printf("[ERROR] Got: %v\n", err)
-				vips, err = zClient.virtualipaddress.GetZSGREVirtualIPList(req.SourceIP, 2)
+				vips, err = virtualipaddress.GetZSGREVirtualIPList(service, req.SourceIP, 2)
 				if err != nil {
 					return err
 				}
 			}
 			pair = *vips
 		} else {
-			vips, err := zClient.virtualipaddress.GetZSGREVirtualIPList(req.SourceIP, 2)
+			vips, err := virtualipaddress.GetZSGREVirtualIPList(service, req.SourceIP, 2)
 			if err != nil {
 				return err
 			}
 			pair = *vips
 		}
-		req.PrimaryDestVip = &gretunnels.PrimaryDestVip{ID: pair[0].ID, VirtualIP: pair[0].VirtualIp}
-		req.SecondaryDestVip = &gretunnels.SecondaryDestVip{ID: pair[1].ID, VirtualIP: pair[1].VirtualIp}
+		req.PrimaryDestVip = &gretunnels.PrimaryDestVip{ID: pair[0].ID, VirtualIP: pair[0].VirtualIp, Datacenter: pair[0].DataCenter}
+		req.SecondaryDestVip = &gretunnels.SecondaryDestVip{ID: pair[1].ID, VirtualIP: pair[1].VirtualIp, Datacenter: pair[0].DataCenter}
 	}
 	return nil
 }
 
 func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
+
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
 		return fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set")
 	}
-	resp, err := zClient.gretunnels.GetGreTunnels(id)
+	resp, err := gretunnels.GetGreTunnels(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing gre tunnel %s from state because it no longer exists in ZIA", d.Id())
@@ -259,10 +253,9 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
-			"id":                   primaryDestVip.ID,
-			"virtual_ip":           primaryDestVip.VirtualIP,
-			"private_service_edge": primaryDestVip.PrivateServiceEdge,
-			"datacenter":           primaryDestVip.Datacenter,
+			"id":         primaryDestVip.ID,
+			"virtual_ip": primaryDestVip.VirtualIP,
+			"datacenter": primaryDestVip.Datacenter,
 		},
 	}
 }
@@ -270,16 +263,16 @@ func flattenGrePrimaryDestVipSimple(primaryDestVip *gretunnels.PrimaryDestVip) i
 func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDestVip) interface{} {
 	return []map[string]interface{}{
 		{
-			"id":                   secondaryDestVip.ID,
-			"virtual_ip":           secondaryDestVip.VirtualIP,
-			"private_service_edge": secondaryDestVip.PrivateServiceEdge,
-			"datacenter":           secondaryDestVip.Datacenter,
+			"id":         secondaryDestVip.ID,
+			"virtual_ip": secondaryDestVip.VirtualIP,
+			"datacenter": secondaryDestVip.Datacenter,
 		},
 	}
 }
 
 func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
 
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
@@ -292,13 +285,13 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	if err != nil {
 		return err
 	}
-	if _, err := zClient.gretunnels.GetGreTunnels(id); err != nil {
+	if _, err := gretunnels.GetGreTunnels(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.gretunnels.UpdateGreTunnels(id, &req); err != nil {
+	if _, _, err := gretunnels.UpdateGreTunnels(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -318,13 +311,15 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 
 func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.gretunnels
+
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
 		log.Printf("[ERROR] gre tunnel ID not set: %v\n", id)
 	}
 	log.Printf("[INFO] Deleting gre tunnel ID: %v\n", id)
 
-	if _, err := zClient.gretunnels.DeleteGreTunnels(id); err != nil {
+	if _, err := gretunnels.DeleteGreTunnels(service, id); err != nil {
 		return err
 	}
 	d.SetId("")
@@ -382,9 +377,8 @@ func expandPrimaryDestVip(d *schema.ResourceData) *gretunnels.PrimaryDestVip {
 			return nil
 		}
 		r := &gretunnels.PrimaryDestVip{
-			VirtualIP:          vip["virtual_ip"].(string),
-			PrivateServiceEdge: vip["private_service_edge"].(bool),
-			Datacenter:         vip["datacenter"].(string),
+			VirtualIP:  vip["virtual_ip"].(string),
+			Datacenter: vip["datacenter"].(string),
 		}
 
 		if id, ok := vip["id"].(int); ok && id != 0 {
@@ -411,9 +405,8 @@ func expandSecondaryDestVip(d *schema.ResourceData) *gretunnels.SecondaryDestVip
 			return nil
 		}
 		r := &gretunnels.SecondaryDestVip{
-			VirtualIP:          vip["virtual_ip"].(string),
-			PrivateServiceEdge: vip["private_service_edge"].(bool),
-			Datacenter:         vip["datacenter"].(string),
+			VirtualIP:  vip["virtual_ip"].(string),
+			Datacenter: vip["datacenter"].(string),
 		}
 		if id, ok := vip["id"].(int); ok && id != 0 {
 			r.ID = id

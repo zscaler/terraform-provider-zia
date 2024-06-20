@@ -32,13 +32,14 @@ func resourceDlpWebRules() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.dlp_web_rules
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := zClient.dlp_web_rules.GetByName(id)
+					resp, err := dlp_web_rules.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -227,6 +228,8 @@ func resourceDlpWebRules() *schema.Resource {
 
 func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_web_rules
+
 	req := expandDlpWebRules(d)
 
 	// Validate file types
@@ -247,7 +250,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	for {
 		dlpWebRulesLock.Lock()
 		if dlpWebStartingOrder == 0 {
-			list, _ := zClient.dlp_web_rules.GetAll()
+			list, _ := dlp_web_rules.GetAll(service)
 			for _, r := range list {
 				if r.Order > dlpWebStartingOrder {
 					dlpWebStartingOrder = r.Order
@@ -262,7 +265,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		order := req.Order
 		req.Order = dlpWebStartingOrder
 
-		resp, err := zClient.dlp_web_rules.Create(&req)
+		resp, err := dlp_web_rules.Create(service, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
@@ -276,15 +279,15 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		log.Printf("[INFO] Created zia web dlp rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 
 		reorder(order, resp.ID, "dlp_web_rules", func() (int, error) {
-			list, err := zClient.dlp_web_rules.GetAll()
+			list, err := dlp_web_rules.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.dlp_web_rules.Get(id)
+			rule, err := dlp_web_rules.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = zClient.dlp_web_rules.Update(id, rule)
+			_, err = dlp_web_rules.Update(service, id, rule)
 			return err
 		})
 
@@ -320,12 +323,13 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_web_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		return fmt.Errorf("no zia web dlp rule id is set")
 	}
-	resp, err := zClient.dlp_web_rules.Get(id)
+	resp, err := dlp_web_rules.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing web dlp rule %s from state because it no longer exists in ZIA", d.Id())
@@ -444,6 +448,7 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 
 func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_web_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -461,7 +466,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	if _, err := zClient.dlp_web_rules.Get(id); err != nil {
+	if _, err := dlp_web_rules.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
@@ -472,7 +477,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	start := time.Now()
 
 	for {
-		_, err := zClient.dlp_web_rules.Update(id, &req)
+		_, err := dlp_web_rules.Update(service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if time.Since(start) < timeout {
@@ -484,15 +489,15 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 		}
 
 		reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
-			list, err := zClient.dlp_web_rules.GetAll()
+			list, err := dlp_web_rules.GetAll(service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := zClient.dlp_web_rules.Get(id)
+			rule, err := dlp_web_rules.Get(service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = zClient.dlp_web_rules.Update(id, rule)
+			_, err = dlp_web_rules.Update(service, id, rule)
 			return err
 		})
 
@@ -525,6 +530,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_web_rules
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -532,7 +538,7 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting dlp rule ID: %v\n", (d.Id()))
 
-	if _, err := zClient.dlp_web_rules.Delete(id); err != nil {
+	if _, err := dlp_web_rules.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")

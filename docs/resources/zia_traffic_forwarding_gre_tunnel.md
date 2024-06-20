@@ -10,9 +10,9 @@ description: |-
 
 The **zia_traffic_forwarding_gre_tunnel** resource allows the creation and management of GRE tunnel configuration in the Zscaler Internet Access (ZIA) portal.
 
--> **Note:** The provider automatically query the Zscaler cloud for the primary and secondary destination datacenter and virtual IP address (VIP) of the GRE tunnel. The parameter can be overriden if needed by setting the parameters: `primary_dest_vip` and `secondary_dest_vip`.
+-> **Note:** The provider automatically query the Zscaler cloud for the primary and secondary destination datacenter and virtual IP address (VIP) of the GRE tunnel. The attribute can be overriden if needed by setting the parameters: `primary_dest_vip` and `secondary_dest_vip`.
 
-## Example Usage
+## Example Usage - Unnumbered
 
 ```hcl
 # Creates a numbered GRE Tunnel
@@ -21,7 +21,7 @@ resource "zia_traffic_forwarding_gre_tunnel" "example" {
   comment           = "Example"
   within_country    = true
   country_code      = "US"
-  ip_unnumbered     = false
+  ip_unnumbered     = true
   depends_on        = [ zia_traffic_forwarding_static_ip.example ]
 }
 
@@ -59,8 +59,8 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
   source_ip      = zia_traffic_forwarding_static_ip.this.ip_address
   comment        = "GRE Tunnel Created with Terraform"
   within_country = false
-  country_code   = "CA"
-  ip_unnumbered  = false
+  country_code   = "US"
+  ip_unnumbered  = true
   primary_dest_vip {
     datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].datacenter
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].virtual_ip
@@ -69,29 +69,30 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
     datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].datacenter
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
   }
+  lifecycle {
+    ignore_changes = [
+      internal_ip_range,
+    ]
+  }
   depends_on     = [zia_traffic_forwarding_static_ip.this]
 }
 ```
 
--> **Note:** Although the example shows 2 valid attributes defined (datacenter, virtual_ip) within the primary_dest_vip and secondary_dest_vip, only one attribute is required. If setting the datacenter name as the attribute i.e YVR1. The provider will automatically select the agvaiulable VIP.
+-> **Note:** Although the example shows 2 valid attributes defined (datacenter, virtual_ip) within the primary_dest_vip and secondary_dest_vip, only one attribute is required. If setting the datacenter name as the attribute i.e YVR1. The provider will automatically select the available VIP.
 
 -> **Note:** To obtain the datacenter codes and/or virtual_ips, refer to the following [Zscaler Portal](https://config.zscaler.com/zscloud.net/cenr) and choose your cloud tenant.
 
 -> **Note:** The provider will automatically query and set the Zscaler cloud for the next available `/29` internal IP range to be used in a numbered GRE tunnel.
 
+## Example Usage - Numbered
+
 ```hcl
-# Creates an unnumbered GRE Tunnel
-resource "zia_traffic_forwarding_gre_tunnel" "telus_home_internet_01_gre01" {
-  source_ip       = zia_traffic_forwarding_static_ip.example.ip_address
-  comment         = "Example"
-  within_country  = true
-  country_code    = "CA"
-  ip_unnumbered   = true
-  depends_on      = [ zia_traffic_forwarding_static_ip.example ]
+data "zia_gre_internal_ip_range_list" "this"{
+    required_count = 1
 }
 
 # ZIA Traffic Forwarding - Static IP
-resource "zia_traffic_forwarding_static_ip" "example"{
+resource "zia_traffic_forwarding_static_ip" "this"{
     ip_address      =  "1.1.1.1"
     routable_ip     = true
     comment         = "Example"
@@ -99,7 +100,26 @@ resource "zia_traffic_forwarding_static_ip" "example"{
     latitude        = 37.418171
     longitude       = -121.953140
 }
+
+# Creates a Numbered GRE Tunnel
+resource "zia_traffic_forwarding_gre_tunnel" "this" {
+  source_ip       = zia_traffic_forwarding_static_ip.this.ip_address
+  comment         = "Example"
+  internal_ip_range = data.zia_gre_internal_ip_range_list.this.list[0].start_ip_address
+  within_country  = true
+  country_code    = "US"
+  ip_unnumbered   = true
+  depends_on      = [ zia_traffic_forwarding_static_ip.this ]
+
+  lifecycle {
+    ignore_changes = [
+      internal_ip_range,
+    ]
+  }
+}
 ```
+
+-> **Note:** When configuring a numbered GRE Tunnel where the attribute `internal_ip_range` is defined, we must set the lifecycle block to ignore changes to the ``internal_ip_range`` attribute unless it is explicitly changed in the Terraform configuration.
 
 ## Argument Reference
 

@@ -9,19 +9,80 @@ description: |-
 
 The **zia_url_filtering_rules** resource creates and manages a URL filtering rules within the Zscaler Internet Access cloud.
 
+## Example Usage - ALLOW ACTION
+
+```hcl
+resource "zia_url_filtering_rules" "this" {
+    name                  = "Example"
+    description           = "Example"
+    state                 = "ENABLED"
+    action                = "ALLOW"
+    order                 = 1
+    enforce_time_validity = true
+    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+    validity_time_zone_id = "US/Pacific"
+    time_quota            = 15
+    size_quota            = 10
+    url_categories        = ["ANY"]
+    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+    protocols             = ["ANY_RULE"]
+    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+}
+```
+
 ## Example Usage - BLOCK ACTION
 
 ```hcl
 resource "zia_url_filtering_rules" "this" {
-    name                = "Example"
-    description         = "Example"
-    state               = "ENABLED"
-    action              = "BLOCK"
-    order               = 1
-    url_categories      = ["ANY"]
-    device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols           = ["ANY_RULE"]
-    request_methods     = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    name                  = "Example"
+    description           = "Example"
+    state                 = "ENABLED"
+    action                = "BLOCK"
+    order                 = 1
+    enforce_time_validity = true
+    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+    validity_time_zone_id = "US/Pacific"
+    time_quota = 15
+    size_quota = 10
+    url_categories        = ["ANY"]
+    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+    protocols             = ["ANY_RULE"]
+    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    block_override        = true
+    override_users {
+      id = [ 45513075 ]
+    }
+    override_groups {
+      id = [ 76662385 ]
+    }
+}
+```
+
+## Example Usage - CAUTION ACTION
+
+```hcl
+resource "zia_url_filtering_rules" "this" {
+    name                  = "Example"
+    description           = "Example"
+    state                 = "ENABLED"
+    action                = "CAUTION"
+    order                 = 1
+    enforce_time_validity = true
+    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+    validity_time_zone_id = "US/Pacific"
+    time_quota            = 15
+    size_quota            = 10
+    url_categories        = ["ANY"]
+    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+    protocols             = ["ANY_RULE"]
+    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    end_user_notification_url = "https://caution.acme.com"
 }
 ```
 
@@ -35,15 +96,21 @@ data "zia_cloud_browser_isolation_profile" "this" {
 }
 
 resource "zia_url_filtering_rules" "this" {
-    name                = "Example"
-    description         = "Example"
-    state               = "ENABLED"
-    action              = "ISOLATE"
-    order               = 1
-    url_categories      = ["ANY"]
-    device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols           = [ "HTTPS_RULE", "HTTP_RULE" ]
-    request_methods     = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE" ]
+    name                  = "Example"
+    description           = "Example"
+    state                 = "ENABLED"
+    action                = "ISOLATE"
+    order                 = 1
+    enforce_time_validity = true
+    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+    validity_time_zone_id = "US/Pacific"
+    time_quota            = 15
+    size_quota            = 10
+    url_categories        = ["ANY"]
+    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+    protocols             = [ "HTTPS_RULE", "HTTP_RULE" ]
+    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE" ]
     cbi_profile {
         id = data.zia_cloud_browser_isolation_profile.this.id
         name = data.zia_cloud_browser_isolation_profile.this.name
@@ -69,14 +136,14 @@ The following arguments are supported:
 * `end_user_notification_url` - (Optional) URL of end user notification page to be displayed when the rule is matched. Not applicable if either 'overrideUsers' or 'overrideGroups' is specified.
 * `block_override` - (Optional) When set to true, a `BLOCK` action triggered by the rule could be overridden. If true and both overrideGroup and overrideUsers are not set, the `BLOCK` triggered by this rule could be overridden for any users. If block_override is not set, `BLOCK` action cannot be overridden.
 * `time_quota` - (Optional) Time quota in minutes, after which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
-* `size_quota` - (Optional) Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
+* `size_quota` - (Optional) Size quota in MB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `description` - (Optional) Additional information about the rule
-* `validity_start_time` - (Optional) If enforceTimeValidity is set to true, the URL Filtering rule will be valid starting on this date and time.
-* `validity_end_time` - (Optional) If `enforceTimeValidity` is set to true, the URL Filtering rule will cease to be valid on this end date and time.
-* `validity_time_zone_id` - (Optional) If `enforceTimeValidity` is set to true, the URL Filtering rule date and time will be valid based on this time zone ID.
+* `validity_start_time` - (Optional) If enforce_time_validity is set to true, the URL Filtering rule will be valid starting on this date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
+* `validity_end_time` - (Optional) If `enforce_time_validity` is set to true, the URL Filtering rule will cease to be valid on this end date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
+* `validity_time_zone_id` - (Optional) If `enforce_time_validity` is set to true, the URL Filtering rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
 * `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
-* `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `ANY`, `NONE`, `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
+* `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
 * `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`

@@ -68,6 +68,8 @@ func resourceSandboxSubmission() *schema.Resource {
 
 func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.sandbox_submission
+
 	filePath := d.Get("file_path").(string)
 	force := d.Get("force").(bool)
 	submissionMethod := d.Get("submission_method").(string)
@@ -86,9 +88,9 @@ func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) erro
 	var result *sandbox_submission.ScanResult
 	if submissionMethod == "submit" {
 		forceStr := boolToString(force)
-		result, err = zClient.sandbox_submission.SubmitFile(filePath, file, forceStr)
+		result, err = sandbox_submission.SubmitFile(service, filePath, file, forceStr)
 	} else if submissionMethod == "discan" {
-		result, err = zClient.sandbox_submission.Discan(filePath, file)
+		result, err = sandbox_submission.Discan(service, filePath, file)
 	} else {
 		return fmt.Errorf("invalid submission method: %s", submissionMethod)
 	}

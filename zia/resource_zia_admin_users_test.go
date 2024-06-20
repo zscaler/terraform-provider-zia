@@ -69,6 +69,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 
 func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
+	service := apiClient.admins
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.AdminUsers {
@@ -81,7 +82,7 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 			return err
 		}
 
-		admin, err := apiClient.admins.GetAdminUsers(id)
+		admin, err := admins.GetAdminUsers(service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -112,7 +113,9 @@ func testAccCheckAdminUsersExists(resource string, admin *admins.AdminUsers) res
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		receivedRule, err := apiClient.admins.GetAdminUsers(id)
+		service := apiClient.admins
+
+		receivedRule, err := admins.GetAdminUsers(service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

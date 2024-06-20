@@ -21,13 +21,14 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
+				service := zClient.dlp_notification_templates
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("template_id", idInt)
 				} else {
-					resp, err := zClient.dlp_notification_templates.GetByName(id)
+					resp, err := dlp_notification_templates.GetByName(service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("template_id", resp.ID)
@@ -87,11 +88,12 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 
 func resourceDLPNotificationTemplatesCreate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_notification_templates
 
 	req := expandDLPNotificationTemplates(d)
 	log.Printf("[INFO] Creating zia dlp notification templates\n%+v\n", req)
 
-	resp, _, err := zClient.dlp_notification_templates.Create(&req)
+	resp, _, err := dlp_notification_templates.Create(service, &req)
 	if err != nil {
 		return err
 	}
@@ -116,12 +118,13 @@ func resourceDLPNotificationTemplatesCreate(d *schema.ResourceData, m interface{
 
 func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_notification_templates
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
 		return fmt.Errorf("no DLP notification template id is set")
 	}
-	resp, err := zClient.dlp_notification_templates.Get(id)
+	resp, err := dlp_notification_templates.Get(service, id)
 	if err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing dlp notification template %s from state because it no longer exists in ZIA", d.Id())
@@ -148,6 +151,7 @@ func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{})
 
 func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_notification_templates
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
@@ -156,13 +160,13 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 
 	log.Printf("[INFO] Updating dlp notification template ID: %v\n", id)
 	req := expandDLPNotificationTemplates(d)
-	if _, err := zClient.dlp_notification_templates.Get(id); err != nil {
+	if _, err := dlp_notification_templates.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.dlp_notification_templates.Update(id, &req); err != nil {
+	if _, _, err := dlp_notification_templates.Update(service, id, &req); err != nil {
 		return err
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -182,6 +186,7 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 
 func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{}) error {
 	zClient := m.(*Client)
+	service := zClient.dlp_notification_templates
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
@@ -189,7 +194,7 @@ func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{
 	}
 	log.Printf("[INFO] Deleting dlp notification template ID: %v\n", (d.Id()))
 
-	if _, err := zClient.dlp_notification_templates.Delete(id); err != nil {
+	if _, err := dlp_notification_templates.Delete(service, id); err != nil {
 		return err
 	}
 	d.SetId("")
