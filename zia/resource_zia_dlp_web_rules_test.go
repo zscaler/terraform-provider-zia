@@ -189,6 +189,7 @@ resource "%s" "%s" {
     action 						= "%s"
     state 						= "%s"
 	order 						= 1
+	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= true
 	file_types                  = [ "ALL_OUTBOUND" ]

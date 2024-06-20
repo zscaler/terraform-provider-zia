@@ -93,7 +93,7 @@ jobs:
         environment:
           # - ZIA_ZSCLOUD
           - ZIA_ZS0
-          # - ZIA_ZS3
+          - ZIA_ZS3
     environment: ${{ matrix.environment }}
     steps:
       - name: Checkout code
