@@ -62,5 +62,3 @@ release:
   #   owner: zscaler
   #   name: terraform-provider-zia
   draft: true
-changelog:
-  skip: true
