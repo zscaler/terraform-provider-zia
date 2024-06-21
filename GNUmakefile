@@ -78,6 +78,7 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccDataSourceRuleLabels_Basic \
   TestResourceSandboxSettings_basic \
   TestAccDataSourceTrafficGreInternalIPRangeList_Basic \
+  TestAccDataSourceTrafficForwardingGreTunnels_Basic \
   TestAccDataSourceTrafficForwardingStaticIP_Basic \
   TestAccDataSourceTrafficForwardingVPNCredentials_Basic \
   TestAccDataSourceURLCategories_Basic \
@@ -100,6 +101,7 @@ DEFAULT_INTEGRATION_TESTS?=\
   TestAccResourceRuleLabelsBasic \
   TestResourceSandboxSettings_basic \
   TestAccResourceSecurityPolicySettings_basic \
+  TestAccResourceTrafficForwardingGRETunnelBasic \
   TestAccResourceTrafficForwardingStaticIPBasic \
   TestAccResourceTrafficForwardingVPNCredentialsBasic \
   TestAccResourceURLCategoriesBasic \
