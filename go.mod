@@ -1,17 +1,17 @@
 module github.com/zscaler/terraform-provider-zia/v2
 
-go 1.21
+go 1.22
 
-toolchain go1.22.2
+toolchain go1.22.4
 
 require (
 	github.com/biter777/countries v1.7.5
-	github.com/fabiotavarespr/iso3166 v0.0.2
+	github.com/fabiotavarespr/iso3166 v0.0.3
 	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
-	github.com/zscaler/zscaler-sdk-go/v2 v2.61.1
+	github.com/zscaler/zscaler-sdk-go/v2 v2.61.3
 )
 
 require (
