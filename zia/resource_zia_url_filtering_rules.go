@@ -217,16 +217,14 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "Enforce a set a validity time period for the URL Filtering rule.",
 			},
 			"validity_start_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "If enforceTimeValidity is set to true, the URL Filtering rule is valid starting on this date and time.",
-				ValidateFunc: validateTimesNotInPast,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule is valid starting on this date and time.",
 			},
 			"validity_end_time": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "If enforceTimeValidity is set to true, the URL Filtering rule ceases to be valid on this end date and time.",
-				ValidateFunc: validateTimesNotInPast,
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "If enforceTimeValidity is set to true, the URL Filtering rule ceases to be valid on this end date and time.",
 			},
 			"validity_time_zone_id": {
 				Type:         schema.TypeString,
@@ -762,23 +760,6 @@ func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
 		return 0, fmt.Errorf("invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", err)
 	}
 	return int(t.Unix()), nil
-}
-
-func validateTimesNotInPast(val interface{}, key string) (warns []string, errs []error) {
-	timeStr := val.(string)
-	timeVal, err := ConvertRFC1123ToEpoch(timeStr)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("%q: invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", key, err))
-		return
-	}
-
-	now := time.Now().Unix()
-
-	if int64(timeVal) < now {
-		errs = append(errs, fmt.Errorf("%q: time cannot be in the past", key))
-	}
-
-	return
 }
 
 func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {

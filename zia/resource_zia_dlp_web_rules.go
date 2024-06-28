@@ -200,7 +200,6 @@ func resourceDlpWebRules() *schema.Resource {
 			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
 			"locations":                setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
