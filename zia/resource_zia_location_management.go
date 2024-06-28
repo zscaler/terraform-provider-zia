@@ -218,7 +218,6 @@ func resourceLocationManagement() *schema.Resource {
 			"display_time_unit": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Default:     "MINUTE",
 				Description: "Display Time Unit. The time unit to display for IP Surrogate idle time to disassociation.",
 				ValidateFunc: validation.StringInSlice([]string{
 					"MINUTE",
