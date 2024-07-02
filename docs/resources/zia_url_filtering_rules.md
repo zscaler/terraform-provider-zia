@@ -140,7 +140,11 @@ The following arguments are supported:
 * `description` - (Optional) Additional information about the rule
 * `validity_start_time` - (Optional) If enforce_time_validity is set to true, the URL Filtering rule will be valid starting on this date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
 * `validity_end_time` - (Optional) If `enforce_time_validity` is set to true, the URL Filtering rule will cease to be valid on this end date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
+
+  **NOTE** Notice that according to RFC1123 the day must be provided as a double digit value for `validity_start_time` and `validity_end_time` i.e `01`, `02` etc.
+
 * `validity_time_zone_id` - (Optional) If `enforce_time_validity` is set to true, the URL Filtering rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
+
 * `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
 * `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`

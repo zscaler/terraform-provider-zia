@@ -31,6 +31,21 @@ func resourceURLFilteringRules() *schema.Resource {
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			action := d.Get("action").(string)
 
+			// Common validation for actions other than BLOCK
+			if action != "BLOCK" {
+				if blockOverride, blockOverrideOk := d.GetOk("block_override"); blockOverrideOk && blockOverride.(bool) {
+					return errors.New("block_override can only be set when action is BLOCK")
+				}
+
+				if _, overrideUsersOk := d.GetOk("override_users"); overrideUsersOk {
+					return errors.New("override_users can only be set when action is BLOCK and block_override is true")
+				}
+
+				if _, overrideGroupsOk := d.GetOk("override_groups"); overrideGroupsOk {
+					return errors.New("override_groups can only be set when action is BLOCK and block_override is true")
+				}
+			}
+
 			switch action {
 			case "ISOLATE":
 				// Validation for ISOLATE action
@@ -73,33 +88,14 @@ func resourceURLFilteringRules() *schema.Resource {
 					}
 				}
 
-				// Ensure BLOCK specific attributes are not set
-				if blockOverride, blockOverrideOk := d.GetOk("block_override"); blockOverrideOk && blockOverride.(bool) {
-					return errors.New("block_override can only be set when action is BLOCK")
-				}
-
-				if _, overrideUsersOk := d.GetOk("override_users"); overrideUsersOk {
-					return errors.New("override_users can only be set when action is BLOCK and block_override is true")
-				}
-
-				if _, overrideGroupsOk := d.GetOk("override_groups"); overrideGroupsOk {
-					return errors.New("override_groups can only be set when action is BLOCK and block_override is true")
-				}
-
 			case "BLOCK":
 				// Validation for BLOCK action
 				blockOverride, blockOverrideOk := d.GetOk("block_override")
 				if blockOverrideOk && blockOverride.(bool) {
-					overrideUsers, overrideUsersOk := d.GetOk("override_users")
-					if !overrideUsersOk || len(overrideUsers.(*schema.Set).List()) == 0 {
-						return errors.New("override_users must be set when block_override is true")
-					}
-
-					overrideGroups, overrideGroupsOk := d.GetOk("override_groups")
-					if !overrideGroupsOk || len(overrideGroups.(*schema.Set).List()) == 0 {
-						return errors.New("override_groups must be set when block_override is true")
-					}
+					// If block_override is true, override_users and override_groups can be set but are optional
+					// No further checks needed here as block_override being true allows override_users and override_groups to be set optionally
 				} else {
+					// If block_override is false, override_users and override_groups must not be set
 					if _, overrideUsersOk := d.GetOk("override_users"); overrideUsersOk {
 						return errors.New("override_users can only be set when block_override is true")
 					}
@@ -109,13 +105,38 @@ func resourceURLFilteringRules() *schema.Resource {
 					}
 				}
 			}
-			// Validate enforce_time_validity, validity_start_time, and validity_end_time
+
+			// Validate enforce_time_validity, validity_start_time, validity_end_time, and validity_time_zone_id
 			if enforceTimeValidity, ok := d.GetOk("enforce_time_validity"); ok && enforceTimeValidity.(bool) {
 				if _, ok := d.GetOk("validity_start_time"); !ok {
 					return errors.New("validity_start_time must be set when enforce_time_validity is true")
+				} else {
+					validityStartTimeStr := d.Get("validity_start_time").(string)
+					if isSingleDigitDay(validityStartTimeStr) {
+						return errors.New("validity_start_time must have a two-digit day (e.g., 02 instead of 2)")
+					}
 				}
 				if _, ok := d.GetOk("validity_end_time"); !ok {
 					return errors.New("validity_end_time must be set when enforce_time_validity is true")
+				} else {
+					validityEndTimeStr := d.Get("validity_end_time").(string)
+					if isSingleDigitDay(validityEndTimeStr) {
+						return errors.New("validity_end_time must have a two-digit day (e.g., 02 instead of 2)")
+					}
+				}
+				if _, ok := d.GetOk("validity_time_zone_id"); !ok {
+					return errors.New("validity_time_zone_id must be set when enforce_time_validity is true")
+				}
+			} else {
+				// If enforce_time_validity is false, ensure validity attributes are not set
+				if _, ok := d.GetOk("validity_start_time"); ok {
+					return errors.New("validity_start_time can only be set when enforce_time_validity is true")
+				}
+				if _, ok := d.GetOk("validity_end_time"); ok {
+					return errors.New("validity_end_time can only be set when enforce_time_validity is true")
+				}
+				if _, ok := d.GetOk("validity_time_zone_id"); ok {
+					return errors.New("validity_time_zone_id can only be set when enforce_time_validity is true")
 				}
 			}
 
@@ -446,7 +467,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("size_quota", sizeQuotaMB)
 	_ = d.Set("request_methods", resp.RequestMethods)
 
-	// Convert epoch time back to RFC1123 in UTC
+	// Convert epoch time back to RFC1123 in UTC with consistent formatting
 	_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
 	_ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
 
@@ -482,12 +503,18 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 		return err
 	}
 
-	if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
-		return err
-	}
-
-	if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
-		return err
+	// Ensure override_users and override_groups are only set when block_override is true and action is BLOCK
+	if resp.Action == "BLOCK" && resp.BlockOverride {
+		if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
+			return err
+		}
+		if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
+			return err
+		}
+	} else {
+		// Remove override_users and override_groups from state if block_override is not true or action is not BLOCK
+		_ = d.Set("override_users", nil)
+		_ = d.Set("override_groups", nil)
 	}
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
@@ -622,13 +649,34 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	validityStartTimeStr := d.Get("validity_start_time").(string)
 	validityEndTimeStr := d.Get("validity_end_time").(string)
 
-	validityStartTime, err := ConvertRFC1123ToEpoch(validityStartTimeStr)
-	if err != nil {
-		log.Printf("[ERROR] Invalid validity_start_time: %v", err)
+	var validityStartTime int
+	var validityEndTime int
+	var err error
+
+	if validityStartTimeStr != "" {
+		log.Printf("[INFO] Converting validity_start_time: %s", validityStartTimeStr)
+		validityStartTime, err = ConvertRFC1123ToEpoch(validityStartTimeStr)
+		if err != nil {
+			log.Printf("[ERROR] Invalid validity_start_time: %v", err)
+			validityStartTime = 0
+		} else {
+			log.Printf("[INFO] Converted validity_start_time: %d", validityStartTime)
+		}
+	} else {
+		log.Printf("[INFO] validity_start_time is empty")
 	}
-	validityEndTime, err := ConvertRFC1123ToEpoch(validityEndTimeStr)
-	if err != nil {
-		log.Printf("[ERROR] Invalid validity_end_time: %v", err)
+
+	if validityEndTimeStr != "" {
+		log.Printf("[INFO] Converting validity_end_time: %s", validityEndTimeStr)
+		validityEndTime, err = ConvertRFC1123ToEpoch(validityEndTimeStr)
+		if err != nil {
+			log.Printf("[ERROR] Invalid validity_end_time: %v", err)
+			validityEndTime = 0
+		} else {
+			log.Printf("[INFO] Converted validity_end_time: %d", validityEndTime)
+		}
+	} else {
+		log.Printf("[INFO] validity_end_time is empty")
 	}
 
 	sizeQuotaMB := d.Get("size_quota").(int)
@@ -773,4 +821,14 @@ func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {
 	// Convert MB to KB
 	sizeQuotaKB := sizeQuotaMB * 1024
 	return sizeQuotaKB, nil
+}
+
+func isSingleDigitDay(timeStr string) bool {
+	parts := strings.Split(timeStr, " ")
+	if len(parts) < 2 {
+		return false
+	}
+
+	day := parts[1]
+	return len(day) == 1
 }
