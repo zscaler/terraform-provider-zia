@@ -15,10 +15,9 @@ The **zia_location_management** resource allows the creation and management of Z
 * VPN credentials resource
 * URL filtering and firewall filtering rules
 
-## Example Usage
+## Example Usage - Location Management with UFQDN VPN Credential
 
 ```hcl
-# ZIA Location Management with UFQDN VPN Credential
 resource "zia_location_management" "usa_sjc37"{
     name                        = "USA_SJC_37"
     description                 = "Created with Terraform"
@@ -45,6 +44,8 @@ resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
     pre_shared_key  = "***************"
 }
 ```
+
+## Example Usage - Location Management with IP VPN Credential
 
 ```hcl
 # ZIA Location Management with IP VPN Credential
@@ -85,6 +86,87 @@ resource "zia_traffic_forwarding_static_ip" "usa_sjc37"{
 }
 ```
 
+## Example Usage - Location Management with Manual and Dynamic Location Groups
+
+```hcl
+# Retrieve ZIA Manual Location Groups
+data "zia_location_groups" "this"{
+    name = "SDWAN_CAN"
+}
+
+# ZIA Location Management with UFQDN VPN Credential
+resource "zia_location_management" "usa_sjc37"{
+    name                        = "USA_SJC_37"
+    description                 = "Created with Terraform"
+    country                     = "UNITED_STATES"
+    tz                          = "UNITED_STATES_AMERICA_LOS_ANGELES"
+    state                       = "California"
+    auth_required               = true
+    idle_time_in_minutes        = 720
+    display_time_unit           = "HOUR"
+    surrogate_ip                = true
+    xff_forward_enabled         = true
+    ofw_enabled                 = true
+    ips_control                 = true
+    profile                     = "CORPORATE"
+    vpn_credentials {
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
+       type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
+    }
+    static_location_groups {
+      id = [data.zia_location_groups.this.id]
+    }
+    depends_on = [zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
+}
+
+resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
+    type            = "UFQDN"
+    fqdn            = "usa_sjc37@acme.com"
+    comments        = "USA - San Jose IPSec Tunnel"
+    pre_shared_key  = "***************"
+}
+```
+
+## Example Usage - Location Management with Excluded Manual and Dynamic Location Groups
+
+```hcl
+# Retrieve ZIA Manual Location Groups
+data "zia_location_groups" "this"{
+    name = "SDWAN_CAN"
+}
+
+# ZIA Location Management with UFQDN VPN Credential
+resource "zia_location_management" "usa_sjc37"{
+    name                        = "USA_SJC_37"
+    description                 = "Created with Terraform"
+    country                     = "UNITED_STATES"
+    tz                          = "UNITED_STATES_AMERICA_LOS_ANGELES"
+    state                       = "California"
+    auth_required               = true
+    idle_time_in_minutes        = 720
+    display_time_unit           = "HOUR"
+    surrogate_ip                = true
+    xff_forward_enabled         = true
+    ofw_enabled                 = true
+    ips_control                 = true
+    exclude_from_dynamic_groups = true
+    exclude_from_manual_groups  = true
+    profile                     = "CORPORATE"
+    vpn_credentials {
+       id = zia_traffic_forwarding_vpn_credentials.usa_sjc37.id
+       type = zia_traffic_forwarding_vpn_credentials.usa_sjc37.type
+    }
+    depends_on = [zia_traffic_forwarding_vpn_credentials.usa_sjc37 ]
+}
+
+resource "zia_traffic_forwarding_vpn_credentials" "usa_sjc37"{
+    type            = "UFQDN"
+    fqdn            = "usa_sjc37@acme.com"
+    comments        = "USA - San Jose IPSec Tunnel"
+    pre_shared_key  = "***************"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -92,7 +174,7 @@ The following arguments are supported:
 ### Required
 
 * `name` - (Required) - Location Name.
-* `ip_addresses` - (Required) For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., `238.10.33.9`). For sub-locations: Egress, internal, or GRE tunnel IP addresses. Each entry is either a single IP address, CIDR (e.g., `10.10.33.0/24`), or range (e.g., `10.10.33.1-10.10.33.10`)). The value is required if `vpn_credentials` are not defined.
+* `ip_addresses` - (Required) For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., `238.10.33.9`). For sub-locations: Egress, internal, or GRE tunnel IP addresses. Each entry is either a single IP address, CIDR (e.g., `10.10.33.0/24`), or range (e.g., `10.10.33.1-10.10.33.10`). The value is required if `vpn_credentials` are not defined.
 * `vpn_credentials`
   * `id` - (Optional) VPN credential resource id. The value is required if `ip_addresses` are not defined.
 
@@ -100,6 +182,7 @@ The following arguments are supported:
 
 * `description` - (String) Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.
 * `country` - (Optional) Country
+* `state` - (Optional) Country
 * `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT.
 * `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`, `WORKLOAD`.
 
@@ -107,6 +190,9 @@ The following arguments are supported:
 * `aup_enabled` - (Optional) Enable AUP. When set to true, AUP is enabled for the location.
 * `aup_force_ssl_inspection` - (Optional) For First Time AUP Behavior, Force SSL Inspection. When set, Zscaler will force SSL Inspection in order to enforce AUP for HTTPS traffic.
 * `aup_timeout_in_days` - (Optional) Custom AUP Frequency. Refresh time (in days) to re-validate the AUP.
+* `cookies_and_proxy` - (Optional) Enable Cookies and proxy feature
+* `digest_auth_enabled` - (Optional) Enable Digest Auth feature
+* `kerberos_auth_enabled` - (Optional) Enable Kerberos Auth feature
 * `auth_required` - (Optional) Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.
 * `caution_enabled` - (Optional) Enable Caution. When set to true, a caution notifcation is enabled for the location.
 * `display_time_unit` - (Optional) Display Time Unit. The time unit to display for IP Surrogate idle time to disassociation.
@@ -125,6 +211,10 @@ The following arguments are supported:
 * `xff_forward_enabled` - (Optional) Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.
 * `zapp_ssl_scan_enabled` - (Optional) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
 
+* `iot_discovery_enabled` - (Optional) Enable IOT Discovery at the location
+
+* `iot_enforce_policy_set` - (Optional) Enable IOT Policy at the location
+
 * `other_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.
 
 * `other6_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.
@@ -133,10 +223,17 @@ The following arguments are supported:
 
 * `ipv6_dns_64prefix` - (Optional) Name-ID pair of the NAT64 prefix configured as the DNS64 prefix for the location. If specified, the DNS64 prefix is used for the IP addresses that reside in this location. If not specified, a prefix is selected from the set of supported prefixes. This field is applicable only if ipv6Enabled is set is true.
 
-* `managed_by` - (Optional)
-  * `id` - (Optional) Identifier that uniquely identifies an entity
-  * `name` - (Optional) The configured name of the entity
-  * `extensions` - (Optional)
+* `dynamic_location_groups` - (List of Object) Dynamic location groups the location belongs to
+  * `id` - (Optional) The Identifier that uniquely identifies an entity
+
+* `static_location_groups` - (List of Object) Manual location groups the location belongs to
+  * `id` - (Optional) The Identifier that uniquely identifies an entity
+
+* `exclude_from_dynamic_groups` - (Optional) Enable to prevent the location from being assigned to any dynamic groups and to remove it from any dynamic groups it's already assigned to
+
+* `exclude_from_manual_groups` - (Optional) Enable to prevent the location from being added to manual groups and to remove it from any manual groups it's already assigned to
+
+  **NOTE** The attributes, ``dynamic_location_groups``, and ``static_location_groups`` CANNOT be configured if the attributes `exclude_from_dynamic_groups` and/or `exclude_from_manual_groups` are set to `true`
 
 ## Import
 
