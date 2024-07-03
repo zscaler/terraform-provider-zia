@@ -1,6 +1,8 @@
 package zia
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -82,6 +84,11 @@ func resourceLocationManagement() *schema.Resource {
 			},
 			"country": getLocationManagementCountries(),
 			"tz":      getLocationManagementTimeZones(),
+			"state": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "IP ports that are associated with the location.",
+			},
 			"ip_addresses": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -204,11 +211,23 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable IOT Discovery at the location",
 			},
+			"iot_enforce_policy_set": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "",
+			},
 			"auth_required": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
 				Description: "Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.",
+			},
+			"cookies_and_proxy": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "",
 			},
 			"idle_time_in_minutes": {
 				Type:        schema.TypeInt,
@@ -311,6 +330,35 @@ func resourceLocationManagement() *schema.Resource {
 					"WORKLOAD",
 				}, false),
 			},
+			"exclude_from_dynamic_groups": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "",
+			},
+			"exclude_from_manual_groups": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "",
+			},
+			"dynamic_location_groups": setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"static_location_groups":  setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations for which rule must be applied"),
+		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
+			if d.Get("exclude_from_dynamic_groups").(bool) && d.HasChange("dynamic_location_groups") {
+				if v, ok := d.GetOk("dynamic_location_groups"); ok && len(v.(*schema.Set).List()) > 0 {
+					return errors.New("dynamic_location_groups cannot be set when exclude_from_dynamic_groups is set to true")
+				}
+			}
+
+			// Validation for exclude_from_manual_groups and static_location_groups
+			if d.Get("exclude_from_manual_groups").(bool) && d.HasChange("static_location_groups") {
+				if v, ok := d.GetOk("static_location_groups"); ok && len(v.(*schema.Set).List()) > 0 {
+					return errors.New("static_location_groups cannot be set when exclude_from_manual_groups is set to true")
+				}
+			}
+
+			return nil
 		},
 	}
 }
@@ -414,11 +462,13 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("tz", resp.TZ)
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("ports", resp.Ports)
+	_ = d.Set("cookies_and_proxy", resp.CookiesAndProxy)
 	_ = d.Set("auth_required", resp.AuthRequired)
 	_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
 	_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
 	_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
 	_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
+	_ = d.Set("iot_enforce_policy_set", resp.IOTEnforcePolicySet)
 	_ = d.Set("other_sublocation", resp.OtherSubLocation)
 	_ = d.Set("other6_sublocation", resp.Other6SubLocation)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
@@ -440,8 +490,18 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("profile", resp.Profile)
 	_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
 	_ = d.Set("ipv6_dns_64prefix", resp.IPv6Dns64Prefix)
+	_ = d.Set("exclude_from_dynamic_groups", resp.ExcludeFromDynamicGroups)
+	_ = d.Set("exclude_from_manual_groups", resp.ExcludeFromManualGroups)
 
 	if err := d.Set("vpn_credentials", flattenLocationVPNCredentialsSimple(resp.VPNCredentials)); err != nil {
+		return err
+	}
+
+	if err := d.Set("dynamic_location_groups", flattenIDs(resp.DynamiclocationGroups)); err != nil {
+		return err
+	}
+
+	if err := d.Set("static_location_groups", flattenIDs(resp.StaticLocationGroups)); err != nil {
 		return err
 	}
 
@@ -567,14 +627,17 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		UpBandwidth:                         d.Get("up_bandwidth").(int),
 		DnBandwidth:                         d.Get("dn_bandwidth").(int),
 		Country:                             d.Get("country").(string),
+		State:                               d.Get("state").(string),
 		TZ:                                  d.Get("tz").(string),
 		IPAddresses:                         SetToStringList(d, "ip_addresses"), // removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
 		Ports:                               d.Get("ports").(string),
+		CookiesAndProxy:                     d.Get("cookies_and_proxy").(bool),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),
 		DigestAuthEnabled:                   d.Get("digest_auth_enabled").(bool),
 		KerberosAuth:                        d.Get("kerberos_auth_enabled").(bool),
 		IOTDiscoveryEnabled:                 d.Get("iot_discovery_enabled").(bool),
+		IOTEnforcePolicySet:                 d.Get("iot_enforce_policy_set").(bool),
 		SSLScanEnabled:                      d.Get("ssl_scan_enabled").(bool),
 		ZappSSLScanEnabled:                  d.Get("zapp_ssl_scan_enabled").(bool),
 		XFFForwardEnabled:                   d.Get("xff_forward_enabled").(bool),
@@ -594,6 +657,10 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		IPv6Dns64Prefix:                     d.Get("ipv6_dns_64prefix").(bool),
 		OtherSubLocation:                    d.Get("other_sublocation").(bool),
 		Other6SubLocation:                   d.Get("other6_sublocation").(bool),
+		ExcludeFromDynamicGroups:            d.Get("exclude_from_dynamic_groups").(bool),
+		ExcludeFromManualGroups:             d.Get("exclude_from_manual_groups").(bool),
+		DynamiclocationGroups:               expandIDNameExtensionsSet(d, "dynamic_location_groups"),
+		StaticLocationGroups:                expandIDNameExtensionsSet(d, "static_location_groups"),
 
 		AUPTimeoutInDays: d.Get("aup_timeout_in_days").(int),
 		Profile:          d.Get("profile").(string),

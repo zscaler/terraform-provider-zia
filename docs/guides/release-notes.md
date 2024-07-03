@@ -12,9 +12,32 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.91.0``
+``Last updated: v2.91.2``
 
 ---
+
+## 2.91.2 (July, 2 2024)
+
+### Notes
+
+- Release date: **(July, 2  2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fix
+
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+
+## 2.91.1 (June, 29 2024)
+
+### Notes
+
+- Release date: **(June, 29  2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fix
+
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed go.mod and go.sum
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed computed attributes in the schema
 
 ## 2.91.0 (June, 19 2024)
 
