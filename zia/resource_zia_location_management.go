@@ -459,6 +459,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("up_bandwidth", resp.UpBandwidth)
 	_ = d.Set("dn_bandwidth", resp.DnBandwidth)
 	_ = d.Set("country", resp.Country)
+	_ = d.Set("state", resp.State)
 	_ = d.Set("tz", resp.TZ)
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("ports", resp.Ports)
