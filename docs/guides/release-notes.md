@@ -12,9 +12,32 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.91.2``
+``Last updated: v2.91.4``
 
 ---
+
+## 2.91.4 (July, 3 2024)
+
+### Notes
+
+- Release date: **(July, 3  2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fix
+
+- [PR #357](https://github.com/zscaler/terraform-provider-zia/357) - Fixed ``zia_url_filtering_rules`` drift due to attribute conversion ``validatidy_start_time`` and ``validity_end_time``.
+
+## 2.91.3 (July, 2 2024)
+
+### Notes
+
+- Release date: **(July, 2  2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fix
+
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_location_management`` drift due to missing `state` attribute in the READ function.
 
 ## 2.91.2 (July, 2 2024)
 

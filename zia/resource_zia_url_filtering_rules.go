@@ -468,8 +468,22 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("request_methods", resp.RequestMethods)
 
 	// Convert epoch time back to RFC1123 in UTC with consistent formatting
-	_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
-	_ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
+	// _ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
+	// _ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
+
+	// Set validity_start_time only if it is not the default value
+	if resp.ValidityStartTime != 0 {
+		_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
+	} else {
+		_ = d.Set("validity_start_time", nil)
+	}
+
+	// Set validity_end_time only if it is not the default value
+	if resp.ValidityEndTime != 0 {
+		_ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
+	} else {
+		_ = d.Set("validity_end_time", nil)
+	}
 
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
 	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
