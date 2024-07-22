@@ -467,10 +467,6 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("size_quota", sizeQuotaMB)
 	_ = d.Set("request_methods", resp.RequestMethods)
 
-	// Convert epoch time back to RFC1123 in UTC with consistent formatting
-	// _ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
-	// _ = d.Set("validity_end_time", time.Unix(int64(resp.ValidityEndTime), 0).UTC().Format(time.RFC1123))
-
 	// Set validity_start_time only if it is not the default value
 	if resp.ValidityStartTime != 0 {
 		_ = d.Set("validity_start_time", time.Unix(int64(resp.ValidityStartTime), 0).UTC().Format(time.RFC1123))
@@ -804,45 +800,4 @@ func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) err
 	}
 
 	return nil
-}
-
-func validateTimeZone(v interface{}, k string) (ws []string, errors []error) {
-	tzStr := v.(string)
-	_, err := time.LoadLocation(tzStr)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q is not a valid timezone. Visit https://nodatime.org/TimeZones for the valid IANA list", tzStr))
-	}
-
-	return
-}
-
-func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
-	t, err := time.Parse(time.RFC1123, timeStr)
-	if err != nil {
-		return 0, fmt.Errorf("invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", err)
-	}
-	return int(t.Unix()), nil
-}
-
-func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {
-	const (
-		minMB = 10
-		maxMB = 100000
-	)
-	if sizeQuotaMB < minMB || sizeQuotaMB > maxMB {
-		return 0, fmt.Errorf("size_quota must be between %d MB and %d MB", minMB, maxMB)
-	}
-	// Convert MB to KB
-	sizeQuotaKB := sizeQuotaMB * 1024
-	return sizeQuotaKB, nil
-}
-
-func isSingleDigitDay(timeStr string) bool {
-	parts := strings.Split(timeStr, " ")
-	if len(parts) < 2 {
-		return false
-	}
-
-	day := parts[1]
-	return len(day) == 1
 }

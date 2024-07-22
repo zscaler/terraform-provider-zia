@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/biter777/countries"
@@ -207,6 +208,79 @@ func validateURLSuperCategories() schema.SchemaValidateDiagFunc {
 
 		return diags
 	}
+}
+
+var supportedAppControlType = []string{
+	"AI_ML", "BUSINESS_PRODUCTIVITY", "ENTERPRISE_COLLABORATION", "STREAMING_MEDIA",
+}
+
+func validateAppControlType() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for User Agent Types",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedAppControlType, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var validActionsForType = map[string][]string{
+	"AI_ML":                    {"ALLOW_AI_ML_WEB_USE", "DENY_AI_ML_WEB_USE", "CAUTION_AI_ML_WEB_USE", "ISOLATE_AI_ML_WEB_USE"},
+	"BUSINESS_PRODUCTIVITY":    {"ALLOW_BUSINESS_PRODUCTIVITY_APPS", "BLOCK_BUSINESS_PRODUCTIVITY_APPS", "CAUTION_BUSINESS_PRODUCTIVITY_APPS", "ISOLATE_BUSINESS_PRODUCTIVITY_APPS"},
+	"ENTERPRISE_COLLABORATION": {"ALLOW_ENTERPRISE_COLLABORATION_APPS", "BLOCK_ENTERPRISE_COLLABORATION_APPS", "CAUTION_ENTERPRISE_COLLABORATION_APPS", "ISOLATE_ENTERPRISE_COLLABORATION_APPS"},
+	"STREAMING_MEDIA":          {"ALLOW_STREAMING_VIEW_LISTEN", "ALLOW_STREAMING_UPLOAD", "BLOCK_STREAMING_UPLOAD", "CAUTION_STREAMING_VIEW_LISTEN", "ISOLATE_STREAMING_VIEW_LISTEN"},
+}
+
+func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	ruleType := diff.Get("type").(string)
+	actions := diff.Get("actions").(*schema.Set).List()
+
+	validActions, typeExists := validActionsForType[ruleType]
+	if !typeExists {
+		return fmt.Errorf("invalid type: %s", ruleType)
+	}
+
+	validActionsMap := make(map[string]struct{}, len(validActions))
+	for _, action := range validActions {
+		validActionsMap[action] = struct{}{}
+	}
+
+	var invalidActions []string
+	for _, action := range actions {
+		actionStr, ok := action.(string)
+		if !ok {
+			return fmt.Errorf("expected action to be a string, got: %T", action)
+		}
+		if _, valid := validActionsMap[actionStr]; !valid {
+			invalidActions = append(invalidActions, actionStr)
+		}
+	}
+
+	if len(invalidActions) > 0 {
+		return fmt.Errorf(
+			"invalid actions %v for type %s. Valid actions are: %v. Please adjust the type or actions accordingly",
+			invalidActions, ruleType, validActions)
+	}
+
+	return nil
 }
 
 func validateLocationManagementCountries() schema.SchemaValidateDiagFunc {

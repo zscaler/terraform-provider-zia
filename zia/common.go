@@ -603,6 +603,19 @@ func getUserAgentTypes() *schema.Schema {
 		},
 	}
 }
+
+func getAppControlType() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeString,
+		Description: "Supported App Control Types",
+		Optional:    true,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateAppControlType(),
+		},
+	}
+}
+
 func getLocationManagementCountries() *schema.Schema {
 	return &schema.Schema{
 		Type:             schema.TypeString,
