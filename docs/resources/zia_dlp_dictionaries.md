@@ -57,12 +57,19 @@ The following arguments are supported:
     * `PATTERN_COUNT_TYPE_UNIQUE`
   * `pattern` - (Required) DLP dictionary pattern
 
-### Optional
-
 * `confidence_threshold` - (Optional) The DLP confidence threshold. The following values are supported:
   * `CONFIDENCE_LEVEL_LOW`
   * `CONFIDENCE_LEVEL_MEDIUM`
   * `CONFIDENCE_LEVEL_HIGH`
+
+### Optional
+
+* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
+  * `CONFIDENCE_LEVEL_LOW`
+  * `CONFIDENCE_LEVEL_MEDIUM`
+  * `CONFIDENCE_LEVEL_HIGH`
+
+* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary. Supported only for the following Identifiers: `ASPP_LEAKAGE`, `CRED_LEAKAGE`, `EUIBAN_LEAKAGE`, `PPEU_LEAKAGE`, `USDL_LEAKAGE`.
 
 * `threshold_type` - (Optional) The DLP threshold type. The following values are supported:
   * `VIOLATION_COUNT_ONLY`

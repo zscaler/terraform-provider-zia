@@ -462,6 +462,7 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
 	_ = d.Set("time_quota", resp.TimeQuota)
+
 	// Convert size_quota from KB back to MB
 	sizeQuotaMB := resp.SizeQuota / 1024
 	_ = d.Set("size_quota", sizeQuotaMB)
@@ -764,40 +765,4 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 			// "profile_seq": cbiProfile.ProfileSeq,
 		},
 	}
-}
-
-func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) error {
-	switch rule.Action {
-	case "ISOLATE":
-		// Validation 1: Check if any field in CBIProfile is set
-		if rule.CBIProfile.ID == "" && rule.CBIProfile.Name == "" && rule.CBIProfile.URL == "" {
-			return errors.New("cbi_profile attribute is required when action is ISOLATE")
-		}
-
-		// Validation 2: Check user_agent_types does not contain "OTHER"
-		for _, userAgent := range rule.UserAgentTypes {
-			if userAgent == "OTHER" {
-				return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
-			}
-		}
-
-		// Validation 3: Check Protocols should be HTTP or HTTPS
-		validProtocols := map[string]bool{"HTTPS_RULE": true, "HTTP_RULE": true}
-		for _, protocol := range rule.Protocols {
-			if !validProtocols[strings.ToUpper(protocol)] {
-				return errors.New("when action is ISOLATE, valid options for protocols are: HTTP and/or HTTPS")
-			}
-		}
-
-	case "CAUTION":
-		// Validation 4: Ensure request_methods only contain CONNECT, GET, HEAD
-		validMethods := map[string]bool{"CONNECT": true, "GET": true, "HEAD": true}
-		for _, method := range rule.RequestMethods { // Assuming RequestMethods is the correct field
-			if !validMethods[strings.ToUpper(method)] {
-				return errors.New("'CAUTION' action is allowed only for CONNECT/GET/HEAD request methods")
-			}
-		}
-	}
-
-	return nil
 }

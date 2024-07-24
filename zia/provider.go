@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common"
 )
 
 func Provider() *schema.Provider {
@@ -119,6 +119,7 @@ func Provider() *schema.Provider {
 			"zia_location_groups":                               dataSourceLocationGroup(),
 			"zia_location_lite":                                 dataSourceLocationLite(),
 			"zia_dlp_dictionaries":                              dataSourceDLPDictionaries(),
+			"zia_dlp_dictionary_predefined_identifiers":         dataSourceDLPDictionaryPredefinedIdentifiers(),
 			"zia_dlp_engines":                                   dataSourceDLPEngines(),
 			"zia_dlp_icap_servers":                              dataSourceDLPICAPServers(),
 			"zia_dlp_edm_schema":                                dataSourceDLPEDMSchema(),

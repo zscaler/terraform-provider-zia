@@ -29,7 +29,7 @@ func testAccCheckActivationStatusDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckActivationStatusExists(n string) resource.TestCheckFunc {
+func testAccCheckActivationStatusExists(_ string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Implement this function to ensure the resource exists in your real infrastructure
 		// You can use the Terraform SDK's helper functions to access and verify resource attributes

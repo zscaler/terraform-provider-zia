@@ -193,6 +193,8 @@ func resourceCloudAppControlRules() *schema.Resource {
 			"groups":                 setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
 			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
 			"users":                  setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
+			"tenancy_profile_ids":    setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
+			"cloud_app_risk_profile": setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded."),
 			"device_trust_levels":    getDeviceTrustLevels(),
 			"user_risk_score_levels": getUserRiskScoreLevels(),
 			"user_agent_types":       getUserAgentTypes(),
@@ -265,16 +267,13 @@ func resourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) err
 	_ = d.Set("state", resp.State)
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("type", resp.Type)
-	_ = d.Set("time_quota", resp.TimeQuota)
 	_ = d.Set("cascading_enabled", resp.CascadingEnabled)
 	_ = d.Set("applications", resp.Applications)
-	_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
-	_ = d.Set("validity_start_time", resp.ValidityStartTime)
-	_ = d.Set("validity_end_time", resp.ValidityEndTime)
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
+	_ = d.Set("time_quota", resp.TimeQuota)
 
 	// Convert size_quota from KB back to MB
 	sizeQuotaMB := resp.SizeQuota / 1024
@@ -304,7 +303,15 @@ func resourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) err
 		}
 	}
 
+	if err := d.Set("cloud_app_risk_profile", flattenCustomIDSet(resp.CloudAppRiskProfile)); err != nil {
+		return err
+	}
+
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+		return err
+	}
+
+	if err := d.Set("tenancy_profile_ids", flattenIDs(resp.TenancyProfileIDs)); err != nil {
 		return err
 	}
 
@@ -479,6 +486,7 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		ValidityEndTime:     validityEndTime,
 		ValidityTimeZoneID:  d.Get("validity_time_zone_id").(string),
 		EnforceTimeValidity: d.Get("enforce_time_validity").(bool),
+		CascadingEnabled:    d.Get("cascading_enabled").(bool),
 		Actions:             SetToStringList(d, "actions"),
 		Applications:        SetToStringList(d, "applications"),
 		UserRiskScoreLevels: SetToStringList(d, "user_risk_score_levels"),
@@ -493,6 +501,8 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
+		TenancyProfileIDs:   expandIDNameExtensionsSet(d, "tenancy_profile_ids"),
+		CloudAppRiskProfile: expandIDNameExtensionsSetSingle(d, "cloud_app_risk_profile"),
 		CBIProfile:          expandCloudAppControlCBIProfile(d),
 	}
 

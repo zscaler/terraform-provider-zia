@@ -31,6 +31,11 @@ func dataSourceDLPDictionaries() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"confidence_level_for_predefined_dict": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The DLP confidence threshold for predefined dictionaries",
+			},
 			"confidence_threshold": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -226,6 +231,7 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("custom", resp.Custom)
+		_ = d.Set("confidence_level_for_predefined_dict", resp.ConfidenceLevelForPredefinedDict)
 		_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 		_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)

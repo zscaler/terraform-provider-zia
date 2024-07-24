@@ -43,7 +43,7 @@ func dataSourceCloudAppControlRules() *schema.Resource {
 				Description: "The unique identifier for the device.",
 			},
 			"rank": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "The unique identifier for the device.",
 			},
@@ -121,6 +121,10 @@ func dataSourceCloudAppControlRules() *schema.Resource {
 			},
 			"last_modified_time": {
 				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"enforce_time_validity": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"user_agent_types": {

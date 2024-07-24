@@ -9,8 +9,8 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
 )
 
-func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
-	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
+func TestAccDataSourceCloudAppControlRules_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.CloudAppControlRule)
 
 	// Generate Rule Label HCL Resource
 	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
@@ -19,20 +19,18 @@ func TestAccDataSourceURLFilteringRules_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckURLFilteringRulesDestroy,
+		CheckDestroy: testAccCheckCloudAppControlRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLFilteringRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.URLFilteringRuleDescription, variable.URLFilteringRuleAction, variable.URLFilteringRuleState, ruleLabelTypeAndName, ruleLabelHCL),
+				Config: testAccCheckCloudAppControlRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.CloudAppControlRuleDescription, variable.CloudAppControlRuleState, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "action", resourceTypeAndName, "action"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "actions", resourceTypeAndName, "actions"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "url_categories.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "request_methods.#", "9"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "labels.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "rank", resourceTypeAndName, "rank"),
+					resource.TestCheckResourceAttr(dataSourceTypeAndName, "applications.#", "2"),
 				),
 			},
 		},
