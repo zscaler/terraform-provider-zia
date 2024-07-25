@@ -1,5 +1,18 @@
 # Changelog
 
+## 3.0.0 (July, 25 2024)
+
+### Notes
+
+- Release date: **(July, 25 2024)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
+
 ## 2.91.4 (July, 3 2024)
 
 ### Notes

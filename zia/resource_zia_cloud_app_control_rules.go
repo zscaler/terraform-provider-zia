@@ -5,12 +5,18 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudappcontrol"
+)
+
+var (
+	cloudAppRuleLock          sync.Mutex
+	cloudAppRuleStartingOrder int
 )
 
 func resourceCloudAppControlRules() *schema.Resource {
@@ -204,21 +210,74 @@ func resourceCloudAppControlRules() *schema.Resource {
 }
 
 func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) error {
-
 	zClient := m.(*Client)
 	service := zClient.cloudappcontrol
 
 	req := expandCloudAppControlRules(d)
 	log.Printf("[INFO] Creating zia cloud app control rule\n%+v\n", req)
 
-	resp, err := cloudappcontrol.Create(service, req.Type, &req)
-	if err != nil {
-		return err
+	timeout := d.Timeout(schema.TimeoutCreate)
+	start := time.Now()
+
+	for {
+		cloudAppRuleLock.Lock()
+		if cloudAppRuleStartingOrder == 0 {
+			rules, _ := cloudappcontrol.GetByRuleType(service, req.Type)
+			for _, r := range rules {
+				if r.Order > cloudAppRuleStartingOrder {
+					cloudAppRuleStartingOrder = r.Order
+				}
+			}
+			if cloudAppRuleStartingOrder == 0 {
+				cloudAppRuleStartingOrder = 1
+			}
+		}
+		cloudAppRuleLock.Unlock()
+		startWithoutLocking := time.Now()
+
+		order := req.Order
+		req.Order = cloudAppRuleStartingOrder
+		resp, err := cloudappcontrol.Create(service, req.Type, &req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				log.Printf("[INFO] Creating cloud app control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+				if time.Since(start) < timeout {
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
+			}
+			return fmt.Errorf("error creating resource: %s", err)
+		}
+
+		log.Printf("[INFO] Created zia cloud app control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		reorder(order, resp.ID, "cloud_app_control_rules", func() (int, error) {
+			rules, err := cloudappcontrol.GetByRuleType(service, req.Type)
+			return len(rules), err
+		}, func(id, order int) error {
+			rule, err := cloudappcontrol.GetByRuleID(service, req.Type, id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, err = cloudappcontrol.Update(service, req.Type, id, rule)
+			return err
+		})
+
+		d.SetId(strconv.Itoa(resp.ID))
+		_ = d.Set("rule_id", resp.ID)
+
+		err = resourceCloudAppControlRulesRead(d, m)
+		if err != nil {
+			if time.Since(start) < timeout {
+				time.Sleep(10 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
+		}
+		markOrderRuleAsDone(resp.ID, "cloud_app_control_rules")
+		break
 	}
 
-	log.Printf("[INFO] Created zia cloud app control request. ID: %v\n", resp)
-	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("rule_id", resp.ID)
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
@@ -311,9 +370,11 @@ func resourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) err
 		return err
 	}
 
+	log.Printf("[DEBUG] Tenancy Profile IDs before setting: %+v\n", resp.TenancyProfileIDs)
 	if err := d.Set("tenancy_profile_ids", flattenIDs(resp.TenancyProfileIDs)); err != nil {
 		return err
 	}
+	log.Printf("[DEBUG] Tenancy Profile IDs after setting: %+v\n", d.Get("tenancy_profile_ids"))
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
 		return err
@@ -361,6 +422,7 @@ func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) e
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] cloud application control rule ID not set: %v\n", id)
+		return fmt.Errorf("cloud application control rule ID not set")
 	}
 
 	ruleType, ok := d.Get("type").(string)
@@ -377,9 +439,48 @@ func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) e
 			return nil
 		}
 	}
-	if _, err := cloudappcontrol.Update(service, ruleType, id, &req); err != nil {
-		return err
+
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	start := time.Now()
+
+	for {
+		_, err := cloudappcontrol.Update(service, ruleType, id, &req)
+		if err != nil {
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
+				if time.Since(start) < timeout {
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
+			}
+			return fmt.Errorf("error updating resource: %s", err)
+		}
+
+		reorder(req.Order, req.ID, "cloud_app_control_rules", func() (int, error) {
+			rules, err := cloudappcontrol.GetByRuleType(service, req.Type)
+			return len(rules), err
+		}, func(id, order int) error {
+			rule, err := cloudappcontrol.GetByRuleID(service, req.Type, id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, err = cloudappcontrol.Update(service, req.Type, id, rule)
+			return err
+		})
+
+		err = resourceCloudAppControlRulesRead(d, m)
+		if err != nil {
+			if time.Since(start) < timeout {
+				time.Sleep(10 * time.Second) // Wait before retrying
+				continue
+			}
+			return err
+		}
+		markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
+		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 

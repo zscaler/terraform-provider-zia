@@ -268,6 +268,7 @@ var validActionsForType = map[string][]string{
 	"WEBMAIL":                  {"ALLOW_WEBMAIL_VIEW", "ALLOW_WEBMAIL_ATTACHMENT_SEND", "ALLOW_WEBMAIL_SEND", "CAUTION_WEBMAIL_VIEW", "BLOCK_WEBMAIL_VIEW", "BLOCK_WEBMAIL_ATTACHMENT_SEND", "BLOCK_WEBMAIL_SEND"},
 }
 
+/*
 // Add valid applications for types that support tenancy_profile_ids
 var validAppsForTypeWithTenancy = map[string][]string{
 	"BUSINESS_PRODUCTIVITY":    {"GOOGLEANALYTICS"},
@@ -280,6 +281,7 @@ var validAppsForTypeWithTenancy = map[string][]string{
 	"SYSTEM_AND_DEVELOPMENT":   {"GOOGLE_DEVELOPERS", "GOOGLEAPPMAKER"},
 	"WEBMAIL":                  {"GOOGLE_WEBMAIL"},
 }
+*/
 
 func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	ruleType := diff.Get("type").(string)
@@ -387,34 +389,6 @@ func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff
 			if userAgent == "OTHER" {
 				return fmt.Errorf("user_agent_types should not contain 'OTHER' when actions contain ISOLATE_. Valid options are: CHROME, FIREFOX, MSIE, MSEDGE, MSCHREDGE, OPERA, SAFARI")
 			}
-		}
-	}
-
-	// Validation 4: When the "tenancy_profile_ids" attribute is set, validate the "applications" based on the "type".
-	if _, ok := diff.GetOk("tenancy_profile_ids"); ok {
-		applications := diff.Get("applications").(*schema.Set).List()
-		validApps, typeExists := validAppsForTypeWithTenancy[ruleType]
-		if !typeExists {
-			return fmt.Errorf("invalid type: %s", ruleType)
-		}
-		validAppsMap := make(map[string]struct{}, len(validApps))
-		for _, app := range validApps {
-			validAppsMap[app] = struct{}{}
-		}
-		var invalidApps []string
-		for _, app := range applications {
-			appStr, ok := app.(string)
-			if !ok {
-				return fmt.Errorf("expected application to be a string, got: %T", app)
-			}
-			if _, valid := validAppsMap[appStr]; !valid {
-				invalidApps = append(invalidApps, appStr)
-			}
-		}
-		if len(invalidApps) > 0 {
-			return fmt.Errorf(
-				"invalid applications %v for type %s when tenancy_profile_ids is set. Valid applications are: %v. Please adjust the applications accordingly. Visit Zscaler Help Portal: https://help.zscaler.com/zia/documentation-knowledgebase/policies/cloud-apps/cloud-app-control-policies",
-				invalidApps, ruleType, validApps)
 		}
 	}
 
