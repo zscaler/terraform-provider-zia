@@ -1,7 +1,10 @@
 package zia
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/biter777/countries"
 	"github.com/fabiotavarespr/iso3166"
@@ -10,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
 )
 
 // Validate URL Filtering Category Options
@@ -207,6 +211,188 @@ func validateURLSuperCategories() schema.SchemaValidateDiagFunc {
 
 		return diags
 	}
+}
+
+var supportedAppControlType = []string{
+	"AI_ML", "BUSINESS_PRODUCTIVITY", "CONSUMER", "CUSTOM_CAPP", "DNS_OVER_HTTPS", "ENTERPRISE_COLLABORATION", "FILE_SHARE",
+	"FINANCE", "HEALTH_CARE", "HOSTING_PROVIDER", "HUMAN_RESOURCES", "INSTANT_MESSAGING", "IT_SERVICES", "LEGAL", "SALES_AND_MARKETING",
+	"SOCIAL_NETWORKING", "STREAMING_MEDIA", "SYSTEM_AND_DEVELOPMENT", "WEBMAIL",
+}
+
+func validateAppControlType() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for User Agent Types",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedAppControlType, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var validActionsForType = map[string][]string{
+	"AI_ML":                    {"ALLOW_AI_ML_WEB_USE", "CAUTION_AI_ML_WEB_USE", "DENY_AI_ML_WEB_USE", "ISOLATE_AI_ML_WEB_USE"},
+	"BUSINESS_PRODUCTIVITY":    {"ALLOW_BUSINESS_PRODUCTIVITY_APPS", "BLOCK_BUSINESS_PRODUCTIVITY_APPS", "CAUTION_BUSINESS_PRODUCTIVITY_APPS", "ISOLATE_BUSINESS_PRODUCTIVITY_APPS"},
+	"CONSUMER":                 {"ALLOW_CONSUMER_APPS", "BLOCK_CONSUMER_APPS", "CAUTION_CONSUMER_APPS", "ISOLATE_CONSUMER_APPS"},
+	"DNS_OVER_HTTPS":           {"ALLOW_DNS_OVER_HTTPS_USE", "DENY_DNS_OVER_HTTPS_USE"},
+	"ENTERPRISE_COLLABORATION": {"ALLOW_ENTERPRISE_COLLABORATION_APPS", "BLOCK_ENTERPRISE_COLLABORATION_APPS", "CAUTION_ENTERPRISE_COLLABORATION_APPS", "ISOLATE_ENTERPRISE_COLLABORATION_APPS"},
+	"FILE_SHARE":               {"ALLOW_FILE_SHARE_VIEW", "ALLOW_FILE_SHARE_UPLOAD", "CAUTION_FILE_SHARE_VIEW", "DENY_FILE_SHARE_VIEW", "DENY_FILE_SHARE_UPLOAD", "ISOLATE_FILE_SHARE_VIEW"},
+	"FINANCE":                  {"ALLOW_FINANCE_USE", "CAUTION_FINANCE_USE", "DENY_FINANCE_USE", "ISOLATE_FINANCE_USE"},
+	"HEALTH_CARE":              {"ALLOW_HEALTH_CARE_USE", "CAUTION_HEALTH_CARE_USE", "DENY_HEALTH_CARE_USE", "ISOLATE_HEALTH_CARE_USE"},
+	"HOSTING_PROVIDER":         {"ALLOW_HOSTING_PROVIDER_USE", "CAUTION_HOSTING_PROVIDER_USE", "DENY_HOSTING_PROVIDER_USE", "ISOLATE_HOSTING_PROVIDER_USE"},
+	"HUMAN_RESOURCES":          {"ALLOW_HUMAN_RESOURCES_USE", "CAUTION_HUMAN_RESOURCES_USE", "DENY_HUMAN_RESOURCES_USE", "ISOLATE_HUMAN_RESOURCES_USE"},
+	"INSTANT_MESSAGING":        {"ALLOW_CHAT", "ALLOW_FILE_TRANSFER_IN_CHAT", "BLOCK_CHAT", "BLOCK_FILE_TRANSFER_IN_CHAT", "CAUTION_CHAT", "ISOLATE_CHAT"},
+	"IT_SERVICES":              {"ALLOW_IT_SERVICES_USE", "CAUTION_LEGAL_USE", "DENY_IT_SERVICES_USE", "ISOLATE_IT_SERVICES_USE"},
+	"LEGAL":                    {"ALLOW_LEGAL_USE", "DENY_DNS_OVER_HTTPS_USE", "DENY_LEGAL_USE", "ISOLATE_LEGAL_USE"},
+	"SALES_AND_MARKETING":      {"ALLOW_SALES_MARKETING_APPS", "BLOCK_SALES_MARKETING_APPS", "CAUTION_SALES_MARKETING_APPS", "ISOLATE_SALES_MARKETING_APPS"},
+	"STREAMING_MEDIA":          {"ALLOW_STREAMING_VIEW_LISTEN", "ALLOW_STREAMING_UPLOAD", "BLOCK_STREAMING_UPLOAD", "CAUTION_STREAMING_VIEW_LISTEN", "ISOLATE_STREAMING_VIEW_LISTEN"},
+	"SOCIAL_NETWORKING":        {"ALLOW_SOCIAL_NETWORKING_VIEW", "ALLOW_SOCIAL_NETWORKING_POST", "BLOCK_SOCIAL_NETWORKING_VIEW", "BLOCK_SOCIAL_NETWORKING_POST", "CAUTION_SOCIAL_NETWORKING_VIEW"},
+	"SYSTEM_AND_DEVELOPMENT":   {"ALLOW_SYSTEM_DEVELOPMENT_APPS", "ALLOW_SYSTEM_DEVELOPMENT_UPLOAD", "BLOCK_SYSTEM_DEVELOPMENT_APPS", "BLOCK_SYSTEM_DEVELOPMENT_UPLOAD", "CAUTION_SYSTEM_DEVELOPMENT_APPS", "ISOLATE_SALES_MARKETING_APPS"},
+	"WEBMAIL":                  {"ALLOW_WEBMAIL_VIEW", "ALLOW_WEBMAIL_ATTACHMENT_SEND", "ALLOW_WEBMAIL_SEND", "CAUTION_WEBMAIL_VIEW", "BLOCK_WEBMAIL_VIEW", "BLOCK_WEBMAIL_ATTACHMENT_SEND", "BLOCK_WEBMAIL_SEND"},
+}
+
+/*
+// Add valid applications for types that support tenancy_profile_ids
+var validAppsForTypeWithTenancy = map[string][]string{
+	"BUSINESS_PRODUCTIVITY":    {"GOOGLEANALYTICS"},
+	"ENTERPRISE_COLLABORATION": {"GOOGLECALENDAR", "GOOGLEKEEP", "GOOGLEMEET", "GOOGLESITES", "WEBEX", "SLACK", "WEBEX_TEAMS", "ZOOM"},
+	"FILE_SHARE":               {"DROPBOX", "GDRIVE", "GPHOTOS"},
+	"HOSTING_PROVIDER":         {"GCLOUDCOMPUTE", "AWS", "IBMSMARTCLOUD", "GAPPENGINE", "GOOGLE_CLOUD_PLATFORM"},
+	"IT_SERVICES":              {"MSLOGINSERVICES", "GOOGLOGINSERVICE", "WEBEX_LOGIN_SERVICES", "ZOHO_LOGIN_SERVICES"},
+	"SOCIAL_NETWORKING":        {"GOOGLE_GROUPS", "GOOGLE_PLUS"},
+	"STREAMING_MEDIA":          {"YOUTUBE", "GOOGLE_STREAMING"},
+	"SYSTEM_AND_DEVELOPMENT":   {"GOOGLE_DEVELOPERS", "GOOGLEAPPMAKER"},
+	"WEBMAIL":                  {"GOOGLE_WEBMAIL"},
+}
+*/
+
+func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	ruleType := diff.Get("type").(string)
+	actions := diff.Get("actions").(*schema.Set).List()
+
+	validActions, typeExists := validActionsForType[ruleType]
+	if !typeExists {
+		return fmt.Errorf("invalid type: %s", ruleType)
+	}
+
+	validActionsMap := make(map[string]struct{}, len(validActions))
+	for _, action := range validActions {
+		validActionsMap[action] = struct{}{}
+	}
+
+	var invalidActions []string
+	var containsIsolate bool
+	var containsDenyOrBlock bool
+	for _, action := range actions {
+		actionStr, ok := action.(string)
+		if !ok {
+			return fmt.Errorf("expected action to be a string, got: %T", action)
+		}
+		if _, valid := validActionsMap[actionStr]; !valid {
+			invalidActions = append(invalidActions, actionStr)
+		}
+		if strings.Contains(actionStr, "ISOLATE_") {
+			containsIsolate = true
+		}
+		if strings.Contains(actionStr, "DENY_") || strings.Contains(actionStr, "BLOCK_") {
+			containsDenyOrBlock = true
+		}
+	}
+
+	if len(invalidActions) > 0 {
+		return fmt.Errorf(
+			"invalid actions %v for type %s. Valid actions are: %v. Please adjust the type or actions accordingly",
+			invalidActions, ruleType, validActions)
+	}
+
+	// Additional validation logic for enforce_time_validity, validity_start_time, and validity_end_time
+	if enforceTimeValidity, ok := diff.GetOk("enforce_time_validity"); ok && enforceTimeValidity.(bool) {
+		if _, ok := diff.GetOk("validity_start_time"); !ok {
+			return fmt.Errorf("validity_start_time must be set when enforce_time_validity is true")
+		} else {
+			validityStartTimeStr := diff.Get("validity_start_time").(string)
+			if isSingleDigitDay(validityStartTimeStr) {
+				return fmt.Errorf("validity_start_time must have a two-digit day (e.g., 02 instead of 2)")
+			}
+		}
+		if _, ok := diff.GetOk("validity_end_time"); !ok {
+			return fmt.Errorf("validity_end_time must be set when enforce_time_validity is true")
+		} else {
+			validityEndTimeStr := diff.Get("validity_end_time").(string)
+			if isSingleDigitDay(validityEndTimeStr) {
+				return fmt.Errorf("validity_end_time must have a two-digit day (e.g., 02 instead of 2)")
+			}
+		}
+		if _, ok := diff.GetOk("validity_time_zone_id"); !ok {
+			return fmt.Errorf("validity_time_zone_id must be set when enforce_time_validity is true")
+		}
+	} else {
+		// If enforce_time_validity is false, ensure validity attributes are not set
+		if _, ok := diff.GetOk("validity_start_time"); ok {
+			return fmt.Errorf("validity_start_time can only be set when enforce_time_validity is true")
+		}
+		if _, ok := diff.GetOk("validity_end_time"); ok {
+			return fmt.Errorf("validity_end_time can only be set when enforce_time_validity is true")
+		}
+		if _, ok := diff.GetOk("validity_time_zone_id"); ok {
+			return fmt.Errorf("validity_time_zone_id can only be set when enforce_time_validity is true")
+		}
+	}
+
+	// Validation 1: When the "actions" value contains the string "ISOLATE_", the attribute cbi_profile must be set.
+	if containsIsolate {
+		if _, ok := diff.GetOk("cbi_profile"); !ok {
+			return fmt.Errorf("cbi_profile attribute must be set when actions contain ISOLATE_")
+		}
+		cbiProfileList := diff.Get("cbi_profile").([]interface{})
+		if len(cbiProfileList) == 0 || cbiProfileList[0] == nil {
+			return fmt.Errorf("cbi_profile attribute must be set when actions contain ISOLATE_")
+		}
+		cbiProfile := cbiProfileList[0].(map[string]interface{})
+		if cbiProfile["id"] == "" && cbiProfile["name"] == "" && cbiProfile["url"] == "" {
+			return fmt.Errorf("cbi_profile attribute must be properly set when actions contain ISOLATE_")
+		}
+	}
+
+	// Validation 2: The attribute cascading_enabled can only be set when the actions value contain the string "DENY_" or "BLOCK_".
+	if cascadingEnabled, ok := diff.GetOk("cascading_enabled"); ok && cascadingEnabled.(bool) && !containsDenyOrBlock {
+		return fmt.Errorf("cascading_enabled can only be set when actions contain DENY_ or BLOCK_")
+	}
+
+	// Validation 3: When the "actions" value contains the string "ISOLATE_", the attribute user_agent_types must be set.
+	if containsIsolate {
+		if _, ok := diff.GetOk("user_agent_types"); !ok {
+			return fmt.Errorf("user_agent_types attribute must be set when actions contain ISOLATE_")
+		}
+		userAgentTypes := diff.Get("user_agent_types").(*schema.Set).List()
+		if len(userAgentTypes) == 0 {
+			return fmt.Errorf("user_agent_types attribute must be set when actions contain ISOLATE_")
+		}
+		for _, userAgent := range userAgentTypes {
+			if userAgent == "OTHER" {
+				return fmt.Errorf("user_agent_types should not contain 'OTHER' when actions contain ISOLATE_. Valid options are: CHROME, FIREFOX, MSIE, MSEDGE, MSCHREDGE, OPERA, SAFARI")
+			}
+		}
+	}
+
+	return nil
 }
 
 func validateLocationManagementCountries() schema.SchemaValidateDiagFunc {
@@ -421,41 +607,6 @@ func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
 	return nil
 }
 
-/*
-	func validateDLPRuleFileTypes() schema.SchemaValidateDiagFunc {
-		return func(i interface{}, path cty.Path) diag.Diagnostics {
-			value, ok := i.(string)
-			if !ok {
-				return diag.Diagnostics{
-					{
-						Severity: diag.Error,
-						Summary:  "Expected type to be string",
-						Detail:   "Type assertion failed, expected string type for DLP Rule File Types validation",
-					},
-				}
-			}
-
-			// Convert the cty.Path to a string representation
-			pathStr := fmt.Sprintf("%+v", path)
-
-			// Use StringInSlice from helper/validation package
-			var diags diag.Diagnostics
-			if _, errs := validation.StringInSlice(supportedDLPRuleFileTypes, false)(value, pathStr); len(errs) > 0 {
-				for _, err := range errs {
-					diags = append(diags, diag.FromErr(err)...)
-				}
-			}
-
-			return diags
-		}
-	}
-
-	var supportedDLPRuleFileTypes = []string{
-		"ANY", "CHEMDRAW_FILES", "BITMAP", "SCT", "ASM", "COBOL", "PDF_DOCUMENT", "RES_FILES",
-		"POSTSCRIPT", "OAB", "BASIC_SOURCE_CODE", "JAVASCRIPT", "QLIKVIEW_FILES", "BORLAND_CPP_FILES", "JAVA_FILES", "APPLE_DOCUMENTS", "MS_MSG", "DSP", "MSC", "RUBY_FILES", "GO_FILES", "DMD", "MS_MDB", "FORM_DATA_POST", "TDSX", "MATLAB_FILES", "PYTHON", "CML", "C_FILES", "SCALA", "X1B", "TLI", "TLH", "YAML_FILES", "MS_RTF", "POD", "DELPHI", "SCZIP", "SAS", "FOR", "JAVA_APPLET", "F_FILES", "VISUAL_BASIC_SCRIPT", "TBM", "MS_EXCEL", "MS_CPP_FILES", "POWERSHELL", "TXT", "CSX", "INCLUDE_FILES", "RSP", "APPX", "INF", "JPEG", "SQL", "MM", "PNG", "COMPILED_HTML_HELP", "WINDOWS_META_FORMAT", "MS_WORD", "NATVIS", "ACCDB", "CSV", "BCP", "MAKE_FILES", "CP", "IFC", "PERL_FILES", "WINDOWS_SCRIPT_FILES", "RPY", "SHELL_SCRAP", "VISUAL_CPP_FILES", "VISUAL_BASIC_FILES", "XAML", "MS_POWERPOINT", "BASH_SCRIPTS", "SC", "VSDX", "TDS", "TIFF",
-	}
-*/
-
 func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {
 		value, ok := i.(string)
@@ -486,4 +637,147 @@ func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {
 
 var supportedDeviceTrustLevels = []string{
 	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST",
+}
+
+func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) error {
+	switch rule.Action {
+	case "ISOLATE":
+		// Validation 1: Check if any field in CBIProfile is set
+		if rule.CBIProfile.ID == "" && rule.CBIProfile.Name == "" && rule.CBIProfile.URL == "" {
+			return errors.New("cbi_profile attribute is required when action is ISOLATE")
+		}
+
+		// Validation 2: Check user_agent_types does not contain "OTHER"
+		for _, userAgent := range rule.UserAgentTypes {
+			if userAgent == "OTHER" {
+				return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
+			}
+		}
+
+		// Validation 3: Check Protocols should be HTTP or HTTPS
+		validProtocols := map[string]bool{"HTTPS_RULE": true, "HTTP_RULE": true}
+		for _, protocol := range rule.Protocols {
+			if !validProtocols[strings.ToUpper(protocol)] {
+				return errors.New("when action is ISOLATE, valid options for protocols are: HTTP and/or HTTPS")
+			}
+		}
+
+	case "CAUTION":
+		// Validation 4: Ensure request_methods only contain CONNECT, GET, HEAD
+		validMethods := map[string]bool{"CONNECT": true, "GET": true, "HEAD": true}
+		for _, method := range rule.RequestMethods { // Assuming RequestMethods is the correct field
+			if !validMethods[strings.ToUpper(method)] {
+				return errors.New("'CAUTION' action is allowed only for CONNECT/GET/HEAD request methods")
+			}
+		}
+	}
+
+	return nil
+}
+
+var predefinedIdentifiersMap = map[string][]string{
+	"ASPP_LEAKAGE": {
+		"ASPP_CN", "ASPP_JP", "ASPP_KR", "ASPP_MY", "ASPP_PH", "ASPP_SG", "ASPP_TW", "ASPP_TR",
+	},
+	"CRED_LEAKAGE": {
+		"CRED_AMAZON_MWS_TOKEN", "CRED_GIT_TOKEN", "CRED_GITHUB_TOKEN", "CRED_GOOGLE_API", "CRED_GOOGLE_OAUTH_TOKEN",
+		"CRED_GOOGLE_OAUTH_ID", "CRED_JWT_TOKEN", "CRED_PAYPAL_TOKEN", "CRED_PICATIC_API_KEY", "CRED_PRIVATE_KEY",
+		"CRED_SENDGRID_API_KEY", "CRED_SLACK_TOKEN", "CRED_SLACK_WEBHOOK", "CRED_SQUARE_ACCESS_TOKEN", "CRED_SQUARE_OAUTH_SECRET",
+		"CRED_STRIPE_API_KEY",
+	},
+	"EUIBAN_LEAKAGE": {
+		"EUIBAN_AD", "EUIBAN_AT", "EUIBAN_BE", "EUIBAN_BA", "EUIBAN_BG", "EUIBAN_HR", "EUIBAN_CY",
+		"EUIBAN_CZ", "EUIBAN_DK", "EUIBAN_EE", "EUIBAN_FO", "EUIBAN_FI", "EUIBAN_FR", "EUIBAN_DE",
+		"EUIBAN_GI", "EUIBAN_GR", "EUIBAN_GL", "EUIBAN_HU", "EUIBAN_IS", "EUIBAN_IE", "EUIBAN_IL",
+		"EUIBAN_IT", "EUIBAN_LV", "EUIBAN_LI", "EUIBAN_LT", "EUIBAN_LU", "EUIBAN_MK", "EUIBAN_MT",
+		"EUIBAN_MC", "EUIBAN_ME", "EUIBAN_NL", "EUIBAN_NO", "EUIBAN_PL", "EUIBAN_PT", "EUIBAN_RO",
+		"EUIBAN_SM", "EUIBAN_RS", "EUIBAN_SK", "EUIBAN_SI", "EUIBAN_ES", "EUIBAN_SE", "EUIBAN_CH",
+		"EUIBAN_TN", "EUIBAN_TR", "EUIBAN_GB",
+	},
+	"PPEU_LEAKAGE": {
+		"EUPP_AT", "EUPP_BE", "EUPP_BG", "EUPP_CZ", "EUPP_DK", "EUPP_EE", "EUPP_FL", "EUPP_FR", "EUPP_DE",
+		"EUPP_GR", "EUPP_HU", "EUPP_IE", "EUPP_IT", "EUPP_LV", "EUPP_LU", "EUPP_NL", "EUPP_PL", "EUPP_PT",
+		"EUPP_RO", "EUPP_SK", "EUPP_SI", "EUPP_ES", "EUPP_SE",
+	},
+	"USDL_LEAKAGE": {
+		"USDL_AL", "USDL_AK", "USDL_AZ", "USDL_CA", "USDL_CO", "USDL_CT", "USDL_DE", "USDL_DC", "USDL_FL", "USDL_GA",
+		"USDL_HI", "USDL_ID", "USDL_IL", "USDL_IN", "USDL_IA", "USDL_KS", "USDL_KY", "USDL_LA", "USDL_ME", "USDL_MD",
+		"USDL_MA", "USDL_MI", "USDL_MN", "USDL_MS", "USDL_MO", "USDL_MT", "USDL_NE", "USDL_NV", "USDL_NH", "USDL_NJ",
+		"USDL_NM", "USDL_NY", "USDL_NC", "USDL_ND", "USDL_OH", "USDL_OK", "USDL_OR", "USDL_PA", "USDL_RI", "USDL_SC",
+		"USDL_SD", "USDL_TN", "USDL_TX", "USDL_UT", "USDL_VT", "USDL_VA", "USDL_WA", "USDL_WV", "USDL_WI", "USDL_WY",
+	},
+}
+
+func validateDLPHierarchicalIdentifiersDiff(ctx context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	identifiers := diff.Get("hierarchical_identifiers").(*schema.Set).List()
+
+	var invalidIdentifiers []string
+	for _, identifier := range identifiers {
+		idStr := identifier.(string)
+		if _, exists := predefinedIdentifiersMap[idStr]; !exists {
+			valid := false
+			for _, ids := range predefinedIdentifiersMap {
+				for _, id := range ids {
+					if id == idStr {
+						valid = true
+						break
+					}
+				}
+				if valid {
+					break
+				}
+			}
+			if !valid {
+				invalidIdentifiers = append(invalidIdentifiers, idStr)
+			}
+		}
+	}
+
+	if len(invalidIdentifiers) > 0 {
+		return fmt.Errorf("invalid hierarchical identifiers: %v. Supported identifiers are: %v", invalidIdentifiers, getAllSupportedIdentifiers())
+	}
+	return nil
+}
+
+func getAllSupportedIdentifiers() []string {
+	var identifiers []string
+	for key, values := range predefinedIdentifiersMap {
+		identifiers = append(identifiers, key)
+		identifiers = append(identifiers, values...)
+	}
+	return identifiers
+}
+
+func validatePredefinedIdentifier(val interface{}, key string) (warns []string, errs []error) {
+	supportedIdentifiers := []string{
+		"EUIBAN_LEAKAGE", "ASPP_LEAKAGE", "REGON_LEAKAGE", "BRCNPJ_LEAKAGE", "MXCURP_LEAKAGE",
+		"HRPIN_LEAKAGE", "JMBG_LEAKAGE", "TREATMENTS_LEAKAGE", "DRUGS_LEAKAGE", "DISEASES_LEAKAGE",
+		"NDC_PROD_LEAKAGE", "NDC_PKG_LEAKAGE", "CRED_LEAKAGE", "PPEU_LEAKAGE", "USDL_LEAKAGE",
+		"IEVAT_LEAKAGE", "FITIN_LEAKAGE", "IETIN_LEAKAGE", "NZNHIN_LEAKAGE", "GRTIN_LEAKAGE",
+		"PLTIN_LEAKAGE", "USITIN_LEAKAGE", "AUPP_LEAKAGE", "CIF_LEAKAGE", "PERUC_LEAKAGE",
+		"NPI_LEAKAGE", "ATSSN_LEAKAGE", "NLVAT_LEAKAGE", "LUVAT_LEAKAGE", "FRVAT_LEAKAGE",
+		"DEVAT_LEAKAGE", "ATVAT_LEAKAGE", "BEVAT_LEAKAGE", "EGN_LEAKAGE", "LUTIN_LEAKAGE",
+		"HUTIN_LEAKAGE", "ATTIN_LEAKAGE", "FRTIN_LEAKAGE", "SETIN_LEAKAGE", "PTTIN_LEAKAGE",
+		"DKTIN_LEAKAGE", "BETIN_LEAKAGE", "DETIN_LEAKAGE", "NZTIN_LEAKAGE", "ML_IMMIGRATION_LEAKAGE",
+		"ML_CORPORATE_LEGAL_LEAKAGE", "ML_COURT_LEAKAGE", "ML_LEGAL_LEAKAGE", "ML_TAX_LEAKAGE",
+		"ML_INSURANCE_LEAKAGE", "ML_INVOICE_LEAKAGE", "ML_RESUME_LEAKAGE", "ML_REAL_ESTATE_LEAKAGE",
+		"ML_MEDICAL_DOC_LEAKAGE", "ML_TECH_LEAKAGE", "ML_CORPORATE_FINANCE_LEAKAGE", "ML_DMV_LEAKAGE",
+		"INSEE_LEAKAGE", "DNI_LEAKAGE", "AADHAR_LEAKAGE", "TICN_LEAKAGE", "MYKAD_LEAKAGE",
+		"TIN_LEAKAGE", "PESEL_LEAKAGE", "AHV_LEAKAGE", "CYBER_BULLY", "JCN_LEAKAGE", "JMN_LEAKAGE",
+		"SDS_LEAKAGE", "NAME_ES_LEAKAGE", "NAME_CA_LEAKAGE", "FISCAL_LEAKAGE", "HKID_LEAKAGE",
+		"CREDIT_CARD", "FINANCIAL", "MEDICAL", "SOURCE_CODE", "NRIC_LEAKAGE", "CSIN_LEAKAGE",
+		"SALESFORCE_REPORT_LEAKAGE", "ADULT_CONTENT", "ILLEGAL_DRUGS", "GAMBLING", "WEAPONS",
+		"NINO_LEAKAGE", "NAME_LEAKAGE", "MCN_LEAKAGE", "TFN_LEAKAGE", "BSN_LEAKAGE", "ABA_LEAKAGE",
+		"CLABE_LEAKAGE", "CPF_LEAKAGE", "NHS_LEAKAGE", "CNID_LEAKAGE", "KRRN_LEAKAGE", "TNID_LEAKAGE",
+	}
+
+	name := val.(string)
+	for _, identifier := range supportedIdentifiers {
+		if name == identifier {
+			return
+		}
+	}
+
+	errs = append(errs, fmt.Errorf("%q is not a valid predefined identifier. Supported identifiers are: %v", key, supportedIdentifiers))
+	return
 }

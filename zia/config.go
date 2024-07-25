@@ -44,6 +44,7 @@ type Client struct {
 	locationgroups                *services.Service
 	locationlite                  *services.Service
 	activation                    *services.Service
+	cloudappcontrol               *services.Service
 	devicegroups                  *services.Service
 	dlpdictionaries               *services.Service
 	dlp_engines                   *services.Service
@@ -83,6 +84,7 @@ func (c *Config) Client() (*Client, error) {
 	ziaClient := &Client{
 		activation:                    services.New(cli),
 		admins:                        services.New(cli),
+		cloudappcontrol:               services.New(cli),
 		roles:                         services.New(cli),
 		filteringrules:                services.New(cli),
 		ipdestinationgroups:           services.New(cli),

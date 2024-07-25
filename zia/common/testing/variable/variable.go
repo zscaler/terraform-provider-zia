@@ -155,3 +155,11 @@ const (
 const (
 	Status = "ACTIVE"
 )
+
+// Cloud Application Control Rules
+const (
+	CloudAppControlRuleResourceName = "tf-acc-test-cloud-app-control"
+	CloudAppControlRuleDescription  = "tf-acc-test-cloud-app-control"
+	CloudAppControlRuleType         = "STREAMING_MEDIA"
+	CloudAppControlRuleState        = "ENABLED"
+)

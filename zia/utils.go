@@ -220,3 +220,44 @@ func shouldActivate() bool {
 	}
 	return activationBool
 }
+
+func validateTimeZone(v interface{}, k string) (ws []string, errors []error) {
+	tzStr := v.(string)
+	_, err := time.LoadLocation(tzStr)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q is not a valid timezone. Visit https://nodatime.org/TimeZones for the valid IANA list", tzStr))
+	}
+
+	return
+}
+
+func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
+	t, err := time.Parse(time.RFC1123, timeStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid time format: %v. Expected format: RFC1123 (Mon, 02 Jan 2006 15:04:05 MST)", err)
+	}
+	return int(t.Unix()), nil
+}
+
+func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {
+	const (
+		minMB = 10
+		maxMB = 100000
+	)
+	if sizeQuotaMB < minMB || sizeQuotaMB > maxMB {
+		return 0, fmt.Errorf("size_quota must be between %d MB and %d MB", minMB, maxMB)
+	}
+	// Convert MB to KB
+	sizeQuotaKB := sizeQuotaMB * 1024
+	return sizeQuotaKB, nil
+}
+
+func isSingleDigitDay(timeStr string) bool {
+	parts := strings.Split(timeStr, " ")
+	if len(parts) < 2 {
+		return false
+	}
+
+	day := parts[1]
+	return len(day) == 1
+}

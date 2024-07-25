@@ -15,10 +15,11 @@ import (
 
 func resourceDLPDictionaries() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDLPDictionariesCreate,
-		Read:   resourceDLPDictionariesRead,
-		Update: resourceDLPDictionariesUpdate,
-		Delete: resourceDLPDictionariesDelete,
+		Create:        resourceDLPDictionariesCreate,
+		Read:          resourceDLPDictionariesRead,
+		Update:        resourceDLPDictionariesUpdate,
+		Delete:        resourceDLPDictionariesDelete,
+		CustomizeDiff: validateDLPHierarchicalIdentifiersDiff,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
@@ -57,6 +58,23 @@ func resourceDLPDictionaries() *schema.Resource {
 				Optional:     true,
 				Description:  "The desciption of the DLP dictionary",
 				ValidateFunc: validation.StringLenBetween(0, 255),
+			},
+			"custom": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "The DLP dictionary proximity length.",
+			},
+			"confidence_level_for_predefined_dict": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The DLP confidence threshold for predefined dictionaries",
+				// Default:     "CONFIDENCE_LEVEL_MEDIUM",
+				ValidateFunc: validation.StringInSlice([]string{
+					"CONFIDENCE_LEVEL_LOW",
+					"CONFIDENCE_LEVEL_MEDIUM",
+					"CONFIDENCE_LEVEL_HIGH",
+				}, false),
 			},
 			"confidence_threshold": {
 				Type:        schema.TypeString,
@@ -139,6 +157,12 @@ func resourceDLPDictionaries() *schema.Resource {
 					"EXACT_DATA_MATCH",
 					"INDEXED_DATA_MATCH",
 				}, false),
+			},
+			"hierarchical_identifiers": {
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "List of hierarchical identifiers for the DLP dictionary.",
 			},
 			"exact_data_match_details": {
 				Type:        schema.TypeSet,
@@ -263,7 +287,7 @@ func resourceDLPDictionariesCreate(d *schema.ResourceData, m interface{}) error 
 	zClient := m.(*Client)
 	service := zClient.dlpdictionaries
 
-	req := expandDLPDictionaries(d)
+	req := expandDLPDictionaries(d, true)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
 	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
 		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
@@ -316,9 +340,12 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("dictionary_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
+	_ = d.Set("custom", resp.Custom)
 	_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
+	_ = d.Set("confidence_level_for_predefined_dict", resp.ConfidenceLevelForPredefinedDict)
 	_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
+	_ = d.Set("hierarchical_identifiers", d.Get("hierarchical_identifiers")) // Keep the user input for hierarchical_identifiers
 	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
 	_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
 	_ = d.Set("bin_numbers", resp.BinNumbers)
@@ -335,43 +362,11 @@ func resourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 
-	// Need to fully flatten and expand this menu
 	if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracySimple(resp)); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func flattenIDNameExtensionSimple(list []common.IDNameExtensions) []interface{} {
-	flattenedList := make([]interface{}, len(list))
-	for i, val := range list {
-		r := map[string]interface{}{
-			"id": val.ID,
-		}
-		if val.Extensions != nil {
-			r["extensions"] = val.Extensions
-		}
-		flattenedList[i] = r
-	}
-	return flattenedList
-}
-
-func flattenIDMProfileMatchAccuracySimple(edm *dlpdictionaries.DlpDictionary) []interface{} {
-	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
-	for i, val := range edm.IDMProfileMatchAccuracy {
-		exts := []common.IDNameExtensions{}
-		if val.AdpIdmProfile != nil {
-			exts = append(exts, *val.AdpIdmProfile)
-		}
-
-		idmProfileMatchAccuracies[i] = map[string]interface{}{
-			"match_accuracy":  val.MatchAccuracy,
-			"adp_idm_profile": flattenIDNameExtensionSimple(exts),
-		}
-	}
-
-	return idmProfileMatchAccuracies
 }
 
 func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error {
@@ -384,7 +379,7 @@ func resourceDLPDictionariesUpdate(d *schema.ResourceData, m interface{}) error 
 	}
 
 	log.Printf("[INFO] Updating dlp dictionary ID: %v\n", id)
-	req := expandDLPDictionaries(d)
+	req := expandDLPDictionaries(d, true)
 	if _, err := dlpdictionaries.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
@@ -443,35 +438,42 @@ func resourceDLPDictionariesDelete(d *schema.ResourceData, m interface{}) error 
 	return nil
 }
 
-// Need to make all below expand functions as SchemaSet
-
-func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary {
+func expandDLPDictionaries(d *schema.ResourceData, isCreate bool) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
+	hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
+
 	result := dlpdictionaries.DlpDictionary{
-		ID:                      id,
-		Name:                    d.Get("name").(string),
-		Description:             d.Get("description").(string),
-		ConfidenceThreshold:     d.Get("confidence_threshold").(string),
-		CustomPhraseMatchType:   d.Get("custom_phrase_match_type").(string),
-		DictionaryType:          d.Get("dictionary_type").(string),
-		IgnoreExactMatchIdmDict: d.Get("ignore_exact_match_idm_dict").(bool),
-		IncludeBinNumbers:       d.Get("include_bin_numbers").(bool),
-		DictTemplateId:          d.Get("dict_template_id").(int),
-		Proximity:               d.Get("proximity").(int),
+		ID:                               id,
+		Name:                             d.Get("name").(string),
+		Description:                      d.Get("description").(string),
+		ConfidenceThreshold:              d.Get("confidence_threshold").(string),
+		CustomPhraseMatchType:            d.Get("custom_phrase_match_type").(string),
+		ConfidenceLevelForPredefinedDict: d.Get("confidence_level_for_predefined_dict").(string),
+		DictionaryType:                   d.Get("dictionary_type").(string),
+		Custom:                           d.Get("custom").(bool),
+		IgnoreExactMatchIdmDict:          d.Get("ignore_exact_match_idm_dict").(bool),
+		IncludeBinNumbers:                d.Get("include_bin_numbers").(bool),
+		DictTemplateId:                   d.Get("dict_template_id").(int),
+		Proximity:                        d.Get("proximity").(int),
+		HierarchicalIdentifiers:          hierarchicalIdentifiers,
 	}
 	binNumbers := []int{}
 	for _, i := range d.Get("bin_numbers").([]interface{}) {
 		binNumbers = append(binNumbers, i.(int))
 	}
 	result.BinNumbers = binNumbers
+
 	phrases := expandDLPDictionariesPhrases(d)
 	if phrases != nil {
 		result.Phrases = phrases
 	}
 
-	patterns := expandDLPDictionariesPatterns(d)
-	if patterns != nil {
-		result.Patterns = patterns
+	// Include phrases and patterns only if it's a create operation or if the dictionary is not cloned
+	if isCreate || (result.DictTemplateId == 0 && len(result.HierarchicalIdentifiers) == 0) {
+		patterns := expandDLPDictionariesPatterns(d)
+		if patterns != nil {
+			result.Patterns = patterns
+		}
 	}
 
 	edmDetails := expandEDMDetails(d)
@@ -484,6 +486,18 @@ func expandDLPDictionaries(d *schema.ResourceData) dlpdictionaries.DlpDictionary
 		result.IDMProfileMatchAccuracy = idmProfileMarch
 	}
 	return result
+}
+
+func expandHierarchicalIdentifiers(identifiers []interface{}) []string {
+	var expandedIdentifiers []string
+	for _, identifier := range identifiers {
+		if values, exists := predefinedIdentifiersMap[identifier.(string)]; exists {
+			expandedIdentifiers = append(expandedIdentifiers, values...)
+		} else {
+			expandedIdentifiers = append(expandedIdentifiers, identifier.(string))
+		}
+	}
+	return expandedIdentifiers
 }
 
 func expandDLPDictionariesPhrases(d *schema.ResourceData) []dlpdictionaries.Phrases {
@@ -611,4 +625,35 @@ func expandIDMProfile(m map[string]interface{}, key string) []common.IDNameExten
 		return result
 	}
 	return []common.IDNameExtensions{}
+}
+
+func flattenIDNameExtensionSimple(list []common.IDNameExtensions) []interface{} {
+	flattenedList := make([]interface{}, len(list))
+	for i, val := range list {
+		r := map[string]interface{}{
+			"id": val.ID,
+		}
+		if val.Extensions != nil {
+			r["extensions"] = val.Extensions
+		}
+		flattenedList[i] = r
+	}
+	return flattenedList
+}
+
+func flattenIDMProfileMatchAccuracySimple(edm *dlpdictionaries.DlpDictionary) []interface{} {
+	idmProfileMatchAccuracies := make([]interface{}, len(edm.IDMProfileMatchAccuracy))
+	for i, val := range edm.IDMProfileMatchAccuracy {
+		exts := []common.IDNameExtensions{}
+		if val.AdpIdmProfile != nil {
+			exts = append(exts, *val.AdpIdmProfile)
+		}
+
+		idmProfileMatchAccuracies[i] = map[string]interface{}{
+			"match_accuracy":  val.MatchAccuracy,
+			"adp_idm_profile": flattenIDNameExtensionSimple(exts),
+		}
+	}
+
+	return idmProfileMatchAccuracies
 }

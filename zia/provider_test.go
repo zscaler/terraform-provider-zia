@@ -8,7 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
 )
 
 var (
@@ -49,6 +49,7 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.TrafficForwardingStaticIP, sweepTestStaticIP)
 		setupSweeper(resourcetype.TrafficForwardingVPNCredentials, sweepTestVPNCredentials)
 		setupSweeper(resourcetype.ForwardingControlRule, sweepTestForwardingControlRule)
+		setupSweeper(resourcetype.CloudAppControlRule, sweepTestCloudAppControlRule)
 		setupSweeper(resourcetype.FirewallFilteringRules, sweepTestFirewallFilteringRule)
 		setupSweeper(resourcetype.FWFilteringSourceGroup, sweepTestSourceIPGroup)
 		setupSweeper(resourcetype.FWFilteringDestinationGroup, sweepTestDestinationIPGroup)

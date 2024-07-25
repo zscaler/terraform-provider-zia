@@ -586,6 +586,7 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("ciparule", resp.Ciparule)
 		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+		_ = d.Set("user_agent_types", resp.UserAgentTypes)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return err
