@@ -12,9 +12,28 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v2.91.4``
+``Last updated: v3.0.0``
 
 ---
+
+## 3.0.0 (August, 12 2024)
+
+### Notes
+
+- Release date: **(August, 12 2024)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Enhanced `zia_security_settings` to support maximum number of blacklist urls.
+
+### Bug Fixes
+
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added Semaphore retry logic to resource ``zia_url_categories`` to assist with rate limiting management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeList`.
 
 ## 2.91.4 (July, 3 2024)
 

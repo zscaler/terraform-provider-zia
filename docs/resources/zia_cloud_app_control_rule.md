@@ -250,7 +250,7 @@ terraform import zia_cloud_app_control_rule.this <"rule_type:rule_name">
 |     `WEBMAIL`                        |          `BLOCK_WEBMAIL_VIEW`                   |
 |     `WEBMAIL`                        |          `BLOCK_WEBMAIL_ATTACHMENT_SEND`        |
 |     `WEBMAIL`                        |          `BLOCK_WEBMAIL_SEND`                   |
-|     `WEBMAIL`                        |          `ISOLATE_WEBMAIL_VIEW`                   |
+|     `WEBMAIL`                        |          `ISOLATE_WEBMAIL_VIEW`                 |
 |--------------------------------------|-------------------------------------------------|
 
 ## Cloud Application Control - Rule Types vs Tenant Profile Support

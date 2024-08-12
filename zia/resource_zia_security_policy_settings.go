@@ -56,7 +56,7 @@ func resourceSecurityPolicySettings() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Computed:    true,
-				MaxItems:    25000,
+				MaxItems:    275000,
 				Description: "URLs on the denylist for your organization. Allow up to 25000 URLs.",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
