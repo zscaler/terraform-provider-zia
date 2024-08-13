@@ -2,8 +2,6 @@ module github.com/zscaler/terraform-provider-zia/v3
 
 go 1.22
 
-toolchain go1.22.4
-
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/fabiotavarespr/iso3166 v0.0.3

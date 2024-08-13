@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.21"]
+        goVersion: ["1.22"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -85,14 +85,17 @@ jobs:
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
   zia-test-tenants:
+    needs: [zia-zsbeta-tests]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.21"]
+        goVersion: ["1.22"]
         environment:
           # - ZIA_ZSCLOUD
           - ZIA_ZS0
+          - ZIA_ZS1
+          - ZIA_ZS2
           - ZIA_ZS3
     environment: ${{ matrix.environment }}
     steps:
@@ -153,139 +156,139 @@ jobs:
           TF_ACC: ${{ secrets.TF_ACC }}
           ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
-  zia-zscalerone-test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goVersion: ["1.21"]
-        environment:
-          - ZIA_ZS1
-    environment: ${{ matrix.environment }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # zia-zscalerone-test:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       goVersion: ["1.22"]
+  #       environment:
+  #         - ZIA_ZS1
+  #   environment: ${{ matrix.environment }}
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.goVersion }}
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ matrix.goVersion }}
 
-      - name: Set Go env
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+  #     - name: Set Go env
+  #       run: |
+  #         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+  #         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Download Go Dependencies
-        run: |
-          go mod tidy && go mod vendor
+  #     - name: Download Go Dependencies
+  #       run: |
+  #         go mod tidy && go mod vendor
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Check Formatting
-        run: make fmtcheck
+  #     - name: Check Formatting
+  #       run: make fmtcheck
 
-      # - name: Vet Code
-      #   run: make vet
+  #     # - name: Vet Code
+  #     #   run: make vet
 
-      - name: Lint Code
-        run: make lint
+  #     - name: Lint Code
+  #       run: make lint
 
-      - name: Check Build
-        run: make build
+  #     - name: Check Build
+  #       run: make build
 
-      - name: Run tests with retry on Ubuntu
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 3
-          timeout_minutes: 45 # Adjust as needed
-          command: |
-            make sweep
-            make test:integration:zscalerone
-            make sweep
-        env:
-          ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
-          ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
-          ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
-          ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
-          ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
-          ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
-          ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
-          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
-          ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
-          TF_ACC: ${{ secrets.TF_ACC }}
-          ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
+  #     - name: Run tests with retry on Ubuntu
+  #       uses: nick-fields/retry@v3
+  #       with:
+  #         max_attempts: 3
+  #         timeout_minutes: 45 # Adjust as needed
+  #         command: |
+  #           make sweep
+  #           make test:integration:zscalerone
+  #           make sweep
+  #       env:
+  #         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+  #         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+  #         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+  #         ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+  #         ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
+  #         ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
+  #         ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
+  #         ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+  #         ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
+  #         TF_ACC: ${{ secrets.TF_ACC }}
+  #         ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
-  zia-zscalertwo-test:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goVersion: ["1.21"]
-        environment:
-          - ZIA_ZS2
-    environment: ${{ matrix.environment }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # zia-zscalertwo-test:
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       goVersion: ["1.22"]
+  #       environment:
+  #         - ZIA_ZS2
+  #   environment: ${{ matrix.environment }}
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ matrix.goVersion }}
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v5
+  #       with:
+  #         go-version: ${{ matrix.goVersion }}
 
-      - name: Set Go env
-        run: |
-          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+  #     - name: Set Go env
+  #       run: |
+  #         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+  #         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Download Go Dependencies
-        run: |
-          go mod tidy && go mod vendor
+  #     - name: Download Go Dependencies
+  #       run: |
+  #         go mod tidy && go mod vendor
 
-      - name: Setup Go Tools
-        run: make tools
+  #     - name: Setup Go Tools
+  #       run: make tools
 
-      - name: Check Formatting
-        run: make fmtcheck
+  #     - name: Check Formatting
+  #       run: make fmtcheck
 
-      # - name: Vet Code
-      #   run: make vet
+  #     # - name: Vet Code
+  #     #   run: make vet
 
-      - name: Lint Code
-        run: make lint
+  #     - name: Lint Code
+  #       run: make lint
 
-      - name: Check Build
-        run: make build
+  #     - name: Check Build
+  #       run: make build
 
-      - name: Run tests with retry on Ubuntu
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 3
-          timeout_minutes: 120
-          command: |
-            make sweep
-            make test:integration:zia
-            make sweep
-        env:
-          ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
-          ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
-          ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
-          ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
-          ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
-          ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
-          ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
-          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
-          ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
-          TF_ACC: ${{ secrets.TF_ACC }}
-          ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
+  #     - name: Run tests with retry on Ubuntu
+  #       uses: nick-fields/retry@v3
+  #       with:
+  #         max_attempts: 3
+  #         timeout_minutes: 120
+  #         command: |
+  #           make sweep
+  #           make test:integration:zia
+  #           make sweep
+  #       env:
+  #         ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
+  #         ZIA_PASSWORD: ${{ secrets.ZIA_PASSWORD }}
+  #         ZIA_API_KEY: ${{ secrets.ZIA_API_KEY }}
+  #         ZIA_CLOUD: ${{ secrets.ZIA_CLOUD }}
+  #         ZIA_SANDBOX_TOKEN: ${{ secrets.ZIA_SANDBOX_TOKEN }}
+  #         ZPA_CLIENT_ID: ${{ secrets.ZPA_CLIENT_ID }}
+  #         ZPA_CLIENT_SECRET: ${{ secrets.ZPA_CLIENT_SECRET }}
+  #         ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
+  #         ZPA_CLOUD: ${{ secrets.ZPA_CLOUD }}
+  #         TF_ACC: ${{ secrets.TF_ACC }}
+  #         ZIA_ACC_TEST_FORCE_SWEEPERS: ${{ secrets.ZIA_ACC_TEST_FORCE_SWEEPERS }}
 
       - name: Publish test coverage
         uses: codecov/codecov-action@v4
