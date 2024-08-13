@@ -62,7 +62,7 @@ The following arguments are supported:
 ### Optional
 
 * `whitelist_urls` - (Required) Allowlist URLs whose contents will not be scanned. Allows up to `255` URLs
-* `blacklist_urls` - (Optional) URLs on the denylist for your organization. Allow up to `25000` URLs.
+* `blacklist_urls` - (Optional) URLs on the denylist for your organization. Allow up to `275000` URLs.
 
 ## Import
 

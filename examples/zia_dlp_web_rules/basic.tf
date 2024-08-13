@@ -2,7 +2,6 @@ resource "zia_dlp_web_rules" "this" {
   name                      = "Terraform_Test"
   description               = "Terraform_Test"
   action                    = "BLOCK"
-  ocr_enabled               =  true
   order                     = 1
   protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
   cloud_applications        = ["WINDOWS_LIVE_HOTMAIL"]

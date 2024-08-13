@@ -31,7 +31,15 @@ In addition to all arguments above, the following attributes are exported:
 * `confidence_threshold` - (String) he DLP confidence threshold. [`CONFIDENCE_LEVEL_LOW`, `CONFIDENCE_LEVEL_MEDIUM` `CONFIDENCE_LEVEL_HIGH` ]
 * `custom_phrase_match_type` - (String) The DLP custom phrase match type. [ `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`, `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY` ]
 * `dictionary_type` - (String) The DLP dictionary type. The cloud service API only supports custom DLP dictionaries that are using the `PATTERNS_AND_PHRASES` type.
+
+* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
+  * `CONFIDENCE_LEVEL_LOW`
+  * `CONFIDENCE_LEVEL_MEDIUM`
+  * `CONFIDENCE_LEVEL_HIGH`
+
 * `name_l10n_tag` - (Boolean) Indicates whether the name is localized or not. This is always set to True for predefined DLP dictionaries.
+
+* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary. Supported only for the following Identifiers: `ASPP_LEAKAGE`, `CRED_LEAKAGE`, `EUIBAN_LEAKAGE`, `PPEU_LEAKAGE`, `USDL_LEAKAGE`.
 
 `phrases` - (List of Object) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries
 

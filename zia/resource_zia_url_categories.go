@@ -12,6 +12,9 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
 )
 
+// Allows only one API request at a time
+var urlCategoriesSemaphore = make(chan struct{}, 1)
+
 func resourceURLCategories() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceURLCategoriesCreate,
@@ -194,17 +197,23 @@ func resourceURLCategories() *schema.Resource {
 }
 
 func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
+	// Acquire semaphore before making an API request
+	urlCategoriesSemaphore <- struct{}{}
+	defer func() { <-urlCategoriesSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.urlcategories
 
 	req := expandURLCategory(d)
 	log.Printf("[INFO] Creating zia url category\n%+v\n", req)
 
+	// Use the existing CreateURLCategories function
 	resp, err := urlcategories.CreateURLCategories(service, &req)
 	if err != nil {
 		return err
 	}
-	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp)
+
+	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp.ID)
 	d.SetId(resp.ID)
 	_ = d.Set("category_id", resp.ID)
 
@@ -289,21 +298,29 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 }
 
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
+	// Acquire semaphore before making an API request
+	urlCategoriesSemaphore <- struct{}{}
+	defer func() { <-urlCategoriesSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.urlcategories
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
 		log.Printf("[ERROR] custom url category ID not set: %v\n", id)
+		return fmt.Errorf("custom url category ID not set: %v", id)
 	}
+
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)
+
 	if _, err := urlcategories.Get(service, id); err != nil {
 		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
+
 	if _, _, err := urlcategories.UpdateURLCategories(service, id, &req); err != nil {
 		return err
 	}

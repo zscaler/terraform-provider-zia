@@ -29,6 +29,25 @@ resource "zia_dlp_dictionaries" "example"{
 }
 ```
 
+## Example Usage - With Hierarchical Identifiers
+
+```hcl
+resource "zia_dlp_dictionaries" "example"{
+    name                     = "Example Dictionary Clone"
+    description              = "Example Dictionary Clone"
+    confidence_level_for_predefined_dict = "CONFIDENCE_LEVEL_MEDIUM"
+    hierarchical_identifiers = ["CRED_LEAKAGE"]
+    confidence_threshold     = "CONFIDENCE_LEVEL_HIGH"
+    dict_template_id         = data.zia_dlp_dictionaries.this.id
+    phrases {
+        action = "PHRASE_COUNT_TYPE_ALL"
+        phrase = "YourPhrase1"
+    }
+    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+    dictionary_type          = "PATTERNS_AND_PHRASES"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -57,12 +76,19 @@ The following arguments are supported:
     * `PATTERN_COUNT_TYPE_UNIQUE`
   * `pattern` - (Required) DLP dictionary pattern
 
-### Optional
-
 * `confidence_threshold` - (Optional) The DLP confidence threshold. The following values are supported:
   * `CONFIDENCE_LEVEL_LOW`
   * `CONFIDENCE_LEVEL_MEDIUM`
   * `CONFIDENCE_LEVEL_HIGH`
+
+### Optional
+
+* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
+  * `CONFIDENCE_LEVEL_LOW`
+  * `CONFIDENCE_LEVEL_MEDIUM`
+  * `CONFIDENCE_LEVEL_HIGH`
+
+* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary. Supported only for the following Identifiers: `ASPP_LEAKAGE`, `CRED_LEAKAGE`, `EUIBAN_LEAKAGE`, `PPEU_LEAKAGE`, `USDL_LEAKAGE`.
 
 * `threshold_type` - (Optional) The DLP threshold type. The following values are supported:
   * `VIOLATION_COUNT_ONLY`

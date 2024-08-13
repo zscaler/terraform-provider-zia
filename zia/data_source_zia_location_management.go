@@ -50,8 +50,9 @@ func dataSourceLocationManagement() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"ports": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"vpn_credentials": {
 				Type:     schema.TypeList,

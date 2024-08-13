@@ -104,8 +104,9 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
 			},
 			"ports": {
-				Type:        schema.TypeString,
+				Type:        schema.TypeList,
 				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "IP ports that are associated with the location.",
 			},
 			"vpn_credentials": {
@@ -459,7 +460,7 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("up_bandwidth", resp.UpBandwidth)
 	_ = d.Set("dn_bandwidth", resp.DnBandwidth)
 	_ = d.Set("country", resp.Country)
-	_ = d.Set("state", resp.State)
+	// _ = d.Set("state", resp.State)
 	_ = d.Set("tz", resp.TZ)
 	_ = d.Set("ip_addresses", resp.IPAddresses)
 	_ = d.Set("ports", resp.Ports)
@@ -631,7 +632,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		State:                               d.Get("state").(string),
 		TZ:                                  d.Get("tz").(string),
 		IPAddresses:                         SetToStringList(d, "ip_addresses"), // removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
-		Ports:                               d.Get("ports").(string),
+		Ports:                               SetToStringList(d, "ports"),
 		CookiesAndProxy:                     d.Get("cookies_and_proxy").(bool),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),

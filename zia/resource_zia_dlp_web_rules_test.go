@@ -9,9 +9,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
 )
 
@@ -189,7 +189,7 @@ resource "%s" "%s" {
     action 						= "%s"
     state 						= "%s"
 	order 						= 1
-	rank 						= 7
+	rank 						= 0
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= true
 	file_types                  = [ "ALL_OUTBOUND" ]

@@ -10,8 +10,9 @@ import (
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v2/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudappcontrol"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_notification_templates"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
@@ -390,6 +391,40 @@ func sweepTestForwardingControlRule(client *testClient) error {
 			sweeperLogger.Error(err.Error())
 		}
 	}
+	return condenseError(errorList)
+}
+
+func sweepTestCloudAppControlRule(client *testClient) error {
+	var errorList []error
+	ruleTypes := []string{"STREAMING_MEDIA"}
+
+	for _, ruleType := range ruleTypes {
+		rules, err := cloudappcontrol.GetByRuleType(client.sdkClient.cloudappcontrol, ruleType)
+		if err != nil {
+			return err
+		}
+
+		// Logging the number of identified resources before the deletion loop
+		sweeperLogger.Warn(fmt.Sprintf("Found %d resources of type %s to sweep", len(rules), ruleType))
+		for _, b := range rules {
+			// Check if the resource name has the required prefix before deleting it
+			if strings.HasPrefix(b.Name, testResourcePrefix) {
+				if _, err := cloudappcontrol.Delete(client.sdkClient.cloudappcontrol, ruleType, b.ID); err != nil {
+					errorList = append(errorList, err)
+					continue
+				}
+				logSweptResource(resourcetype.CloudAppControlRule, fmt.Sprintf("%d", b.ID), b.Name)
+			}
+		}
+	}
+
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+
 	return condenseError(errorList)
 }
 
