@@ -141,7 +141,7 @@ jobs:
           timeout_minutes: 120
           command: |
             make sweep
-            make test:integration:zia
+            make test:integration:zscalerone
             make sweep
         env:
           ZIA_USERNAME: ${{ secrets.ZIA_USERNAME }}
