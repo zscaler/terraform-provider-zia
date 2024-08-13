@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.22"]
+        goVersion: ["1.21"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -90,7 +90,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.22"]
+        goVersion: ["1.21"]
         environment:
           # - ZIA_ZSCLOUD
           - ZIA_ZS0
@@ -161,7 +161,7 @@ jobs:
   #   strategy:
   #     fail-fast: false
   #     matrix:
-  #       goVersion: ["1.22"]
+  #       goVersion: ["1.21"]
   #       environment:
   #         - ZIA_ZS1
   #   environment: ${{ matrix.environment }}
@@ -228,7 +228,7 @@ jobs:
   #   strategy:
   #     fail-fast: false
   #     matrix:
-  #       goVersion: ["1.22"]
+  #       goVersion: ["1.21"]
   #       environment:
   #         - ZIA_ZS2
   #   environment: ${{ matrix.environment }}
