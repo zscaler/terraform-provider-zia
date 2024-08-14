@@ -104,9 +104,9 @@ func resourceLocationManagement() *schema.Resource {
 				Description: "For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., 238.10.33.9).",
 			},
 			"ports": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeSet,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
+				Elem:        &schema.Schema{Type: schema.TypeInt},
 				Description: "IP ports that are associated with the location.",
 			},
 			"vpn_credentials": {
@@ -631,8 +631,8 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		Country:                             d.Get("country").(string),
 		State:                               d.Get("state").(string),
 		TZ:                                  d.Get("tz").(string),
-		IPAddresses:                         SetToStringList(d, "ip_addresses"), // removeEmpty(ListToStringSlice(d.Get("ip_addresses").([]interface{}))),
-		Ports:                               SetToStringList(d, "ports"),
+		IPAddresses:                         SetToStringList(d, "ip_addresses"),
+		Ports:                               SetToIntList(d, "ports"),
 		CookiesAndProxy:                     d.Get("cookies_and_proxy").(bool),
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),

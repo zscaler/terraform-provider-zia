@@ -3,146 +3,21 @@ subcategory: "Cloud App Control Policy"
 layout: "zscaler"
 page_title: "ZIA: cloud_app_control_rule"
 description: |-
-  Creates and manages ZIA Cloud Application Control rule.
+  Get information about ZIA DLP Web Rules.
 ---
 
-# Resource: zia_cloud_app_control_rule
+# Data Source: zia_cloud_app_control_rule
 
-The **zia_cloud_app_control_rule** resource allows the creation and management of ZIA Cloud Application Control rules in the Zscaler Internet Access.
+Use the **zia_cloud_app_control_rule** data source to get information about a ZIA Cloud Application Control Policy in the Zscaler Internet Access cloud or via the API.
 
-**NOTE** Resources or DataSources to retrieve Tenant Profile or Cloud Application Risk Profile ID information are not currently available.
-
-## Example Usage - Basic Rule Configuration
+## Example Usage
 
 ```hcl
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+# Retrieve a Cloud App Control Policy by name
+data "zia_cloud_app_control_rule" "this"{
+    name = "Example"
+    type = "STREAMING_MEDIA"
 }
-```
-
-## Example Usage - With Cloud Risk Profile Configuration
-
-```hcl
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    cloud_app_risk_profile {
-      id = 318
-    }
-}
-```
-
-## Example Usage - With Tenant Profile Configuration
-
-**NOTE** Tenant profile is supported only for specific applications depending on the type
-
-```hcl
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    tenancy_profile_ids {
-        id = [ 19016237 ]
-    }
-}
-```
-
-## Example Usage - With ISOLATE ACTION
-
-⚠️ **WARNING 1:**: Creating a Cloud Application Control Rule with the actions containing `ISOLATE_` Cloud Browser Isolation subscription is required. See the "Cloud Application Control - Rule Types vs Actions Matrix" below. To learn more, contact Zscaler Support or your local account team.
-
-```hcl
-data "zia_cloud_browser_isolation_profile" "this" {
-    name = "BD_SA_Profile1_ZIA"
-}
-
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example"
-    description                  = "Example"
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota            = 15
-    size_quota            = 10
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    cbi_profile {
-        id = data.zia_cloud_browser_isolation_profile.this.id
-        name = data.zia_cloud_browser_isolation_profile.this.name
-        url = data.zia_cloud_browser_isolation_profile.this.url
-    }
-    user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE" ]
-}
-```
-
-## Import
-
-Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZPA configurations into Terraform-compliant HashiCorp Configuration Language.
-[Visit](https://github.com/zscaler/zscaler-terraformer)
-
-Policy access rule can be imported by using `<RULE_TYPE:RULE_ID>` or `<RULE_TYPE:RULE_NAME>` as the import ID.
-
-For example:
-
-```shell
-terraform import zia_cloud_app_control_rule.this <rule_type:rule_id>
-```
-
-```shell
-terraform import zia_cloud_app_control_rule.this <"rule_type:rule_name">
 ```
 
 ## Argument Reference
@@ -151,46 +26,59 @@ The following arguments are supported:
 
 ### Required
 
-* `name` - (String) The Cloud App Control rule name.
-* `type` - (String) The Cloud App Control rule type.
+* `name` - (Required) The Cloud App Control rule name.
+* `type` - (Required) The Cloud App Control rule type.
 
 ### Optional
 
 * `description` - (String) The description of the Cloud App Control rule.
-
-* `actions` - (List of String) Refer to the Cloud Application Control - Rule Types vs Actions Matrix table.
-
 * `order` - (Number) The rule order of execution for the Cloud App Control rule with respect to other
 * `rank` - (Number) Admin rank of the admin who creates this rule
+* `last_modified_time` - (Number) Timestamp when the Cloud App Control rule was last modified.
+
+* `access_control` - (String) The access privilege for this Cloud App Control rule based on the admin's state. The supported values are:
+  * `NONE`
+  * `READ_ONLY`
+  * `READ_WRITE`
+
+* `action` - (String) The action taken when traffic matches the Cloud App Control rule criteria. The supported values are:
+  * `ANY`
+  * `NONE`
+  * `BLOCK`
+  * `ALLOW`
+  * `ICAP_RESPONSE`
 
 * `state` - (String) Enables or disables the Cloud App Control rule.. The supported values are:
   * `DISABLED`
   * `ENABLED`
 
-* `device_trust_levels` - (List of String) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
-* `user_risk_score_levels` (List of String) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-* `user_agent_types` (List of String) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
+* `user_risk_score_levels` (List) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
 * `time_quota` - (Number) Time quota in minutes, after which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `size_quota` - (Number) Size quota in MB beyond which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
+* `description` - (String) Additional information about the rule
 * `validity_start_time` - (String) If enforce_time_validity is set to true, the Cloud App Control Rules rule will be valid starting on this date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
 * `validity_end_time` - (String) If `enforce_time_validity` is set to true, the Cloud App Control Rules rule will cease to be valid on this end date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
 
   **NOTE** Notice that according to RFC1123 the day must be provided as a double digit value for `validity_start_time` and `validity_end_time` i.e `01`, `02` etc.
 
-* `validity_time_zone_id` - (String) If `enforce_time_validity` is set to true, the Cloud App Control Rules rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
+* `validity_time_zone_id` - (Optional) If `enforce_time_validity` is set to true, the Cloud App Control Rules rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
 
+* `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
+* `number_of_applications` - (Number) Total number of applications assigned to the rule.
 
-* `applications` - (List of Numbers) List of cloud applications for which rule will be applied.
+* `applications` - (List) List of cloud applications for which rule will be applied.
   * `val` - (Number) Identifier that uniquely identifies an entity
 
-* `tenancy_profile_ids` - (List of Numbers) This is an immutable reference to an entity. which mainly consists of id and name.
+* `tenancy_profile_ids` - (List) This is an immutable reference to an entity. which mainly consists of id and name.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `cloud_app_risk_profile` - (List of Numbers) Name-ID pair of cloud Application Risk Profile for which rule will be applied.
+* `cloud_app_risk_profile` - (List) Name-ID pair of cloud Application Risk Profile for which rule will be applied.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `cloud_app_instances` - (List of Numbers) Name-ID pair of cloud application instances for which rule will be applied.
+* `cloud_app_instances` - (List) Name-ID pair of cloud application instances for which rule will be applied.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
 * `cbi_profile` - (List) The cloud browser isolation profile to which the ISOLATE action is applied in the Cloud App Control Rules Policy rules. This block is required when the attribute `action` is set to `ISOLATE`
@@ -198,25 +86,28 @@ The following arguments are supported:
   * `name` - (String) Name of the browser isolation profile
   * `url` - (String) The browser isolation profile URL
 
-* `locations` - (List of Numbers) The Name-ID pairs of locations to which the Cloud App Control rule must be applied. Maximum of up to `8` locations. When not used it implies `Any` to apply the rule to all locations.
+* `last_modified_by` - (Number)  The admin that modified the Cloud App Control rule last.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `location_groups` - (List of Numbers) The Name-ID pairs of locations groups to which the Cloud App Control rule must be applied. Maximum of up to `32` location groups. When not used it implies `Any` to apply the rule to all location groups.
+* `locations` - (List) The Name-ID pairs of locations to which the Cloud App Control rule must be applied. Maximum of up to `8` locations. When not used it implies `Any` to apply the rule to all locations.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `users` - (List of Numbers) The Name-ID pairs of users to which the Cloud App Control rule must be applied. Maximum of up to `4` users. When not used it implies `Any` to apply the rule to all users.
+* `location_groups` - (List) The Name-ID pairs of locations groups to which the Cloud App Control rule must be applied. Maximum of up to `32` location groups. When not used it implies `Any` to apply the rule to all location groups.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `groups` - (List of Numbers) The Name-ID pairs of groups to which the Cloud App Control rule must be applied. Maximum of up to `8` groups. When not used it implies `Any` to apply the rule to all groups.
+* `users` - (List) The Name-ID pairs of users to which the Cloud App Control rule must be applied. Maximum of up to `4` users. When not used it implies `Any` to apply the rule to all users.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `departments` - (List of Numbers) The name-ID pairs of the departments that are excluded from the Cloud App Control rule.
+* `groups` - (List) The Name-ID pairs of groups to which the Cloud App Control rule must be applied. Maximum of up to `8` groups. When not used it implies `Any` to apply the rule to all groups.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `time_windows` - (List of Numbers) The Name-ID pairs of time windows to which the Cloud App Control rule must be applied. Maximum of up to `2` time intervals. When not used it implies `always` to apply the rule to all time intervals.
+* `departments` - (List) The name-ID pairs of the departments that are excluded from the Cloud App Control rule.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
-* `labels` - (List of Numbers) The Name-ID pairs of rule labels associated to the Cloud App Control rule.
+* `time_windows` - (List) The Name-ID pairs of time windows to which the Cloud App Control rule must be applied. Maximum of up to `2` time intervals. When not used it implies `always` to apply the rule to all time intervals.
+  * `id` - (Number) Identifier that uniquely identifies an entity
+
+* `labels` - (List) The Name-ID pairs of rule labels associated to the Cloud App Control rule.
   * `id` - (Number) Identifier that uniquely identifies an entity.
 
 ## Cloud Application Control - Rule Types vs Actions Matrix
