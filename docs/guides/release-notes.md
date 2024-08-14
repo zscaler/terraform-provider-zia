@@ -12,9 +12,24 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v3.0.0``
+``Last updated: v3.0.1``
 
 ---
+
+## 3.0.1 (August, 13 2024)
+
+### Notes
+
+- Release date: **(August, 13 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeSet` with elements of `TypeInt`.
+
+### Documentation
+
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Updated documentation for resources: `zia_location_management` and `zia_cloud_app_control_rule`
 
 ## 3.0.0 (August, 12 2024)
 

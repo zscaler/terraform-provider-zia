@@ -186,40 +186,40 @@ The following arguments are supported:
 * `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT.
 * `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`, `WORKLOAD`.
 
-* `aup_block_internet_until_accepted` - (Optional) For First Time AUP Behavior, Block Internet Access. When set, all internet access (including non-HTTP traffic) is disabled until the user accepts the AUP.
-* `aup_enabled` - (Optional) Enable AUP. When set to true, AUP is enabled for the location.
-* `aup_force_ssl_inspection` - (Optional) For First Time AUP Behavior, Force SSL Inspection. When set, Zscaler will force SSL Inspection in order to enforce AUP for HTTPS traffic.
-* `aup_timeout_in_days` - (Optional) Custom AUP Frequency. Refresh time (in days) to re-validate the AUP.
-* `cookies_and_proxy` - (Optional) Enable Cookies and proxy feature
-* `digest_auth_enabled` - (Optional) Enable Digest Auth feature
-* `kerberos_auth_enabled` - (Optional) Enable Kerberos Auth feature
-* `auth_required` - (Optional) Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.
-* `caution_enabled` - (Optional) Enable Caution. When set to true, a caution notifcation is enabled for the location.
-* `display_time_unit` - (Optional) Display Time Unit. The time unit to display for IP Surrogate idle time to disassociation.
-* `dn_bandwidth` - (Optional) Download bandwidth in bytes. The value `0` implies no Bandwidth Control enforcement.
-* `up_bandwidth` - (Optional) Upload bandwidth in bytes. The value `0` implies no Bandwidth Control enforcement.
-* `idle_time_in_minutes` - (Optional) Idle Time to Disassociation. The user mapping idle time (in minutes) is required if a Surrogate IP is enabled.
-* `ips_control` - (Optional) Enable IPS Control. When set to true, IPS Control is enabled for the location if Firewall is enabled.
-* `ofw_enabled` - (Optional) Enable Firewall. When set to true, Firewall is enabled for the location.
-* `parent_id` - (Optional) - Parent Location ID. If this ID does not exist or is `0`, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: `SUB`
-* `ports` - (Optional) IP ports that are associated with the location.
-* `ssl_scan_enabled` - (Optional) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
-* `surrogate_ip` - (Optional) Enable Surrogate IP. When set to true, users are mapped to internal device IP addresses.
-* `surrogate_ip_enforced_for_known_browsers` - (Optional) Enforce Surrogate IP for Known Browsers. When set to true, IP Surrogate is enforced for all known browsers.
-* `surrogate_refresh_time_in_minutes` - (Optional) Refresh Time for re-validation of Surrogacy. The surrogate refresh time (in minutes) to re-validate the IP surrogates.
-* `surrogate_refresh_time_unit` - (Optional) Display Refresh Time Unit. The time unit to display for refresh time for re-validation of surrogacy.
-* `xff_forward_enabled` - (Optional) Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.
-* `zapp_ssl_scan_enabled` - (Optional) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
+* `aup_block_internet_until_accepted` - (Boolean) For First Time AUP Behavior, Block Internet Access. When set, all internet access (including non-HTTP traffic) is disabled until the user accepts the AUP.
+* `aup_enabled` - (Boolean) Enable AUP. When set to true, AUP is enabled for the location.
+* `aup_force_ssl_inspection` - (Boolean) For First Time AUP Behavior, Force SSL Inspection. When set, Zscaler will force SSL Inspection in order to enforce AUP for HTTPS traffic.
+* `aup_timeout_in_days` - (Number) Custom AUP Frequency. Refresh time (in days) to re-validate the AUP.
+* `cookies_and_proxy` - (Boolean) Enable Cookies and proxy feature
+* `digest_auth_enabled` - (Boolean) Enable Digest Auth feature
+* `kerberos_auth_enabled` - (Boolean) Enable Kerberos Auth feature
+* `auth_required` - (Boolean) Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.
+* `caution_enabled` - (Boolean) Enable Caution. When set to true, a caution notifcation is enabled for the location.
+* `display_time_unit` - (String) Display Time Unit. The time unit to display for IP Surrogate idle time to disassociation.
+* `dn_bandwidth` - (Number) Download bandwidth in bytes. The value `0` implies no Bandwidth Control enforcement.
+* `up_bandwidth` - (Number) Upload bandwidth in bytes. The value `0` implies no Bandwidth Control enforcement.
+* `idle_time_in_minutes` - (Number) Idle Time to Disassociation. The user mapping idle time (in minutes) is required if a Surrogate IP is enabled.
+* `ips_control` - (Boolean) Enable IPS Control. When set to true, IPS Control is enabled for the location if Firewall is enabled.
+* `ofw_enabled` - (Boolean) Enable Firewall. When set to true, Firewall is enabled for the location.
+* `parent_id` - (Number) - Parent Location ID. If this ID does not exist or is `0`, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: `SUB`
+* `ports` - (List of Numbers) IP ports that are associated with the location.
+* `ssl_scan_enabled` - (Boolean) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
+* `surrogate_ip` - (Boolean) Enable Surrogate IP. When set to true, users are mapped to internal device IP addresses.
+* `surrogate_ip_enforced_for_known_browsers` - (Boolean) Enforce Surrogate IP for Known Browsers. When set to true, IP Surrogate is enforced for all known browsers.
+* `surrogate_refresh_time_in_minutes` - (Number) Refresh Time for re-validation of Surrogacy. The surrogate refresh time (in minutes) to re-validate the IP surrogates.
+* `surrogate_refresh_time_unit` - (String) Display Refresh Time Unit. The time unit to display for refresh time for re-validation of surrogacy.
+* `xff_forward_enabled` - (Boolean) Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.
+* `zapp_ssl_scan_enabled` - (Boolean) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
 
-* `iot_discovery_enabled` - (Optional) Enable IOT Discovery at the location
+* `iot_discovery_enabled` - (Boolean) Enable IOT Discovery at the location
 
-* `iot_enforce_policy_set` - (Optional) Enable IOT Policy at the location
+* `iot_enforce_policy_set` - (Boolean) Enable IOT Policy at the location
 
-* `other_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.
+* `other_sublocation` - (Boolean) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.
 
-* `other6_sublocation` - (Optional) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.
+* `other6_sublocation` - (Boolean) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.
 
-* `ipv6_enabled` - (Optional) If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.
+* `ipv6_enabled` - (Boolean) If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.
 
 * `ipv6_dns_64prefix` - (Optional) Name-ID pair of the NAT64 prefix configured as the DNS64 prefix for the location. If specified, the DNS64 prefix is used for the IP addresses that reside in this location. If not specified, a prefix is selected from the set of supported prefixes. This field is applicable only if ipv6Enabled is set is true.
 
@@ -229,9 +229,9 @@ The following arguments are supported:
 * `static_location_groups` - (List of Object) Manual location groups the location belongs to
   * `id` - (Optional) The Identifier that uniquely identifies an entity
 
-* `exclude_from_dynamic_groups` - (Optional) Enable to prevent the location from being assigned to any dynamic groups and to remove it from any dynamic groups it's already assigned to
+* `exclude_from_dynamic_groups` - (Boolean) Enable to prevent the location from being assigned to any dynamic groups and to remove it from any dynamic groups it's already assigned to
 
-* `exclude_from_manual_groups` - (Optional) Enable to prevent the location from being added to manual groups and to remove it from any manual groups it's already assigned to
+* `exclude_from_manual_groups` - (Boolean) Enable to prevent the location from being added to manual groups and to remove it from any manual groups it's already assigned to
 
   **NOTE** The attributes, ``dynamic_location_groups``, and ``static_location_groups`` CANNOT be configured if the attributes `exclude_from_dynamic_groups` and/or `exclude_from_manual_groups` are set to `true`
 

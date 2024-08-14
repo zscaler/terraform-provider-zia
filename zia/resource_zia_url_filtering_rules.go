@@ -62,7 +62,7 @@ func resourceURLFilteringRules() *schema.Resource {
 				userAgentTypes := d.Get("user_agent_types").(*schema.Set).List()
 				for _, userAgent := range userAgentTypes {
 					if userAgent.(string) == "OTHER" {
-						return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
+						return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: CHROME, FIREFOX, MSIE, MSEDGE, MSCHREDGE, OPERA, SAFARI")
 					}
 				}
 
