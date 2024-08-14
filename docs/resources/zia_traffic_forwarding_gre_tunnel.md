@@ -62,11 +62,11 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
   country_code   = "US"
   ip_unnumbered  = true
   primary_dest_vip {
-    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].datacenter
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].id
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[0].virtual_ip
   }
   secondary_dest_vip {
-    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].datacenter
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].id
     virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.this.list[1].virtual_ip
   }
   lifecycle {
