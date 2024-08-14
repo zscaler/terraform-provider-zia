@@ -48,7 +48,7 @@ In addition to all arguments above, the following attributes are exported:
 * `ips_control` - (Boolean) Enable IPS Control. When set to true, IPS Control is enabled for the location if Firewall is enabled.
 * `ofw_enabled` - (Boolean) Enable Firewall. When set to true, Firewall is enabled for the location.
 * `parent_id` - (Number) - Parent Location ID. If this ID does not exist or is `0`, it is implied that it is a parent location. Otherwise, it is a sub-location whose parent has this ID. x-applicableTo: `SUB`
-* `ports` - (String) IP ports that are associated with the location.
+* `ports` - (List of String) IP ports that are associated with the location.
 * `profile` - (String) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`.
 * `ssl_scan_enabled` - (Boolean) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
 * `surrogate_ip` - (Boolean) Enable Surrogate IP. When set to true, users are mapped to internal device IP addresses.
