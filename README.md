@@ -11,7 +11,7 @@
 </a>
 
 <a href="https://www.zscaler.com/">
-    <img src="https://www.zscaler.com/themes/custom/zscaler/logo.svg" alt="Zscaler logo" title="Zscaler" height="50" />
+    <img src="https://raw.githubusercontent.com/zscaler/zscaler-terraformer/master/images/zscaler_terraformer-logo.svg" alt="Zscaler logo" title="Zscaler" height="50" />
 </a>
 
 Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
