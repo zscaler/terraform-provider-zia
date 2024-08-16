@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v3.0.1``
+``Last updated: v3.0.2``
 
 ---
+
+## 3.0.2 (August, xx 2024)
+
+### Notes
+
+- Release date: **(August, xx 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/366) - Implemented runtime validation for resource: `zia_forwarding_control_rule`. The provider now validates incompatible attributes during the plan and apply stages at the schema level.
 
 ## 3.0.1 (August, 13 2024)
 

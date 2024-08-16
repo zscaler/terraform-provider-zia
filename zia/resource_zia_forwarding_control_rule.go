@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -24,6 +25,59 @@ func resourceForwardingControlRule() *schema.Resource {
 		Read:   resourceForwardingControlRuleRead,
 		Update: resourceForwardingControlRuleUpdate,
 		Delete: resourceForwardingControlRuleDelete,
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			forwardMethod := d.Get("forward_method").(string)
+			ruleType := d.Get("type").(string)
+
+			// Function to check if an attribute is set
+			isSet := func(attr string) bool {
+				_, ok := d.GetOk(attr)
+				return ok
+			}
+
+			// Validate the constraints based on the rule type and forward method
+			if ruleType == "FORWARDING" {
+				switch forwardMethod {
+				case "ZPA":
+					requiredAttrs := []string{"zpa_app_segments", "zpa_gateway"}
+					var missingAttrs []string
+					for _, attr := range requiredAttrs {
+						if !isSet(attr) {
+							missingAttrs = append(missingAttrs, attr)
+						}
+					}
+					if len(missingAttrs) > 0 {
+						return fmt.Errorf("the following attributes are required for ZPA forwarding: %v", missingAttrs)
+					}
+
+				case "DIRECT":
+					prohibitedAttrs := []string{"zpa_gateway", "proxy_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
+					for _, attr := range prohibitedAttrs {
+						if isSet(attr) {
+							return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'DIRECT'", attr)
+						}
+					}
+
+				case "PROXYCHAIN":
+					if !isSet("proxy_gateway") {
+						return fmt.Errorf("proxy gateway is mandatory for Proxy Chaining forwarding")
+					}
+					prohibitedAttrs := []string{"zpa_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
+					for _, attr := range prohibitedAttrs {
+						if isSet(attr) {
+							return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'PROXYCHAIN'", attr)
+						}
+					}
+				}
+			}
+
+			// Combined validation: `dest_addresses` and `dest_countries` can only be set when `forward_method` is either `PROXYCHAIN` or `DIRECT`
+			if (isSet("dest_addresses") || isSet("dest_countries") || isSet("dest_ip_categories")) && forwardMethod != "PROXYCHAIN" && forwardMethod != "DIRECT" {
+				return fmt.Errorf("dest_addresses, dest_countries and dest_ip_categories can only be set when forward_method is either 'PROXYCHAIN' or 'DIRECT'")
+			}
+
+			return nil
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
@@ -171,53 +225,6 @@ func resourceForwardingControlRule() *schema.Resource {
 	}
 }
 
-func validateForwardingRuleConstraints(d *schema.ResourceData) error {
-	forwardMethod := d.Get("forward_method").(string)
-	ruleType := d.Get("type").(string)
-
-	isSet := func(attr string) bool {
-		_, ok := d.GetOk(attr)
-		return ok
-	}
-
-	if ruleType == "FORWARDING" {
-		switch forwardMethod {
-		case "ZPA":
-			requiredAttrs := []string{"zpa_app_segments", "zpa_gateway"}
-			var missingAttrs []string
-			for _, attr := range requiredAttrs {
-				if !isSet(attr) {
-					missingAttrs = append(missingAttrs, attr)
-				}
-			}
-			if len(missingAttrs) > 0 {
-				return fmt.Errorf("the following attributes are required for ZPA forwarding: %v", missingAttrs)
-			}
-
-		case "DIRECT":
-			prohibitedAttrs := []string{"zpa_gateway", "proxy_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
-			for _, attr := range prohibitedAttrs {
-				if isSet(attr) {
-					return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'DIRECT'", attr)
-				}
-			}
-
-		case "PROXYCHAIN":
-			if !isSet("proxy_gateway") {
-				return fmt.Errorf("proxy gateway is mandatory for Proxy Chaining forwarding")
-			}
-			prohibitedAttrs := []string{"zpa_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
-			for _, attr := range prohibitedAttrs {
-				if isSet(attr) {
-					return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is 'PROXYCHAIN'", attr)
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
 func validatePredefinedRules(req forwarding_rules.ForwardingRules) error {
 	if req.Name == "Client Connector Traffic Direct" || req.Name == "ZPA Pool For Stray Traffic" {
 		return fmt.Errorf("predefined rule '%s' cannot be deleted", req.Name)
@@ -229,10 +236,6 @@ func validatePredefinedRules(req forwarding_rules.ForwardingRules) error {
 }
 
 func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) error {
-
-	if err := validateForwardingRuleConstraints(d); err != nil {
-		return err
-	}
 
 	zClient := m.(*Client)
 	service := zClient.forwarding_rules
@@ -393,10 +396,6 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] forwarding control rule ID not set: %v\n", id)
-	}
-
-	if err := validateForwardingRuleConstraints(d); err != nil {
-		return err
 	}
 
 	log.Printf("[INFO] Updating zia forwarding control rule ID: %v\n", id)
