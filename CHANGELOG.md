@@ -9,7 +9,15 @@
 
 ### Bug Fixes
 
-- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/365) - Implemented runtime validation for resource: `zia_forwarding_control_rule`. The provider now validates incompatible attributes during the plan and apply stages at the schema level.
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Implemented runtime validation for resource: `zia_forwarding_control_rule`. The provider now validates incompatible attributes during the plan and apply stages at the schema level.
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Fixed the datasource `zia_traffic_forwarding_gre_vip_recommended_list` to allow Geo location  information override when needed. The datasource now supports the following optional attributes:
+  - `routable_ip` - (Boolean) The routable IP address.
+  - `within_country_only` - (Boolean) Search within country only.
+  - `include_private_service_edge` - (Boolean) Include ZIA Private Service Edge VIPs.
+  - `include_current_vips` - (Boolean) Include currently assigned VIPs.
+  - `latitude` - (Number) The latitude coordinate of the GRE tunnel source.
+  - `longitude` - (Number) The longitude coordinate of the GRE tunnel source.
+  - `subcloud` - (String) The longitude coordinate of the GRE tunnel source.
 
 ## 3.0.1 (August, 13 2024)
 
