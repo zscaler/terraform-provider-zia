@@ -74,6 +74,11 @@ func expandSecurityPolicySettings(d *schema.ResourceData) security_policy_settin
 }
 
 func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{}) error {
+
+	// Acquire semaphore before making an API request
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.security_policy_settings
 	listUrls := expandSecurityPolicySettings(d)
@@ -99,6 +104,11 @@ func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{})
 }
 
 func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{}) error {
+
+	// Acquire semaphore before making an API request
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.security_policy_settings
 	listUrls := expandSecurityPolicySettings(d)

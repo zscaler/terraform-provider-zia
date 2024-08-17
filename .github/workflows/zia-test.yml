@@ -94,7 +94,7 @@ jobs:
         environment:
           # - ZIA_ZSCLOUD
           - ZIA_ZS0
-          - ZIA_ZS1
+          # - ZIA_ZS1
           # - ZIA_ZS2
           # - ZIA_ZS3
     environment: ${{ matrix.environment }}

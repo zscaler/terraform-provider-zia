@@ -35,6 +35,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
   - `longitude` - (Number) The longitude coordinate of the GRE tunnel source.
   - `subcloud` - (String) The longitude coordinate of the GRE tunnel source.
 
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Added centralized semaphore functionality to manipulate concurrent request limitations.
+
 ## 3.0.1 (August, 13 2024)
 
 ### Notes
@@ -44,11 +46,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fixes
 
-- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeSet` with elements of `TypeInt`.
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/365) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeSet` with elements of `TypeInt`.
 
 ### Documentation
 
-- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Updated documentation for resources: `zia_location_management` and `zia_cloud_app_control_rule`
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/365) - Updated documentation for resources: `zia_location_management` and `zia_cloud_app_control_rule`
 
 ## 3.0.0 (August, 12 2024)
 
@@ -59,15 +61,15 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancements
 
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Enhanced `zia_security_settings` to support maximum number of blacklist urls.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Enhanced `zia_security_settings` to support maximum number of blacklist urls.
 
 ### Bug Fixes
 
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added Semaphore retry logic to resource ``zia_url_categories`` to assist with rate limiting management.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeList`.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added Semaphore retry logic to resource ``zia_url_categories`` to assist with rate limiting management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeList`.
 
 ## 2.91.4 (July, 3 2024)
 
@@ -78,7 +80,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fix
 
-- [PR #357](https://github.com/zscaler/terraform-provider-zia/357) - Fixed ``zia_url_filtering_rules`` drift due to attribute conversion ``validatidy_start_time`` and ``validity_end_time``.
+- [PR #357](https://github.com/zscaler/terraform-provider-zia/pull/357) - Fixed ``zia_url_filtering_rules`` drift due to attribute conversion ``validatidy_start_time`` and ``validity_end_time``.
 
 ## 2.91.3 (July, 2 2024)
 
@@ -89,8 +91,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fix
 
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_location_management`` drift due to missing `state` attribute in the READ function.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_location_management`` drift due to missing `state` attribute in the READ function.
 
 ## 2.91.2 (July, 2 2024)
 
@@ -101,7 +103,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fix
 
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
 
 ## 2.91.1 (June, 29 2024)
 
@@ -112,8 +114,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fix
 
-- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed go.mod and go.sum
-- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed computed attributes in the schema
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/pull/354) - Fixed go.mod and go.sum
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/pull/354) - Fixed computed attributes in the schema
 
 ## 2.91.0 (June, 19 2024)
 
@@ -124,7 +126,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### BREAKING CHANGES and ENHACEMENTS
 
-- [PR #350](https://github.com/zscaler/terraform-provider-zia/350)
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/pull/350)
   - `zia_url_filtering_rules` - The provider now explicitly validates during the plan and apply stages which attributes can be set based on the `action` value.
   - `zia_url_filtering_rules` - The provider now allows for the use of `RFC1123` date and time format i.e `Sun, 16 Jun 2024 15:04:05 UTC` when setting the attributes `validity_start_time` and `validity_end_time` instead of the native epoch unix format.
 
@@ -139,7 +141,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Internal Changes
 
-- [PR #350](https://github.com/zscaler/terraform-provider-zia/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/pull/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
 - [PR #350](https://github.com/zscaler/terraform-provider-zpa/pull/350) Upgraded ``releaser.yml`` to [GoReleaser v6](https://github.com/goreleaser/goreleaser-action/releases/tag/v6.0.0)
 
 ## 2.9.1 (June, 14 2024)
@@ -151,8 +153,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Internal Changes
 
-- [PR #350](https://github.com/zscaler/terraform-provider-zia/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
-- [PR #350](https://github.com/zscaler/terraform-provider-zpa/pull/350) Upgraded ``releaser.yml`` to [GoReleaser v6](https://github.com/goreleaser/goreleaser-action/releases/tag/v6.0.0)
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/pull/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
+- [PR #350](https://github.com/zscaler/terraform-provider-zpa/pull/pull/350) Upgraded ``releaser.yml`` to [GoReleaser v6](https://github.com/goreleaser/goreleaser-action/releases/tag/v6.0.0)
 
 ## 2.9.0 (May, 22 2024) - BREAKING CHANGE
 
@@ -163,10 +165,10 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fixes - BREAKING CHANGE
 
-- [PR #345](https://github.com/zscaler/terraform-provider-zia/345) - The attribute `ocr_enabled` has been deprecated at the upstream API and is no longer accepted. The OCR feature must be enabled via the [DLP Advanced Settings](https://help.zscaler.com/zia/configuring-dlp-advanced-settings).
+- [PR #345](https://github.com/zscaler/terraform-provider-zia/pull/345) - The attribute `ocr_enabled` has been deprecated at the upstream API and is no longer accepted. The OCR feature must be enabled via the [DLP Advanced Settings](https://help.zscaler.com/zia/configuring-dlp-advanced-settings).
   **NOTE** DLP engines support OCR scanning of `PNG`, `JPEG`, `TIFF`, and `BMP` files.
 
-- [PR #345](https://github.com/zscaler/terraform-provider-zia/345) - Implemented Fix for `zia_dlp_web_rules` for new attributes `parent_rule` and `sub_rules`. A parent rule must be configured with rank 0 and prior to any potential subrule. It is not possible to add existing rules as as subrules under the parent rule.
+- [PR #345](https://github.com/zscaler/terraform-provider-zia/pull/345) - Implemented Fix for `zia_dlp_web_rules` for new attributes `parent_rule` and `sub_rules`. A parent rule must be configured with rank 0 and prior to any potential subrule. It is not possible to add existing rules as as subrules under the parent rule.
 
 ## 2.8.31 (May, 21 2024)
 
@@ -179,7 +181,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 - [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Fixed `id` conversion for the resource `zia_traffic_forwarding_vpn_credentials` to ensure proper state file setting.
 
-- [PR #344](https://github.com/zscaler/terraform-provider-zia/344) - Upgraded to [Zscaler-SDK-GO v2.5.2](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.2)
+- [PR #344](https://github.com/zscaler/terraform-provider-zia/pull/344) - Upgraded to [Zscaler-SDK-GO v2.5.2](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.2)
 
 ## 2.8.3 (May, 7 2024)
 
@@ -190,8 +192,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancements
 
-- [PR #340](https://github.com/zscaler/terraform-provider-zia/340) - Added new ZIA URL Filtering Rule attribute `source_ip_groups` to resources: `zia_url_filtering_rules` and `zia_dlp_web_rules`
-- [PR #340](https://github.com/zscaler/terraform-provider-zia/340) - Upgraded to [Zscaler-GO-SDK v2.5.0](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.0)
+- [PR #340](https://github.com/zscaler/terraform-provider-zia/pull/340) - Added new ZIA URL Filtering Rule attribute `source_ip_groups` to resources: `zia_url_filtering_rules` and `zia_dlp_web_rules`
+- [PR #340](https://github.com/zscaler/terraform-provider-zia/pull/340) - Upgraded to [Zscaler-GO-SDK v2.5.0](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.5.0)
 
 ## 2.8.21 (April, 8 2024)
 
@@ -202,7 +204,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancements
 
-- [PR #336](https://github.com/zscaler/terraform-provider-zia/336) - Upgraded provider to [Zscaler-SDK-GO v2.4.35](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.4.35)
+- [PR #336](https://github.com/zscaler/terraform-provider-zia/pull/336) - Upgraded provider to [Zscaler-SDK-GO v2.4.35](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.4.35)
 
 ## 2.8.2 (April, 8 2024)
 
@@ -213,7 +215,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancements
 
-- [PR #332](https://github.com/zscaler/terraform-provider-zia/332) - Implemented optional environment variable `ZIA_ACTIVATION` for optional configuration activation. This is an improved version of the initial release [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) where activations were done implicitly for every resource. With this enhancement the activation will only occur when this environment variable is set to true.
+- [PR #332](https://github.com/zscaler/terraform-provider-zia/pull/332) - Implemented optional environment variable `ZIA_ACTIVATION` for optional configuration activation. This is an improved version of the initial release [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) where activations were done implicitly for every resource. With this enhancement the activation will only occur when this environment variable is set to true.
 
 ## 2.8.1 (March, 27 2024)
 
@@ -235,11 +237,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhacements
 
-- [PR #330](https://github.com/zscaler/terraform-provider-zia/330) - Implemented auto activation functionality to all supported resources. Configurations will now be activated during `CREATE`, `UPDATE` AND `DELETE` actions when executing `terraform apply` or `terraform destroy`, which removes the need of out of band activation or the use of the resource: `zia_activation_status`.
+- [PR #330](https://github.com/zscaler/terraform-provider-zia/pull/330) - Implemented auto activation functionality to all supported resources. Configurations will now be activated during `CREATE`, `UPDATE` AND `DELETE` actions when executing `terraform apply` or `terraform destroy`, which removes the need of out of band activation or the use of the resource: `zia_activation_status`.
 
 ### Fixes
 
-- [PR #330](https://github.com/zscaler/terraform-provider-zia/330) - Fixed `zia_user_management` resource to support activation pre and post user enrolment using `BASIC` authentication method.
+- [PR #330](https://github.com/zscaler/terraform-provider-zia/pull/330) - Fixed `zia_user_management` resource to support activation pre and post user enrolment using `BASIC` authentication method.
 
 ## 2.7.33 (March, 6 2024)
 
@@ -250,7 +252,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhacements
 
-- [PR #325](https://github.com/zscaler/terraform-provider-zia/325) Updated [support guide](/docs/guides/support.md) with new Zscaler support model.
+- [PR #325](https://github.com/zscaler/terraform-provider-zia/pull/325) Updated [support guide](/docs/guides/support.md) with new Zscaler support model.
 - [PR #325](https://github.com/zscaler/terraform-provider-zia/pull/325) - Added support to import of the following resources:
 - ``zia_auth_settings_urls``
 - ``zia_sandbox_behavioral_analysis``

@@ -19,6 +19,8 @@
   - `longitude` - (Number) The longitude coordinate of the GRE tunnel source.
   - `subcloud` - (String) The longitude coordinate of the GRE tunnel source.
 
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Added centralized semaphore functionality to manipulate concurrent request limitations.
+
 ## 3.0.1 (August, 13 2024)
 
 ### Notes

@@ -68,6 +68,11 @@ func expandAuthSettingsUrls(d *schema.ResourceData) user_authentication_settings
 }
 
 func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error {
+
+	// Acquire semaphore before making an API request
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.user_authentication_settings
 
@@ -93,6 +98,11 @@ func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error
 }
 
 func resourceAuthSettingsUrlsUpdate(d *schema.ResourceData, m interface{}) error {
+
+	// Acquire semaphore before making an API request
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
+
 	zClient := m.(*Client)
 	service := zClient.user_authentication_settings
 

@@ -278,3 +278,27 @@ func isSingleDigitDay(timeStr string) bool {
 	day := parts[1]
 	return len(day) == 1
 }
+
+// Global semaphore for controlling concurrent API requests
+var apiSemaphore = make(chan struct{}, 1) // Default to 1, meaning only 1 API request at a time
+
+// SetSemaphoreSize allows adjusting the size of the semaphore globally
+func SetSemaphoreSize(size int) {
+	apiSemaphore = make(chan struct{}, size)
+}
+
+// WithSemaphore handles acquiring and releasing a semaphore around an API call.
+func WithSemaphore(apiCall func() error) error {
+	// Acquire semaphore before making an API request
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
+
+	// Execute the actual API call
+	err := apiCall()
+	if err != nil {
+		log.Printf("[ERROR] API call failed: %v", err)
+		return err
+	}
+
+	return nil
+}
