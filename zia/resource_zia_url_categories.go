@@ -13,7 +13,7 @@ import (
 )
 
 // Allows only one API request at a time
-var urlCategoriesSemaphore = make(chan struct{}, 1)
+// var urlCategoriesSemaphore = make(chan struct{}, 1)
 
 func resourceURLCategories() *schema.Resource {
 	return &schema.Resource{
@@ -198,8 +198,8 @@ func resourceURLCategories() *schema.Resource {
 
 func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 	// Acquire semaphore before making an API request
-	urlCategoriesSemaphore <- struct{}{}
-	defer func() { <-urlCategoriesSemaphore }() // Release semaphore after the request is done
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
 	zClient := m.(*Client)
 	service := zClient.urlcategories
@@ -299,8 +299,8 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 
 func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	// Acquire semaphore before making an API request
-	urlCategoriesSemaphore <- struct{}{}
-	defer func() { <-urlCategoriesSemaphore }() // Release semaphore after the request is done
+	apiSemaphore <- struct{}{}
+	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
 	zClient := m.(*Client)
 	service := zClient.urlcategories

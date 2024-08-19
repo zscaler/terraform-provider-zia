@@ -19,19 +19,16 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 	var rules dlp_web_rules.WebDLPRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPWebRules)
 
-	initialName := "tf-acc-test-" + generatedName
-	updatedName := "tf-updated-" + generatedName
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDlpWebRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, initialName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", initialName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
@@ -43,10 +40,10 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 
 			// Update test
 			{
-				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, updatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
+				Config: testAccCheckDlpWebRulesConfigure(resourceTypeAndName, generatedName, variable.DLPWebRuleDesc, variable.DLPRuleResourceAction, variable.DLPRuleResourceState),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDlpWebRulesExists(resourceTypeAndName, &rules),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.DLPWebRuleDesc),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "action", variable.DLPRuleResourceAction),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.DLPRuleResourceState),
@@ -113,22 +110,10 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 		apiClient := testAccProvider.Meta().(*Client)
 		service := apiClient.dlp_web_rules
 
-		var receivedRule *dlp_web_rules.WebDLPRules
-
-		// Integrate retry here
-		retryErr := RetryOnError(func() error {
-			var innerErr error
-			receivedRule, innerErr = dlp_web_rules.Get(service, id)
-			if innerErr != nil {
-				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
-			}
-			return nil
-		})
-
-		if retryErr != nil {
-			return retryErr
+		receivedRule, err := dlp_web_rules.Get(service, id)
+		if err != nil {
+			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
-
 		*rule = *receivedRule
 		return nil
 	}
@@ -184,12 +169,12 @@ data "zia_dlp_engines" "this" {
   }
 
 resource "%s" "%s" {
-	name 						= "%s"
+	name 						= "tf-acc-test-%s"
 	description 				= "%s"
     action 						= "%s"
     state 						= "%s"
 	order 						= 1
-	rank 						= 0
+	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= true
 	file_types                  = [ "ALL_OUTBOUND" ]

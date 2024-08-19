@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.0.2 (August, xx 2024)
+
+### Notes
+
+- Release date: **(August, xx 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Implemented runtime validation for resource: `zia_forwarding_control_rule`. The provider now validates incompatible attributes during the plan and apply stages at the schema level.
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Fixed the datasource `zia_traffic_forwarding_gre_vip_recommended_list` to allow Geo location  information override when needed. The datasource now supports the following optional attributes:
+  - `routable_ip` - (Boolean) The routable IP address.
+  - `within_country_only` - (Boolean) Search within country only.
+  - `include_private_service_edge` - (Boolean) Include ZIA Private Service Edge VIPs.
+  - `include_current_vips` - (Boolean) Include currently assigned VIPs.
+  - `latitude` - (Number) The latitude coordinate of the GRE tunnel source.
+  - `longitude` - (Number) The longitude coordinate of the GRE tunnel source.
+  - `subcloud` - (String) The longitude coordinate of the GRE tunnel source.
+
+- [PR #366](https://github.com/zscaler/terraform-provider-zia/pull/366) - Added centralized semaphore functionality to manipulate concurrent request limitations.
+
 ## 3.0.1 (August, 13 2024)
 
 ### Notes
@@ -9,11 +30,11 @@
 
 ### Bug Fixes
 
-- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeSet` with elements of `TypeInt`.
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/365) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeSet` with elements of `TypeInt`.
 
 ### Documentation
 
-- [PR #365](https://github.com/zscaler/terraform-provider-zia/365) - Updated documentation for resources: `zia_location_management` and `zia_cloud_app_control_rule`
+- [PR #365](https://github.com/zscaler/terraform-provider-zia/pull/365) - Updated documentation for resources: `zia_location_management` and `zia_cloud_app_control_rule`
 
 ## 3.0.0 (August, 12 2024)
 
@@ -24,15 +45,15 @@
 
 ### Enhancements
 
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Enhanced `zia_security_settings` to support maximum number of blacklist urls.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new resource and datasource `zia_cloud_app_control_rule` for Cloud Application Control rule management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new datasource `zia_dlp_dictionary_predefined_identifiers` to retrieve DLP Dictionary Hierarchical Identifiers. The information can be used when configuring DLP Dictionary resource attribute `hierarchical_identifiers` to clone predefined dictionaries.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added new attribute `hierarchical_identifiers` to `zia_dlp_dictionaries` resource.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Enhanced `zia_security_settings` to support maximum number of blacklist urls.
 
 ### Bug Fixes
 
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Added Semaphore retry logic to resource ``zia_url_categories`` to assist with rate limiting management.
-- [PR #361](https://github.com/zscaler/terraform-provider-zia/361) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeList`.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Added Semaphore retry logic to resource ``zia_url_categories`` to assist with rate limiting management.
+- [PR #361](https://github.com/zscaler/terraform-provider-zia/pull/361) - Fixed `ports` attribute in `zia_location_management` resource to support `TypeList`.
 
 ## 2.91.4 (July, 3 2024)
 
@@ -43,7 +64,7 @@
 
 ### Bug Fixes
 
-- [PR #357](https://github.com/zscaler/terraform-provider-zia/357) - Fixed ``zia_url_filtering_rules`` drift due to attribute conversion ``validatidy_start_time`` and ``validity_end_time``.
+- [PR #357](https://github.com/zscaler/terraform-provider-zia/pull/357) - Fixed ``zia_url_filtering_rules`` drift due to attribute conversion ``validatidy_start_time`` and ``validity_end_time``.
 
 ## 2.91.3 (July, 2 2024)
 
@@ -54,8 +75,8 @@
 
 ### Bug Fix
 
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_location_management`` drift due to missing `state` attribute in the READ function.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_location_management`` drift due to missing `state` attribute in the READ function.
 
 ## 2.91.2 (July, 2 2024)
 
@@ -66,7 +87,7 @@
 
 ### Bug Fix
 
-- [PR #356](https://github.com/zscaler/terraform-provider-zia/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
+- [PR #356](https://github.com/zscaler/terraform-provider-zia/pull/356) - Fixed ``zia_url_filtering_rules`` schema validation to ensure proper validation during plan and apply stages.
 
 ## 2.91.1 (June, 29 2024)
 
@@ -77,8 +98,8 @@
 
 ### Bug Fix
 
-- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed go.mod and go.sum
-- [PR #354](https://github.com/zscaler/terraform-provider-zia/354) - Fixed computed attributes in the schema
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/pull/354) - Fixed go.mod and go.sum
+- [PR #354](https://github.com/zscaler/terraform-provider-zia/pull/354) - Fixed computed attributes in the schema
 
 ## 2.91.0 (June, 19 2024)
 
@@ -89,7 +110,7 @@
 
 ### BREAKING CHANGES and ENHACEMENTS
 
-- [PR #350](https://github.com/zscaler/terraform-provider-zia/350)
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/pull/350)
   - `zia_url_filtering_rules` - The provider now explicitly validates during the plan and apply stages which attributes can be set based on the `action` value.
   - `zia_url_filtering_rules` - The provider now allows for the use of `RFC1123` date and time format i.e `Sun, 16 Jun 2024 15:04:05 UTC` when setting the attributes `validity_start_time` and `validity_end_time` instead of the native epoch unix format.
 
@@ -104,7 +125,7 @@
 
 ### Internal Changes
 
-- [PR #350](https://github.com/zscaler/terraform-provider-zia/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
+- [PR #350](https://github.com/zscaler/terraform-provider-zia/pull/350) - Upgraded to [Zscaler-SDK-GO](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v2.61.0). The upgrade supports easier ZIA API Client instantiation for existing and new resources.
 - [PR #350](https://github.com/zscaler/terraform-provider-zpa/pull/350) Upgraded ``releaser.yml`` to [GoReleaser v6](https://github.com/goreleaser/goreleaser-action/releases/tag/v6.0.0)
 
 ## 2.9.0 (May, 22 2024) - BREAKING CHANGE
