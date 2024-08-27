@@ -1,10 +1,21 @@
 # Changelog
 
-## 3.0.2 (August, xx 2024)
+## 3.0.3 (August, 26 2024)
 
 ### Notes
 
-- Release date: **(August, xx 2024)**
+- Release date: **(August, 26 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #368](https://github.com/zscaler/terraform-provider-zia/pull/368) - Implemented runtime validation for the attribute `dest_addresses` in the resource: `zia_firewall_filtering_rule`. The provider now validates if the IP address provided is an IPv4.
+
+## 3.0.2 (August, 19 2024)
+
+### Notes
+
+- Release date: **(August, 19 2024)**
 - Supported Terraform version: **v1.x**
 
 ### Bug Fixes

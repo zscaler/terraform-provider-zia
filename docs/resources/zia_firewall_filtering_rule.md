@@ -92,15 +92,12 @@ The following arguments are supported:
 * `nw_application_groups` - (Optional) Any number of application groups that you want to control with this rule. The service provides predefined applications that you can group, but not modify
 * `nw_applications` - (Optional) When not used it applies the rule to all applications. The service provides predefined applications, which you can group, but not modify.
 
-`source ip addresses` supports the following attributes:
-
 * `src_ip_groups` - (Optional) Any number of source IP address groups that you want to control with this rule.
       - `id` - (String) Identifier that uniquely identifies an entity
 * `src_ips` - (Optional) You can enter individual IP addresses, subnets, or address ranges.
 
-`destinations` supports the following attributes:
-
-* `dest_addresses`** - (Optional) -  IP addresses and fully qualified domain names (FQDNs), if the domain has multiple destination IP addresses or if its IP addresses may change. For IP addresses, you can enter individual IP addresses, subnets, or address ranges. If adding multiple items, hit Enter after each entry.
+* `dest_addresses`** - (Optional) -  IP addresses and fully qualified domain names (FQDNs), if the domain has multiple destination IP addresses or if its IP addresses may change. For IP addresses, you can enter individual IP addresses, subnets, or address ranges.
+      **NOTE**: PLEASE BE AWARE. The API supports ONLY `IPv4` addresses. `IPV6` addresses are not supported.
 * `dest_countries`** - (Optional) Identify destinations based on the location of a server, select Any to apply the rule to all countries or select the countries to which you want to control traffic.
 * `dest_ip_categories`** - (Optional) identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
       - `id` - (String) Identifier that uniquely identifies an entity

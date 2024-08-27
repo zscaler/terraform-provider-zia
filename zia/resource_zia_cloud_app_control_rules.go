@@ -128,9 +128,10 @@ func resourceCloudAppControlRules() *schema.Resource {
 				Description: "Actions allowed for the specified type.",
 			},
 			"applications": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
+				Type:        schema.TypeSet,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Optional:    true,
+				Description: "List of cloud applications for which rule will be applied",
 			},
 			"time_quota": {
 				Type:         schema.TypeInt,
@@ -168,7 +169,7 @@ func resourceCloudAppControlRules() *schema.Resource {
 			"cascading_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "The unique identifier for the device.",
+				Description: "nforce the URL Filtering policy on a transaction, even after it is explicitly allowed by the Cloud App Control policy.",
 			},
 			"cbi_profile": {
 				Type:     schema.TypeList,
