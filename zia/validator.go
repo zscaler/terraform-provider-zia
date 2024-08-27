@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"regexp"
 	"strings"
 
 	"github.com/biter777/countries"
@@ -779,5 +781,63 @@ func validatePredefinedIdentifier(val interface{}, key string) (warns []string, 
 	}
 
 	errs = append(errs, fmt.Errorf("%q is not a valid predefined identifier. Supported identifiers are: %v", key, supportedIdentifiers))
+	return
+}
+
+func validateDestAddress(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// Regular expression to match FQDNs and wildcard FQDNs
+	fqdnRegex := `^(\*\.)?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`
+
+	// Regular expression to match IPv4 ranges
+	ipRangeRegex := `^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})-(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$`
+
+	// Check if the value is a valid IPv4 CIDR
+	if _, _, err := net.ParseCIDR(value); err == nil {
+		ip, _, _ := net.ParseCIDR(value)
+		if ip.To4() != nil {
+			// It's a valid IPv4 CIDR
+			return
+		} else {
+			errors = append(errors, fmt.Errorf("invalid IPv4 address: %s. IPv6 addresses are not allowed", value))
+			return
+		}
+	}
+
+	// Check if the value is a valid IPv4 address (without CIDR)
+	if ip := net.ParseIP(value); ip != nil {
+		if ip.To4() != nil {
+			// It's a valid IPv4 address
+			return
+		} else {
+			errors = append(errors, fmt.Errorf("invalid IPv4 address: %s. IPv6 addresses are not allowed", value))
+			return
+		}
+	}
+
+	// Check if the value is a valid IPv4 range
+	if matched, _ := regexp.MatchString(ipRangeRegex, value); matched {
+		parts := strings.Split(value, "-")
+		if len(parts) == 2 {
+			startIP := net.ParseIP(parts[0])
+			endIP := net.ParseIP(parts[1])
+			if startIP != nil && endIP != nil && startIP.To4() != nil && endIP.To4() != nil {
+				// It's a valid IPv4 range
+				return
+			}
+		}
+		errors = append(errors, fmt.Errorf("invalid IPv4 range: %s. Must be a valid IPv4 range", value))
+		return
+	}
+
+	// Check if the value is a valid FQDN or wildcard FQDN
+	if matched, _ := regexp.MatchString(fqdnRegex, value); matched {
+		// It's a valid FQDN or wildcard FQDN
+		return
+	}
+
+	// If none of the above checks passed, it must be an invalid address
+	errors = append(errors, fmt.Errorf("invalid address: %s. Must be a valid IPv4 address, IPv4 CIDR, IPv4 range, FQDN, or wildcard FQDN", value))
 	return
 }

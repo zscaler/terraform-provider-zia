@@ -97,6 +97,9 @@ resource "zia_dlp_web_rules" "this" {
   icap_server {
     id = data.zia_dlp_incident_receiver_servers.this.id
   }
+  notification_template {
+    id = data.zia_dlp_notification_templates.this.id
+  }
 }
 ```
 
