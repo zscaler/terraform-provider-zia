@@ -571,6 +571,64 @@ func validateOCRDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
 }
 
 func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
+	// Define allowed file types for both true and false states of `withoutContentInspection`
+	allowedFileTypesWithoutInspection := []string{
+		"FORM_DATA_POST", "DB", "JAVASCRIPT", "FOR", "MS_POWERPOINT", "TMP", "MATLAB_FILES", "NATVIS", "PNG", "SC", "RUBY_FILES",
+		"CAB", "PERL_FILES", "APPLE_DOCUMENTS", "CSX", "POSTSCRIPT", "ZIP", "CATALOG", "BITMAP", "SCZIP", "BORLAND_CPP_FILES",
+		"RAR", "SQL", "APPX", "NETMON", "MS_RTF", "PARASOLID", "INF", "ACCDB", "IGS", "HIGH_EFFICIENCY_IMAGE_FILES", "RPY",
+		"OAB", "CER", "ENCRYPT", "MM", "DSP", "YAML_FILES", "CHEMDRAW_FILES", "HBS", "SCT", "PS2", "INI", "CERT", "SLDPRT",
+		"ICS", "MS_EXCEL", "MS_MSG", "QLIKVIEW_FILES", "MS_MDB", "VISUAL_BASIC_SCRIPT", "MAKE_FILES", "BCP", "MS_CPP_FILES",
+		"AAC", "COMPILED_HTML_HELP", "DB2", "SDB", "MS_PST", "JAVA_APPLET", "ADE", "COBOL", "AUTOCAD", "VSDX", "MS_WORD", "CP",
+		"BGI", "DAT", "DER", "ASM", "TAR", "BASH_SCRIPTS", "MUI", "PYTHON", "TLB", "HIVE", "KEY", "IMG", "GIF", "STL", "STUFFIT",
+		"INCLUDE_FILES", "TABLEAU_FILES", "XZ", "AU3", "PCAP", "DELPHI", "P12", "PHOTOSHOP", "TIFF", "FLASH", "TLI", "VISUAL_CPP_FILES",
+		"EML_FILES", "GREENSHOT", "C_FILES", "JAVA_FILES", "MANIFEST", "NFM", "IFC", "VIRTUAL_HARD_DISK", "ISO", "LOG_FILES", "GZIP",
+		"EXP", "FCL", "BZIP2", "DMD", "P7Z", "PRT", "NCB", "X1B", "DRAWIO", "XAML", "CML", "ASHX", "PGP", "PS3", "ACIS", "VISUAL_BASIC_FILES",
+		"TXT", "DRV", "NLS", "F_FILES", "P7B", "JPEG", "TLH", "CSV", "POD", "SAS", "WINDOWS_META_FORMAT", "RSP", "KDBX", "WINDOWS_SCRIPT_FILES",
+		"SCALA", "ONENOTE", "CGR", "BASIC_SOURCE_CODE", "MSC", "POWERSHELL", "PEM", "INTEGRATED_CIRCUIT_FILES", "GO_FILES", "PDF_DOCUMENT",
+		"DBF", "JKS", "VDA", "RES_FILES", "A_FILE", "SHELL_SCRAP", "ALL_OUTBOUND",
+	}
+
+	allowedFileTypesWithInspection := []string{
+		"BASH_SCRIPTS", "FORM_DATA_POST", "PYTHON", "INCLUDE_FILES", "TABLEAU_FILES", "JAVASCRIPT", "AU3", "DELPHI", "FOR", "TIFF",
+		"MS_POWERPOINT", "TLI", "MATLAB_FILES", "NATVIS", "PNG", "SC", "RUBY_FILES", "VISUAL_CPP_FILES", "EML_FILES", "PERL_FILES",
+		"APPLE_DOCUMENTS", "CSX", "C_FILES", "JAVA_FILES", "BITMAP", "IFC", "LOG_FILES", "SCZIP", "BORLAND_CPP_FILES", "SQL",
+		"MS_RTF", "INF", "ACCDB", "X1B", "XAML", "RPY", "VISUAL_BASIC_FILES", "DSP", "TXT", "F_FILES", "YAML_FILES", "JPEG", "TLH",
+		"CSV", "POD", "SCT", "SAS", "RSP", "WINDOWS_SCRIPT_FILES", "SCALA", "MS_EXCEL", "MS_MSG", "MS_MDB", "BASIC_SOURCE_CODE",
+		"MSC", "VISUAL_BASIC_SCRIPT", "POWERSHELL", "GO_FILES", "MAKE_FILES", "BCP", "PDF_DOCUMENT", "MS_CPP_FILES", "RES_FILES",
+		"SHELL_SCRAP", "JAVA_APPLET", "COBOL", "VSDX", "MS_WORD", "DAT", "ASM", "ALL_OUTBOUND",
+	}
+
+	// Check if `ALL_OUTBOUND` is selected and `withoutContentInspection` is false
+	allOutboundSelected := contains(dlp.FileTypes, "ALL_OUTBOUND")
+	if allOutboundSelected && !dlp.WithoutContentInspection {
+		return fmt.Errorf("when file_type ALL_OUTBOUND is present, without_content_inspection must be true")
+	}
+
+	// If ALL_OUTBOUND is selected and no other file types are present, allow it
+	if allOutboundSelected && len(dlp.FileTypes) > 1 {
+		return fmt.Errorf("cannot have other file types when ALL_OUTBOUND is selected")
+	}
+
+	// Validate file types based on the `withoutContentInspection` flag
+	var allowedFileTypes []string
+	if dlp.WithoutContentInspection {
+		allowedFileTypes = allowedFileTypesWithoutInspection
+	} else {
+		allowedFileTypes = allowedFileTypesWithInspection
+	}
+
+	// Ensure all selected file types are in the allowed list
+	for _, fileType := range dlp.FileTypes {
+		if !contains(allowedFileTypes, fileType) {
+			return fmt.Errorf("the file_type '%s' is not accepted when without_content_inspection is %v", fileType, dlp.WithoutContentInspection)
+		}
+	}
+
+	return nil
+}
+
+/*
+func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
 	// New check: If FileTypes is not defined, WithoutContentInspection must be false
 	if len(dlp.FileTypes) == 0 && dlp.WithoutContentInspection {
 		return fmt.Errorf("without_content_inspection must be set to false when no file types are defined")
@@ -608,6 +666,7 @@ func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
 
 	return nil
 }
+*/
 
 func validateDeviceTrustLevels() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {

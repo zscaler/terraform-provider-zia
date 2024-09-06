@@ -179,9 +179,11 @@ The following arguments are supported:
 
   * ~> Note: `ALL_OUTBOUND` file type is applicable only when the predefined DLP engine called `EXTERNAL` is used and when the attribute `without_content_inspection` is set to `false`.
 
-  * ~> Note: `ALL_OUTBOUND` file type cannot be used alongside any any other file type.
+  * ~> Note: `ALL_OUTBOUND` file type cannot be used alongside any other file type.
 
-* `severity` - (String) Indicates the severity selected for the DLP rule violation: Returned values are:  `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
+* `cloud_applications` - (Optional) The list of cloud applications to which the DLP policy rule must be applied.. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
+
+* `severity` - (Optional) Indicates the severity selected for the DLP rule violation: Returned values are:  `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
