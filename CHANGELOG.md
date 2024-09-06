@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.4 (September, 6 2024)
+
+### Notes
+
+- Release date: **(September, 6 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #369](https://github.com/zscaler/terraform-provider-zia/pull/369) - Fixed `zia_dlp_web_rules` validation function for the attribute `file_types`.
+
 ## 3.0.3 (August, 26 2024)
 
 ### Notes
