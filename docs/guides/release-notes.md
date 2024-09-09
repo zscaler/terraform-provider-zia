@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v3.0.4``
+``Last updated: v3.0.5``
 
 ---
+
+## 3.0.5 (September, 9 2024)
+
+### Notes
+
+- Release date: **(September, 9 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #370](https://github.com/zscaler/terraform-provider-zia/pull/370) - Fixed `zia_url_categories` data source search mechanism to allow search of predefined categories by the custom attribute `name`.
 
 ## 3.0.4 (September, 6 2024)
 

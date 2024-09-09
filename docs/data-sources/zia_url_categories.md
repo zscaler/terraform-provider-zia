@@ -10,17 +10,19 @@ description: |-
 
 Use the **zia_url_categories** data source to get information about all or custom URL categories. By default, the response includes keywords.
 
+## Example - Search Custom Category By Name
+
 ```hcl
-// Query a URL Category by Name
 data "zia_url_categories" "this"{
     configured_name = "Example"
 }
 ```
 
+## Example - Search Predefined Category By Name
+
 ```hcl
-// Query a URL Category by its Custom ID
 data "zia_url_categories" "this"{
-    id = "CUSTOM_08"
+    name = "DINING_AND_RESTAURANT"
 }
 ```
 
@@ -36,7 +38,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `configured_name` - (String) Name of the URL category. This is only required for custom URL categories.
 * `keywords` - (List of String) Custom keywords associated to a URL category. Up to 2048 custom keywords can be added per organization across all categories (including bandwidth classes).
-* `super_category` - (String)
 * `custom_category` - (Boolean) Set to true for custom URL category. Up to 48 custom URL categories can be added per organization.
 * `custom_urls_count` - (Number) The number of custom URLs associated to the URL category.
 * `db_categorized_urls` - (List of String) URLs added to a custom URL category are also retained under the original parent URL category (i.e., the predefined category the URL previously belonged to).

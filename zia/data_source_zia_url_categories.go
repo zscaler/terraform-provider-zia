@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v2/zia/services"
 	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
 )
 
@@ -16,6 +17,16 @@ func dataSourceURLCategories() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			"val": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"name": { // New name attribute
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: false,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,
@@ -45,10 +56,6 @@ func dataSourceURLCategories() *schema.Resource {
 			"custom_category": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				Optional: true,
-			},
-			"super_category": {
-				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"scopes": {
@@ -145,10 +152,6 @@ func dataSourceURLCategories() *schema.Resource {
 					},
 				},
 			},
-			"val": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
 			"custom_urls_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -187,34 +190,71 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	var err error
 
 	id, _ := d.Get("id").(string)
-	name, _ := d.Get("configured_name").(string)
+	name, _ := d.Get("name").(string)
+	configuredName, _ := d.Get("configured_name").(string)
+	val, _ := d.Get("val").(int)
 
-	// Ensure either ID or name is provided
-	if id == "" && name == "" {
-		return fmt.Errorf("either 'id' or 'configured_name' must be specified")
-	}
-
-	if id != "" {
-		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
-		resp, err = urlcategories.Get(service, id)
+	// If no parameters are specified, fetch all categories
+	if id == "" && name == "" && configuredName == "" && val == 0 {
+		log.Printf("[INFO] No parameters provided. Fetching all URL categories.")
+		categories, err := urlcategories.GetAll(service)
 		if err != nil {
-			return err
+			return fmt.Errorf("error retrieving all URL categories: %s", err)
 		}
-	} else if name != "" {
-		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = urlcategories.GetCustomURLCategories(service, name, true, true)
-		if err != nil {
-			return err
+		if len(categories) == 0 {
+			return fmt.Errorf("no URL categories found")
+		}
+
+		// Example: Just use the first category (this can be expanded to return all)
+		resp = &categories[0]
+	} else {
+		// Process specific parameters
+		if id != "" {
+			log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
+			resp, err = urlcategories.Get(service, id)
+			if err != nil {
+				return err
+			}
+		} else if name != "" {
+			log.Printf("[INFO] Getting URL categories by name: %s\n", name)
+			resp, err = getPredefinedCategoryByName(service, name)
+			if err != nil {
+				return err
+			}
+		} else if configuredName != "" {
+			log.Printf("[INFO] Getting URL categories by configured name: %s\n", configuredName)
+			resp, err = urlcategories.GetCustomURLCategories(service, configuredName, true, true)
+			if err != nil {
+				return err
+			}
+		} else if val != 0 {
+			log.Printf("[INFO] Getting URL categories by val: %d\n", val)
+			categories, err := urlcategories.GetAll(service)
+			if err != nil {
+				return err
+			}
+
+			// Iterate through all categories and match by val
+			for _, category := range categories {
+				if category.Val == val {
+					resp = &category
+					break
+				}
+			}
+
+			if resp == nil {
+				return fmt.Errorf("URL category with val '%d' not found", val)
+			}
 		}
 	}
 
 	// After attempting to fetch, check if resp is still nil, indicating no data was found.
 	if resp == nil {
-		return fmt.Errorf("couldn't find any URL category with ID '%s' or name '%s'", id, name)
+		return fmt.Errorf("couldn't find any URL category with ID '%s', name '%s', configured name '%s', or val '%d'", id, name, configuredName, val)
 	}
 
 	// Set the data source fields with the response
-	d.SetId(fmt.Sprintf(resp.ID))
+	d.SetId(fmt.Sprintf("%d", resp.Val)) // Use the 'val' as the unique ID
 	_ = d.Set("configured_name", resp.ConfiguredName)
 	_ = d.Set("keywords", resp.Keywords)
 	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
@@ -268,4 +308,22 @@ func flattenUrlKeywordCounts(urlKeywords *urlcategories.URLKeywordCounts) []inte
 	}
 
 	return []interface{}{m}
+}
+
+// Helper function to get predefined category by name
+func getPredefinedCategoryByName(service *services.Service, name string) (*urlcategories.URLCategory, error) {
+	// Fetch all predefined categories using GetAll
+	categories, err := urlcategories.GetAll(service) // Correct usage of the GetAll method
+	if err != nil {
+		return nil, err
+	}
+
+	// Iterate over the fetched categories to find the one with the matching name
+	for _, category := range categories {
+		if category.ID == name { // Comparing with the ID field as it represents the "name" for predefined categories
+			return &category, nil
+		}
+	}
+
+	return nil, fmt.Errorf("predefined category with name '%s' not found", name)
 }

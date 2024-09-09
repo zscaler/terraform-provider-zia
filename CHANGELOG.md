@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.5 (September, 9 2024)
+
+### Notes
+
+- Release date: **(September, 9 2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #370](https://github.com/zscaler/terraform-provider-zia/pull/370) - Fixed `zia_url_categories` data source search mechanism to allow search of predefined categories by the custom attribute `name`.
+
 ## 3.0.4 (September, 6 2024)
 
 ### Notes
