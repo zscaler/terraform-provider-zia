@@ -23,10 +23,9 @@ func dataSourceURLCategories() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"name": { // New name attribute
+			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: false,
 			},
 			"configured_name": {
 				Type:     schema.TypeString,
@@ -194,58 +193,46 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	configuredName, _ := d.Get("configured_name").(string)
 	val, _ := d.Get("val").(int)
 
-	// If no parameters are specified, fetch all categories
-	if id == "" && name == "" && configuredName == "" && val == 0 {
-		log.Printf("[INFO] No parameters provided. Fetching all URL categories.")
+	// Process specific parameters
+	if id != "" {
+		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
+		resp, err = urlcategories.Get(service, id)
+		if err != nil {
+			return err
+		}
+	} else if name != "" {
+		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
+		resp, err = getPredefinedCategoryByName(service, name)
+		if err != nil {
+			return err
+		}
+	} else if configuredName != "" {
+		log.Printf("[INFO] Getting URL categories by configured name: %s\n", configuredName)
+		resp, err = urlcategories.GetCustomURLCategories(service, configuredName, true, true)
+		if err != nil {
+			return err
+		}
+	} else if val != 0 {
+		log.Printf("[INFO] Getting URL categories by val: %d\n", val)
 		categories, err := urlcategories.GetAll(service)
 		if err != nil {
-			return fmt.Errorf("error retrieving all URL categories: %s", err)
-		}
-		if len(categories) == 0 {
-			return fmt.Errorf("no URL categories found")
+			return err
 		}
 
-		// Example: Just use the first category (this can be expanded to return all)
-		resp = &categories[0]
+		// Iterate through all categories and match by val
+		for _, category := range categories {
+			if category.Val == val {
+				resp = &category
+				break
+			}
+		}
+
+		if resp == nil {
+			return fmt.Errorf("URL category with val '%d' not found", val)
+		}
 	} else {
-		// Process specific parameters
-		if id != "" {
-			log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
-			resp, err = urlcategories.Get(service, id)
-			if err != nil {
-				return err
-			}
-		} else if name != "" {
-			log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-			resp, err = getPredefinedCategoryByName(service, name)
-			if err != nil {
-				return err
-			}
-		} else if configuredName != "" {
-			log.Printf("[INFO] Getting URL categories by configured name: %s\n", configuredName)
-			resp, err = urlcategories.GetCustomURLCategories(service, configuredName, true, true)
-			if err != nil {
-				return err
-			}
-		} else if val != 0 {
-			log.Printf("[INFO] Getting URL categories by val: %d\n", val)
-			categories, err := urlcategories.GetAll(service)
-			if err != nil {
-				return err
-			}
-
-			// Iterate through all categories and match by val
-			for _, category := range categories {
-				if category.Val == val {
-					resp = &category
-					break
-				}
-			}
-
-			if resp == nil {
-				return fmt.Errorf("URL category with val '%d' not found", val)
-			}
-		}
+		// No parameters were provided, returning an error
+		return fmt.Errorf("either 'id', 'name', 'configured_name', or 'val' must be specified")
 	}
 
 	// After attempting to fetch, check if resp is still nil, indicating no data was found.
