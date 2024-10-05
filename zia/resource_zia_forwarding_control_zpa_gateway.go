@@ -131,6 +131,7 @@ func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interfa
 	if err != nil {
 		return err
 	}
+
 	log.Printf("[INFO] Created forwarding control zpa gateway request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("gateway_id", resp.ID)

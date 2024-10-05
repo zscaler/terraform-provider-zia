@@ -247,7 +247,32 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 		return err
 	}
 
-	resp, err := forwarding_rules.Create(service, &req)
+	forwardMethod := d.Get("forward_method").(string)
+	if forwardMethod == "ZPA" {
+		// Sleep for 60 seconds before invoking Create
+		time.Sleep(60 * time.Second)
+	}
+
+	// Retry logic in case of specific error
+	var resp *forwarding_rules.ForwardingRules
+	var err error
+	for i := 0; i < 3; i++ {
+		resp, err = forwarding_rules.Create(service, &req)
+		if err == nil {
+			break
+		}
+
+		if forwardMethod == "ZPA" {
+			if respErr, ok := err.(*client.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
+				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
+				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
+				continue
+			}
+		}
+		return err
+	}
+
 	if err != nil {
 		return err
 	}
@@ -411,9 +436,31 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 			return nil
 		}
 	}
-	if _, err := forwarding_rules.Update(service, id, &req); err != nil {
+
+	forwardMethod := d.Get("forward_method").(string)
+	if forwardMethod == "ZPA" {
+		// Sleep for 60 seconds before invoking Update
+		time.Sleep(60 * time.Second)
+	}
+
+	// Retry logic in case of specific error
+	for i := 0; i < 3; i++ {
+		_, err := forwarding_rules.Update(service, id, &req)
+		if err == nil {
+			break
+		}
+
+		if forwardMethod == "ZPA" {
+			if respErr, ok := err.(*client.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
+				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
+				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
+				continue
+			}
+		}
 		return err
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 

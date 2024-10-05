@@ -10,6 +10,11 @@ description: |-
 
 The **zia_forwarding_control_rule** resource allows the creation and management of ZIA Forwarding Control rules in the Zscaler Internet Access.
 
+⚠️ **WARNING:**  - [PR #373](https://github.com/zscaler/terraform-provider-zia/pull/373) - The resource `zia_forwarding_control_rule` now pauses for 60 seconds before proceeding with the create or update process whenever the `forward_method` attribute is set to `ZPA`. In case of a failure related to resource synchronization, the provider will retry the resource creation or update up to 3 times, waiting 30 seconds between each retry. This behavior ensures that ZIA and ZPA have sufficient time to synchronize and replicate the necessary resource IDs, reducing the risk of transient errors during provisioning.
+
+  **NOTE**: This retry mechanism helps to automatically overcome temporary latency without manual intervention. This behavior does not affect forwarding rules configured with other forward_methods such as `DIRECT`.
+
+
 ## Example Usage - DIRECT Forwarding Method
 
 ```hcl
