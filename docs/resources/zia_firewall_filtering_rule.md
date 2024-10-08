@@ -97,8 +97,17 @@ The following arguments are supported:
 * `src_ips` - (Optional) You can enter individual IP addresses, subnets, or address ranges.
 
 * `dest_addresses`** - (Optional) -  IP addresses and fully qualified domain names (FQDNs), if the domain has multiple destination IP addresses or if its IP addresses may change. For IP addresses, you can enter individual IP addresses, subnets, or address ranges.
+
       **NOTE**: PLEASE BE AWARE. The API supports ONLY `IPv4` addresses. `IPV6` addresses are not supported.
-* `dest_countries`** - (Optional) Identify destinations based on the location of a server, select Any to apply the rule to all countries or select the countries to which you want to control traffic.
+
+* `dest_countries`** - (Optional) Destination countries for which the rule is applicable. If not set, the rule is not restricted to specific destination countries.
+
+      **NOTE**: Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
+
+* `source_countries`** - (Optional) The list of source countries that must be included or excluded from the rule based on the excludeSrcCountries field value. If no value is set, this field is ignored during policy evaluation and the rule is applied to all source countries.
+
+      **NOTE**: Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
+
 * `dest_ip_categories`** - (Optional) identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
       - `id` - (String) Identifier that uniquely identifies an entity
 * `dest_ip_groups`** - (Optional) Any number of destination IP address groups that you want to control with this rule.

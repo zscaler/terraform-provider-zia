@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.6 (October, 8 2024)
+
+### Notes
+
+- Release date: **(October, 8  2024)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #374](https://github.com/zscaler/terraform-provider-zia/pull/374) - Added missing attribute `sourceCountries` to ZIA `firewallfilteringrule`
+
 ## 3.0.5 (October, 4 2024)
 
 ### Notes
