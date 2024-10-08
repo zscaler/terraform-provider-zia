@@ -302,3 +302,16 @@ func WithSemaphore(apiCall func() error) error {
 
 	return nil
 }
+
+// Helper function to process countries
+func processCountries(countries []string) []string {
+	processedCountries := make([]string, len(countries))
+	for i, country := range countries {
+		if country != "ANY" && country != "NONE" && len(country) == 2 { // Assuming the 2 letter code is an ISO Alpha-2 Code
+			processedCountries[i] = "COUNTRY_" + country
+		} else {
+			processedCountries[i] = country
+		}
+	}
+	return processedCountries
+}

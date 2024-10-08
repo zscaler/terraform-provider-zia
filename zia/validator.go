@@ -462,7 +462,7 @@ func validateLocationManagementTimeZones() schema.SchemaValidateDiagFunc {
 
 // Validate Cloud Firewall Network Service Applications
 
-func validateDestinationCountries(value interface{}, key string) ([]string, []error) {
+func validateISOCountryCodes(value interface{}, key string) ([]string, []error) {
 	var warnings []string
 	var errors []error
 

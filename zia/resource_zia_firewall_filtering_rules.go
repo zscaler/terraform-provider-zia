@@ -160,7 +160,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"workload_groups":       setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
 			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
-			"dest_countries":        getDestinationCountries(),
+			"dest_countries":        getISOCountryCodes(),
+			"source_countries":      getISOCountryCodes(),
 			"nw_applications":       getCloudFirewallNwApplications(),
 			"device_trust_levels":   getDeviceTrustLevels(),
 		},
@@ -296,6 +297,11 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
 	}
 
+	processedSrcCountries := make([]string, len(resp.SourceCountries))
+	for i, country := range resp.SourceCountries {
+		processedSrcCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
+	}
+
 	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
@@ -312,6 +318,7 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("dest_addresses", resp.DestAddresses)
 	_ = d.Set("dest_ip_categories", resp.DestIpCategories)
 	_ = d.Set("dest_countries", processedDestCountries)
+	_ = d.Set("source_countries", processedSrcCountries)
 	_ = d.Set("nw_applications", resp.NwApplications)
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
@@ -508,16 +515,19 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
-	// Process the DestCountries to add the prefix where needed
-	rawDestCountries := SetToStringList(d, "dest_countries")
-	processedDestCountries := make([]string, len(rawDestCountries))
-	for i, country := range rawDestCountries {
-		if country != "ANY" && country != "NONE" && len(country) == 2 { // Assuming the 2 letter code is an ISO Alpha-2 Code
-			processedDestCountries[i] = "COUNTRY_" + country
-		} else {
-			processedDestCountries[i] = country
-		}
-	}
+	// // Process the DestCountries to add the prefix where needed
+	// rawDestCountries := SetToStringList(d, "dest_countries")
+	// processedDestCountries := make([]string, len(rawDestCountries))
+	// for i, country := range rawDestCountries {
+	// 	if country != "ANY" && country != "NONE" && len(country) == 2 { // Assuming the 2 letter code is an ISO Alpha-2 Code
+	// 		processedDestCountries[i] = "COUNTRY_" + country
+	// 	} else {
+	// 		processedDestCountries[i] = country
+	// 	}
+	// }
+	// Process DestCountries and SourceCountries using the helper function
+	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
+	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
 
 	result := filteringrules.FirewallFilteringRules{
 		ID:                  id,
@@ -532,6 +542,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
 		DeviceTrustLevels:   SetToStringList(d, "device_trust_levels"),
 		DestCountries:       processedDestCountries,
+		SourceCountries:     processedSourceCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
 		EnableFullLogging:   d.Get("enable_full_logging").(bool),
 		DefaultRule:         d.Get("default_rule").(bool),
