@@ -254,7 +254,7 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 
-	d.SetId(fmt.Sprintf(resp.ID))
+	d.SetId(resp.ID)
 	_ = d.Set("category_id", resp.ID)
 	_ = d.Set("configured_name", resp.ConfiguredName)
 	_ = d.Set("keywords", resp.Keywords)

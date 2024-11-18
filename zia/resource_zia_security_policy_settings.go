@@ -11,10 +11,10 @@ import (
 
 func resourceSecurityPolicySettings() *schema.Resource {
 	return &schema.Resource{
-		Read:          resourceSecurityPolicySettingsRead,
-		Create:        resourceSecurityPolicySettingsCreate,
-		Update:        resourceSecurityPolicySettingsUpdate,
-		DeleteContext: resourceFuncNoOp,
+		Read:   resourceSecurityPolicySettingsRead,
+		Create: resourceSecurityPolicySettingsCreate,
+		Update: resourceSecurityPolicySettingsUpdate,
+		Delete: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)

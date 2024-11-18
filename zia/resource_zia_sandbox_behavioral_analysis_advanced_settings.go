@@ -13,10 +13,10 @@ import (
 
 func resourceSandboxSettings() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceSandboxSettingsCreate,
-		Read:          resourceSandboxSettingsRead,
-		Update:        resourceSandboxSettingsUpdate,
-		DeleteContext: resourceFuncNoOp,
+		Create: resourceSandboxSettingsCreate,
+		Read:   resourceSandboxSettingsRead,
+		Update: resourceSandboxSettingsUpdate,
+		Delete: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)

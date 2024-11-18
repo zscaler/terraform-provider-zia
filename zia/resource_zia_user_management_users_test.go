@@ -34,8 +34,8 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPassword+"Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", (rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),
@@ -48,8 +48,8 @@ func TestAccResourceUserManagementBasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserManagementExists(resourceTypeAndName, &users),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", name),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", fmt.Sprintf(rEmail+"@bd-hashicorp.com")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "password", fmt.Sprintf(rPasswordUpdate+"Super@Secret007")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "password", (rPasswordUpdate+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", rComments),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "department.#", "1"),

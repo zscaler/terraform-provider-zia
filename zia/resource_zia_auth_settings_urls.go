@@ -11,10 +11,10 @@ import (
 
 func resourceAuthSettingsUrls() *schema.Resource {
 	return &schema.Resource{
-		Read:          resourceAuthSettingsUrlsRead,
-		Create:        resourceAuthSettingsUrlsCreate,
-		Update:        resourceAuthSettingsUrlsUpdate,
-		DeleteContext: resourceFuncNoOp,
+		Read:   resourceAuthSettingsUrlsRead,
+		Create: resourceAuthSettingsUrlsCreate,
+		Update: resourceAuthSettingsUrlsUpdate,
+		Delete: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 				zClient := m.(*Client)
