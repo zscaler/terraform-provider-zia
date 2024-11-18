@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v3.0.6``
+``Last updated: v3.0.7``
 
 ---
+
+## 3.0.7 (November, 17 2024)
+
+### Notes
+
+- Release date: **(November, 17  2024)**
+- Supported Terraform version: **v1.x**
+
+### Internal Fixes
+
+- [PR #374](https://github.com/zscaler/terraform-provider-zia/pull/374) - Added new `file_types` supported values in the `zia_dlp_web_rules` resource. See the [zia_dlp_web_rules](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_dlp_web_rules) documentation.
 
 ## 3.0.6 (October, 8 2024)
 

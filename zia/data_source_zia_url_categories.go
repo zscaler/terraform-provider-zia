@@ -214,7 +214,7 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	}
 
 	// Set the data source fields with the response
-	d.SetId(fmt.Sprintf(resp.ID))
+	d.SetId(resp.ID)
 	_ = d.Set("configured_name", resp.ConfiguredName)
 	_ = d.Set("keywords", resp.Keywords)
 	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)

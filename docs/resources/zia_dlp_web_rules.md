@@ -250,6 +250,62 @@ The following arguments are supported:
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
+|              Inspection Type              |                   File Types                                  |
+|:------------------------------------------|:--------------------------------------------------------------|
+|--------------------------------|-------------------------------------------------------|
+|                                           | `FTCATEGORY_ENCRYPT`, `FTCATEGORY_P7Z`,                       |
+|                                           | `FTCATEGORY_BZIP2`, `FTCATEGORY_CAB`,                         |
+|                                           | `FTCATEGORY_FCL`, `FTCATEGORY_GZIP`,                          |
+|       `WITHOUT INSPECTION`                | `FTCATEGORY_ISO`, `FTCATEGORY_LZH`,                           |
+|                                           | `FTCATEGORY_RAR`,`FTCATEGORY_STUFFIT`,                        |
+|                                           | `FTCATEGORY_TAR`, `FTCATEGORY_XZ`,                            |
+|                                           | `FTCATEGORY_ZIP`, `FTCATEGORY_SCZIP`,                         |
+|                                           | `FTCATEGORY_ZIPX`                                             |
+|--------------------------------|--------------------------------------------------------|
+|--------------------------------|--------------------------------------------------------|
+|                                           | `FTCATEGORY_ACCDB`, `FTCATEGORY_APPLE_DOCUMENTS`,             |
+|                                           | `FTCATEGORY_ASM`, `FTCATEGORY_AU3`,                           |
+|                                           | `FTCATEGORY_BASH_SCRIPTS`, `FTCATEGORY_BASIC_SOURCE_CODE`,    |
+|                                           | `FTCATEGORY_BCP`,`FTCATEGORY_BITMAP`,                         |
+|                                           | `FTCATEGORY_BORLAND_CPP_FILES`, `FTCATEGORY_C_FILES`,         |
+|                                           | `FTCATEGORY_COBOL`,`FTCATEGORY_CSV`,                          |
+|                                           | `FTCATEGORY_CSX`,`FTCATEGORY_DAT`,                            |
+|                                           | `FTCATEGORY_DCM`, `FTCATEGORY_DELPHI`,                        |
+|                                           | `FTCATEGORY_F_FILES`,`FTCATEGORY_FOR`,                        |
+|                                           | `FTCATEGORY_FORM_DATA_POST`, `FTCATEGORY_DSP`,                |
+|                                           | `FTCATEGORY_EML_FILES`, `FTCATEGORY_GO_FILES`,                |
+|                                           | `FTCATEGORY_HTTP`,`FTCATEGORY_IFC`,                           |
+|                                           | `FTCATEGORY_INCLUDE_FILES`,`FTCATEGORY_INF`,                  |
+|                                           | `FTCATEGORY_JAVA_FILES`,`FTCATEGORY_JPEG`,                    |
+|                                           | `FTCATEGORY_JSON`,`FTCATEGORY_LOG_FILES`,                     |
+|                                           | `FTCATEGORY_MAKE_FILES`, `FTCATEGORY_MATLAB_FILES`,           |
+|                                           | `FTCATEGORY_MS_EXCEL`,`FTCATEGORY_MS_MDB`,                    |
+|                                           | `FTCATEGORY_MS_MSG`,`FTCATEGORY_MS_POWERPOINT`,               |
+|          `WITH INSPECTION`                | `FTCATEGORY_MS_PUB`,`FTCATEGORY_MS_RTF`,                      |
+|                                           | `FTCATEGORY_MS_WORD`,`FTCATEGORY_MSC`,                        |
+|                                           | `FTCATEGORY_NATVIS`,`FTCATEGORY_OLM`,                         |
+|                                           | `FTCATEGORY_OPEN_OFFICE_PRESENTATIONS`,                       |
+|                                           | `FTCATEGORY_OPEN_OFFICE_SPREADSHEETS`,                        |
+|                                           | `FTCATEGORY_MS_CPP_FILES`, `FTCATEGORY_PDF_DOCUMENT`,         |
+|                                           | `FTCATEGORY_PERL_FILES`,`FTCATEGORY_PNG`,                     |
+|                                           | `FTCATEGORY_POD`,`FTCATEGORY_POWERSHELL`,                     |
+|                                           | `FTCATEGORY_PYTHON`, `FTCATEGORY_RES_FILES`,                  |
+|                                           | `FTCATEGORY_RPY`,`FTCATEGORY_RSP`,                            |
+|                                           | `FTCATEGORY_RUBY_FILES`,`FTCATEGORY_SAS`,                     |
+|                                           | `FTCATEGORY_SC`,`FTCATEGORY_SCALA`,                           |
+|                                           | `FTCATEGORY_SCT`,`FTCATEGORY_SHELL_SCRAP`,                    |
+|                                           | `FTCATEGORY_SQL`,`FTCATEGORY_TABLEAU_FILES`,                  |
+|                                           | `FTCATEGORY_TIFF`, `FTCATEGORY_TLH`                           |
+|                                           | `FTCATEGORY_TLI`,`FTCATEGORY_TXT`,                            |
+|                                           | `FTCATEGORY_UNK_TXT`,`FTCATEGORY_XAML`                        |
+|                                           | `FTCATEGORY_VISUAL_BASIC_SCRIPT`,                             |
+|                                           | `FTCATEGORY_VISUAL_CPP_FILES`,`FTCATEGORY_VSDX`,              |
+|                                           | `FTCATEGORY_X1B`,`FTCATEGORY_VISUAL_BASIC_FILES`,             |
+|                                           | `FTCATEGORY_XML`, `FTCATEGORY_YAML_FILES`,                    |
+|                                           | `FTCATEGORY_JAVA_APPLET`,`FTCATEGORY_JAVASCRIPT`              |
+|                                           | `FTCATEGORY_WINDOWS_SCRIPT_FILES`                             |
+|------------------------------|----------------------------------------------------------|
+
 ## Import
 
 Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.

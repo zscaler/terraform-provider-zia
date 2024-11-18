@@ -55,6 +55,7 @@ type Client struct {
 	dlp_incident_receiver_servers *services.Service
 	dlp_notification_templates    *services.Service
 	dlp_web_rules                 *services.Service
+	pacfiles                      *services.Service
 	rule_labels                   *services.Service
 	security_policy_settings      *services.Service
 	user_authentication_settings  *services.Service
@@ -101,6 +102,7 @@ func (c *Config) Client() (*Client, error) {
 		users:                         users.New(cli),
 		groups:                        groups.New(cli),
 		departments:                   departments.New(cli),
+		pacfiles:                      services.New(cli),
 		virtualipaddress:              services.New(cli),
 		vpncredentials:                services.New(cli),
 		gretunnels:                    services.New(cli),
