@@ -137,7 +137,6 @@ const (
 	AdminUserLoginName = "tf-acc-test-@securitygeek.io"
 	AdminUserName      = "tf-acc-test-admin"
 	AdminUserEmail     = "tf-acc-test-@securitygeek.io"
-	AdminUserPassword  = "Password@123!"
 )
 
 // User Management
