@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/roles"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/adminuserrolemgmt/roles"
 )
 
 func dataSourceAdminRoles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAdminRolesRead,
+		ReadContext: dataSourceAdminRolesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -87,17 +89,17 @@ func dataSourceAdminRoles() *schema.Resource {
 	}
 }
 
-func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.roles
+func dataSourceAdminRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *roles.AdminRoles
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for admin role name: %s\n", name)
-		res, err := roles.GetByName(service, name)
+		res, err := roles.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -120,7 +122,7 @@ func dataSourceAdminRolesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("role_type", resp.RoleType)
 
 	} else {
-		return fmt.Errorf("couldn't find any admin role name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any admin role name '%s'", name))
 	}
 
 	return nil

@@ -6,9 +6,9 @@ description: |-
   Get information about forwarding control rule.
 
 ---
-# Data Source: forwarding_control_rule
+# Data Source: zia_forwarding_control_rule
 
-Use the **forwarding_control_rule** data source to get information about a forwarding control rule which is used to forward selective Zscaler traffic to specific destinations based on your needs.For example, if you want to forward specific web traffic to a third-party proxy service or if you want to forward source IP anchored application traffic to a specific Zscaler Private Access (ZPA) App Connector or internal application traffic through ZIA threat and data protection engines, use forwarding control by configuring appropriate rules.
+Use the **zia_forwarding_control_rule** data source to get information about a forwarding control rule which is used to forward selective Zscaler traffic to specific destinations based on your needs.For example, if you want to forward specific web traffic to a third-party proxy service or if you want to forward source IP anchored application traffic to a specific Zscaler Private Access (ZPA) App Connector or internal application traffic through ZIA threat and data protection engines, use forwarding control by configuring appropriate rules.
 
 ## Example Usage
 

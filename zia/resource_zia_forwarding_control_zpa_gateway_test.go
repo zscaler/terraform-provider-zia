@@ -11,10 +11,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/zpa_gateways"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/zpa_gateways"
 )
 
 func TestAccResourceForwardingControlZPAGatewayBasic(t *testing.T) {

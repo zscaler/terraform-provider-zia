@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservicegroups"
 )
 
 func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccResourceFWNetworkServiceGroupsBasic(t *testing.T) {
 
 func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.networkservicegroups
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringNetworkServiceGroups {
@@ -72,7 +73,7 @@ func testAccCheckFWNetworkServiceGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := networkservicegroups.GetNetworkServiceGroups(service, id)
+		rule, err := networkservicegroups.GetNetworkServiceGroups(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -103,9 +104,9 @@ func testAccCheckFWNetworkServiceGroupsExists(resource string, rule *networkserv
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.networkservicegroups
+		service := apiClient.Service
 
-		receivedRule, err := networkservicegroups.GetNetworkServiceGroups(service, id)
+		receivedRule, err := networkservicegroups.GetNetworkServiceGroups(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

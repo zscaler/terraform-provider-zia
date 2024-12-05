@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
 )
 
 func dataSourceFWNetworkServices() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWNetworkServicesRead,
+		ReadContext: dataSourceFWNetworkServicesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -50,26 +52,26 @@ func dataSourceFWNetworkServices() *schema.Resource {
 	}
 }
 
-func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkservices
+func dataSourceFWNetworkServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *networkservices.NetworkServices
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network services id: %d\n", id)
-		res, err := networkservices.Get(service, id)
+		res, err := networkservices.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network services : %s\n", name)
-		res, err := networkservices.GetByName(service, name)
+		res, err := networkservices.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -80,7 +82,7 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 			log.Printf("[INFO] Getting network services : %s\n", protocol)
 			res, err := zClient.networkservices.GetByProtocol(d.Get("protocol").(string))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			resp = res
 		}
@@ -94,23 +96,23 @@ func dataSourceFWNetworkServicesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("is_name_l10n_tag", resp.IsNameL10nTag)
 
 		if err := d.Set("src_tcp_ports", flattenNetwordPorts(resp.SrcTCPPorts)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dest_tcp_ports", flattenNetwordPorts(resp.DestTCPPorts)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("src_udp_ports", flattenNetwordPorts(resp.SrcUDPPorts)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dest_udp_ports", flattenNetwordPorts(resp.DestUDPPorts)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any network service group with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any network service group with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

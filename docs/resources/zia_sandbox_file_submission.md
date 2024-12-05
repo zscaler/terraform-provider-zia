@@ -1,5 +1,5 @@
 ---
-subcategory: "Sandbox Settings"
+subcategory: "Sandbox Policy & Settings"
 layout: "zscaler"
 page_title: "ZIA: sandbox_file_submission"
 description: |-

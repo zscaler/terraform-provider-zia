@@ -8,8 +8,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservices"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
 )
 
 func listIDsSchemaTypeCustom(maxItems int, desc string) *schema.Schema {
@@ -99,7 +99,7 @@ func setIdNameSchemaCustom(maxItems int, description string) *schema.Schema {
 				},
 				"name": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					Description: "The name of the resource.",
 				},
 			},
@@ -331,6 +331,17 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 
 // Flattening function used in the Forwarding Control Policy Resource
 func flattenIDNameSet(idName *common.IDName) []interface{} {
+	idNameSet := make([]interface{}, 0)
+	if idName != nil {
+		idNameSet = append(idNameSet, map[string]interface{}{
+			"id":   idName.ID,
+			"name": idName.Name,
+		})
+	}
+	return idNameSet
+}
+
+func flattenIDNameExternalSet(idName *common.IDNameExternalID) []interface{} {
 	idNameSet := make([]interface{}, 0)
 	if idName != nil {
 		idNameSet = append(idNameSet, map[string]interface{}{
@@ -579,6 +590,44 @@ func getURLProtocols() *schema.Schema {
 	}
 }
 
+func getFileTypeProtocols() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Protocol for the given rule. This field is not applicable to the Lite API.",
+		Required:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateFileTypeControlProtocols(),
+		},
+	}
+}
+
+func getSandboxRuleProtocols() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Protocol for the given rule. This field is not applicable to the Lite API.",
+		Required:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateSandboxRuleProtocols(),
+		},
+	}
+}
+
+func getDNSRuleProtocols() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Protocol for the given rule. This field is not applicable to the Lite API.",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateDNSRuleProtocols(),
+		},
+	}
+}
 func getUserRiskScoreLevels() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -649,13 +698,13 @@ func getISOCountryCodes() *schema.Schema {
 	}
 }
 
-func getCloudFirewallNwApplications() *schema.Schema {
+func getCloudApplications() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "User-defined network service applications on which the rule is applied. If not set, the rule is not restricted to a specific network service application.",
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
-			ValidateDiagFunc: validateCloudFirewallNwApplications(),
+			ValidateDiagFunc: validateCloudApplications(),
 		},
 		Optional: true,
 		Computed: true,
@@ -668,6 +717,54 @@ func getCloudFirewallNwServicesTag() *schema.Schema {
 		ValidateDiagFunc: validateCloudFirewallNwServicesTag(),
 		Optional:         true,
 		Computed:         true,
+	}
+}
+
+func getFileTypes() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "File type categories for which the policy is applied. If not set, the rule is applied across all file types.",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateFileTypes(),
+		},
+		Optional: true,
+	}
+}
+
+func getSandboxFileTypes() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "File type categories for which the policy is applied. If not set, the rule is applied across all file types.",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateSandboxRuleFileTypes(),
+		},
+		Optional: true,
+	}
+}
+
+func getBaPolicyCategories() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "The threat categories to which the rule applies",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateSandboxPolicyCategories(),
+		},
+		Optional: true,
+	}
+}
+
+func getDnsRuleRequestTypes() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "DNS request types to which the rule applies",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateDnsRuleRequestTypes(),
+		},
+		Optional: true,
 	}
 }
 

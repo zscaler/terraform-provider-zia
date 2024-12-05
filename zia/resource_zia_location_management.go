@@ -8,31 +8,32 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 )
 
 func resourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationManagementCreate,
-		Read:   resourceLocationManagementRead,
-		Update: resourceLocationManagementUpdate,
-		Delete: resourceLocationManagementDelete,
+		CreateContext: resourceLocationManagementCreate,
+		ReadContext:   resourceLocationManagementRead,
+		UpdateContext: resourceLocationManagementUpdate,
+		DeleteContext: resourceLocationManagementDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.locationmanagement
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("location_id", idInt)
 				} else {
-					resp, err := locationmanagement.GetLocationOrSublocationByName(service, id)
+					resp, err := locationmanagement.GetLocationOrSublocationByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("location_id", resp.ID)
@@ -364,28 +365,28 @@ func resourceLocationManagement() *schema.Resource {
 	}
 }
 
-func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationmanagement
+func resourceLocationManagementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	if parentIDInt, ok := d.GetOk("parent_id"); ok && parentIDInt.(int) != 0 {
 		ipAddresses := d.Get("ip_addresses").(*schema.Set)
 		if len(removeEmpty(ListToStringSlice(ipAddresses.List()))) == 0 {
-			return fmt.Errorf("when the location is a sub-location ip_addresses must not be empty: %v", d.Get("name"))
+			return diag.FromErr(fmt.Errorf("when the location is a sub-location ip_addresses must not be empty: %v", d.Get("name")))
 		}
 	}
 
 	req := expandLocationManagement(d)
 	log.Printf("[INFO] Creating zia location management\n%+v\n", req)
 	if err := checkSurrogateIPDependencies(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := checkVPNCredentials(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	resp, err := locationmanagement.Create(service, &req)
+	resp, err := locationmanagement.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia location management request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -397,13 +398,13 @@ func resourceLocationManagementCreate(d *schema.ResourceData, m interface{}) err
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceLocationManagementRead(d, m)
+	return resourceLocationManagementRead(ctx, d, meta)
 }
 
 func checkVPNCredentials(locations locationmanagement.Locations) error {
@@ -431,23 +432,23 @@ func checkSurrogateIPDependencies(loc locationmanagement.Locations) error {
 	return nil
 }
 
-func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationmanagement
+func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
-		return fmt.Errorf("no location management id is set")
+		return diag.FromErr(fmt.Errorf("no location management id is set"))
 	}
-	resp, err := locationmanagement.GetLocationOrSublocationByID(service, id)
+	resp, err := locationmanagement.GetLocationOrSublocationByID(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing location management %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting location management:\n%+v\n", resp)
@@ -496,15 +497,15 @@ func resourceLocationManagementRead(d *schema.ResourceData, m interface{}) error
 	_ = d.Set("exclude_from_manual_groups", resp.ExcludeFromManualGroups)
 
 	if err := d.Set("vpn_credentials", flattenLocationVPNCredentialsSimple(resp.VPNCredentials)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("dynamic_location_groups", flattenIDs(resp.DynamiclocationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("static_location_groups", flattenIDs(resp.StaticLocationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -526,9 +527,9 @@ func flattenLocationVPNCredentialsSimple(vpnCredential []locationmanagement.VPNC
 	return vpnCredentials
 }
 
-func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationmanagement
+func resourceLocationManagementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
@@ -537,17 +538,17 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	log.Printf("[INFO] Updating location management ID: %v\n", id)
 	req := expandLocationManagement(d)
 	if err := checkSurrogateIPDependencies(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := locationmanagement.GetLocationOrSublocationByID(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := locationmanagement.GetLocationOrSublocationByID(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
 
-	if _, _, err := locationmanagement.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := locationmanagement.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -556,18 +557,18 @@ func resourceLocationManagementUpdate(d *schema.ResourceData, m interface{}) err
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceLocationManagementRead(d, m)
+	return resourceLocationManagementRead(ctx, d, meta)
 }
 
-func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationmanagement
+func resourceLocationManagementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "location_id")
 	if !ok {
@@ -586,10 +587,10 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 		},
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := locationmanagement.Delete(service, id); err != nil {
-		return err
+	if _, err := locationmanagement.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] location deleted")
@@ -600,7 +601,7 @@ func resourceLocationManagementDelete(d *schema.ResourceData, m interface{}) err
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

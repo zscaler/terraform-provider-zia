@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,10 +10,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
 
 var (
@@ -22,25 +24,25 @@ var (
 
 func resourceFirewallFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFirewallFilteringRulesCreate,
-		Read:   resourceFirewallFilteringRulesRead,
-		Update: resourceFirewallFilteringRulesUpdate,
-		Delete: resourceFirewallFilteringRulesDelete,
+		CreateContext: resourceFirewallFilteringRulesCreate,
+		ReadContext:   resourceFirewallFilteringRulesRead,
+		UpdateContext: resourceFirewallFilteringRulesUpdate,
+		DeleteContext: resourceFirewallFilteringRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.filteringrules
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := filteringrules.GetByName(service, id)
+					resp, err := filteringrules.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -123,7 +125,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validateDestAddress, // Apply the custom validation function here
+					ValidateFunc: validateDestAddress,
 				},
 				Description: "Destination addresses. Supports IPv4, FQDNs, or wildcard FQDNs",
 			},
@@ -162,7 +164,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"dest_countries":        getISOCountryCodes(),
 			"source_countries":      getISOCountryCodes(),
-			"nw_applications":       getCloudFirewallNwApplications(),
+			"nw_applications":       getCloudApplications(),
 			"device_trust_levels":   getDeviceTrustLevels(),
 		},
 	}
@@ -181,15 +183,15 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 	return nil
 }
 
-func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.filteringrules
+func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
 	if err := validateFirewallRule(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	timeout := d.Timeout(schema.TimeoutCreate)
@@ -198,7 +200,7 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	for {
 		firewallFilteringLock.Lock()
 		if firewallFilteringStartingOrder == 0 {
-			list, _ := filteringrules.GetAll(service)
+			list, _ := filteringrules.GetAll(ctx, service)
 			for _, r := range list {
 				if r.Order > firewallFilteringStartingOrder {
 					firewallFilteringStartingOrder = r.Order
@@ -213,12 +215,13 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 
 		order := req.Order
 		req.Order = firewallFilteringStartingOrder
-		resp, err := filteringrules.Create(service, &req)
+
+		resp, err := filteringrules.Create(ctx, service, &req)
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err)
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -226,44 +229,44 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 					continue
 				}
 			}
-			return fmt.Errorf("error creating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(service)
+			list, err := filteringrules.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := filteringrules.Get(service, id)
+			rule, err := filteringrules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = filteringrules.Update(service, id, rule)
+			_, err = filteringrules.Update(ctx, service, id, rule)
 			return err
 		})
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		err = resourceFirewallFilteringRulesRead(d, m)
-		if err != nil {
+		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
 				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
 		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -272,24 +275,24 @@ func resourceFirewallFilteringRulesCreate(d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.filteringrules
+func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no zia firewall filtering rule id is set")
+		return diag.FromErr(fmt.Errorf("no zia firewall filtering rule id is set"))
 	}
 
-	resp, err := filteringrules.Get(service, id)
+	resp, err := filteringrules.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	processedDestCountries := make([]string, len(resp.DestCountries))
@@ -324,92 +327,93 @@ func resourceFirewallFilteringRulesRead(d *schema.ResourceData, m interface{}) e
 	_ = d.Set("predefined", resp.Predefined)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("app_services", flattenIDs(resp.AppServices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("app_service_groups", flattenIDs(resp.AppServiceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-		return fmt.Errorf("error setting workload_groups: %s", err)
+		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
+
 	return nil
 }
 
-func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.filteringrules
+func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] firewall filtering rule ID not set: %v\n", id)
-		return fmt.Errorf("firewall filtering rule ID not set")
+		return diag.FromErr(fmt.Errorf("firewall filtering rule ID not set"))
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
 	if err := validateFirewallRule(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := filteringrules.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := filteringrules.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
@@ -419,7 +423,7 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	start := time.Now()
 
 	for {
-		_, err := filteringrules.Update(service, id, &req)
+		_, err := filteringrules.Update(ctx, service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -428,40 +432,40 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 					continue
 				}
 			}
-			return fmt.Errorf("error updating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
 		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(service)
+			list, err := filteringrules.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := filteringrules.Get(service, id)
+			rule, err := filteringrules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = filteringrules.Update(service, id, rule)
+			_, err = filteringrules.Update(ctx, service, id, rule)
 			return err
 		})
 
-		err = resourceFirewallFilteringRulesRead(d, m)
-		if err != nil {
+		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
 				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
 		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -470,9 +474,9 @@ func resourceFirewallFilteringRulesUpdate(d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.filteringrules
+func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -480,19 +484,19 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	}
 
 	// Retrieve the rule to check if it's a predefined one
-	rule, err := filteringrules.Get(service, id)
+	rule, err := filteringrules.Get(ctx, service, id)
 	if err != nil {
-		return fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err)
+		return diag.FromErr(fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err))
 	}
 
 	// Validate if the rule can be deleted
 	if err := validateFirewallRule(*rule); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
-	if _, err := filteringrules.Delete(service, id); err != nil {
-		return err
+	if _, err := filteringrules.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] firewall filtering rule deleted")
@@ -503,7 +507,7 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -515,16 +519,6 @@ func resourceFirewallFilteringRulesDelete(d *schema.ResourceData, m interface{})
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
-	// // Process the DestCountries to add the prefix where needed
-	// rawDestCountries := SetToStringList(d, "dest_countries")
-	// processedDestCountries := make([]string, len(rawDestCountries))
-	// for i, country := range rawDestCountries {
-	// 	if country != "ANY" && country != "NONE" && len(country) == 2 { // Assuming the 2 letter code is an ISO Alpha-2 Code
-	// 		processedDestCountries[i] = "COUNTRY_" + country
-	// 	} else {
-	// 		processedDestCountries[i] = country
-	// 	}
-	// }
 	// Process DestCountries and SourceCountries using the helper function
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))

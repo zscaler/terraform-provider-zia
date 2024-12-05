@@ -1,27 +1,29 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/security_policy_settings"
 )
 
 func resourceSecurityPolicySettings() *schema.Resource {
 	return &schema.Resource{
-		Read:   resourceSecurityPolicySettingsRead,
-		Create: resourceSecurityPolicySettingsCreate,
-		Update: resourceSecurityPolicySettingsUpdate,
-		Delete: resourceFuncNoOp,
+		ReadContext:   resourceSecurityPolicySettingsRead,
+		CreateContext: resourceSecurityPolicySettingsCreate,
+		UpdateContext: resourceSecurityPolicySettingsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.security_policy_settings
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				// Use the GetListUrls method to fetch both whitelist and blacklist URLs.
-				resp, err := security_policy_settings.GetListUrls(service)
+				resp, err := security_policy_settings.GetListUrls(ctx, service)
 				if err != nil {
 					return []*schema.ResourceData{}, err
 				}
@@ -73,18 +75,17 @@ func expandSecurityPolicySettings(d *schema.ResourceData) security_policy_settin
 	}
 }
 
-func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{}) error {
-
+func resourceSecurityPolicySettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.security_policy_settings
+	zClient := meta.(*Client)
+	service := zClient.Service
 	listUrls := expandSecurityPolicySettings(d)
-	_, err := security_policy_settings.UpdateListUrls(service, listUrls)
+	_, err := security_policy_settings.UpdateListUrls(ctx, service, listUrls)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("url_list")
 
@@ -94,28 +95,27 @@ func resourceSecurityPolicySettingsCreate(d *schema.ResourceData, m interface{})
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSecurityPolicySettingsRead(d, m)
+	return resourceSecurityPolicySettingsRead(ctx, d, meta)
 }
 
-func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{}) error {
-
+func resourceSecurityPolicySettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.security_policy_settings
+	zClient := meta.(*Client)
+	service := zClient.Service
 	listUrls := expandSecurityPolicySettings(d)
 
-	_, err := security_policy_settings.UpdateListUrls(service, listUrls)
+	_, err := security_policy_settings.UpdateListUrls(ctx, service, listUrls)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -124,20 +124,20 @@ func resourceSecurityPolicySettingsUpdate(d *schema.ResourceData, m interface{})
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSecurityPolicySettingsRead(d, m)
+	return resourceSecurityPolicySettingsRead(ctx, d, meta)
 }
 
-func resourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.security_policy_settings
+func resourceSecurityPolicySettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
-	resp, err := security_policy_settings.GetListUrls(service)
+	resp, err := security_policy_settings.GetListUrls(ctx, service)
 	if err != nil {
 		return nil
 	}
@@ -148,7 +148,7 @@ func resourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) e
 		_ = d.Set("blacklist_urls", resp.Black)
 
 	} else {
-		return fmt.Errorf("couldn't read urls")
+		return diag.FromErr(fmt.Errorf("couldn't read urls"))
 	}
 
 	return nil

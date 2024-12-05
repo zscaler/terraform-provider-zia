@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/departments"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/departments"
 )
 
 func dataSourceDepartmentManagement() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDepartmentManagementRead,
+		ReadContext: dataSourceDepartmentManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -36,25 +38,26 @@ func dataSourceDepartmentManagement() *schema.Resource {
 	}
 }
 
-func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func dataSourceDepartmentManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *departments.Department
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for department id: %d\n", id)
-		res, err := zClient.departments.GetDepartments(id)
+		res, err := departments.GetDepartments(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for department : %s\n", name)
-		res, err := zClient.departments.GetDepartmentsByName(name)
+		res, err := departments.GetDepartmentsByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -67,7 +70,7 @@ func dataSourceDepartmentManagementRead(d *schema.ResourceData, m interface{}) e
 		_ = d.Set("deleted", resp.Deleted)
 
 	} else {
-		return fmt.Errorf("couldn't find any department with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any department with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

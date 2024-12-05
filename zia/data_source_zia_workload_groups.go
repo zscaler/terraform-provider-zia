@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/workloadgroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/workloadgroups"
 )
 
 func dataSourceWorkloadGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkloadGroupRead,
+		ReadContext: dataSourceWorkloadGroupRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -119,17 +121,17 @@ func dataSourceWorkloadGroup() *schema.Resource {
 	}
 }
 
-func dataSourceWorkloadGroupRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.workloadgroups
+func dataSourceWorkloadGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *workloadgroups.WorkloadGroup
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting workload group id: %d\n", id)
-		res, err := workloadgroups.Get(service, id)
+		res, err := workloadgroups.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -137,9 +139,9 @@ func dataSourceWorkloadGroupRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting Getting workload group : %s\n", name)
-		res, err := workloadgroups.GetByName(service, name)
+		res, err := workloadgroups.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -150,16 +152,16 @@ func dataSourceWorkloadGroupRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("expression", resp.Expression)
 
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		expressionJson := flattenWorkloadTagExpression(resp.WorkloadTagExpression)
 		if err := d.Set("expression_json", expressionJson); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any workload group with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any workload group with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

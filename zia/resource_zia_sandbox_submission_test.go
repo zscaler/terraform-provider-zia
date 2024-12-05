@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccZiaSandboxFileSubmission_basic(t *testing.T) {
-	baseURL := "https://github.com/SecurityGeekIO/malware-samples/raw/main/"
+	baseURL := "https://github.com/zscaler/malware-samples/raw/main/"
 	fileNames := []string{
 		"2a961d4e5a2100570c942ed20a29735b.bin",
 		"327bd8a60fb54aaaba8718c890dda09d.bin",

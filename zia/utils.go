@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
@@ -10,15 +11,16 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/activation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/activation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
 
 func intPtr(n int) *int {
 	return &n
 }
+
 func SetToStringSlice(d *schema.Set) []string {
 	list := d.List()
 	return ListToStringSlice(list)
@@ -85,10 +87,10 @@ func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool
 
 // avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
 func DetachRuleIDNameExtensions(client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
-	service := client.filteringrules
+	service := client.Service
 
 	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
-	rules, err := filteringrules.GetAll(service)
+	rules, err := filteringrules.GetAll(context.Background(), service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -107,9 +109,9 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = filteringrules.Get(service, rule.ID)
+			_, err = filteringrules.Get(context.Background(), service, rule.ID)
 			if err == nil {
-				_, err = filteringrules.Update(service, rule.ID, &rule)
+				_, err = filteringrules.Update(context.Background(), service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -120,10 +122,10 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 }
 
 func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
-	service := client.dlp_web_rules
+	service := client.Service
 
 	log.Printf("[INFO] Detaching dlp engine from %s: %d\n", resource, id)
-	rules, err := dlp_web_rules.GetAll(service)
+	rules, err := dlp_web_rules.GetAll(context.Background(), service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -142,9 +144,9 @@ func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, ge
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = dlp_web_rules.Get(service, rule.ID)
+			_, err = dlp_web_rules.Get(context.Background(), service, rule.ID)
 			if err == nil {
-				_, err = dlp_web_rules.Update(service, rule.ID, &rule)
+				_, err = dlp_web_rules.Update(context.Background(), service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -209,13 +211,13 @@ func contains(slice []string, element string) bool {
 
 // Helper function to trigger configuration activation
 func triggerActivation(zClient *Client) error {
-	service := zClient.activation
+	service := zClient.Service
 
 	// Assuming the activation request doesn't need specific details from the rule labels
 	req := activation.Activation{Status: "ACTIVE"}
 	log.Printf("[INFO] Triggering configuration activation\n%+v\n", req)
 
-	_, err := activation.CreateActivation(service, req)
+	_, err := activation.CreateActivation(context.Background(), service, req)
 	if err != nil {
 		return err
 	}

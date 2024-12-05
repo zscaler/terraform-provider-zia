@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplications"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkapplications"
 )
 
 func dataSourceFWNetworkApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWNetworkApplicationRead,
+		ReadContext: dataSourceFWNetworkApplicationRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -37,19 +39,19 @@ func dataSourceFWNetworkApplication() *schema.Resource {
 	}
 }
 
-func dataSourceFWNetworkApplicationRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkapplications
+func dataSourceFWNetworkApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getStringFromResourceData(d, "id")
 	if !ok {
-		return fmt.Errorf("network application id is required '%s'", id)
+		return diag.FromErr(fmt.Errorf("network application id is required '%s'", id))
 	}
 
 	log.Printf("[INFO] Getting network application group id: %s\n", id)
-	resp, err := networkapplications.GetNetworkApplication(service, id, d.Get("locale").(string))
+	resp, err := networkapplications.GetNetworkApplication(ctx, service, id, d.Get("locale").(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resp.ID)

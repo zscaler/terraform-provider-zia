@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingPublicNodeVIPsRead,
+		ReadContext: dataSourceTrafficForwardingPublicNodeVIPsRead,
 		Schema: map[string]*schema.Schema{
 			"cloud_name": {
 				Type:     schema.TypeString,
@@ -63,17 +65,17 @@ func dataSourceTrafficForwardingPublicNodeVIPs() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.virtualipaddress
+func dataSourceTrafficForwardingPublicNodeVIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *virtualipaddress.ZscalerVIPs
 	datacenter, _ := d.Get("datacenter").(string)
 	if datacenter != "" {
 		log.Printf("[INFO] Getting data for datacenter name: %s\n", datacenter)
-		res, err := virtualipaddress.GetZscalerVIPs(service, datacenter)
+		res, err := virtualipaddress.GetZscalerVIPs(ctx, service, datacenter)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -92,7 +94,7 @@ func dataSourceTrafficForwardingPublicNodeVIPsRead(d *schema.ResourceData, m int
 		_ = d.Set("pac_ips", resp.PACIPs)
 		_ = d.Set("pac_domain_name", resp.PACDomainName)
 	} else {
-		return fmt.Errorf("couldn't find any datacenter with name '%s'", datacenter)
+		return diag.FromErr(fmt.Errorf("couldn't find any datacenter with name '%s'", datacenter))
 	}
 
 	return nil

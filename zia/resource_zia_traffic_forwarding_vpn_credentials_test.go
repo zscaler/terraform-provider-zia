@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/vpncredentials"
 )
 
 func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
@@ -38,7 +39,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 					testAccCheckTrafficForwardingVPNCredentialsExists(resourceTypeAndName, &credentials),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "comments", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "UFQDN"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@bd-hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "fqdn", rEmail+"@securitygeek.io"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "pre_shared_key", rSharedKey),
 				),
 			},
@@ -95,7 +96,7 @@ func TestAccResourceTrafficForwardingVPNCredentialsBasic(t *testing.T) {
 
 func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.vpncredentials
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingVPNCredentials {
@@ -108,7 +109,7 @@ func testAccCheckTrafficForwardingVPNCredentialsDestroy(s *terraform.State) erro
 			return err
 		}
 
-		rule, err := vpncredentials.Get(service, id)
+		rule, err := vpncredentials.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -139,9 +140,9 @@ func testAccCheckTrafficForwardingVPNCredentialsExists(resource string, rule *vp
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.vpncredentials
+		service := apiClient.Service
 
-		receivedRule, err := vpncredentials.Get(service, id)
+		receivedRule, err := vpncredentials.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -176,7 +177,7 @@ func getTrafficForwardingVPNCredentialsUFQDN_HCL(generatedName, rEmail, rSharedK
 resource "%s" "%s" {
 	comments = "tf-acc-test-%s"
     type = "UFQDN"
-    fqdn = "%s@bd-hashicorp.com"
+    fqdn = "%s@securitygeek.io"
     pre_shared_key = "%s"
 }
 `,

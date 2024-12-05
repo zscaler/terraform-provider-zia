@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudappcontrol"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
 
 func dataSourceCloudAppControlRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCloudAppControlRulesRead,
+		ReadContext: dataSourceCloudAppControlRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -353,22 +355,22 @@ func dataSourceCloudAppControlRules() *schema.Resource {
 	}
 }
 
-func dataSourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.cloudappcontrol
+func dataSourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	ruleType, ok := d.Get("type").(string)
 	if !ok || ruleType == "" {
-		return fmt.Errorf("type must be specified")
+		return diag.FromErr(fmt.Errorf("type must be specified"))
 	}
 
 	var resp *cloudappcontrol.WebApplicationRules
 	id, idOk := getIntFromResourceData(d, "id")
 	if idOk {
 		log.Printf("[INFO] Getting data for cloud app control rule id: %d and type: %s\n", id, ruleType)
-		res, err := cloudappcontrol.GetByRuleID(service, ruleType, id)
+		res, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -376,9 +378,9 @@ func dataSourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) e
 	name, nameOk := d.Get("name").(string)
 	if resp == nil && nameOk && name != "" {
 		log.Printf("[INFO] Getting data for cloud app control rule: %s and type: %s\n", name, ruleType)
-		res, err := cloudappcontrol.GetByRuleType(service, ruleType)
+		res, err := cloudappcontrol.GetByRuleType(ctx, service, ruleType)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		// Look for the rule with the specified name
@@ -416,45 +418,45 @@ func dataSourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) e
 		_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 		_ = d.Set("user_agent_types", resp.UserAgentTypes)
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if resp.CBIProfile.ID != "" {
 			if err := d.Set("cbi_profile", flattenCloudAppControlCBIProfile(&resp.CBIProfile)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any cloud application rule with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any cloud application rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

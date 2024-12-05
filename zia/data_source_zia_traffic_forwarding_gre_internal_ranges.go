@@ -1,13 +1,16 @@
 package zia
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/greinternalipranges"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/greinternalipranges"
 )
 
 func dataSourceTrafficForwardingGreInternalIPRangeList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingGreInternalIPRangesRead,
+		ReadContext: dataSourceTrafficForwardingGreInternalIPRangesRead,
 		Schema: map[string]*schema.Schema{
 			"required_count": {
 				Type:     schema.TypeInt,
@@ -34,17 +37,17 @@ func dataSourceTrafficForwardingGreInternalIPRangeList() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingGreInternalIPRangesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.greinternalipranges
+func dataSourceTrafficForwardingGreInternalIPRangesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	count, ok := getIntFromResourceData(d, "required_count")
 	if !ok {
 		count = 1
 	}
-	ipRanges, err := greinternalipranges.GetGREInternalIPRange(service, count)
+	ipRanges, err := greinternalipranges.GetGREInternalIPRange(ctx, service, count)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("internal-ip-range-list")
 	_ = d.Set("list", flattenInternalIpRangeList(*ipRanges))

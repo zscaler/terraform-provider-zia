@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/vpncredentials"
 )
 
 func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingVPNCredentialsRead,
+		ReadContext: dataSourceTrafficForwardingVPNCredentialsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -89,17 +91,17 @@ func dataSourceTrafficForwardingVPNCredentials() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.vpncredentials
+func dataSourceTrafficForwardingVPNCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *vpncredentials.VPNCredentials
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for vpn credential id: %d\n", id)
-		res, err := vpncredentials.Get(service, id)
+		res, err := vpncredentials.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -107,20 +109,22 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 	fqdn, _ := d.Get("fqdn").(string)
 	if resp == nil && fqdn != "" {
 		log.Printf("[INFO] Getting data for vpn credential fqdn: %s\n", fqdn)
-		res, err := vpncredentials.GetByFQDN(service, fqdn)
+		res, err := vpncredentials.GetByFQDN(ctx, service, fqdn)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	vpnType, _ := d.Get("type").(string)
 	if resp == nil && vpnType != "" {
 		log.Printf("[INFO] Getting data for vpn credential type: %s\n", vpnType)
-		res, err := vpncredentials.GetVPNByType(service, vpnType)
+		res, err := vpncredentials.GetVPNByType(ctx, service, vpnType, nil, nil, nil)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
-		resp = res
+		if len(res) > 0 {
+			resp = &res[0] // Assuming you want the first result
+		}
 	}
 
 	if resp != nil {
@@ -131,15 +135,15 @@ func dataSourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m int
 		// _ = d.Set("pre_shared_key", resp.PreSharedKey)
 		_ = d.Set("comments", resp.Comments)
 		if err := d.Set("location", flattenVPNCredentialsLocation(resp.Location)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("managed_by", flattenVPNCredentialsManagedBy(resp.ManagedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any vpn credentials with fqdn '%s' or id '%d'", fqdn, id))
 	}
 
 	return nil

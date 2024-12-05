@@ -111,7 +111,7 @@ const (
 	DLPWebRuleDesc           = "this is an acceptance test"
 	DLPRuleResourceAction    = "ALLOW"
 	DLPRuleResourceState     = "ENABLED"
-	DLPRuleContentInspection = true
+	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
 )
 
@@ -134,9 +134,9 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "tf-acc-test-@bd-hashicorp.com"
+	AdminUserLoginName = "tf-acc-test-@securitygeek.io"
 	AdminUserName      = "tf-acc-test-admin"
-	AdminUserEmail     = "tf-acc-test-@bd-hashicorp.com"
+	AdminUserEmail     = "tf-acc-test-@securitygeek.io"
 	AdminUserPassword  = "Password@123!"
 )
 

@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/zpa_gateways"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/zpa_gateways"
 )
 
 func dataSourceForwardingControlZPAGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataForwardingControlZPAGatewayRead,
+		ReadContext: dataForwardingControlZPAGatewayRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -108,25 +110,26 @@ func dataSourceForwardingControlZPAGateway() *schema.Resource {
 	}
 }
 
-func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func dataForwardingControlZPAGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *zpa_gateways.ZPAGateways
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for zpa gateway id: %d\n", id)
-		res, err := zClient.zpa_gateways.Get(id)
+		res, err := zpa_gateways.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for zpa gateway name: %s\n", name)
-		res, err := zClient.zpa_gateways.GetByName(name)
+		res, err := zpa_gateways.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -140,19 +143,19 @@ func dataForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 
 		if err := d.Set("zpa_server_group", flattenZPAServerGroup(resp.ZPAServerGroup)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("zpa_app_segments", flattenFWDZPAAppSegments(resp.ZPAAppSegments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any zpa gateway name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any zpa gateway name '%s' or id '%d'", name, id))
 	}
 
 	return nil

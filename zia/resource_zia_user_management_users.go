@@ -1,35 +1,38 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/users"
 )
 
 func resourceUserManagement() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserManagementCreate,
-		Read:   resourceUserManagementRead,
-		Update: resourceUserManagementUpdate,
-		Delete: resourceUserManagementDelete,
+		CreateContext: resourceUserManagementCreate,
+		ReadContext:   resourceUserManagementRead,
+		UpdateContext: resourceUserManagementUpdate,
+		DeleteContext: resourceUserManagementDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("user_id", idInt)
 				} else {
-					resp, err := zClient.users.GetUserByName(id)
+					resp, err := users.GetUserByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("user_id", resp.ID)
@@ -131,28 +134,29 @@ func resourceUserManagement() *schema.Resource {
 	}
 }
 
-func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceUserManagementCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandUsers(d)
 	log.Printf("[INFO] Creating zia user with request\n%+v\n", req)
 
-	resp, err := zClient.users.Create(&req)
+	resp, err := users.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// Sleep for 5 seconds before triggering the activation
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
 
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
 	authMethods := SetToStringList(d, "auth_methods")
 	if len(authMethods) > 0 {
-		_, err = zClient.users.EnrollUser(resp.ID, users.EnrollUserRequest{
+		_, err = users.EnrollUser(ctx, service, resp.ID, users.EnrollUserRequest{
 			AuthMethods: authMethods,
 			Password:    resp.Password,
 		})
@@ -167,26 +171,27 @@ func resourceUserManagementCreate(d *schema.ResourceData, m interface{}) error {
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
-	return resourceUserManagementRead(d, m)
+	return resourceUserManagementRead(ctx, d, meta)
 }
 
-func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "user_id")
 	if !ok {
-		return fmt.Errorf("no users id is set")
+		return diag.FromErr(fmt.Errorf("no users id is set"))
 	}
-	resp, err := zClient.users.Get(id)
+	resp, err := users.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing user %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting user:\n%+v\n", resp)
@@ -198,18 +203,19 @@ func resourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "user_id")
 	if !ok {
@@ -218,14 +224,14 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 
 	log.Printf("[INFO] Updating users ID: %v\n", id)
 	req := expandUsers(d)
-	if _, err := zClient.users.Get(id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := users.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := zClient.users.Update(id, &req); err != nil {
-		return err
+	if _, _, err := users.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 5 seconds before triggering the activation
@@ -233,12 +239,12 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
 
 	authMethods := SetToStringList(d, "auth_methods")
 	if (d.HasChange("password") || d.HasChange("auth_methods")) && len(authMethods) > 0 {
-		_, err := zClient.users.EnrollUser(id, users.EnrollUserRequest{
+		_, err := users.EnrollUser(ctx, service, id, users.EnrollUserRequest{
 			AuthMethods: authMethods,
 			Password:    req.Password,
 		})
@@ -252,14 +258,15 @@ func resourceUserManagementUpdate(d *schema.ResourceData, m interface{}) error {
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
 
-	return resourceUserManagementRead(d, m)
+	return resourceUserManagementRead(ctx, d, meta)
 }
 
-func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "user_id")
 	if !ok {
@@ -279,10 +286,10 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 		},
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := zClient.users.Delete(id); err != nil {
-		return err
+	if _, err := users.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -293,7 +300,7 @@ func resourceUserManagementDelete(d *schema.ResourceData, m interface{}) error {
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
 
 	return nil

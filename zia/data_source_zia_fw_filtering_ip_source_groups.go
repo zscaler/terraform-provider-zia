@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipsourcegroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipsourcegroups"
 )
 
 func dataSourceFWIPSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWIPSourceGroupsRead,
+		ReadContext: dataSourceFWIPSourceGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -35,26 +37,26 @@ func dataSourceFWIPSourceGroups() *schema.Resource {
 	}
 }
 
-func dataSourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.ipsourcegroups
+func dataSourceFWIPSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *ipsourcegroups.IPSourceGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting ip source group id: %d\n", id)
-		res, err := ipsourcegroups.Get(service, id)
+		res, err := ipsourcegroups.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting ip source group : %s\n", name)
-		res, err := ipsourcegroups.GetByName(service, name)
+		res, err := ipsourcegroups.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -66,7 +68,7 @@ func dataSourceFWIPSourceGroupsRead(d *schema.ResourceData, m interface{}) error
 		_ = d.Set("ip_addresses", resp.IPAddresses)
 
 	} else {
-		return fmt.Errorf("couldn't find any ip source group with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any ip source group with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

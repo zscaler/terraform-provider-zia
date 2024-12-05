@@ -1,15 +1,17 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlcategories"
 )
 
 // Allows only one API request at a time
@@ -17,27 +19,27 @@ import (
 
 func resourceURLCategories() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceURLCategoriesCreate,
-		Read:   resourceURLCategoriesRead,
-		Update: resourceURLCategoriesUpdate,
-		Delete: resourceURLCategoriesDelete,
+		CreateContext: resourceURLCategoriesCreate,
+		ReadContext:   resourceURLCategoriesRead,
+		UpdateContext: resourceURLCategoriesUpdate,
+		DeleteContext: resourceURLCategoriesDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.urlcategories
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("category_id", idInt)
 				} else {
-					resp, err := urlcategories.Get(service, id)
+					resp, err := urlcategories.Get(ctx, service, id)
 					if err == nil {
 						d.SetId(resp.ID)
 						_ = d.Set("category_id", resp.ID)
 					} else {
 						// Input is assumed to be a custom name, use the GetCustomURLCategories method
-						resp, err := urlcategories.GetCustomURLCategories(service, id, true, true)
+						resp, err := urlcategories.GetCustomURLCategories(ctx, service, id, true, true)
 						if err != nil {
 							return nil, fmt.Errorf("error fetching URL category by custom name: %s", err)
 						}
@@ -196,21 +198,21 @@ func resourceURLCategories() *schema.Resource {
 	}
 }
 
-func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
+func resourceURLCategoriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.urlcategories
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandURLCategory(d)
 	log.Printf("[INFO] Creating zia url category\n%+v\n", req)
 
 	// Use the existing CreateURLCategories function
-	resp, err := urlcategories.CreateURLCategories(service, &req)
+	resp, err := urlcategories.CreateURLCategories(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Created zia url category request. ID: %v\n", resp.ID)
@@ -223,33 +225,32 @@ func resourceURLCategoriesCreate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceURLCategoriesRead(d, m)
+	return resourceURLCategoriesRead(ctx, d, meta)
 }
 
-func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlcategories
+func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
-		return fmt.Errorf("no url category id is set")
+		return diag.FromErr(fmt.Errorf("no url category id is set"))
 	}
-	resp, err := urlcategories.Get(service, id)
-
+	resp, err := urlcategories.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
@@ -274,11 +275,11 @@ func resourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 
 	if err := d.Set("scopes", flattenScopesLite(resp)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -297,32 +298,32 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 	return scope
 }
 
-func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceURLCategoriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.urlcategories
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getStringFromResourceData(d, "category_id")
 	if !ok {
 		log.Printf("[ERROR] custom url category ID not set: %v\n", id)
-		return fmt.Errorf("custom url category ID not set: %v", id)
+		return diag.FromErr(fmt.Errorf("custom url category ID not set: %v", id))
 	}
 
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
 	req := expandURLCategory(d)
 
-	if _, err := urlcategories.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := urlcategories.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
 
-	if _, _, err := urlcategories.UpdateURLCategories(service, id, &req); err != nil {
-		return err
+	if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -331,18 +332,18 @@ func resourceURLCategoriesUpdate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceURLCategoriesRead(d, m)
+	return resourceURLCategoriesRead(ctx, d, meta)
 }
 
-func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlcategories
+func resourceURLCategoriesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "category_id")
 	if !ok {
@@ -350,8 +351,8 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting custom url category ID: %v\n", (d.Id()))
 
-	if _, err := urlcategories.DeleteURLCategories(service, d.Id()); err != nil {
-		return err
+	if _, err := urlcategories.DeleteURLCategories(ctx, service, d.Id()); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] custom url category deleted")
@@ -362,7 +363,7 @@ func resourceURLCategoriesDelete(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -412,6 +413,7 @@ func expandURLKeywordCounts(d *schema.ResourceData) *urlcategories.URLKeywordCou
 	}
 	return &keywordCounts
 }
+
 func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 	var scopes []urlcategories.Scopes
 	if scopeInterface, ok := d.GetOk("scopes"); ok {

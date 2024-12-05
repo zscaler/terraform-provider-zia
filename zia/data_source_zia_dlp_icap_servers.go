@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_icap_servers"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_icap_servers"
 )
 
 func dataSourceDLPICAPServers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPICAPServersRead,
+		ReadContext: dataSourceDLPICAPServersRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -36,26 +38,26 @@ func dataSourceDLPICAPServers() *schema.Resource {
 	}
 }
 
-func dataSourceDLPICAPServersRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_icap_servers
+func dataSourceDLPICAPServersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_icap_servers.DLPICAPServers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp icap server id: %d\n", id)
-		res, err := dlp_icap_servers.Get(service, id)
+		res, err := dlp_icap_servers.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp icap server name: %s\n", name)
-		res, err := dlp_icap_servers.GetByName(service, name)
+		res, err := dlp_icap_servers.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -67,7 +69,7 @@ func dataSourceDLPICAPServersRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("status", resp.Status)
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp icap server name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp icap server name '%s' or id '%d'", name, id))
 	}
 
 	return nil

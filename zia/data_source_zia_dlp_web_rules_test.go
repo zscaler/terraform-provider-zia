@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
 )
 
 func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAccDataSourceDlpWebRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "3"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "without_content_inspection", strconv.FormatBool(variable.DLPRuleContentInspection)),
-					//resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
+					// resource.TestCheckResourceAttr(resourceTypeAndName, "match_only", strconv.FormatBool(variable.DLPMatchOnly)),
 
 				),
 			},

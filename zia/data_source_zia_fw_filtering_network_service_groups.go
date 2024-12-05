@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkservicegroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservicegroups"
 )
 
 func dataSourceFWNetworkServiceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWNetworkServiceGroupsRead,
+		ReadContext: dataSourceFWNetworkServiceGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -54,26 +56,26 @@ func dataSourceFWNetworkServiceGroups() *schema.Resource {
 	}
 }
 
-func dataSourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkservicegroups
+func dataSourceFWNetworkServiceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *networkservicegroups.NetworkServiceGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting network service group id: %d\n", id)
-		res, err := networkservicegroups.GetNetworkServiceGroups(service, id)
+		res, err := networkservicegroups.GetNetworkServiceGroups(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting network service group : %s\n", name)
-		res, err := networkservicegroups.GetNetworkServiceGroupsByName(service, name)
+		res, err := networkservicegroups.GetNetworkServiceGroupsByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -84,11 +86,11 @@ func dataSourceFWNetworkServiceGroupsRead(d *schema.ResourceData, m interface{})
 		_ = d.Set("description", resp.Description)
 
 		if err := d.Set("services", flattenServices(resp.Services)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any network service group with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any network service group with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

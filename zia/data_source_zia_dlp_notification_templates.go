@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_notification_templates"
 )
 
 func dataSourceDLPNotificationTemplates() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPNotificationTemplatesRead,
+		ReadContext: dataSourceDLPNotificationTemplatesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -53,17 +55,17 @@ func dataSourceDLPNotificationTemplates() *schema.Resource {
 	}
 }
 
-func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_notification_templates
+func dataSourceDLPNotificationTemplatesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_notification_templates.DlpNotificationTemplates
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp notifiation template id: %d\n", id)
-		res, err := dlp_notification_templates.Get(service, id)
+		res, err := dlp_notification_templates.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -71,9 +73,9 @@ func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp notifiation template: %s\n", name)
-		res, err := dlp_notification_templates.GetByName(service, name)
+		res, err := dlp_notification_templates.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -88,7 +90,7 @@ func dataSourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{
 		_ = d.Set("tls_enabled", resp.TLSEnabled)
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp notification template with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp notification template with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

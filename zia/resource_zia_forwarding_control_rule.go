@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
 // var (
@@ -21,10 +22,10 @@ import (
 
 func resourceForwardingControlRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceForwardingControlRuleCreate,
-		Read:   resourceForwardingControlRuleRead,
-		Update: resourceForwardingControlRuleUpdate,
-		Delete: resourceForwardingControlRuleDelete,
+		CreateContext: resourceForwardingControlRuleCreate,
+		ReadContext:   resourceForwardingControlRuleRead,
+		UpdateContext: resourceForwardingControlRuleUpdate,
+		DeleteContext: resourceForwardingControlRuleDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			forwardMethod := d.Get("forward_method").(string)
 			ruleType := d.Get("type").(string)
@@ -83,16 +84,16 @@ func resourceForwardingControlRule() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.forwarding_rules
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := forwarding_rules.GetByName(service, id)
+					resp, err := forwarding_rules.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -235,16 +236,15 @@ func validatePredefinedRules(req forwarding_rules.ForwardingRules) error {
 	return nil
 }
 
-func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) error {
-
-	zClient := m.(*Client)
-	service := zClient.forwarding_rules
+func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandForwardingControlRule(d)
 	log.Printf("[INFO] Creating zia forwarding control rule\n%+v\n", req)
 
 	if err := validatePredefinedRules(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	forwardMethod := d.Get("forward_method").(string)
@@ -257,24 +257,24 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 	var resp *forwarding_rules.ForwardingRules
 	var err error
 	for i := 0; i < 3; i++ {
-		resp, err = forwarding_rules.Create(service, &req)
+		resp, err = forwarding_rules.Create(ctx, service, &req)
 		if err == nil {
 			break
 		}
 
 		if forwardMethod == "ZPA" {
-			if respErr, ok := err.(*client.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
 				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
 				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
 				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
 				continue
 			}
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Created zia ip source groups request. ID: %v\n", resp)
@@ -286,32 +286,32 @@ func resourceForwardingControlRuleCreate(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlRuleRead(d, m)
+	return resourceForwardingControlRuleRead(ctx, d, meta)
 }
 
-func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.forwarding_rules
+func resourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no zia forwarding control rule id is set")
+		return diag.FromErr(fmt.Errorf("no zia forwarding control rule id is set"))
 	}
-	resp, err := forwarding_rules.Get(service, id)
+	resp, err := forwarding_rules.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing forwarding control rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	processedDestCountries := make([]string, len(resp.DestCountries))
@@ -336,87 +336,87 @@ func resourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) er
 	_ = d.Set("res_categories", resp.ResCategories)
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("ec_groups", flattenIDs(resp.ECGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("src_ipv6_groups", flattenIDs(resp.SrcIpv6Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("dest_ipv6_groups", flattenIDs(resp.DestIpv6Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("app_service_groups", flattenIDs(resp.AppServiceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.forwarding_rules
+func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -427,11 +427,11 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 	req := expandForwardingControlRule(d)
 
 	if err := validatePredefinedRules(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if _, err := forwarding_rules.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := forwarding_rules.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
@@ -445,20 +445,20 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 
 	// Retry logic in case of specific error
 	for i := 0; i < 3; i++ {
-		_, err := forwarding_rules.Update(service, id, &req)
+		_, err := forwarding_rules.Update(ctx, service, id, &req)
 		if err == nil {
 			break
 		}
 
 		if forwardMethod == "ZPA" {
-			if respErr, ok := err.(*client.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
 				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
 				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
 				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
 				continue
 			}
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -467,38 +467,38 @@ func resourceForwardingControlRuleUpdate(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlRuleRead(d, m)
+	return resourceForwardingControlRuleRead(ctx, d, meta)
 }
 
-func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.forwarding_rules
+func resourceForwardingControlRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("forwarding control rule ID not set: %v", id)
+		return diag.FromErr(fmt.Errorf("forwarding control rule ID not set: %v", id))
 	}
 
 	// Retrieve the rule to check if it's a predefined one
-	rule, err := forwarding_rules.Get(service, id)
+	rule, err := forwarding_rules.Get(ctx, service, id)
 	if err != nil {
-		return fmt.Errorf("error retrieving forwarding control rule %d: %v", id, err)
+		return diag.FromErr(fmt.Errorf("error retrieving forwarding control rule %d: %v", id, err))
 	}
 
 	// Validate if the rule can be deleted
 	if err := validatePredefinedRules(*rule); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Deleting forwarding control rule ID: %v", id)
-	if _, err := forwarding_rules.Delete(service, id); err != nil {
-		return fmt.Errorf("error deleting forwarding control rule %d: %v", id, err)
+	if _, err := forwarding_rules.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(fmt.Errorf("error deleting forwarding control rule %d: %v", id, err))
 	}
 
 	d.SetId("")
@@ -509,7 +509,7 @@ func resourceForwardingControlRuleDelete(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

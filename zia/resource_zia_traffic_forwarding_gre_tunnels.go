@@ -1,35 +1,37 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTrafficForwardingGRETunnelCreate,
-		Read:   resourceTrafficForwardingGRETunnelRead,
-		Update: resourceTrafficForwardingGRETunnelUpdate,
-		Delete: resourceTrafficForwardingGRETunnelDelete,
+		CreateContext: resourceTrafficForwardingGRETunnelCreate,
+		ReadContext:   resourceTrafficForwardingGRETunnelRead,
+		UpdateContext: resourceTrafficForwardingGRETunnelUpdate,
+		DeleteContext: resourceTrafficForwardingGRETunnelDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.gretunnels
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("tunnel_id", idInt)
 				} else {
-					resp, err := gretunnels.GetByIPAddress(service, id)
+					resp, err := gretunnels.GetByIPAddress(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("tunnel_id", resp.ID)
@@ -146,40 +148,45 @@ func resourceTrafficForwardingGRETunnel() *schema.Resource {
 	}
 }
 
-func resourceTrafficForwardingGRETunnelCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnels
+func resourceTrafficForwardingGRETunnelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandGRETunnel(d)
 	log.Printf("[INFO] Creating zia gre tunnel\n%+v\n", req)
-	err := asssignVipsIfNotSet(d, zClient, &req)
-	if err != nil {
-		return err
+
+	// Handle asssignVipsIfNotSet error
+	if err := asssignVipsIfNotSet(ctx, d, zClient, &req); err != nil {
+		return diag.Errorf("error assigning VIPs: %v", err)
 	}
-	resp, _, err := gretunnels.CreateGreTunnels(service, &req)
-	if err != nil {
-		return err
+
+	// Create GRE Tunnel
+	resp, _, createErr := gretunnels.CreateGreTunnels(ctx, service, &req)
+	if createErr != nil {
+		return diag.Errorf("error creating GRE tunnel: %v", createErr)
 	}
-	log.Printf("[INFO] Created zia gre tunnel request. ID: %v\n", resp)
+
+	log.Printf("[INFO] Created zia gre tunnel request. ID: %v\n", resp.ID)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("tunnel_id", resp.ID)
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.Errorf("error triggering activation: %v", activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingGRETunnelRead(d, m)
+	return resourceTrafficForwardingGRETunnelRead(ctx, d, meta)
 }
 
-func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnels.GreTunnels) error {
-	service := zClient.gretunnels
+func asssignVipsIfNotSet(ctx context.Context, d *schema.ResourceData, zClient *Client, req *gretunnels.GreTunnels) diag.Diagnostics {
+	service := zClient.Service
 
 	if (req.PrimaryDestVip == nil || (req.PrimaryDestVip.VirtualIP == "" && req.PrimaryDestVip.ID == 0)) ||
 		(req.SecondaryDestVip == nil || (req.SecondaryDestVip.VirtualIP == "" && req.SecondaryDestVip.ID == 0)) {
@@ -187,19 +194,19 @@ func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnel
 		countryCode, ok := getStringFromResourceData(d, "country_code")
 		var pair []virtualipaddress.GREVirtualIPList
 		if ok {
-			vips, err := virtualipaddress.GetPairZSGREVirtualIPsWithinCountry(service, req.SourceIP, countryCode)
+			vips, err := virtualipaddress.GetPairZSGREVirtualIPsWithinCountry(ctx, service, req.SourceIP, countryCode)
 			if err != nil {
 				log.Printf("[ERROR] Got: %v\n", err)
-				vips, err = virtualipaddress.GetZSGREVirtualIPList(service, req.SourceIP, 2)
+				vips, err = virtualipaddress.GetZSGREVirtualIPList(ctx, service, req.SourceIP, 2)
 				if err != nil {
-					return err
+					return diag.FromErr(err)
 				}
 			}
 			pair = *vips
 		} else {
-			vips, err := virtualipaddress.GetZSGREVirtualIPList(service, req.SourceIP, 2)
+			vips, err := virtualipaddress.GetZSGREVirtualIPList(ctx, service, req.SourceIP, 2)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			pair = *vips
 		}
@@ -209,23 +216,23 @@ func asssignVipsIfNotSet(d *schema.ResourceData, zClient *Client, req *gretunnel
 	return nil
 }
 
-func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnels
+func resourceTrafficForwardingGRETunnelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
-		return fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set")
+		return diag.FromErr(fmt.Errorf("no Traffic Forwarding GRE Tunnel id is set"))
 	}
-	resp, err := gretunnels.GetGreTunnels(service, id)
+	resp, err := gretunnels.GetGreTunnels(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing gre tunnel %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting gre tunnel:\n%+v\n", resp)
@@ -240,11 +247,11 @@ func resourceTrafficForwardingGRETunnelRead(d *schema.ResourceData, m interface{
 	_ = d.Set("comment", resp.Comment)
 	_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
 	if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVipSimple(resp.PrimaryDestVip)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("secondary_dest_vip", flattenGreSecondaryDestVipSimple(resp.SecondaryDestVip)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -270,9 +277,9 @@ func flattenGreSecondaryDestVipSimple(secondaryDestVip *gretunnels.SecondaryDest
 	}
 }
 
-func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnels
+func resourceTrafficForwardingGRETunnelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
@@ -281,18 +288,18 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	log.Printf("[INFO] Updating gre tunnel ID: %v\n", id)
 	req := expandGRETunnel(d)
 
-	err := asssignVipsIfNotSet(d, zClient, &req)
+	err := asssignVipsIfNotSet(ctx, d, zClient, &req)
 	if err != nil {
-		return err
+		return diag.Errorf("error assigning VIPs: %v", err)
 	}
-	if _, err := gretunnels.GetGreTunnels(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := gretunnels.GetGreTunnels(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := gretunnels.UpdateGreTunnels(service, id, &req); err != nil {
-		return err
+	if _, _, err := gretunnels.UpdateGreTunnels(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -300,18 +307,18 @@ func resourceTrafficForwardingGRETunnelUpdate(d *schema.ResourceData, m interfac
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingGRETunnelRead(d, m)
+	return resourceTrafficForwardingGRETunnelRead(ctx, d, meta)
 }
 
-func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnels
+func resourceTrafficForwardingGRETunnelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "tunnel_id")
 	if !ok {
@@ -319,8 +326,8 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 	}
 	log.Printf("[INFO] Deleting gre tunnel ID: %v\n", id)
 
-	if _, err := gretunnels.DeleteGreTunnels(service, id); err != nil {
-		return err
+	if _, err := gretunnels.DeleteGreTunnels(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] gre tunnel deleted")
@@ -330,7 +337,7 @@ func resourceTrafficForwardingGRETunnelDelete(d *schema.ResourceData, m interfac
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

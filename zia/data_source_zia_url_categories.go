@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlcategories"
 )
 
 func dataSourceURLCategories() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceURLCategoriesRead,
+		ReadContext: dataSourceURLCategoriesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -179,9 +181,9 @@ func dataSourceURLCategories() *schema.Resource {
 	}
 }
 
-func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlcategories
+func dataSourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *urlcategories.URLCategory
 	var err error
@@ -191,26 +193,26 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 
 	// Ensure either ID or name is provided
 	if id == "" && name == "" {
-		return fmt.Errorf("either 'id' or 'configured_name' must be specified")
+		return diag.FromErr(fmt.Errorf("either 'id' or 'configured_name' must be specified"))
 	}
 
 	if id != "" {
 		log.Printf("[INFO] Getting URL categories by ID: %s\n", id)
-		resp, err = urlcategories.Get(service, id)
+		resp, err = urlcategories.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else if name != "" {
 		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = urlcategories.GetCustomURLCategories(service, name, true, true)
+		resp, err = urlcategories.GetCustomURLCategories(ctx, service, name, true, true)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	// After attempting to fetch, check if resp is still nil, indicating no data was found.
 	if resp == nil {
-		return fmt.Errorf("couldn't find any URL category with ID '%s' or name '%s'", id, name)
+		return diag.FromErr(fmt.Errorf("couldn't find any URL category with ID '%s' or name '%s'", id, name))
 	}
 
 	// Set the data source fields with the response
@@ -233,11 +235,11 @@ func dataSourceURLCategoriesRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 
 	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("url_keyword_counts", flattenUrlKeywordCounts(resp.URLKeywordCounts)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

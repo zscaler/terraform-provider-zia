@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 )
 
 func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
@@ -61,7 +62,7 @@ func TestAccResourceFWIPDestinationGroupsBasic(t *testing.T) {
 
 func testAccCheckFWIPDestinationGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.ipdestinationgroups
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringDestinationGroup {
@@ -74,7 +75,7 @@ func testAccCheckFWIPDestinationGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := ipdestinationgroups.Get(service, id)
+		rule, err := ipdestinationgroups.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -105,9 +106,9 @@ func testAccCheckFWIPDestinationGroupsExists(resource string, rule *ipdestinatio
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.ipdestinationgroups
+		service := apiClient.Service
 
-		receivedRule, err := ipdestinationgroups.Get(service, id)
+		receivedRule, err := ipdestinationgroups.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

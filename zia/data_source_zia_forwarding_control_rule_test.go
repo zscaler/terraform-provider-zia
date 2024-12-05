@@ -1,13 +1,18 @@
 package zia
 
+/*
 import (
 	"testing"
 
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
 )
+
+// TODO: NEEDS FIXING BY ENGINEERING: "{"code":"RBA_LIMITED","message":"Functional scope restriction requires PROXY_GATEWAY"}"
+// ONEAPI-915 - ZIA API Tests – Results (RBA_LIMITED) and Other Errors
+
 
 func TestAccDataSourceForwardingControlRule_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ForwardingControlRule)
@@ -49,3 +54,4 @@ func TestAccDataSourceForwardingControlRule_Basic(t *testing.T) {
 		},
 	})
 }
+*/

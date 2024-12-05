@@ -6,9 +6,9 @@ description: |-
   Get information about forwarding control zpa gateway used in IP Source Anchoring.
 
 ---
-# Data Source: forwarding_control_zpa_gateway
+# Data Source: zia_forwarding_control_zpa_gateway
 
-Use the **forwarding_control_zpa_gateway** data source to get information about a forwarding control zpa gateway used in IP Source Anchoring integration between Zscaler Internet Access and Zscaler Private Access. This data source can then be associated with a ZIA Forwarding Control Rule.
+Use the **zia_forwarding_control_zpa_gateway** data source to get information about a forwarding control zpa gateway used in IP Source Anchoring integration between Zscaler Internet Access and Zscaler Private Access. This data source can then be associated with a ZIA Forwarding Control Rule.
 
 ## Example Usage
 

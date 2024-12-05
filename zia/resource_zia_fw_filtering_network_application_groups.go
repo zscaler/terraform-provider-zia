@@ -1,36 +1,38 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/networkapplicationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkapplicationgroups"
 )
 
 func resourceFWNetworkApplicationGroups() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFWNetworkApplicationGroupsCreate,
-		Read:   resourceFWNetworkApplicationGroupsRead,
-		Update: resourceFWNetworkApplicationGroupsUpdate,
-		Delete: resourceFWNetworkApplicationGroupsDelete,
+		CreateContext: resourceFWNetworkApplicationGroupsCreate,
+		ReadContext:   resourceFWNetworkApplicationGroupsRead,
+		UpdateContext: resourceFWNetworkApplicationGroupsUpdate,
+		DeleteContext: resourceFWNetworkApplicationGroupsDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.networkapplicationgroups
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("app_id", idInt)
 				} else {
-					resp, err := networkapplicationgroups.GetNetworkApplicationGroupsByName(service, id)
+					resp, err := networkapplicationgroups.GetNetworkApplicationGroupsByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("app_id", resp.ID)
@@ -70,16 +72,16 @@ func resourceFWNetworkApplicationGroups() *schema.Resource {
 	}
 }
 
-func resourceFWNetworkApplicationGroupsCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkapplicationgroups
+func resourceFWNetworkApplicationGroupsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandNetworkApplicationGroups(d)
 	log.Printf("[INFO] Creating network application groups\n%+v\n", req)
 
-	resp, err := networkapplicationgroups.Create(service, &req)
+	resp, err := networkapplicationgroups.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia network application groups request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -91,32 +93,32 @@ func resourceFWNetworkApplicationGroupsCreate(d *schema.ResourceData, m interfac
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFWNetworkApplicationGroupsRead(d, m)
+	return resourceFWNetworkApplicationGroupsRead(ctx, d, meta)
 }
 
-func resourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkapplicationgroups
+func resourceFWNetworkApplicationGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "app_id")
 	if !ok {
-		return fmt.Errorf("no network application groups id is set")
+		return diag.FromErr(fmt.Errorf("no network application groups id is set"))
 	}
-	resp, err := networkapplicationgroups.GetNetworkApplicationGroups(service, id)
+	resp, err := networkapplicationgroups.GetNetworkApplicationGroups(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia network application groups %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting network application groups :\n%+v\n", resp)
@@ -130,9 +132,9 @@ func resourceFWNetworkApplicationGroupsRead(d *schema.ResourceData, m interface{
 	return nil
 }
 
-func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkapplicationgroups
+func resourceFWNetworkApplicationGroupsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "app_id")
 	if !ok {
@@ -140,14 +142,14 @@ func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interfac
 	}
 	log.Printf("[INFO] Updating network application groups ID: %v\n", id)
 	req := expandNetworkApplicationGroups(d)
-	if _, err := networkapplicationgroups.GetNetworkApplicationGroups(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := networkapplicationgroups.GetNetworkApplicationGroups(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := networkapplicationgroups.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := networkapplicationgroups.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -155,18 +157,18 @@ func resourceFWNetworkApplicationGroupsUpdate(d *schema.ResourceData, m interfac
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFWNetworkApplicationGroupsRead(d, m)
+	return resourceFWNetworkApplicationGroupsRead(ctx, d, meta)
 }
 
-func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.networkapplicationgroups
+func resourceFWNetworkApplicationGroupsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "app_id")
 	if !ok {
@@ -185,10 +187,10 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 		},
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := networkapplicationgroups.Delete(service, id); err != nil {
-		return err
+	if _, err := networkapplicationgroups.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] network application groups deleted")
@@ -199,7 +201,7 @@ func resourceFWNetworkApplicationGroupsDelete(d *schema.ResourceData, m interfac
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

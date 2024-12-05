@@ -1,36 +1,38 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 )
 
 func resourceRuleLabels() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleLabelsCreate,
-		Read:   resourceRuleLabelsRead,
-		Update: resourceRuleLabelsUpdate,
-		Delete: resourceRuleLabelsDelete,
+		CreateContext: resourceRuleLabelsCreate,
+		ReadContext:   resourceRuleLabelsRead,
+		UpdateContext: resourceRuleLabelsUpdate,
+		DeleteContext: resourceRuleLabelsDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.rule_labels
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_label_id", idInt)
 				} else {
-					resp, err := rule_labels.GetRuleLabelByName(service, id)
+					resp, err := rule_labels.GetRuleLabelByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_label_id", resp.ID)
@@ -65,18 +67,22 @@ func resourceRuleLabels() *schema.Resource {
 	}
 }
 
-func resourceRuleLabelsCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.rule_labels
+func resourceRuleLabelsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient, ok := meta.(*Client)
+	if !ok {
+		return diag.Errorf("unexpected meta type: expected *Client, got %T", meta)
+	}
+
+	service := zClient.Service
 
 	req := expandRuleLabels(d)
-	log.Printf("[INFO] Creating zia rule labels\n%+v\n", req)
+	log.Printf("[INFO] Creating ZIA rule labels\n%+v\n", req)
 
-	resp, _, err := rule_labels.Create(service, &req)
+	resp, _, err := rule_labels.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	log.Printf("[INFO] Created zia rule labels request. ID: %v\n", resp)
+	log.Printf("[INFO] Created ZIA rule labels request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("rule_label_id", resp.ID)
 
@@ -86,32 +92,32 @@ func resourceRuleLabelsCreate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceRuleLabelsRead(d, m)
+	return resourceRuleLabelsRead(ctx, d, meta)
 }
 
-func resourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.rule_labels
+func resourceRuleLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
-		return fmt.Errorf("no rule labels id is set")
+		return diag.FromErr(fmt.Errorf("no rule labels id is set"))
 	}
-	resp, err := rule_labels.Get(service, id)
+	resp, err := rule_labels.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia rule labels %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting zia rule labels:\n%+v\n", resp)
@@ -124,9 +130,9 @@ func resourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.rule_labels
+func resourceRuleLabelsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
@@ -134,14 +140,14 @@ func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating zia rule label ID: %v\n", id)
 	req := expandRuleLabels(d)
-	if _, err := rule_labels.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := rule_labels.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := rule_labels.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := rule_labels.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -150,18 +156,18 @@ func resourceRuleLabelsUpdate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceRuleLabelsRead(d, m)
+	return resourceRuleLabelsRead(ctx, d, meta)
 }
 
-func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.rule_labels
+func resourceRuleLabelsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_label_id")
 	if !ok {
@@ -180,10 +186,10 @@ func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
 		},
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := rule_labels.Delete(service, id); err != nil {
-		return err
+	if _, err := rule_labels.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia rule label deleted")
@@ -194,7 +200,7 @@ func resourceRuleLabelsDelete(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

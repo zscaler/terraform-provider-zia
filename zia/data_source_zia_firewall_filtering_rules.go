@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
 
 func dataSourceFirewallFilteringRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFirewallFilteringRuleRead,
+		ReadContext: dataSourceFirewallFilteringRuleRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -617,26 +619,26 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 	}
 }
 
-func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.filteringrules
+func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *filteringrules.FirewallFilteringRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for rule id: %d\n", id)
-		res, err := filteringrules.Get(service, id)
+		res, err := filteringrules.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for rule : %s\n", name)
-		res, err := filteringrules.GetByName(service, name)
+		res, err := filteringrules.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -662,80 +664,80 @@ func dataSourceFirewallFilteringRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationsGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("src_ip_groups", flattenIDNameExtensions(resp.SrcIpGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dest_ip_groups", flattenIDNameExtensions(resp.DestIpGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_services", flattenIDNameExtensions(resp.NwServices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_service_groups", flattenIDNameExtensions(resp.NwServiceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_application_groups", flattenIDNameExtensions(resp.NwApplicationGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("app_services", flattenIDNameExtensions(resp.AppServices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("app_services", flattenIDNameExtensions(resp.AppServiceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-			return fmt.Errorf("error setting workload_groups: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
 		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

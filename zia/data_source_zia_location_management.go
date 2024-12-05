@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 )
 
 func dataSourceLocationManagement() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationManagementRead,
+		ReadContext: dataSourceLocationManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -232,17 +234,17 @@ func dataSourceLocationManagement() *schema.Resource {
 
 // Add logic to search SubLocation by Name and ID
 // See SDK #PR93 https://github.com/zscaler/zscaler-sdk-go/pull/93
-func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationmanagement
+func dataSourceLocationManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *locationmanagement.Locations
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := locationmanagement.GetLocationOrSublocationByID(service, id)
+		res, err := locationmanagement.GetLocationOrSublocationByID(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -251,16 +253,16 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 	if resp == nil && name != "" {
 		if parentName != "" {
 			log.Printf("[INFO] Getting data for location name: %s - parent name:%s\n", name, parentName)
-			res, err := locationmanagement.GetSubLocationByNames(service, parentName, name)
+			res, err := locationmanagement.GetSubLocationByNames(ctx, service, parentName, name)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			resp = res
 		} else {
 			log.Printf("[INFO] Getting data for location name: %s\n", name)
-			res, err := locationmanagement.GetLocationOrSublocationByName(service, name)
+			res, err := locationmanagement.GetLocationOrSublocationByName(ctx, service, name)
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			resp = res
 		}
@@ -301,11 +303,11 @@ func dataSourceLocationManagementRead(d *schema.ResourceData, m interface{}) err
 		_ = d.Set("description", resp.Description)
 
 		if err := d.Set("vpn_credentials", flattenLocationVPNCredentials(resp.VPNCredentials)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any location with name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any location with name '%s'", name))
 	}
 
 	return nil

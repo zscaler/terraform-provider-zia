@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/adminuserrolemgmt/admins"
 )
 
 func dataSourceAdminUsers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAdminUsersRead,
+		ReadContext: dataSourceAdminUsersRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -204,26 +206,26 @@ func dataSourceAdminUsers() *schema.Resource {
 	}
 }
 
-func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.admins
+func dataSourceAdminUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *admins.AdminUsers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := admins.GetAdminUsers(service, id)
+		res, err := admins.GetAdminUsers(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	loginName, _ := d.Get("login_name").(string)
 	if resp == nil && loginName != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", loginName)
-		res, err := admins.GetAdminUsersByLoginName(service, loginName)
+		res, err := admins.GetAdminUsersByLoginName(ctx, service, loginName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -231,9 +233,9 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	userName, _ := d.Get("username").(string)
 	if resp == nil && userName != "" {
 		log.Printf("[INFO] Getting data for admin username: %s\n", userName)
-		res, err := admins.GetAdminByUsername(service, userName)
+		res, err := admins.GetAdminByUsername(ctx, service, userName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -256,18 +258,18 @@ func dataSourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("is_exec_mobile_app_enabled", resp.IsExecMobileAppEnabled)
 
 		if err := d.Set("role", flattenAdminUserRole(resp.Role)); err != nil {
-			return fmt.Errorf("failed to read admin user role %s", err)
+			return diag.FromErr(fmt.Errorf("failed to read admin user role %s", err))
 		}
 
 		if err := d.Set("admin_scope", flattenAdminScope(resp)); err != nil {
-			return fmt.Errorf("failed to read admin scope %s", err)
+			return diag.FromErr(fmt.Errorf("failed to read admin scope %s", err))
 		}
 
 		if err := d.Set("exec_mobile_app_tokens", flattenExecMobileAppTokens(resp)); err != nil {
-			return fmt.Errorf("failed to read mobile app tokens %s", err)
+			return diag.FromErr(fmt.Errorf("failed to read mobile app tokens %s", err))
 		}
 	} else {
-		return fmt.Errorf("couldn't find any admin user login name '%s' or id '%d'", loginName, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any admin user login name '%s' or id '%d'", loginName, id))
 	}
 
 	return nil

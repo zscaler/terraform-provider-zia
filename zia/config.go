@@ -1,139 +1,486 @@
 package zia
 
 import (
+	"fmt"
 	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"runtime"
+	"strconv"
+	"strings"
+	"time"
 
-	gozscaler "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/zpa_gateways"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/departments"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/groups"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
+	"github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia"
 )
 
-func init() {
-	// remove timestamp from Zscaler provider logger, use the timestamp from the default terraform logger
-	log.SetFlags(log.Flags() &^ (log.Ldate | log.Ltime))
-}
+type (
+	// Config contains our provider schema values and Zscaler clients.
+	Config struct {
+		clientID           string
+		clientSecret       string
+		vanityDomain       string
+		cloud              string
+		sandboxToken       string
+		sandboxCloud       string
+		privateKey         string
+		httpProxy          string
+		retryCount         int
+		parallelism        int
+		backoff            bool
+		minWait            int
+		maxWait            int
+		logLevel           int
+		requestTimeout     int
+		useLegacyClient    bool
+		zscalerSDKClientV3 *zscaler.Client
+		logger             hclog.Logger
+		TerraformVersion   string // New field for Terraform version
+		ProviderVersion    string // New field for Provider version
+
+		// Options for Legacy V2 SDK
+		Username   string
+		Password   string
+		APIKey     string
+		ZIABaseURL string
+		UserAgent  string
+	}
+)
 
 type Client struct {
-	admins                        *services.Service
-	roles                         *services.Service
-	filteringrules                *services.Service
-	ipdestinationgroups           *services.Service
-	ipsourcegroups                *services.Service
-	networkapplicationgroups      *services.Service
-	networkapplications           *services.Service
-	networkservices               *services.Service
-	networkservicegroups          *services.Service
-	applicationservices           *services.Service
-	appservicegroups              *services.Service
-	timewindow                    *services.Service
-	urlcategories                 *services.Service
-	urlfilteringpolicies          *services.Service
-	users                         *users.Service
-	groups                        *groups.Service
-	departments                   *departments.Service
-	gretunnels                    *services.Service
-	gretunnelinfo                 *services.Service
-	greinternalipranges           *services.Service
-	staticips                     *services.Service
-	virtualipaddress              *services.Service
-	vpncredentials                *services.Service
-	locationmanagement            *services.Service
-	locationgroups                *services.Service
-	locationlite                  *services.Service
-	activation                    *services.Service
-	cloudappcontrol               *services.Service
-	devicegroups                  *services.Service
-	dlpdictionaries               *services.Service
-	dlp_engines                   *services.Service
-	dlp_idm_profiles              *services.Service
-	dlp_idm_profile_lite          *services.Service
-	dlp_exact_data_match          *services.Service
-	dlp_icap_servers              *services.Service
-	dlp_incident_receiver_servers *services.Service
-	dlp_notification_templates    *services.Service
-	dlp_web_rules                 *services.Service
-	pacfiles                      *services.Service
-	rule_labels                   *services.Service
-	security_policy_settings      *services.Service
-	user_authentication_settings  *services.Service
-	forwarding_rules              *services.Service
-	zpa_gateways                  *zpa_gateways.Service
-	sandbox_settings              *services.Service
-	sandbox_report                *services.Service
-	sandbox_submission            *services.Service
-	cloudbrowserisolation         *services.Service
-	workloadgroups                *services.Service
+	Service *zscaler.Service
 }
 
-type Config struct {
-	Username   string
-	Password   string
-	APIKey     string
-	ZIABaseURL string
-	UserAgent  string
+func NewConfig(d *schema.ResourceData) *Config {
+	// defaults
+	config := Config{
+		backoff:        true,
+		minWait:        30,
+		maxWait:        300,
+		retryCount:     5,
+		parallelism:    1,
+		logLevel:       int(hclog.Error),
+		requestTimeout: 0,
+	}
+	logLevel := hclog.Level(config.logLevel)
+	if os.Getenv("TF_LOG") != "" {
+		logLevel = hclog.LevelFromString(os.Getenv("TF_LOG"))
+	}
+	config.logger = hclog.New(&hclog.LoggerOptions{
+		Level:      logLevel,
+		TimeFormat: "2006/01/02 03:04:05",
+	})
+
+	if val, ok := d.GetOk("use_legacy_client"); ok {
+		config.useLegacyClient = val.(bool)
+	} else if os.Getenv("ZSCALER_USE_LEGACY_CLIENT") != "" {
+		config.useLegacyClient = strings.ToLower(os.Getenv("ZSCALER_USE_LEGACY_CLIENT")) == "true"
+	}
+
+	if val, ok := d.GetOk("client_id"); ok {
+		config.clientID = val.(string)
+	}
+	if config.clientID == "" && os.Getenv("ZSCALER_CLIENT_ID") != "" {
+		config.clientID = os.Getenv("ZSCALER_CLIENT_ID")
+	}
+
+	if val, ok := d.GetOk("client_secret"); ok {
+		config.clientSecret = val.(string)
+	}
+	if config.clientSecret == "" && os.Getenv("ZSCALER_CLIENT_SECRET") != "" {
+		config.clientSecret = os.Getenv("ZSCALER_CLIENT_SECRET")
+	}
+
+	if val, ok := d.GetOk("private_key"); ok {
+		config.privateKey = val.(string)
+	}
+	if config.privateKey == "" && os.Getenv("ZSCALER_PRIVATE_KEY") != "" {
+		config.privateKey = os.Getenv("ZSCALER_PRIVATE_KEY")
+	}
+
+	if val, ok := d.GetOk("vanity_domain"); ok {
+		config.vanityDomain = val.(string)
+	}
+	if config.vanityDomain == "" && os.Getenv("ZSCALER_VANITY_DOMAIN") != "" {
+		config.vanityDomain = os.Getenv("ZSCALER_VANITY_DOMAIN")
+	}
+
+	if val, ok := d.GetOk("zscaler_cloud"); ok {
+		config.cloud = val.(string)
+	}
+	if config.cloud == "" && os.Getenv("ZSCALER_CLOUD") != "" {
+		config.cloud = os.Getenv("ZSCALER_CLOUD")
+	}
+
+	if val, ok := d.GetOk("sandbox_token"); ok {
+		config.sandboxToken = val.(string)
+	}
+	if config.sandboxToken == "" && os.Getenv("ZSCALER_SANDBOX_TOKEN") != "" {
+		config.sandboxToken = os.Getenv("ZSCALER_SANDBOX_TOKEN")
+	}
+
+	if val, ok := d.GetOk("sandbox_cloud"); ok {
+		config.sandboxCloud = val.(string)
+	}
+	if config.sandboxCloud == "" && os.Getenv("ZSCALER_SANDBOX_CLOUD") != "" {
+		config.sandboxCloud = os.Getenv("ZSCALER_SANDBOX_CLOUD")
+	}
+
+	if val, ok := d.GetOk("username"); ok {
+		config.Username = val.(string)
+	}
+	if config.Username == "" {
+		config.Username = os.Getenv("ZIA_USERNAME")
+	}
+
+	if val, ok := d.GetOk("password"); ok {
+		config.Password = val.(string)
+	}
+	if config.Password == "" {
+		config.Password = os.Getenv("ZIA_PASSWORD")
+	}
+
+	if val, ok := d.GetOk("api_key"); ok {
+		config.APIKey = val.(string)
+	}
+	if config.APIKey == "" {
+		config.APIKey = os.Getenv("ZIA_API_KEY")
+	}
+
+	if val, ok := d.GetOk("zia_cloud"); ok {
+		config.ZIABaseURL = val.(string)
+	}
+	if config.ZIABaseURL == "" {
+		config.ZIABaseURL = os.Getenv("ZIA_CLOUD")
+	}
+
+	if val, ok := d.GetOk("sandbox_token"); ok {
+		config.sandboxToken = val.(string)
+	}
+	if config.sandboxToken == "" && os.Getenv("ZSCALER_SANDBOX_TOKEN") != "" {
+		config.sandboxToken = os.Getenv("ZSCALER_SANDBOX_TOKEN")
+	}
+
+	if val, ok := d.GetOk("sandbox_cloud"); ok {
+		config.sandboxCloud = val.(string)
+	}
+	if config.sandboxCloud == "" && os.Getenv("ZSCALER_SANDBOX_CLOUD") != "" {
+		config.sandboxCloud = os.Getenv("ZSCALER_SANDBOX_CLOUD")
+	}
+
+	if val, ok := d.GetOk("cloud"); ok {
+		config.cloud = val.(string)
+	}
+	if config.cloud == "" && os.Getenv("ZSCALER_CLOUD") != "" {
+		config.cloud = os.Getenv("ZSCALER_CLOUD")
+	}
+
+	if val, ok := d.GetOk("max_retries"); ok {
+		config.retryCount = val.(int)
+	}
+
+	if val, ok := d.GetOk("parallelism"); ok {
+		config.parallelism = val.(int)
+	}
+
+	if val, ok := d.GetOk("backoff"); ok {
+		config.backoff = val.(bool)
+	}
+
+	if val, ok := d.GetOk("min_wait_seconds"); ok {
+		config.minWait = val.(int)
+	}
+
+	if val, ok := d.GetOk("max_wait_seconds"); ok {
+		config.maxWait = val.(int)
+	}
+
+	if val, ok := d.GetOk("log_level"); ok {
+		config.logLevel = val.(int)
+	}
+
+	if val, ok := d.GetOk("request_timeout"); ok {
+		config.requestTimeout = val.(int)
+	}
+
+	if httpProxy, ok := d.Get("http_proxy").(string); ok {
+		config.httpProxy = httpProxy
+	}
+	if config.httpProxy == "" && os.Getenv("ZSCALER_HTTP_PROXY") != "" {
+		config.httpProxy = os.Getenv("ZSCALER_HTTP_PROXY")
+	}
+
+	return &config
 }
 
-func (c *Config) Client() (*Client, error) {
-	cli, err := gozscaler.NewClient(c.Username, c.Password, c.APIKey, c.ZIABaseURL, c.UserAgent)
+// loadClients initializes SDK clients based on configuration
+func (c *Config) loadClients() diag.Diagnostics {
+	if c.useLegacyClient {
+		log.Println("[INFO] Initializing ZIA V2 (Legacy) client")
+		v2Client, err := zscalerSDKV2Client(c)
+		if err != nil {
+			return diag.Errorf("failed to initialize SDK V2 client: %v", err)
+		}
+		c.zscalerSDKClientV3 = v2Client.Client
+		return nil
+	}
+
+	log.Println("[INFO] Initializing ZPA V3 client")
+	v3Client, err := zscalerSDKV3Client(c)
 	if err != nil {
+		return diag.Errorf("failed to initialize SDK V3 client: %v", err)
+	}
+	c.zscalerSDKClientV3 = v3Client
+
+	return nil
+}
+
+// SelectClient returns the appropriate client based on authentication type or other factors.
+func (c *Config) SelectClient() (*zscaler.Client, *zia.Client, error) {
+	if !c.useLegacyClient && c.zscalerSDKClientV3 != nil {
+		return c.zscalerSDKClientV3, nil, nil
+	}
+
+	return nil, nil, fmt.Errorf("no valid client configuration provided")
+}
+
+// generateUserAgent constructs the user agent string with all required details
+func generateUserAgent(terraformVersion string) string {
+	// Fetch the provider version dynamically from common.Version()
+	providerVersion := common.Version()
+
+	return fmt.Sprintf("(%s %s) Terraform/%s Provider/%s",
+		runtime.GOOS,
+		runtime.GOARCH,
+		terraformVersion,
+		providerVersion,
+	)
+}
+
+/*
+// Instantiate the v2 client from zscaler-sdk-go
+func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
+	customUserAgent := generateUserAgent(c.TerraformVersion)
+
+	// Validate required credentials
+	if c.Username == "" || c.Password == "" || c.APIKey == "" || c.ZIABaseURL == "" {
+		return nil, fmt.Errorf(
+			"missing required credentials for V2 client: Username, Password, APIKey, and ZIABaseURL must all be set",
+		)
+	}
+
+	// Create ZIA v2 configuration
+	ziaClient, err := zia.NewClient(c.Username, c.Password, c.APIKey, c.ZIABaseURL, customUserAgent)
+	if err != nil {
+		log.Printf("[ERROR] Failed to create ZIA V2 configuration: %v", err)
 		return nil, err
 	}
 
-	ziaClient := &Client{
-		activation:                    services.New(cli),
-		admins:                        services.New(cli),
-		cloudappcontrol:               services.New(cli),
-		roles:                         services.New(cli),
-		filteringrules:                services.New(cli),
-		ipdestinationgroups:           services.New(cli),
-		ipsourcegroups:                services.New(cli),
-		networkapplicationgroups:      services.New(cli),
-		networkapplications:           services.New(cli),
-		networkservices:               services.New(cli),
-		networkservicegroups:          services.New(cli),
-		applicationservices:           services.New(cli),
-		appservicegroups:              services.New(cli),
-		timewindow:                    services.New(cli),
-		urlcategories:                 services.New(cli),
-		urlfilteringpolicies:          services.New(cli),
-		users:                         users.New(cli),
-		groups:                        groups.New(cli),
-		departments:                   departments.New(cli),
-		pacfiles:                      services.New(cli),
-		virtualipaddress:              services.New(cli),
-		vpncredentials:                services.New(cli),
-		gretunnels:                    services.New(cli),
-		gretunnelinfo:                 services.New(cli),
-		greinternalipranges:           services.New(cli),
-		staticips:                     services.New(cli),
-		locationmanagement:            services.New(cli),
-		locationgroups:                services.New(cli),
-		locationlite:                  services.New(cli),
-		devicegroups:                  services.New(cli),
-		dlpdictionaries:               services.New(cli),
-		dlp_engines:                   services.New(cli),
-		dlp_idm_profile_lite:          services.New(cli),
-		dlp_idm_profiles:              services.New(cli),
-		dlp_exact_data_match:          services.New(cli),
-		dlp_icap_servers:              services.New(cli),
-		dlp_incident_receiver_servers: services.New(cli),
-		dlp_notification_templates:    services.New(cli),
-		dlp_web_rules:                 services.New(cli),
-		rule_labels:                   services.New(cli),
-		security_policy_settings:      services.New(cli),
-		user_authentication_settings:  services.New(cli),
-		forwarding_rules:              services.New(cli),
-		zpa_gateways:                  zpa_gateways.New(cli),
-		sandbox_settings:              services.New(cli),
-		sandbox_report:                services.New(cli),
-		sandbox_submission:            services.New(cli),
-		cloudbrowserisolation:         services.New(cli),
-		workloadgroups:                services.New(cli),
+	config, err := zscaler.NewConfiguration(
+		zscaler.WithLegacyClient(true),
+		zscaler.WithZiaLegacyClient(ziaClient),
+		zscaler.WithDebug(true))
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Zscaler configuration for V2 client: %v", err)
 	}
 
-	log.Println("[INFO] initialized ZIA client")
-	return ziaClient, nil
+	wrappedV2Client, err := zscaler.NewOneAPIClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize legacy v2 client: %w", err)
+	}
+	log.Println("[INFO] Successfully initialized ZIA V2 client")
+	return wrappedV2Client, nil
+}
+*/
+
+func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
+	customUserAgent := generateUserAgent(c.TerraformVersion)
+
+	// Start with base configuration setters
+	setters := []zia.ConfigSetter{
+		zia.WithCache(false),
+		zia.WithHttpClientPtr(http.DefaultClient),
+		zia.WithRateLimitMaxRetries(int32(c.retryCount)),
+		zia.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),
+		zia.WithUserAgent(customUserAgent), // Set the custom user agent
+	}
+
+	// Apply credentials and mandatory parameters
+	setters = append(
+		setters,
+		zia.WithZiaUsername(c.Username),
+		zia.WithZiaPassword(c.Password),
+		zia.WithZiaAPIKey(c.APIKey),
+		zia.WithZiaCloud(c.ZIABaseURL),
+	)
+
+	// Configure HTTP proxy if provided
+	if c.httpProxy != "" {
+		_url, err := url.Parse(c.httpProxy)
+		if err != nil {
+			return nil, fmt.Errorf("invalid proxy URL: %v", err)
+		}
+		setters = append(setters, zia.WithProxyHost(_url.Hostname()))
+
+		// Default to port 80 if not provided
+		sPort := _url.Port()
+		if sPort == "" {
+			sPort = "80"
+		}
+		iPort, err := strconv.Atoi(sPort)
+		if err != nil {
+			return nil, fmt.Errorf("invalid proxy port: %v", err)
+		}
+		setters = append(setters, zia.WithProxyPort(int32(iPort)))
+	}
+
+	// Initialize ZIA configuration
+	ziaCfg, err := zia.NewConfiguration(setters...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ZIA configuration: %v", err)
+	}
+
+	// Initialize ZIA client
+	ziaClient, err := zia.NewClient(ziaCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ZIA client: %v", err)
+	}
+
+	// Configure the Zscaler client with the ZIA client
+	config, err := zscaler.NewConfiguration(
+		zscaler.WithLegacyClient(true),
+		zscaler.WithZiaLegacyClient(ziaClient),
+		zscaler.WithSandboxToken(c.sandboxToken),
+		zscaler.WithSandboxCloud(c.sandboxCloud),
+		zscaler.WithDebug(false),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Zscaler configuration for V2 client: %v", err)
+	}
+
+	// Override the User-Agent with the custom Terraform header
+	config.UserAgent = customUserAgent
+
+	// Instantiate the Zscaler OneAPI client
+	wrappedV2Client, err := zscaler.NewOneAPIClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize legacy V2 client: %w", err)
+	}
+
+	log.Println("[INFO] Successfully initialized ZPA V2 client")
+	return wrappedV2Client, nil
+}
+
+// zscalerSDKV3Client initializes the SDK V3 client
+func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
+	customUserAgent := generateUserAgent(c.TerraformVersion)
+
+	setters := []zscaler.ConfigSetter{
+		zscaler.WithCache(false),
+		zscaler.WithHttpClientPtr(http.DefaultClient),
+		zscaler.WithRateLimitMaxRetries(int32(c.retryCount)),
+		zscaler.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),
+		zscaler.WithUserAgentExtra(""), // Set the custom user agent
+	}
+
+	// Configure HTTP proxy if provided
+	if c.httpProxy != "" {
+		_url, err := url.Parse(c.httpProxy)
+		if err != nil {
+			return nil, err
+		}
+		setters = append(setters, zscaler.WithProxyHost(_url.Hostname()))
+
+		sPort := _url.Port()
+		if sPort == "" {
+			sPort = "80"
+		}
+		iPort, err := strconv.Atoi(sPort)
+		if err != nil {
+			return nil, err
+		}
+		setters = append(setters, zscaler.WithProxyPort(int32(iPort)))
+	}
+
+	// Main switch to handle the different authentication methods
+	switch {
+
+	// Method 1: clientID + clientSecret + vanityDomain + customerID
+	case c.clientID != "" && c.clientSecret != "" && c.vanityDomain != "":
+		setters = append(setters,
+			zscaler.WithClientID(c.clientID),
+			zscaler.WithClientSecret(c.clientSecret),
+			zscaler.WithVanityDomain(c.vanityDomain),
+			zscaler.WithSandboxToken(c.sandboxToken),
+			zscaler.WithSandboxCloud(c.sandboxCloud),
+			zscaler.WithUserAgentExtra(""),
+		)
+
+		if c.cloud != "" {
+			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
+		}
+
+	// Method 2: clientID + privateKey + vanityDomain + customerID
+	case c.clientID != "" && c.privateKey != "" && c.vanityDomain != "":
+		setters = append(setters,
+			zscaler.WithClientID(c.clientID),
+			zscaler.WithPrivateKey(c.privateKey),
+			zscaler.WithVanityDomain(c.vanityDomain),
+			zscaler.WithSandboxToken(c.sandboxToken),
+			zscaler.WithSandboxCloud(c.sandboxCloud),
+			zscaler.WithUserAgentExtra(""),
+		)
+
+		if c.cloud != "" {
+			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid authentication configuration: missing required parameters")
+	}
+
+	// Create the Zscaler configuration with the assembled setters
+	config, err := zscaler.NewConfiguration(setters...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SDK V3 configuration: %v", err)
+	}
+
+	config.UserAgent = customUserAgent
+
+	// Initialize the client with the configuration
+	v3Client, err := zscaler.NewOneAPIClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Zscaler API client: %v", err)
+	}
+
+	return v3Client.Client, nil // Return *Client here
+}
+
+// Client instantiates the provider client with necessary configurations.
+func (c *Config) Client() (*Client, error) {
+	if c.useLegacyClient {
+		wrappedV2Client, err := zscalerSDKV2Client(c)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize legacy v2 client: %w", err)
+		}
+
+		return &Client{
+			Service: zscaler.NewService(wrappedV2Client.Client, nil),
+		}, nil
+	}
+
+	// Fallback to v3 client initialization
+	v3Client, err := zscalerSDKV3Client(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize v3 client: %w", err)
+	}
+	return &Client{
+		Service: zscaler.NewService(v3Client, nil),
+	}, nil
 }

@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,10 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudappcontrol"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
 
 var (
@@ -21,19 +23,19 @@ var (
 
 func resourceCloudAppControlRules() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceCloudAppControlRulesCreate,
-		Read:          resourceCloudAppControlRulesRead,
-		Update:        resourceCloudAppControlRulesUpdate,
-		Delete:        resourceCloudAppControlRulesDelete,
+		CreateContext: resourceCloudAppControlRulesCreate,
+		ReadContext:   resourceCloudAppControlRulesRead,
+		UpdateContext: resourceCloudAppControlRulesUpdate,
+		DeleteContext: resourceCloudAppControlRulesDelete,
 		CustomizeDiff: validateActionsCustomizeDiff,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.cloudappcontrol
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				var ruleType, identifier string
@@ -52,7 +54,7 @@ func resourceCloudAppControlRules() *schema.Resource {
 				idInt, parseIDErr := strconv.Atoi(identifier)
 				if parseIDErr == nil {
 					// If identifier is an ID
-					resp, err := cloudappcontrol.GetByRuleID(service, ruleType, idInt)
+					resp, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, idInt)
 					if err != nil {
 						return nil, err
 					}
@@ -61,7 +63,7 @@ func resourceCloudAppControlRules() *schema.Resource {
 					_ = d.Set("type", ruleType)
 				} else {
 					// If identifier is a name
-					resources, err := cloudappcontrol.GetByRuleType(service, ruleType)
+					resources, err := cloudappcontrol.GetByRuleType(ctx, service, ruleType)
 					if err != nil {
 						return nil, err
 					}
@@ -210,9 +212,9 @@ func resourceCloudAppControlRules() *schema.Resource {
 	}
 }
 
-func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.cloudappcontrol
+func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandCloudAppControlRules(d)
 	log.Printf("[INFO] Creating zia cloud app control rule\n%+v\n", req)
@@ -223,7 +225,7 @@ func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) e
 	for {
 		cloudAppRuleLock.Lock()
 		if cloudAppRuleStartingOrder == 0 {
-			rules, _ := cloudappcontrol.GetByRuleType(service, req.Type)
+			rules, _ := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			for _, r := range rules {
 				if r.Order > cloudAppRuleStartingOrder {
 					cloudAppRuleStartingOrder = r.Order
@@ -238,7 +240,8 @@ func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) e
 
 		order := req.Order
 		req.Order = cloudAppRuleStartingOrder
-		resp, err := cloudappcontrol.Create(service, req.Type, &req)
+
+		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Creating cloud app control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -247,33 +250,35 @@ func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) e
 					continue
 				}
 			}
-			return fmt.Errorf("error creating resource: %s", err)
+			return diag.Errorf("error creating resource: %v", err)
 		}
 
 		log.Printf("[INFO] Created zia cloud app control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "cloud_app_control_rules", func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(service, req.Type)
+			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			return len(rules), err
 		}, func(id, order int) error {
-			rule, err := cloudappcontrol.GetByRuleID(service, req.Type, id)
+			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
 			}
 			rule.Order = order
-			_, err = cloudappcontrol.Update(service, req.Type, id, rule)
-			return err
+			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+			if err != nil {
+				return fmt.Errorf("failed to update rule order: %v", err)
+			}
+			return nil
 		})
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		err = resourceCloudAppControlRulesRead(d, m)
-		if err != nil {
+		if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
 				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "cloud_app_control_rules")
 		break
@@ -285,36 +290,36 @@ func resourceCloudAppControlRulesCreate(d *schema.ResourceData, m interface{}) e
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCloudAppControlRulesRead(d, m)
+	return resourceCloudAppControlRulesRead(ctx, d, meta)
 }
 
-func resourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.cloudappcontrol
+func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no zia cloud app control rule id is set")
+		return diag.FromErr(fmt.Errorf("no zia cloud app control rule id is set"))
 	}
 	ruleType, ok := d.Get("type").(string)
 	if !ok || ruleType == "" {
-		return fmt.Errorf("no rule type is set")
+		return diag.FromErr(fmt.Errorf("no rule type is set"))
 	}
-	resp, err := cloudappcontrol.GetByRuleID(service, ruleType, id)
+	resp, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing cloud app control rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting cloud app control rule:\n%+v\n", resp)
@@ -359,83 +364,83 @@ func resourceCloudAppControlRulesRead(d *schema.ResourceData, m interface{}) err
 	// Update the cbi_profile block in the state
 	if resp.CBIProfile.ID != "" {
 		if err := d.Set("cbi_profile", flattenCloudAppControlCBIProfileSimple(&resp.CBIProfile)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set("cloud_app_risk_profile", flattenCustomIDSet(resp.CloudAppRiskProfile)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Tenancy Profile IDs before setting: %+v\n", resp.TenancyProfileIDs)
 	if err := d.Set("tenancy_profile_ids", flattenIDs(resp.TenancyProfileIDs)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[DEBUG] Tenancy Profile IDs after setting: %+v\n", d.Get("tenancy_profile_ids"))
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.cloudappcontrol
+func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] cloud application control rule ID not set: %v\n", id)
-		return fmt.Errorf("cloud application control rule ID not set")
+		return diag.Errorf("cloud application control rule ID not set")
 	}
 
 	ruleType, ok := d.Get("type").(string)
 	if !ok || ruleType == "" {
-		return fmt.Errorf("no rule type is set")
+		return diag.Errorf("no rule type is set")
 	}
 
 	log.Printf("[INFO] Updating zia cloud application control rule ID: %v\n", id)
 	req := expandCloudAppControlRules(d)
 
-	if _, err := cloudappcontrol.GetByRuleID(service, ruleType, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
@@ -445,7 +450,7 @@ func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) e
 	start := time.Now()
 
 	for {
-		_, err := cloudappcontrol.Update(service, ruleType, id, &req)
+		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -454,29 +459,31 @@ func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) e
 					continue
 				}
 			}
-			return fmt.Errorf("error updating resource: %s", err)
+			return diag.Errorf("error updating resource: %v", err)
 		}
 
 		reorder(req.Order, req.ID, "cloud_app_control_rules", func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(service, req.Type)
+			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			return len(rules), err
 		}, func(id, order int) error {
-			rule, err := cloudappcontrol.GetByRuleID(service, req.Type, id)
+			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
 			}
 			rule.Order = order
-			_, err = cloudappcontrol.Update(service, req.Type, id, rule)
-			return err
+			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+			if err != nil {
+				return fmt.Errorf("failed to update rule order: %v", err)
+			}
+			return nil
 		})
 
-		err = resourceCloudAppControlRulesRead(d, m)
-		if err != nil {
+		if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
 				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
 		break
@@ -488,18 +495,18 @@ func resourceCloudAppControlRulesUpdate(d *schema.ResourceData, m interface{}) e
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCloudAppControlRulesRead(d, m)
+	return resourceCloudAppControlRulesRead(ctx, d, meta)
 }
 
-func resourceCloudAppControlRulesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.cloudappcontrol
+func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -507,12 +514,12 @@ func resourceCloudAppControlRulesDelete(d *schema.ResourceData, m interface{}) e
 	}
 	ruleType, ok := d.Get("type").(string)
 	if !ok || ruleType == "" {
-		return fmt.Errorf("no rule type is set")
+		return diag.FromErr(fmt.Errorf("no rule type is set"))
 	}
 	log.Printf("[INFO] Deleting cloud application control rule ID: %v\n", (d.Id()))
 
-	if _, err := cloudappcontrol.Delete(service, ruleType, id); err != nil {
-		return err
+	if _, err := cloudappcontrol.Delete(ctx, service, ruleType, id); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -523,7 +530,7 @@ func resourceCloudAppControlRulesDelete(d *schema.ResourceData, m interface{}) e
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

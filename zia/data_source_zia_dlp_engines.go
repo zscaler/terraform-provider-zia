@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_engines"
 )
 
 func dataSourceDLPEngines() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPEnginesRead,
+		ReadContext: dataSourceDLPEnginesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -46,26 +48,26 @@ func dataSourceDLPEngines() *schema.Resource {
 	}
 }
 
-func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_engines
+func dataSourceDLPEnginesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_engines.DLPEngines
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp engine id: %d\n", id)
-		res, err := dlp_engines.Get(service, id)
+		res, err := dlp_engines.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp engine name: %s\n", name)
-		res, err := dlp_engines.GetByName(service, name)
+		res, err := dlp_engines.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -73,9 +75,9 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	predefined, _ := d.Get("predefined_engine_name").(string)
 	if resp == nil && predefined != "" {
 		log.Printf("[INFO] Getting data for predefined dlp engine name: %s\n", predefined)
-		res, err := dlp_engines.GetByPredefinedEngine(service, predefined)
+		res, err := dlp_engines.GetByPredefinedEngine(ctx, service, predefined)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -89,7 +91,7 @@ func dataSourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("custom_dlp_engine", resp.CustomDlpEngine)
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp engine name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp engine name '%s' or id '%d'", name, id))
 	}
 
 	return nil

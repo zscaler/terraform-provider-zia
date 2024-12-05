@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_exact_data_match"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_exact_data_match"
 )
 
 func dataSourceDLPEDMSchema() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPEDMSchemaRead,
+		ReadContext: dataSourceDLPEDMSchemaRead,
 		Schema: map[string]*schema.Schema{
 			"schema_id": {
 				Type:        schema.TypeInt,
@@ -224,26 +226,26 @@ func dataSourceDLPEDMSchema() *schema.Resource {
 	}
 }
 
-func dataSourceDLPEDMSchemaRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_exact_data_match
+func dataSourceDLPEDMSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_exact_data_match.DLPEDMSchema
 	schemaID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp edm schema id: %d\n", schemaID)
-		res, err := dlp_exact_data_match.GetDLPEDMSchemaID(service, schemaID)
+		res, err := dlp_exact_data_match.GetDLPEDMSchemaID(ctx, service, schemaID)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	projectName, _ := d.Get("project_name").(string)
 	if resp == nil && projectName != "" {
 		log.Printf("[INFO] Getting data for dlp edm schema name: %s\n", projectName)
-		res, err := dlp_exact_data_match.GetDLPEDMByName(service, projectName)
+		res, err := dlp_exact_data_match.GetDLPEDMByName(ctx, service, projectName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -263,23 +265,23 @@ func dataSourceDLPEDMSchemaRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("schedule_present", resp.SchedulePresent)
 
 		if err := d.Set("last_modified_by", flattenIDExtensionsList(resp.ModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("created_by", flattenIDExtensionsList(resp.CreatedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("edm_client", flattenIDExtensionsList(resp.EDMClient)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("token_list", flattenEDMTokenList(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("schedule", flattenEDMSchedule(&resp.Schedule)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any dlp edn schema name '%s' or id '%d'", projectName, schemaID)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp edn schema name '%s' or id '%d'", projectName, schemaID))
 	}
 
 	return nil

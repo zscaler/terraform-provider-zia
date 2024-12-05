@@ -11,10 +11,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
 var (
@@ -24,10 +25,10 @@ var (
 
 func resourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceURLFilteringRulesCreate,
-		Read:   resourceURLFilteringRulesRead,
-		Update: resourceURLFilteringRulesUpdate,
-		Delete: resourceURLFilteringRulesDelete,
+		CreateContext: resourceURLFilteringRulesCreate,
+		ReadContext:   resourceURLFilteringRulesRead,
+		UpdateContext: resourceURLFilteringRulesUpdate,
+		DeleteContext: resourceURLFilteringRulesDelete,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			action := d.Get("action").(string)
 
@@ -147,16 +148,16 @@ func resourceURLFilteringRules() *schema.Resource {
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.urlfilteringpolicies
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := urlfilteringpolicies.GetByName(service, id)
+					resp, err := urlfilteringpolicies.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -312,10 +313,10 @@ func resourceURLFilteringRules() *schema.Resource {
 	}
 }
 
-func currentOrderVsRankWording(zClient *Client) string {
-	service := zClient.urlfilteringpolicies
+func currentOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
 
-	list, err := urlfilteringpolicies.GetAll(service)
+	list, err := urlfilteringpolicies.GetAll(ctx, service)
 	if err != nil {
 		return ""
 	}
@@ -330,16 +331,16 @@ func currentOrderVsRankWording(zClient *Client) string {
 	return result
 }
 
-func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlfilteringpolicies
+func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandURLFilteringRules(d)
 	log.Printf("[INFO] Creating url filtering rule\n%+v\n", req)
 
 	// Validate URL Filtering Actions
 	if err := validateURLFilteringActions(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	timeout := d.Timeout(schema.TimeoutCreate)
@@ -348,7 +349,7 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	for {
 		urlFilteringLock.Lock()
 		if urlFilteringStartingOrder == 0 {
-			list, _ := urlfilteringpolicies.GetAll(service)
+			list, _ := urlfilteringpolicies.GetAll(ctx, service)
 			for _, r := range list {
 				if r.Order > urlFilteringStartingOrder {
 					urlFilteringStartingOrder = r.Order
@@ -363,11 +364,11 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 
 		order := req.Order
 		req.Order = urlFilteringStartingOrder
-		resp, err := urlfilteringpolicies.Create(service, &req)
+		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
-				return fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(zClient), err)
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 			}
 
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -377,44 +378,44 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 					continue
 				}
 			}
-			return fmt.Errorf("error creating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
 		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
-			list, err := urlfilteringpolicies.GetAll(service)
+			list, err := urlfilteringpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := urlfilteringpolicies.Get(service, id)
+			rule, err := urlfilteringpolicies.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, _, err = urlfilteringpolicies.Update(service, id, rule)
+			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 			return err
 		})
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		err = resourceURLFilteringRulesRead(d, m)
-		if err != nil {
+		if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second) // Wait before retrying
+				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
 		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -423,23 +424,23 @@ func resourceURLFilteringRulesCreate(d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlfilteringpolicies
+func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no url filtering rule id is set")
+		return diag.FromErr(fmt.Errorf("no url filtering rule id is set"))
 	}
-	resp, err := urlfilteringpolicies.Get(service, id)
+	resp, err := urlfilteringpolicies.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia url filtering rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
@@ -490,37 +491,37 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	// Update the cbi_profile block in the state
 	if resp.CBIProfile.ID != "" {
 		if err := d.Set("cbi_profile", flattenCBIProfileSimple(&resp.CBIProfile)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
 	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Ensure override_users and override_groups are only set when block_override is true and action is BLOCK
 	if resp.Action == "BLOCK" && resp.BlockOverride {
 		if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
 		// Remove override_users and override_groups from state if block_override is not true or action is not BLOCK
@@ -529,32 +530,32 @@ func resourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error 
 	}
 
 	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIPGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-		return fmt.Errorf("error setting workload_groups: %s", err)
+		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
 	return nil
 }
 
-func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlfilteringpolicies
+func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -565,14 +566,14 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 
 	// Validate URL Filtering Actions
 	if err := validateURLFilteringActions(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, _, err := urlfilteringpolicies.Update(service, id, &req)
+		_, _, err := urlfilteringpolicies.Update(ctx, service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -581,40 +582,40 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 					continue
 				}
 			}
-			return fmt.Errorf("error updating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
 		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
-			list, err := urlfilteringpolicies.GetAll(service)
+			list, err := urlfilteringpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := urlfilteringpolicies.Get(service, id)
+			rule, err := urlfilteringpolicies.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, _, err = urlfilteringpolicies.Update(service, id, rule)
+			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 			return err
 		})
 
-		err = resourceURLFilteringRulesRead(d, m)
-		if err != nil {
+		if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second) // Wait before retrying
+				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
+			return diags
 		}
 		markOrderRuleAsDone(req.ID, "url_filtering_rules")
 		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -623,9 +624,9 @@ func resourceURLFilteringRulesUpdate(d *schema.ResourceData, m interface{}) erro
 	return nil
 }
 
-func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlfilteringpolicies
+func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -633,8 +634,8 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 	}
 	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", (d.Id()))
 
-	if _, err := urlfilteringpolicies.Delete(service, id); err != nil {
-		return err
+	if _, err := urlfilteringpolicies.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -645,7 +646,7 @@ func resourceURLFilteringRulesDelete(d *schema.ResourceData, m interface{}) erro
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

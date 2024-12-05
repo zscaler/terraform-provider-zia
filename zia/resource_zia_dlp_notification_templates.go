@@ -1,34 +1,36 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_notification_templates"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_notification_templates"
 )
 
 func resourceDLPNotificationTemplates() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDLPNotificationTemplatesCreate,
-		Read:   resourceDLPNotificationTemplatesRead,
-		Update: resourceDLPNotificationTemplatesUpdate,
-		Delete: resourceDLPNotificationTemplatesDelete,
+		CreateContext: resourceDLPNotificationTemplatesCreate,
+		ReadContext:   resourceDLPNotificationTemplatesRead,
+		UpdateContext: resourceDLPNotificationTemplatesUpdate,
+		DeleteContext: resourceDLPNotificationTemplatesDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.dlp_notification_templates
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("template_id", idInt)
 				} else {
-					resp, err := dlp_notification_templates.GetByName(service, id)
+					resp, err := dlp_notification_templates.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("template_id", resp.ID)
@@ -86,16 +88,16 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 	}
 }
 
-func resourceDLPNotificationTemplatesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_notification_templates
+func resourceDLPNotificationTemplatesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandDLPNotificationTemplates(d)
 	log.Printf("[INFO] Creating zia dlp notification templates\n%+v\n", req)
 
-	resp, _, err := dlp_notification_templates.Create(service, &req)
+	resp, _, err := dlp_notification_templates.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia dlp notification templates request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -107,32 +109,32 @@ func resourceDLPNotificationTemplatesCreate(d *schema.ResourceData, m interface{
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceDLPNotificationTemplatesRead(d, m)
+	return resourceDLPNotificationTemplatesRead(ctx, d, meta)
 }
 
-func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_notification_templates
+func resourceDLPNotificationTemplatesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
-		return fmt.Errorf("no DLP notification template id is set")
+		return diag.FromErr(fmt.Errorf("no DLP notification template id is set"))
 	}
-	resp, err := dlp_notification_templates.Get(service, id)
+	resp, err := dlp_notification_templates.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing dlp notification template %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting dlp notification template :\n%+v\n", resp)
@@ -149,9 +151,9 @@ func resourceDLPNotificationTemplatesRead(d *schema.ResourceData, m interface{})
 	return nil
 }
 
-func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_notification_templates
+func resourceDLPNotificationTemplatesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
@@ -160,14 +162,14 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 
 	log.Printf("[INFO] Updating dlp notification template ID: %v\n", id)
 	req := expandDLPNotificationTemplates(d)
-	if _, err := dlp_notification_templates.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := dlp_notification_templates.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := dlp_notification_templates.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := dlp_notification_templates.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -175,18 +177,18 @@ func resourceDLPNotificationTemplatesUpdate(d *schema.ResourceData, m interface{
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceDLPNotificationTemplatesRead(d, m)
+	return resourceDLPNotificationTemplatesRead(ctx, d, meta)
 }
 
-func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_notification_templates
+func resourceDLPNotificationTemplatesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "template_id")
 	if !ok {
@@ -194,8 +196,8 @@ func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{
 	}
 	log.Printf("[INFO] Deleting dlp notification template ID: %v\n", (d.Id()))
 
-	if _, err := dlp_notification_templates.Delete(service, id); err != nil {
-		return err
+	if _, err := dlp_notification_templates.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] dlp notification template deleted")
@@ -205,7 +207,7 @@ func resourceDLPNotificationTemplatesDelete(d *schema.ResourceData, m interface{
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

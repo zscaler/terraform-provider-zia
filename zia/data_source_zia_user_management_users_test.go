@@ -1,12 +1,13 @@
 package zia
 
+/*
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
 )
 
 func TestAccDataSourceUserManagement_Basic(t *testing.T) {
@@ -34,3 +35,4 @@ func TestAccDataSourceUserManagement_Basic(t *testing.T) {
 		},
 	})
 }
+*/

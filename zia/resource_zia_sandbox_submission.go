@@ -1,20 +1,22 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_submission"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_submission"
 )
 
 func resourceSandboxSubmission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSandboxSubmissionCreate,
-		Read:   resourceSandboxSubmissionRead,
-		Update: resourceSandboxSubmissionUpdate,
-		Delete: resourceSandboxSubmissionDelete,
+		CreateContext: resourceSandboxSubmissionCreate,
+		ReadContext:   resourceSandboxSubmissionRead,
+		UpdateContext: resourceSandboxSubmissionUpdate,
+		DeleteContext: resourceSandboxSubmissionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"file_path": {
@@ -66,9 +68,9 @@ func resourceSandboxSubmission() *schema.Resource {
 	}
 }
 
-func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_submission
+func resourceSandboxSubmissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	filePath := d.Get("file_path").(string)
 	force := d.Get("force").(bool)
@@ -76,27 +78,27 @@ func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) erro
 
 	// Validation: If submission method is "discan", the "force" attribute should not be set
 	if submissionMethod == "discan" && force {
-		return fmt.Errorf("'force' attribute is not applicable for 'discan' submission method")
+		return diag.FromErr(fmt.Errorf("'force' attribute is not applicable for 'discan' submission method"))
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %s", err)
+		return diag.FromErr(fmt.Errorf("failed to open file: %s", err))
 	}
 	defer file.Close()
 
 	var result *sandbox_submission.ScanResult
 	if submissionMethod == "submit" {
 		forceStr := boolToString(force)
-		result, err = sandbox_submission.SubmitFile(service, filePath, file, forceStr)
+		result, err = sandbox_submission.SubmitFile(ctx, service, filePath, file, forceStr)
 	} else if submissionMethod == "discan" {
-		result, err = sandbox_submission.Discan(service, filePath, file)
+		result, err = sandbox_submission.Discan(ctx, service, filePath, file)
 	} else {
-		return fmt.Errorf("invalid submission method: %s", submissionMethod)
+		return diag.FromErr(fmt.Errorf("invalid submission method: %s", submissionMethod))
 	}
 
 	if err != nil {
-		return fmt.Errorf("error submitting file to Sandbox: %s", err)
+		return diag.FromErr(fmt.Errorf("error submitting file to Sandbox: %s", err))
 	}
 
 	// Set Terraform resource attributes based on the response
@@ -109,25 +111,25 @@ func resourceSandboxSubmissionCreate(d *schema.ResourceData, m interface{}) erro
 	d.Set("virus_type", result.VirusType)
 	d.Set("md5", result.Md5)
 
-	return resourceSandboxSubmissionRead(d, m)
+	return resourceSandboxSubmissionRead(ctx, d, meta)
 }
 
-func resourceSandboxSubmissionRead(d *schema.ResourceData, m interface{}) error {
+func resourceSandboxSubmissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Only POST methods are available, we can't fetch data again
 
 	return nil
 }
 
-func resourceSandboxSubmissionUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceSandboxSubmissionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Trigger a re-creation of the resource if either 'file_path' or 'force' attributes change
 	if d.HasChange("file_path") || d.HasChange("force") {
 		// If there's a change, re-submit the file by calling the Create function
-		return resourceSandboxSubmissionCreate(d, m)
+		return resourceSandboxSubmissionCreate(ctx, d, meta)
 	}
 	return nil
 }
 
-func resourceSandboxSubmissionDelete(d *schema.ResourceData, m interface{}) error {
+func resourceSandboxSubmissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Since there is no DELETE method for this API, simply remove it from state
 	d.SetId("")
 	return nil

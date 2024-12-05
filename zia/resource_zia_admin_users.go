@@ -1,34 +1,36 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/adminuserrolemgmt/admins"
 )
 
 func resourceAdminUsers() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAdminUsersCreate,
-		Read:   resourceAdminUsersRead,
-		Update: resourceAdminUsersUpdate,
-		Delete: resourceAdminUsersDelete,
+		CreateContext: resourceAdminUsersCreate,
+		ReadContext:   resourceAdminUsersRead,
+		UpdateContext: resourceAdminUsersUpdate,
+		DeleteContext: resourceAdminUsersDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				client := m.(*Client)
-				service := client.admins
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("admin_id", idInt)
 				} else {
-					resp, err := admins.GetAdminUsersByLoginName(service, id)
+					resp, err := admins.GetAdminUsersByLoginName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("admin_id", resp.ID)
@@ -140,21 +142,21 @@ func resourceAdminUsers() *schema.Resource {
 	}
 }
 
-func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.admins
+func resourceAdminUsersCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandAdminUsers(d)
 	log.Printf("[INFO] Creating zia admin user with request\n%+v\n", req)
 	if err := checkPasswordAllowed(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := checkAdminScopeType(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	resp, err := admins.CreateAdminUser(service, req)
+	resp, err := admins.CreateAdminUser(ctx, service, req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia admin user request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -166,13 +168,13 @@ func resourceAdminUsersCreate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceAdminUsersRead(d, m)
+	return resourceAdminUsersRead(ctx, d, meta)
 }
 
 func checkPasswordAllowed(pass admins.AdminUsers) error {
@@ -189,23 +191,23 @@ func checkAdminScopeType(scopeType admins.AdminUsers) error {
 	return nil
 }
 
-func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.admins
+func resourceAdminUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "admin_id")
 	if !ok {
-		return fmt.Errorf("no admin users id is set")
+		return diag.FromErr(fmt.Errorf("no admin users id is set"))
 	}
-	resp, err := admins.GetAdminUsers(service, id)
+	resp, err := admins.GetAdminUsers(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing admin user %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting admin user:\n%+v\n", resp)
@@ -226,24 +228,24 @@ func resourceAdminUsersRead(d *schema.ResourceData, m interface{}) error {
 	_ = d.Set("is_password_expired", resp.IsPasswordExpired)
 
 	if err := d.Set("role", flattenAdminUserRoleSimple(resp.Role)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("admin_scope_entities", flattenIDs(resp.AdminScopeEntities)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.admins
+func resourceAdminUsersUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "admin_id")
 	if !ok {
 		log.Printf("[ERROR] admin user ID not set: %v\n", id)
-		return fmt.Errorf("admin user ID not set")
+		return diag.FromErr(fmt.Errorf("admin user ID not set"))
 	}
 
 	log.Printf("[DEBUG] Updating admin user with ID: %d", id)
@@ -251,19 +253,19 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	req := expandAdminUsers(d)
 	log.Printf("[DEBUG] Update request data: %+v", req)
 
-	if _, err := admins.GetAdminUsers(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := admins.GetAdminUsers(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[INFO] Admin user %d not found. Removing from state", id)
 			d.SetId("")
 			return nil
 		}
-		log.Printf("[ERROR] Error retrieving admin user before update: %s", err)
-		return err
+		log.Printf("[ERROR] Error retrieving admin user before UpdateContext: %s", err)
+		return diag.FromErr(err)
 	}
 
-	if _, err := admins.UpdateAdminUser(service, id, req); err != nil {
+	if _, err := admins.UpdateAdminUser(ctx, service, id, req); err != nil {
 		log.Printf("[ERROR] Error updating admin user: %s", err)
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -272,28 +274,28 @@ func resourceAdminUsersUpdate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceAdminUsersRead(d, m)
+	return resourceAdminUsersRead(ctx, d, meta)
 }
 
-func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.admins
+func resourceAdminUsersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "admin_id")
 	if !ok {
-		return fmt.Errorf("cannot delete the resource admin users, no id found")
+		return diag.FromErr(fmt.Errorf("cannot delete the resource admin users, no id found"))
 	}
 
 	log.Printf("[INFO] Deleting admin user ID: %v\n", id)
 
-	if _, err := admins.DeleteAdminUser(service, id); err != nil {
-		return err
+	if _, err := admins.DeleteAdminUser(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
@@ -305,7 +307,7 @@ func resourceAdminUsersDelete(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
