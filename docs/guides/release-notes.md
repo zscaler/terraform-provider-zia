@@ -16,11 +16,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 4.0.0 (December, 17 2024)
+## 4.0.0 (January, 21 2025)
 
 ### Notes
 
-- Release date: **(December, 17  2024)**
+- Release date: **(January, 21 2025)**
 - Supported Terraform version: **v1.x**
 
 #### Enhancements - Zscaler OneAPI Support
