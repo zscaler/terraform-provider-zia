@@ -15,6 +15,14 @@ Use the navigation on the left to read about the available resources.
 
 -> **Disclaimer:** Please refer to our [General Support Statement](guides/support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](guides/troubleshooting.md) for guidance on typical problems.
 
+## Zscaler OneAPI New Framework
+
+The ZIA Terraform Provider now offers support for [OneAPI](https://help.zscaler.com/oneapi/understanding-oneapi) Oauth2 authentication through [Zidentity](https://help.zscaler.com/zidentity/what-zidentity).
+
+**NOTE** As of version v4.0.0, this Terraform provider offers backwards compatibility to the Zscaler legacy API framework. This is the recommended authentication method for organizations whose tenants are still not migrated to [Zidentity](https://help.zscaler.com/zidentity/what-zidentity).
+
+**NOTE** Notice that OneAPI and Zidentity is not currently supported for the following clouds: `zscalergov` and `zscalerten`. Refer to the [Legacy API Framework](#legacy-api-framework) for more information on how authenticate to these environments
+
 ## Examples Usage - Client Secret Authentication
 
 ```hcl
@@ -66,8 +74,8 @@ terraform {
 # corresponding variable name does not need to be set in the provider config
 # block.
 provider "zia" {
-  client_id = "[ZSCALER_CLIENT_ID]"
-  private_key = "[ZSCALER_PRIVATE_KEY]"
+  client_id     = "[ZSCALER_CLIENT_ID]"
+  private_key   = "[ZSCALER_PRIVATE_KEY]"
   vanity_domain = "[ZSCALER_VANITY_DOMAIN]"
   zscaler_cloud = "[ZSCALER_CLOUD]"
 }
@@ -91,22 +99,22 @@ Zscaler OneAPI uses the OAuth 2.0 authorization framework to provide secure acce
 
 You can provide credentials via the `ZSCALER_CLIENT_ID`, `ZSCALER_CLIENT_SECRET`, `ZSCALER_VANITY_DOMAIN`, `ZSCALER_CLOUD` environment variables, representing your Zidentity OneAPI credentials `clientId`, `clientSecret`, `vanityDomain` and `cloud` respectively.
 
-| Argument     | Description | Environment variable |
-|--------------|-------------|-------------------|
-| `clientId`       | _(String)_ Zscaler API Client ID, used with `clientSecret` or `PrivateKey` OAuth auth mode.| `ZSCALER_CLIENT_ID` |
-| `clientSecret`       | _(String)_ A string that contains the password for the API admin.| `ZSCALER_CLIENT_SECRET` |
-| `privateKey`       | _(String)_ A string Private key value.| `ZSCALER_PRIVATE_KEY` |
-| `vanityDomain`       | _(String)_ Refers to the domain name used by your organization `https://<vanity_domain>.zslogin.net/oauth2/v1/token` | `ZSCALER_VANITY_DOMAIN` |
-| `cloud`       | _(String)_ The host and basePath for the cloud services API is `$api.<cloud_name>.zsapi.net`.| `ZSCALER_CLOUD` |
+| Argument        | Description                                                                                         | Environment Variable     |
+|-----------------|-----------------------------------------------------------------------------------------------------|--------------------------|
+| `client_id`     | _(String)_ Zscaler API Client ID, used with `clientSecret` or `PrivateKey` OAuth auth mode.         | `ZSCALER_CLIENT_ID`      |
+| `client_secret` | _(String)_ Secret key associated with the API Client ID for authentication.                         | `ZSCALER_CLIENT_SECRET`  |
+| `privateKey`    | _(String)_ A string Private key value.                                                              | `ZSCALER_PRIVATE_KEY`    |
+| `vanity_domain` | _(String)_ Refers to the domain name used by your organization.                                     | `ZSCALER_VANITY_DOMAIN`  |
+| `cloud`         | _(String)_ The name of the Zidentity cloud, e.g., beta.                                             | `ZSCALER_CLOUD`          |
 
 ### Alternative OneAPI Cloud Environments
 
 OneAPI supports authentication and can interact with alternative Zscaler enviornments i.e `beta`. To authenticate to these environments you must provide the following values:
 
-| Argument     | Description | Environment variable |
-|--------------|-------------|-------------------|
-| `vanityDomain`       | _(String)_ Refers to the domain name used by your organization `https://<vanity_domain>.zslogin.net/oauth2/v1/token` | `ZSCALER_VANITY_DOMAIN` |
-| `cloud`       | _(String)_ The host and basePath for the cloud services API is `$api.<cloud_name>.zsapi.net`.| `ZSCALER_CLOUD` |
+| Argument         | Description                                                                                         |   | Environment Variable     |
+|------------------|-----------------------------------------------------------------------------------------------------|---|--------------------------|
+| `vanity_domain`   | _(String)_ Refers to the domain name used by your organization |   | `ZSCALER_VANITY_DOMAIN`  |
+| `cloud`          | _(String)_ The name of the Zidentity cloud i.e beta      |   | `ZSCALER_CLOUD`          |
 
 For example: Authenticating to Zscaler Beta environment:
 
@@ -127,6 +135,29 @@ dropdown you will see the newly created Role. In the event a newly created role 
 ZIdentity Admin UI a `Sync Now` button is provided in the API Resources menu which will initiate an
 on-demand sync of newly created roles.
 
+### OneAPI Framework - Configuration file
+
+You can use a configuration file to specify your credentials. The
+file location must be `$HOME/.zscaler/zscaler.yaml` on Linux and OS X, or
+`"%USERPROFILE%\.zscaler/zscaler.yaml"` for Windows users.
+If we fail to detect credentials inline, or in the environment variable, Terraform will check
+this location.
+
+Usage:
+
+```terraform
+provider "zia" {}
+```
+
+```yaml
+zscaler:
+  client:
+    client_id: "{yourClientId}"
+    client_secret: "{yourClientSecret}"
+    vanity_domain: "{youVanityDomain}"
+    cloud: "{yourZidentityCloud}"
+```
+
 ## Legacy API Framework
 
 ### ZIA native authentication
@@ -146,7 +177,7 @@ terraform {
     }
 }
 
-# Configure the ZIA Provider (OneAPI Authentication)
+# Configure the ZIA Provider (Legacy Authentication)
 #
 # NOTE: Change place holder values denoted by brackets to real values, including
 # the brackets.
@@ -166,10 +197,10 @@ provider "zia" {
 The ZIA Cloud is identified by several cloud name prefixes, which determines which API endpoint the requests should be sent to. The following cloud environments are supported:
 
 * `zscaler`
+* `zscloud`
 * `zscalerone`
 * `zscalertwo`
 * `zscalerthree`
-* `zscloud`
 * `zscalerbeta`
 * `zscalergov`
 * `zscalerten`
@@ -217,6 +248,29 @@ provider "zia" {}
 ⚠️ **WARNING:** Hard-coding credentials into any Terraform configuration is not recommended, and risks secret leakage should this file be committed to public version control
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>
+
+### Legacy API Framework - Configuration file
+
+You can use a configuration file to specify your credentials. The
+file location must be `$HOME/.zscaler/zscaler.yaml` on Linux and OS X, or
+`"%USERPROFILE%\.zscaler/zscaler.yaml"` for Windows users.
+If we fail to detect credentials inline, or in the environment variable, Terraform will check
+this location.
+
+Usage:
+
+```terraform
+provider "zia" {}
+```
+
+```yaml
+zia:
+  client:
+    username: "{yourUsername}"
+    password: "{yourPassword}"
+    api_key: "{youApiKey}"
+    zia_cloud: "{yourZiaCloud}"
+```
 
 ### ZIA Configuration Activation
 

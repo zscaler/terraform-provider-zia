@@ -230,7 +230,7 @@ func (c *Config) loadClients() diag.Diagnostics {
 		return nil
 	}
 
-	log.Println("[INFO] Initializing ZPA V3 client")
+	log.Println("[INFO] Initializing ZIA V3 client")
 	v3Client, err := zscalerSDKV3Client(c)
 	if err != nil {
 		return diag.Errorf("failed to initialize SDK V3 client: %v", err)
@@ -261,43 +261,6 @@ func generateUserAgent(terraformVersion string) string {
 		providerVersion,
 	)
 }
-
-/*
-// Instantiate the v2 client from zscaler-sdk-go
-func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
-	customUserAgent := generateUserAgent(c.TerraformVersion)
-
-	// Validate required credentials
-	if c.Username == "" || c.Password == "" || c.APIKey == "" || c.ZIABaseURL == "" {
-		return nil, fmt.Errorf(
-			"missing required credentials for V2 client: Username, Password, APIKey, and ZIABaseURL must all be set",
-		)
-	}
-
-	// Create ZIA v2 configuration
-	ziaClient, err := zia.NewClient(c.Username, c.Password, c.APIKey, c.ZIABaseURL, customUserAgent)
-	if err != nil {
-		log.Printf("[ERROR] Failed to create ZIA V2 configuration: %v", err)
-		return nil, err
-	}
-
-	config, err := zscaler.NewConfiguration(
-		zscaler.WithLegacyClient(true),
-		zscaler.WithZiaLegacyClient(ziaClient),
-		zscaler.WithDebug(true))
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Zscaler configuration for V2 client: %v", err)
-	}
-
-	wrappedV2Client, err := zscaler.NewOneAPIClient(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize legacy v2 client: %w", err)
-	}
-	log.Println("[INFO] Successfully initialized ZIA V2 client")
-	return wrappedV2Client, nil
-}
-*/
 
 func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
 	customUserAgent := generateUserAgent(c.TerraformVersion)
@@ -345,35 +308,14 @@ func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ZIA configuration: %v", err)
 	}
-
+	ziaCfg.UserAgent = customUserAgent
 	// Initialize ZIA client
-	ziaClient, err := zia.NewClient(ziaCfg)
+	wrappedV2Client, err := zscaler.NewLegacyZiaClient(ziaCfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ZIA client: %v", err)
 	}
 
-	// Configure the Zscaler client with the ZIA client
-	config, err := zscaler.NewConfiguration(
-		zscaler.WithLegacyClient(true),
-		zscaler.WithZiaLegacyClient(ziaClient),
-		zscaler.WithSandboxToken(c.sandboxToken),
-		zscaler.WithSandboxCloud(c.sandboxCloud),
-		zscaler.WithDebug(false),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Zscaler configuration for V2 client: %v", err)
-	}
-
-	// Override the User-Agent with the custom Terraform header
-	config.UserAgent = customUserAgent
-
-	// Instantiate the Zscaler OneAPI client
-	wrappedV2Client, err := zscaler.NewOneAPIClient(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize legacy V2 client: %w", err)
-	}
-
-	log.Println("[INFO] Successfully initialized ZPA V2 client")
+	log.Println("[INFO] Successfully initialized ZIA V2 client")
 	return wrappedV2Client, nil
 }
 

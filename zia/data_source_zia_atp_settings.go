@@ -9,9 +9,9 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/advancedthreatsettings"
 )
 
-func dataAdvancedThreatSettings() *schema.Resource {
+func dataSourceAdvancedThreatSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataAdvancedThreatSettingsRead,
+		ReadContext: dataSourceAdvancedThreatSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"risk_tolerance": {
 				Type:        schema.TypeInt,
@@ -257,7 +257,7 @@ func dataAdvancedThreatSettings() *schema.Resource {
 	}
 }
 
-func dataAdvancedThreatSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceAdvancedThreatSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 

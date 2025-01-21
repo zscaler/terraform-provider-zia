@@ -18,6 +18,8 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_notification_templates"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipsourcegroups"
@@ -27,6 +29,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/staticips"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/vpncredentials"
@@ -99,6 +102,10 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestGRETunnels(testClient)
 	sweepTestForwardingControlRule(testClient)
 	sweepTestFirewallFilteringRule(testClient)
+	sweepTestFirewallIPSRule(testClient)
+	sweepTestFirewallDNSRule(testClient)
+	sweepTestFileTypeControlRule(testClient)
+	sweepTestSandboxRule(testClient)
 	sweepTestURLFilteringRule(testClient)
 	sweepTestDLPWebRule(testClient)
 	sweepTestDLPEngines(testClient)
@@ -414,6 +421,138 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 				continue
 			}
 			logSweptResource(resourcetype.FirewallFilteringRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestFileTypeControlRule(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	rule, err := firewalldnscontrolpolicies.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := firewalldnscontrolpolicies.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.FirewallDNSRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestFirewallDNSRule(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	rule, err := firewalldnscontrolpolicies.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := firewalldnscontrolpolicies.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.FirewallDNSRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestFirewallIPSRule(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	rule, err := firewallipscontrolpolicies.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := firewallipscontrolpolicies.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.FirewallIPSRules, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestSandboxRule(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	rule, err := sandbox_rules.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := sandbox_rules.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.SandboxRules, fmt.Sprintf("%d", b.ID), b.Name)
 		}
 	}
 	// Log errors encountered during the deletion process

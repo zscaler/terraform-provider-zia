@@ -223,109 +223,112 @@ The following arguments are supported:
 
 **Note**: Refer to this matrix when configuring types vs actions for each specific rules
 
-|            Types                     |                    Actions                      |
-|:------------------------------------:|:-----------------------------------------------:|
-|--------------------------------------|-------------------------------------------------|
-|           `AI_ML`                    |          `ALLOW_AI_ML_WEB_USE`                  |
-|           `AI_ML`                    |          `CAUTION_AI_ML_WEB_USE`                |
-|           `AI_ML`                    |          `DENY_AI_ML_WEB_USE`                   |
-|           `AI_ML`                    |          `ISOLATE_AI_ML_WEB_USE`                |
-|--------------------------------------|-------------------------------------------------|
-|     `BUSINESS_PRODUCTIVITY`          |     `ALLOW_BUSINESS_PRODUCTIVITY_APPS`          |
-|     `BUSINESS_PRODUCTIVITY`          |     `BLOCK_BUSINESS_PRODUCTIVITY_APPS`          |
-|     `BUSINESS_PRODUCTIVITY`          |     `CAUTION_BUSINESS_PRODUCTIVITY_APPS`        |
-|     `BUSINESS_PRODUCTIVITY`          |     `ISOLATE_BUSINESS_PRODUCTIVITY_APPS`        |
-|--------------------------------------|-------------------------------------------------|
-|     `CONSUMER`                       |          `ALLOW_CONSUMER_APPS`                  |
-|     `CONSUMER`                       |          `BLOCK_CONSUMER_APPS`                  |
-|     `CONSUMER`                       |          `CAUTION_CONSUMER_APPS`                |
-|     `CONSUMER`                       |          `ISOLATE_CONSUMER_APPS`                |
-|--------------------------------------|-------------------------------------------------|
-|     `DNS_OVER_HTTPS`                 |          `ALLOW_DNS_OVER_HTTPS_USE`             |
-|     `DNS_OVER_HTTPS`                 |          `DENY_DNS_OVER_HTTPS_USE`              |
-|--------------------------------------|-------------------------------------------------|
-|     `ENTERPRISE_COLLABORATION`       |      `ALLOW_ENTERPRISE_COLLABORATION_APPS`      |
-|     `ENTERPRISE_COLLABORATION`       |      `BLOCK_ENTERPRISE_COLLABORATION_APPS`      |
-|     `ENTERPRISE_COLLABORATION`       |      `CAUTION_ENTERPRISE_COLLABORATION_APPS`    |
-|     `ENTERPRISE_COLLABORATION`       |      `ISOLATE_ENTERPRISE_COLLABORATION_APPS`    |
-|--------------------------------------|-------------------------------------------------|
-|     `FILE_SHARE`                     |          `ALLOW_FILE_SHARE_VIEW`                |
-|     `FILE_SHARE`                     |          `ALLOW_FILE_SHARE_UPLOAD`              |
-|     `FILE_SHARE`                     |          `CAUTION_FILE_SHARE_VIEW`              |
-|     `FILE_SHARE`                     |          `DENY_FILE_SHARE_VIEW`                 |
-|     `FILE_SHARE`                     |          `DENY_FILE_SHARE_UPLOAD`               |
-|     `FILE_SHARE`                     |          `ISOLATE_FILE_SHARE_VIEW`              |
-|--------------------------------------|-------------------------------------------------|
-|     `FINANCE`                        |          `ALLOW_FINANCE_USE`                    |
-|     `FINANCE`                        |          `CAUTION_FINANCE_USE`                  |
-|     `FINANCE`                        |          `DENY_FINANCE_USE`                     |
-|     `FINANCE`                        |          `ISOLATE_FINANCE_USE`                  |
-|--------------------------------------|-------------------------------------------------|
-|     `HEALTH_CARE`                    |          `ALLOW_HEALTH_CARE_USE`                |
-|     `HEALTH_CARE`                    |          `CAUTION_HEALTH_CARE_USE`              |
-|     `HEALTH_CARE`                    |          `DENY_HEALTH_CARE_USE`                 |
-|     `HEALTH_CARE`                    |          `ISOLATE_HEALTH_CARE_USE`              |
-|--------------------------------------|-------------------------------------------------|
-|     `HOSTING_PROVIDER`               |          `ALLOW_HOSTING_PROVIDER_USE`           |
-|     `HOSTING_PROVIDER`               |          `CAUTION_HOSTING_PROVIDER_USE`         |
-|     `HOSTING_PROVIDER`               |          `DENY_HOSTING_PROVIDER_USE`            |
-|     `HOSTING_PROVIDER`               |          `ISOLATE_HOSTING_PROVIDER_USE`         |
-|--------------------------------------|-------------------------------------------------|
-|     `HUMAN_RESOURCES`                |          `ALLOW_HUMAN_RESOURCES_USE`            |
-|     `HUMAN_RESOURCES`                |          `CAUTION_HUMAN_RESOURCES_USE`          |
-|     `HUMAN_RESOURCES`                |          `DENY_HUMAN_RESOURCES_USE`             |
-|     `HUMAN_RESOURCES`                |          `ISOLATE_HUMAN_RESOURCES_USE`          |
-|--------------------------------------|-------------------------------------------------|
-|     `INSTANT_MESSAGING`              |          `ALLOW_CHAT`                           |
-|     `INSTANT_MESSAGING`              |          `ALLOW_FILE_TRANSFER_IN_CHAT`          |
-|     `INSTANT_MESSAGING`              |          `BLOCK_CHAT`                           |
-|     `INSTANT_MESSAGING`              |          `BLOCK_FILE_TRANSFER_IN_CHAT`          |
-|     `INSTANT_MESSAGING`              |          `CAUTION_CHAT`                         |
-|     `INSTANT_MESSAGING`              |          `ISOLATE_CHAT`                         |
-|--------------------------------------|-------------------------------------------------|
-|     `IT_SERVICES`                    |          `ALLOW_IT_SERVICES_USE`                |
-|     `IT_SERVICES`                    |          `CAUTION_LEGAL_USE`                    |
-|     `IT_SERVICES`                    |          `DENY_IT_SERVICES_USE`                 |
-|     `IT_SERVICES`                    |          `ISOLATE_IT_SERVICES_USE`              |
-|--------------------------------------|-------------------------------------------------|
-|     `LEGAL`                          |          `ALLOW_LEGAL_USE`                      |
-|     `LEGAL`                          |          `DENY_DNS_OVER_HTTPS_USE`              |
-|     `LEGAL`                          |          `DENY_LEGAL_USE`                       |
-|     `LEGAL`                          |          `ISOLATE_LEGAL_USE`                    |
-|--------------------------------------|-------------------------------------------------|
-|     `SALES_AND_MARKETING`            |          `ALLOW_SALES_MARKETING_APPS`           |
-|     `SALES_AND_MARKETING`            |          `BLOCK_SALES_MARKETING_APPS`           |
-|     `SALES_AND_MARKETING`            |          `CAUTION_SALES_MARKETING_APPS`         |
-|     `SALES_AND_MARKETING`            |          `ISOLATE_SALES_MARKETING_APPS`         |
-|--------------------------------------|-------------------------------------------------|
-|     `STREAMING_MEDIA`                |          `ALLOW_STREAMING_VIEW_LISTEN`          |
-|     `STREAMING_MEDIA`                |          `ALLOW_STREAMING_UPLOAD`               |
-|     `STREAMING_MEDIA`                |          `BLOCK_STREAMING_UPLOAD`               |
-|     `STREAMING_MEDIA`                |          `CAUTION_STREAMING_VIEW_LISTEN`        |
-|     `STREAMING_MEDIA`                |          `ISOLATE_STREAMING_VIEW_LISTEN`        |
-|--------------------------------------|-------------------------------------------------|
-|     `SOCIAL_NETWORKING`              |          `ALLOW_SOCIAL_NETWORKING_VIEW`         |
-|     `SOCIAL_NETWORKING`              |          `ALLOW_SOCIAL_NETWORKING_POST`         |
-|     `SOCIAL_NETWORKING`              |          `BLOCK_SOCIAL_NETWORKING_VIEW`         |
-|     `SOCIAL_NETWORKING`              |          `BLOCK_SOCIAL_NETWORKING_POST`         |
-|     `SOCIAL_NETWORKING`              |          `CAUTION_SOCIAL_NETWORKING_VIEW`       |
-|--------------------------------------|-------------------------------------------------|
-|     `SYSTEM_AND_DEVELOPMENT`         |          `ALLOW_SYSTEM_DEVELOPMENT_APPS`        |
-|     `SYSTEM_AND_DEVELOPMENT`         |          `ALLOW_SYSTEM_DEVELOPMENT_UPLOAD`      |
-|     `SYSTEM_AND_DEVELOPMENT`         |          `BLOCK_SYSTEM_DEVELOPMENT_APPS`        |
-|     `SYSTEM_AND_DEVELOPMENT`         |          `BLOCK_SYSTEM_DEVELOPMENT_UPLOAD`      |
-|     `SYSTEM_AND_DEVELOPMENT`         |          `CAUTION_SYSTEM_DEVELOPMENT_APPS`      |
-|     `SYSTEM_AND_DEVELOPMENT`         |          `ISOLATE_SALES_MARKETING_APPS`         |
-|--------------------------------------|-------------------------------------------------|
-|     `WEBMAIL`                        |          `ALLOW_WEBMAIL_VIEW`                   |
-|     `WEBMAIL`                        |          `ALLOW_WEBMAIL_ATTACHMENT_SEND`        |
-|     `WEBMAIL`                        |          `ALLOW_WEBMAIL_SEND`                   |
-|     `WEBMAIL`                        |          `CAUTION_WEBMAIL_VIEW`                 |
-|     `WEBMAIL`                        |          `BLOCK_WEBMAIL_VIEW`                   |
-|     `WEBMAIL`                        |          `BLOCK_WEBMAIL_ATTACHMENT_SEND`        |
-|     `WEBMAIL`                        |          `BLOCK_WEBMAIL_SEND`                   |
-|     `WEBMAIL`                        |          `ISOLATE_WEBMAIL_VIEW`                 |
-|--------------------------------------|-------------------------------------------------|
+|              Types                   |                    Actions                                                |
+|:------------------------------------:|:-------------------------------------------------------------------------:|
+|---------------|--------------------------------------------------|
+|               `AI_ML`                | `DENY_AI_ML_WEB_USE`, `ALLOW_AI_ML_WEB_USE`, `ISOLATE_AI_ML_WEB_USE`,     |
+|               `AI_ML`                | `CAUTION_AI_ML_WEB_USE`, `DENY_AI_ML_UPLOAD`, `ALLOW_AI_ML_UPLOAD`,       |
+|               `AI_ML`                | `DENY_AI_ML_SHARE`, `ALLOW_AI_ML_SHARE`, `DENY_AI_ML_DOWNLOAD`,           |
+|               `AI_ML`                | `ALLOW_AI_ML_DOWNLOAD`, `DENY_AI_ML_DELETE`,`ALLOW_AI_ML_DELETE`,         |
+|               `AI_ML`                | `DENY_AI_ML_INVITE`, `ALLOW_AI_ML_INVITE`, `DENY_AI_ML_CHAT`,             |
+|               `AI_ML`                | `ALLOW_AI_ML_CHAT`, `DENY_AI_ML_CREATE`, `ALLOW_AI_ML_CREATE`,            |
+|               `AI_ML`                | `DENY_AI_ML_RENAME`, `ALLOW_AI_ML_RENAME`                                 |
+|-------------------------|--------------------------------------------------------|
+|       `BUSINESS_PRODUCTIVITY`        | `ALLOW_BUSINESS_PRODUCTIVITY_APPS`, `BLOCK_BUSINESS_PRODUCTIVITY_APPS`    |
+|       `BUSINESS_PRODUCTIVITY`        | `CAUTION_BUSINESS_PRODUCTIVITY_APPS`, `ISOLATE_BUSINESS_PRODUCTIVITY_APPS`|
+|------------------------|---------------------------------------------------------|
+|           `CONSUMER`                 | `ALLOW_CONSUMER_APPS`, `BLOCK_CONSUMER_APPS`                         |
+|           `CONSUMER`                 | `CAUTION_CONSUMER_APPS`, `ISOLATE_CONSUMER_APPS`                                   |
+|--------------------------|---------------------------------------------------------|
+|          `CUSTOM_CAPP`               |     `BLOCK_CUSTOM_CAPP_USE`, `ALLOW_CUSTOM_CAPP_USE`    |
+|          `CUSTOM_CAPP`               |     `ISOLATE_CUSTOM_CAPP_USE`, `CAUTION_CUSTOM_CAPP_USE`|
+|--------------------------|---------------------------------------------------------|
+|     `DNS_OVER_HTTPS`                 |            `ALLOW_DNS_OVER_HTTPS_USE`                   |
+|     `DNS_OVER_HTTPS`                 |             `DENY_DNS_OVER_HTTPS_USE`                   |
+|-------------------------|---------------------------------------------------------|
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_APPS`, `ALLOW_ENTERPRISE_COLLABORATION_CHAT`, |
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_UPLOAD`, `ALLOW_ENTERPRISE_COLLABORATION_SHARE`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_APPS`, `ALLOW_ENTERPRISE_COLLABORATION_EDIT`, |
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_RENAME`, `ALLOW_ENTERPRISE_COLLABORATION_CREATE`, |
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_DOWNLOAD`, `ALLOW_ENTERPRISE_COLLABORATION_HUDDLE`,|
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_INVITE`, `ALLOW_ENTERPRISE_COLLABORATION_MEETING`, |
+|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_DELETE`, `ALLOW_ENTERPRISE_COLLABORATION_SCREEN_SHARE`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_CHAT`, `BLOCK_ENTERPRISE_COLLABORATION_UPLOAD`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_SHARE`, `BLOCK_ENTERPRISE_COLLABORATION_EDIT`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_RENAME`,  `BLOCK_ENTERPRISE_COLLABORATION_CREATE`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_DO       WNLOAD`, `BLOCK_ENTERPRISE_COLLABORATION_DELETE`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_HUDDLE`, `BLOCK_ENTERPRISE_COLLABORATION_INVITE`, |
+|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_MEETING`, `BLOCK_ENTERPRISE_COLLABORATION_SCREEN_SHARE`, |
+|        `ENTERPRISE_COLLABORATION`    | `ISOLATE_ENTERPRISE_COLLABORATION_APPS`, `CAUTION_ENTERPRISE_COLLABORATION_APPS`,       |
+|--------------------------|-------------------------------------------------|
+|     `FILE_SHARE`                     | `DENY_FILE_SHARE_VIEW`, `ALLOW_FILE_SHARE_VIEW`, `CAUTION_FILE_SHARE_VIEW`,                 |
+|     `FILE_SHARE`                     | `DENY_FILE_SHARE_UPLOAD`, `ALLOW_FILE_SHARE_UPLOAD`, `ISOLATE_FILE_SHARE_VIEW`,              |
+|     `FILE_SHARE`                     | `DENY_FILE_SHARE_SHARE`, `ALLOW_FILE_SHARE_SHARE`, `DENY_FILE_SHARE_EDIT`,               |
+|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_EDIT`, `DENY_FILE_SHARE_RENAME`, `ALLOW_FILE_SHARE_RENAME`,                 |
+|     `FILE_SHARE`                     | `DENY_FILE_SHARE_CREATE`, `ALLOW_FILE_SHARE_CREATE`, `DENY_FILE_SHARE_DOWNLOAD`,               |
+|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_DOWNLOAD`, `DENY_FILE_SHARE_DELETE`, `ALLOW_FILE_SHARE_DELETE`, |
+|     `FILE_SHARE`                     | `DENY_FILE_SHARE_FORM_SHARE`, `ALLOW_FILE_SHARE_FORM_SHARE`, `DENY_FILE_SHARE_INVITE`, |
+|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_INVITE` |
+|-------------------------|-------------------------------------------------|
+|     `FINANCE`                        | `ALLOW_FINANCE_USE`, `CAUTION_FINANCE_USE`      |
+|     `FINANCE`                        | `DENY_FINANCE_USE`, `ISOLATE_FINANCE_USE`       |
+|--------------------------|-------------------------------------------------|
+|     `HEALTH_CARE`                    | `ALLOW_HEALTH_CARE_USE`,  `CAUTION_HEALTH_CARE_USE`                |
+|     `HEALTH_CARE`                    | `DENY_HEALTH_CARE_USE`, `ISOLATE_HEALTH_CARE_USE`                        |
+|-------------------------|-------------------------------------------------|
+|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_DELETE`, `DENY_HOSTING_PROVIDER_EDIT`, `ALLOW_HOSTING_PROVIDER_EDIT`,           |
+|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_CREATE`, `DENY_HOSTING_PROVIDER_CREATE`,`DENY_HOSTING_PROVIDER_DELETE`,         |
+|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_USE`, `DENY_HOSTING_PROVIDER_USE`,            |
+|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_DOWNLOAD`, `DENY_HOSTING_PROVIDER_DOWNLOAD`,         |
+|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_MOVE`, `DENY_HOSTING_PROVIDER_MOVE`,          |
+|     `HOSTING_PROVIDER`               | `ISOLATE_HOSTING_PROVIDER_USE`, `CAUTION_HOSTING_PROVIDER_USE`,          |
+|--------------------------|-------------------------------------------------|
+|     `HUMAN_RESOURCES`                | `ALLOW_HUMAN_RESOURCES_USE`, `CAUTION_HUMAN_RESOURCES_USE`,            |
+|     `HUMAN_RESOURCES`                | `DENY_HUMAN_RESOURCES_USE`, `ISOLATE_HUMAN_RESOURCES_USE`,                    |
+|--------------------------|-------------------------------------------------|
+|     `INSTANT_MESSAGING`              | `ALLOW_CHAT`, `ALLOW_FILE_TRANSFER_IN_CHAT`,                           |
+|     `INSTANT_MESSAGING`              | `ALLOW_FILE_TRANSFER_IN_CHAT`, `BLOCK_CHAT`,          |
+|     `INSTANT_MESSAGING`              | `BLOCK_FILE_TRANSFER_IN_CHAT`, `CAUTION_CHAT`,                                      |
+|     `INSTANT_MESSAGING`              | `CAUTION_FILE_TRANSFER_IN_CHAT`, `ISOLATE_CHAT`                      |
+|--------------------------|-------------------------------------------------|
+|     `IT_SERVICES`                    | `ALLOW_IT_SERVICES_USE`, `CAUTION_LEGAL_USE`,                |
+|     `IT_SERVICES`                    | `DENY_IT_SERVICES_USE`, `ISOLATE_IT_SERVICES_USE`                              |
+|-------------------------|-------------------------------------------------|
+|     `LEGAL`                          | `ALLOW_LEGAL_USE`, `DENY_DNS_OVER_HTTPS_USE`,                        |
+|     `LEGAL`                          |  `DENY_LEGAL_USE`, `ISOLATE_LEGAL_USE`                       |
+|-------------------------|-------------------------------------------------|
+|     `SALES_AND_MARKETING`            | `ALLOW_SALES_MARKETING_APPS`, `BLOCK_SALES_MARKETING_APPS`,           |
+|     `SALES_AND_MARKETING`            | `CAUTION_SALES_MARKETING_APPS`, `ISOLATE_SALES_MARKETING_APPS`                      |
+|-------------------------|-------------------------------------------------|
+|     `STREAMING_MEDIA`                | `BLOCK_STREAMING_VIEW_LISTEN`, `ALLOW_STREAMING_VIEW_LISTEN`,          |
+|     `STREAMING_MEDIA`                | `CAUTION_STREAMING_VIEW_LISTEN`, `BLOCK_STREAMING_UPLOAD`,               |
+|     `STREAMING_MEDIA`                | `ALLOW_STREAMING_UPLOAD`, `ISOLATE_STREAMING_VIEW_LISTEN`               |
+|-----------------------|-------------------------------------------------|
+|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_CHAT`, `ALLOW_SOCIAL_NETWORKING_COMMENT`,          |
+|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_CREATE`, `ALLOW_SOCIAL_NETWORKING_EDIT`,         |
+|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_POST`, `ALLOW_SOCIAL_NETWORKING_SHARE`,          |
+|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_UPLOAD`, `ALLOW_SOCIAL_NETWORKING_VIEW`,         |
+|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_CHAT`, `BLOCK_SOCIAL_NETWORKING_COMMENT`,       |
+|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_CREATE`, `BLOCK_SOCIAL_NETWORKING_EDIT`,       |
+|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_POST`,`BLOCK_SOCIAL_NETWORKING_SHARE`,       |
+|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_UPLOAD`, `BLOCK_SOCIAL_NETWORKING_VIEW`,       |
+|     `SOCIAL_NETWORKING`              | `CAUTION_SOCIAL_NETWORKING_POST`, `CAUTION_SOCIAL_NETWORKING_VIEW`,       |
+|     `SOCIAL_NETWORKING`              | `ISOLATE_SOCIAL_NETWORKING_VIEW`,        |
+|-------------------------|-------------------------------------------------|
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_APPS`, `ALLOW_SYSTEM_DEVELOPMENT_APPS`,         |
+|     `SYSTEM_AND_DEVELOPMENT`         | `ISOLATE_SYSTEM_DEVELOPMENT_APPS`, `BLOCK_SYSTEM_DEVELOPMENT_UPLOAD`,       |
+|     `SYSTEM_AND_DEVELOPMENT`         | `ALLOW_SYSTEM_DEVELOPMENT_UPLOAD`,`CAUTION_SYSTEM_DEVELOPMENT_APPS`,        |
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_CREATE`, `ALLOW_SYSTEM_DEVELOPMENT_CREATE`,      |
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_EDIT`, `ALLOW_SYSTEM_DEVELOPMENT_EDIT`,      |
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_SHARE`, `ALLOW_SYSTEM_DEVELOPMENT_SHARE`,         |
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_COMMENT`, `ALLOW_SYSTEM_DEVELOPMENT_COMMENT`,         |
+|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_REACTION`,`ALLOW_SYSTEM_DEVELOPMENT_REACTION`         |
+|--------------------------|-------------------------------------------------|
+|     `WEBMAIL`                        | `ALLOW_WEBMAIL_VIEW`, `ALLOW_WEBMAIL_ATTACHMENT_SEND`                   |
+|     `WEBMAIL`                        | `ALLOW_WEBMAIL_SEND`, `CAUTION_WEBMAIL_VIEW`                    |
+|     `WEBMAIL`                        | `BLOCK_WEBMAIL_VIEW`, `BLOCK_WEBMAIL_ATTACHMENT_SEND`                            |
+|     `WEBMAIL`                        | `BLOCK_WEBMAIL_SEND`, `ISOLATE_WEBMAIL_VIEW`                          |
+|-------------------------|-------------------------------------------------|
 
 ## Cloud Application Control - Rule Types vs Tenant Profile Support
 

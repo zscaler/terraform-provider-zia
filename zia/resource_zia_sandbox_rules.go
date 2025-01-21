@@ -245,6 +245,7 @@ func resourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 	_ = d.Set("ml_action_enabled", resp.MLActionEnabled)
 	_ = d.Set("by_threat_score", resp.ByThreatScore)
 	_ = d.Set("ba_policy_categories", resp.BaPolicyCategories)
+	_ = d.Set("url_categories", resp.URLCategories)
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 
@@ -411,6 +412,7 @@ func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 		ByThreatScore:      d.Get("by_threat_score").(int),
 		Protocols:          SetToStringList(d, "protocols"),
 		BaPolicyCategories: SetToStringList(d, "ba_policy_categories"),
+		URLCategories:      SetToStringList(d, "url_categories"),
 		FileTypes:          SetToStringList(d, "file_types"),
 		DeviceGroups:       expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:            expandIDNameExtensionsSet(d, "devices"),

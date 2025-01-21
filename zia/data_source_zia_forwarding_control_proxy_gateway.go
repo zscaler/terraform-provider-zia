@@ -115,25 +115,19 @@ func dataSourceForwardingControlProxyGatewayRead(ctx context.Context, d *schema.
 	service := zClient.Service
 
 	var resp *proxy_gateways.ProxyGateways
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for zpa gateway id: %d\n", id)
-		res, err := proxy_gateways.Get(ctx, service, id)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		resp = res
-	}
+
+	// Search by Name
 	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for proxy gateway name: %s\n", name)
+	if name != "" {
+		log.Printf("[INFO] Searching for proxy gateway with name: %s\n", name)
 		res, err := proxy_gateways.GetByName(ctx, service, name)
 		if err != nil {
-			return diag.FromErr(err)
+			return diag.FromErr(fmt.Errorf("failed to retrieve proxy gateway by name: %w", err))
 		}
 		resp = res
 	}
 
+	// Handle response
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
@@ -145,17 +139,14 @@ func dataSourceForwardingControlProxyGatewayRead(ctx context.Context, d *schema.
 		if err := d.Set("primary_proxy", flattenIDNameExternalSet(resp.PrimaryProxy)); err != nil {
 			return diag.FromErr(err)
 		}
-
 		if err := d.Set("secondary_proxy", flattenIDNameExternalSet(resp.SecondaryProxy)); err != nil {
 			return diag.FromErr(err)
 		}
-
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
 			return diag.FromErr(err)
 		}
-
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any proxy gateway name '%s' or id '%d'", name, id))
+		return diag.FromErr(fmt.Errorf("couldn't find any proxy gateway with name '%s'", name))
 	}
 
 	return nil

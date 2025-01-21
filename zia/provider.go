@@ -157,6 +157,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_settings":                 resourceATPMalwareSettings(),
 			"zia_atp_malware_policy":                   resourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings": resourceURLFilteringCloludAppSettings(),
+			"zia_end_user_notification":                resourceEndUserNotification(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -179,8 +180,8 @@ func ZIAProvider() *schema.Provider {
 			"zia_firewall_filtering_destination_groups":         dataSourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_time_window":                dataSourceFWTimeWindow(),
 			"zia_firewall_ips_rule":                             dataSourceFirewallIPSRules(),
-			//"zia_firewall_dns_rule":                             dataSourceFirewallDNSRules(),
-			"zia_forwarding_control_rule": dataSourceForwardingControlRule(),
+			"zia_firewall_dns_rule":                             dataSourceFirewallDNSRules(),
+			"zia_forwarding_control_rule":                       dataSourceForwardingControlRule(),
 			// "zia_pac_files":                                     dataSourcePacFiles(),
 			"zia_url_categories":                              dataSourceURLCategories(),
 			"zia_url_filtering_rules":                         dataSourceURLFilteringRules(),
@@ -217,7 +218,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_forwarding_control_proxy_gateway":            dataSourceForwardingControlProxyGateway(),
 			"zia_cloud_browser_isolation_profile":             dataSourceCBIProfile(),
 			"zia_workload_groups":                             dataSourceWorkloadGroup(),
-			"zia_advanced_threat_settings":                    dataAdvancedThreatSettings(),
+			"zia_advanced_threat_settings":                    dataSourceAdvancedThreatSettings(),
 			"zia_atp_malicious_urls":                          dataSourceATPMaliciousUrls(),
 			"zia_atp_security_exceptions":                     dataSourceATPSecurityExceptions(),
 			"zia_advanced_settings":                           dataSourceAdvancedSettings(),
@@ -226,6 +227,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_settings":                        dataSourceATPMalwareSettings(),
 			"zia_atp_malware_policy":                          dataSourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings":        dataSourceURLFilteringCloludAppSettings(),
+			"zia_end_user_notification":                       dataSourceEndUserNotification(),
 		},
 	}
 

@@ -10,6 +10,44 @@ const (
 	URLFilteringRuleStateUpdate  = "DISABLED"
 )
 
+// Firewall IPS rules
+const (
+	FWIPSRuleResourceName = "testAcc_firewall_ips_rule"
+	FWIPSRuleDescription  = "testAcc_firewall_ips_rule"
+	FWIPSAction           = "ALLOW"
+	FWIPSActionUpdate     = "BLOCK"
+	FWIPSState            = "ENABLED"
+	FWIPSUpdate           = "DISABLED"
+)
+
+// Firewall DNS rules
+const (
+	FWDNSRuleResourceName = "testAcc_firewall_dns_rule"
+	FWDNSRuleDescription  = "testAcc_firewall_dns_rule"
+	FWDNSAction           = "REDIR_RES"
+	FWDNSActionUpdate     = "BLOCK"
+	FWDNSState            = "ENABLED"
+	FWDNSUpdate           = "DISABLED"
+)
+
+// File Type Control rules
+const (
+	FileTypeControlRuleResourceName = "testAcc_firewall_dns_rule"
+	FileTypeControlRuleDescription  = "testAcc_firewall_dns_rule"
+	FileTypeControlRuleAction       = "ALLOW"
+	FileTypeControlRuleState        = "ENABLED"
+)
+
+// Firewall Sandbox rules
+const (
+	SandboxRuleResourceName = "testAcc_sandbox_rule"
+	SandboxRuleDescription  = "testAcc_sandbox_rule"
+	SandboxAction           = "ALLOW"
+	SandboxActionUpdate     = "BLOCK"
+	SandboxState            = "ENABLED"
+	SandboxStateUpdate      = "DISABLED"
+)
+
 // Custom URL Categories resource/datasource
 const (
 	CustomCategory = true

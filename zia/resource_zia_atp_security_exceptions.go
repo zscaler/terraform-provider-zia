@@ -24,20 +24,21 @@ func resourceATPSecurityExceptions() *schema.Resource {
 
 				urls, err := advancedthreatsettings.GetSecurityExceptions(ctx, service)
 				if err != nil {
-					return nil, fmt.Errorf("error fetching urls from bypass list: %s", err)
+					return nil, fmt.Errorf("error fetching URLs from bypass list: %s", err)
 				}
 
 				if urls != nil {
-					if err := d.Set("urls", urls.BypassUrls); err != nil {
-						return nil, fmt.Errorf("error setting urls: %s", err)
+					if err := d.Set("bypass_urls", urls.BypassUrls); err != nil { // Corrected key
+						return nil, fmt.Errorf("error setting URLs: %s", err)
 					}
 				}
 
-				d.SetId("all_urls")
+				d.SetId("bypass_url")
 
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Schema: map[string]*schema.Schema{
 			"bypass_urls": {
 				Type:     schema.TypeSet,
@@ -122,6 +123,8 @@ func resourceATPSecurityExceptionsUpdate(ctx context.Context, d *schema.Resource
 	return resourceATPSecurityExceptionsRead(ctx, d, meta)
 }
 
-func expandATPBypassURLs(d *schema.ResourceData) []string {
-	return SetToStringList(d, "bypass_urls")
+func expandATPBypassURLs(d *schema.ResourceData) advancedthreatsettings.SecurityExceptions {
+	return advancedthreatsettings.SecurityExceptions{
+		BypassUrls: SetToStringList(d, "bypass_urls"),
+	}
 }

@@ -17,10 +17,12 @@ func dataSourceFileTypeControlRules() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Computed:    true,
 				Description: "The File Type Control policy rule name.",
 			},
 			"description": {

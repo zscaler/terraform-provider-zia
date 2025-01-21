@@ -15,18 +15,15 @@ func dataSourceSandboxRules() *schema.Resource {
 		ReadContext: dataSourceSandboxRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"rule_id": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			"name": {
 				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The File Type Control policy rule name.",
+				Optional:    true,
+				Computed:    true,
+				Description: "The name of the Sandbox rule.",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -90,6 +87,12 @@ func dataSourceSandboxRules() *schema.Resource {
 				Computed:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Protocol for the given rule. This field is not applicable to the Lite API.",
+			},
+			"url_categories": {
+				Type:        schema.TypeList,
+				Optional:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "The URL categories to which the rule applies",
 			},
 			"locations": {
 				Type:        schema.TypeList,
@@ -420,7 +423,6 @@ func dataSourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, met
 
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
-		_ = d.Set("rule_id", resp.ID)
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("state", resp.State)
@@ -432,6 +434,7 @@ func dataSourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, met
 		_ = d.Set("ml_action_enabled", resp.MLActionEnabled)
 		_ = d.Set("by_threat_score", resp.ByThreatScore)
 		_ = d.Set("ba_policy_categories", resp.BaPolicyCategories)
+		_ = d.Set("url_categories", resp.URLCategories)
 		_ = d.Set("protocols", resp.Protocols)
 		_ = d.Set("file_types", resp.FileTypes)
 
@@ -463,15 +466,11 @@ func dataSourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, met
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
+		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return diag.FromErr(err)
 		}
 

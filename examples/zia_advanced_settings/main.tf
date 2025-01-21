@@ -7,6 +7,7 @@ resource "zia_advanced_settings" "this" {
   kerberos_bypass_urls                                        = ["test1.com"]
   kerberos_bypass_apps                                        = []
   dns_resolution_on_transparent_proxy_urls                    = ["test1.com", "test2.com"]
+  ui_session_timeout                                          = 300
   enable_dns_resolution_on_transparent_proxy                  = true
   enable_evaluate_policy_on_global_ssl_bypass                 = true
   enable_office365                                            = true
@@ -27,5 +28,4 @@ resource "zia_advanced_settings" "this" {
   prefer_sni_over_conn_host                                   = false
   sipa_xff_header_enabled                                     = false
   block_non_http_on_http_port_enabled                         = true
-  ui_session_timeout                                          = 300
 }

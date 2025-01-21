@@ -5,6 +5,9 @@ const (
 	URLCategories                   = "zia_url_categories"
 	URLFilteringRules               = "zia_url_filtering_rules"
 	FirewallFilteringRules          = "zia_firewall_filtering_rule"
+	FirewallIPSRules                = "zia_firewall_ips_rule"
+	FirewallDNSRules                = "zia_firewall_dns_rule"
+	FileTypeControlRules            = "zia_file_type_control_rules"
 	FWFilteringDestinationGroup     = "zia_firewall_filtering_destination_groups"
 	FWFilteringSourceGroup          = "zia_firewall_filtering_ip_source_groups"
 	FWFilteringNetworkServices      = "zia_firewall_filtering_network_service"
@@ -25,6 +28,7 @@ const (
 	AdminUsers                      = "zia_admin_users"
 	Users                           = "zia_user_management"
 	RuleLabels                      = "zia_rule_labels"
+	SandboxRules                    = "zia_sandbox_rules"
 	AuthSettingsURLs                = "zia_auth_settings_urls"
 	Activation                      = "zia_activation_status"
 )

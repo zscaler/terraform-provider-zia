@@ -28,7 +28,7 @@ func resourceATPMaliciousUrls() *schema.Resource {
 				}
 
 				if urls != nil {
-					if err := d.Set("urls", urls.MaliciousUrls); err != nil {
+					if err := d.Set("malicious_urls", urls.MaliciousUrls); err != nil {
 						return nil, fmt.Errorf("error setting urls: %s", err)
 					}
 				}
@@ -59,7 +59,7 @@ func resourceATPMaliciousUrlsCreate(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("malicious_url")
+	d.SetId("all_urls")
 
 	// Sleep for 1 seconds before potentially triggering the activation
 	time.Sleep(1 * time.Second)
@@ -86,7 +86,7 @@ func resourceATPMaliciousUrlsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if resp != nil {
-		d.SetId("malicious_url")
+		d.SetId("all_urls")
 		_ = d.Set("malicious_urls", resp.MaliciousUrls)
 
 	} else {
@@ -106,7 +106,7 @@ func resourceATPMaliciousUrlsUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	d.SetId("malicious_url")
+	d.SetId("all_urls")
 
 	// Sleep for 1 seconds before potentially triggering the activation
 	time.Sleep(1 * time.Second)
@@ -123,6 +123,12 @@ func resourceATPMaliciousUrlsUpdate(ctx context.Context, d *schema.ResourceData,
 	return resourceATPMaliciousUrlsRead(ctx, d, meta)
 }
 
-func expandATPMaliciousURLs(d *schema.ResourceData) []string {
-	return SetToStringList(d, "malicious_urls")
+// func expandATPMaliciousURLs(d *schema.ResourceData) []string {
+// 	return SetToStringList(d, "malicious_urls")
+// }
+
+func expandATPMaliciousURLs(d *schema.ResourceData) advancedthreatsettings.MaliciousURLs {
+	return advancedthreatsettings.MaliciousURLs{
+		MaliciousUrls: SetToStringList(d, "malicious_urls"),
+	}
 }
