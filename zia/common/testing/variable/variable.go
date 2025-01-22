@@ -38,7 +38,7 @@ const (
 	FileTypeControlRuleState        = "ENABLED"
 )
 
-// Firewall Sandbox rules
+// Sandbox rules
 const (
 	SandboxRuleResourceName = "testAcc_sandbox_rule"
 	SandboxRuleDescription  = "testAcc_sandbox_rule"
@@ -46,6 +46,14 @@ const (
 	SandboxActionUpdate     = "BLOCK"
 	SandboxState            = "ENABLED"
 	SandboxStateUpdate      = "DISABLED"
+)
+
+// SSL Inspection rules
+const (
+	SSLInspectionRuleName        = "testAcc_ssl_rule"
+	SSLInspectionRuleDescription = "testAcc_ssl_rule"
+	SSLInspectionRuleState       = "ENABLED"
+	RoadWarriorKerberos          = true
 )
 
 // Custom URL Categories resource/datasource

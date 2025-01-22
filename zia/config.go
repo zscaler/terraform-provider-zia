@@ -319,6 +319,7 @@ func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
 	return wrappedV2Client, nil
 }
 
+/*
 // zscalerSDKV3Client initializes the SDK V3 client
 func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
 	customUserAgent := generateUserAgent(c.TerraformVersion)
@@ -403,7 +404,94 @@ func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
 
 	return v3Client.Client, nil // Return *Client here
 }
+*/
 
+func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
+	customUserAgent := generateUserAgent(c.TerraformVersion)
+
+	// Start with base configuration setters
+	setters := []zscaler.ConfigSetter{
+		zscaler.WithCache(false),
+		zscaler.WithHttpClientPtr(http.DefaultClient),
+		zscaler.WithRateLimitMaxRetries(int32(c.retryCount)),
+		zscaler.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),
+		zscaler.WithUserAgentExtra(customUserAgent),
+	}
+
+	// Handle Sandbox-only authentication
+	if c.sandboxToken != "" && c.sandboxCloud != "" && c.clientID == "" && c.clientSecret == "" && c.privateKey == "" {
+		setters = append(setters,
+			zscaler.WithSandboxToken(c.sandboxToken),
+			zscaler.WithSandboxCloud(c.sandboxCloud),
+		)
+
+		// Initialize configuration for Sandbox
+		config, err := zscaler.NewConfiguration(setters...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create SDK V3 configuration for Sandbox: %v", err)
+		}
+
+		config.UserAgent = customUserAgent
+
+		// Create Sandbox-only client
+		v3Client, err := zscaler.NewOneAPIClient(config)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Zscaler API client for Sandbox: %v", err)
+		}
+
+		return v3Client.Client, nil
+	}
+
+	// Main switch for OAuth2 authentication
+	switch {
+	case c.clientID != "" && c.clientSecret != "" && c.vanityDomain != "":
+		setters = append(setters,
+			zscaler.WithClientID(c.clientID),
+			zscaler.WithClientSecret(c.clientSecret),
+			zscaler.WithVanityDomain(c.vanityDomain),
+			zscaler.WithSandboxToken(c.sandboxToken),
+			zscaler.WithSandboxCloud(c.sandboxCloud),
+		)
+
+		if c.cloud != "" {
+			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
+		}
+
+	case c.clientID != "" && c.privateKey != "" && c.vanityDomain != "":
+		setters = append(setters,
+			zscaler.WithClientID(c.clientID),
+			zscaler.WithPrivateKey(c.privateKey),
+			zscaler.WithVanityDomain(c.vanityDomain),
+			zscaler.WithSandboxToken(c.sandboxToken),
+			zscaler.WithSandboxCloud(c.sandboxCloud),
+		)
+
+		if c.cloud != "" {
+			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid authentication configuration: missing required parameters")
+	}
+
+	// Create configuration for OAuth2 authentication
+	config, err := zscaler.NewConfiguration(setters...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create SDK V3 configuration: %v", err)
+	}
+
+	config.UserAgent = customUserAgent
+
+	// Initialize the client with the configuration
+	v3Client, err := zscaler.NewOneAPIClient(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Zscaler API client: %v", err)
+	}
+
+	return v3Client.Client, nil
+}
+
+/*
 // Client instantiates the provider client with necessary configurations.
 func (c *Config) Client() (*Client, error) {
 	if c.useLegacyClient {
@@ -418,6 +506,40 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	// Fallback to v3 client initialization
+	v3Client, err := zscalerSDKV3Client(c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize v3 client: %w", err)
+	}
+	return &Client{
+		Service: zscaler.NewService(v3Client, nil),
+	}, nil
+}
+*/
+
+func (c *Config) Client() (*Client, error) {
+	// Handle Sandbox-only credentials
+	if c.sandboxToken != "" && c.sandboxCloud != "" && c.clientID == "" && c.clientSecret == "" && c.privateKey == "" {
+		v3Client, err := zscalerSDKV3Client(c)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize Sandbox client: %w", err)
+		}
+		return &Client{
+			Service: zscaler.NewService(v3Client, nil),
+		}, nil
+	}
+
+	// Legacy client logic
+	if c.useLegacyClient {
+		wrappedV2Client, err := zscalerSDKV2Client(c)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize legacy v2 client: %w", err)
+		}
+		return &Client{
+			Service: zscaler.NewService(wrappedV2Client.Client, nil),
+		}, nil
+	}
+
+	// Fallback to V3 client logic
 	v3Client, err := zscalerSDKV3Client(c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize v3 client: %w", err)

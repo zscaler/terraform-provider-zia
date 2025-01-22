@@ -111,7 +111,7 @@ func resourceSandboxSubmissionCreate(ctx context.Context, d *schema.ResourceData
 	d.Set("virus_type", result.VirusType)
 	d.Set("md5", result.Md5)
 
-	return resourceSandboxSubmissionRead(ctx, d, meta)
+	return nil
 }
 
 func resourceSandboxSubmissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -391,6 +391,7 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
+
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
 		return diag.FromErr(err)
 	}

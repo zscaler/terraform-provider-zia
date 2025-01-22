@@ -520,6 +520,38 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 							Computed:    true,
 							Description: "The description of the workload group",
 						},
+						"expression": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The description of the workload group",
+						},
+						"last_modified_time": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"last_modified_by": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"extensions": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
 						"expression_json": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -567,38 +599,6 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 													},
 												},
 											},
-										},
-									},
-								},
-							},
-						},
-						"expression": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The description of the workload group",
-						},
-						"last_modified_time": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"last_modified_by": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"extensions": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
 										},
 									},
 								},

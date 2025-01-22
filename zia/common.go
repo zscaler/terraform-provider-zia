@@ -768,6 +768,19 @@ func getDnsRuleRequestTypes() *schema.Schema {
 	}
 }
 
+func getSSLInspectionPlatforms() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Supported Protocol criteria",
+		Required:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateSSLInspectionPlatforms(), // Use ValidateDiagFunc here
+		},
+	}
+}
+
 func sortOrders(ruleOrderMap map[int]orderWithState) RuleIDOrderPairList {
 	pl := make(RuleIDOrderPairList, len(ruleOrderMap))
 	i := 0

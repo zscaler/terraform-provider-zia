@@ -29,6 +29,7 @@ const (
 	Users                           = "zia_user_management"
 	RuleLabels                      = "zia_rule_labels"
 	SandboxRules                    = "zia_sandbox_rules"
+	SSLInspectionRules              = "zia_ssl_inspection_rules"
 	AuthSettingsURLs                = "zia_auth_settings_urls"
 	Activation                      = "zia_activation_status"
 )

@@ -46,6 +46,7 @@ The use of the previous envioronment variables combination `ZIA_SANDBOX_TOKEN` a
 - Added the datasource and resource ``zia_url_filtering_and_cloud_app_settings`` [PR #383](https://github.com/zscaler/terraform-provider-zia/pull/383) :rocket: - Manages the URL and Cloud App Control advanced policy settings.[Configuring Advanced Policy Settings](https://help.zscaler.com/zia/configuring-advanced-policy-settings)
 - Added the datasource ``zia_cloud_applications`` [PR #383](https://github.com/zscaler/terraform-provider-zia/pull/383) :rocket: - Retrieves Predefined and User Defined Cloud Applications associated with the DLP rules, Cloud App Control rules, Advanced Settings, Bandwidth Classes, File Type Control rules, and SSL Inspection rules.
 - Added the datasource ``zia_forwarding_control_proxy_gateway`` [PR #383](https://github.com/zscaler/terraform-provider-zia/pull/383) :rocket: - Retrieves information of existing Proxy Gateway configuration.
+- Added the datasource and resource ``zia_ssl_inspection_rules`` [PR #383](https://github.com/zscaler/terraform-provider-zia/pull/383) :rocket: - Manages SSL Inspection Rules.
 
 #### NEW ATTRIBUTES
 

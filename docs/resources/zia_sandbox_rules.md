@@ -77,7 +77,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+In addition to all arguments above, the following attributes are supported:
 
 * `description` - (String) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.

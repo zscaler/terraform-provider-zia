@@ -1446,3 +1446,35 @@ func validateDestAddress(v interface{}, k string) (ws []string, errors []error) 
 	errors = append(errors, fmt.Errorf("invalid address: %s. Must be a valid IPv4 address, IPv4 CIDR, IPv4 range, FQDN, or wildcard FQDN", value))
 	return
 }
+
+func validateSSLInspectionPlatforms() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Zscaler Client Connector device platforms for which the rule must be applied.",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedSSLInspectionPlatforms, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var supportedSSLInspectionPlatforms = []string{
+	"SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX",
+}
