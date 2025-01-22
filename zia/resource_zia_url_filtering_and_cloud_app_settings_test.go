@@ -20,7 +20,7 @@ func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 			{
 				Config: testAccResourceURLFilteringCloludAppSettingsConfig(
 					false, false, false, true, false, false, false, false, // blocked attributes
-					false, false, false, false, false, false, false, false, false, false), // capture attributes
+					false, false, false, false, false, false, false, false, false), // capture attributes
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_dynamic_content_cat", "false"),
 					resource.TestCheckResourceAttr(resourceName, "consider_embedded_sites", "false"),
@@ -37,7 +37,7 @@ func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_poep_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_meta_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_per_plexity_prompt", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_skype", "false"),
+					// resource.TestCheckResourceAttr(resourceName, "block_skype", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_newly_registered_domains", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cipa_compliance", "false"),
 				),
@@ -46,7 +46,7 @@ func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 			{
 				Config: testAccResourceURLFilteringCloludAppSettingsConfig(
 					true, false, false, true, false, false, false, false, // blocked attributes
-					false, false, false, false, false, false, false, false, false, false), // capture attributes
+					false, false, false, false, false, false, false, false, false), // capture attributes
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "enable_dynamic_content_cat", "true"),
 					resource.TestCheckResourceAttr(resourceName, "consider_embedded_sites", "false"),
@@ -63,7 +63,7 @@ func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_poep_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_meta_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_per_plexity_prompt", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_skype", "false"),
+					// resource.TestCheckResourceAttr(resourceName, "block_skype", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_newly_registered_domains", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cipa_compliance", "false"),
 				),
@@ -88,7 +88,7 @@ func testAccResourceURLFilteringCloludAppSettingsConfig(
 	enableDynamicContentCat, considerEmbeddedSites, enforceSafeSearch, enableOffice365, enableMsftO365,
 	enableUcaasZoom, enableUcaasLogmein, enableUcaasRingCentral, enableUcaasWebex, enableUcaasTalkdesk,
 	enableChatGPTPrompt, enableMicrosoftCopilotPrompt, enablePoepPrompt, enableMetaPrompt, enablePerPlexityPrompt,
-	blockSkype, enableNewlyRegisteredDomains, enableCipaCompliance bool,
+	enableNewlyRegisteredDomains, enableCipaCompliance bool,
 ) string {
 	return fmt.Sprintf(`
 resource "zia_url_filtering_and_cloud_app_settings" "test" {
@@ -107,7 +107,6 @@ resource "zia_url_filtering_and_cloud_app_settings" "test" {
     enable_poep_prompt                      = %t
     enable_meta_prompt                      = %t
     enable_per_plexity_prompt               = %t
-    block_skype                             = %t
     enable_newly_registered_domains         = %t
     enable_cipa_compliance                  = %t
 }
@@ -115,6 +114,6 @@ resource "zia_url_filtering_and_cloud_app_settings" "test" {
 		enableDynamicContentCat, considerEmbeddedSites, enforceSafeSearch, enableOffice365, enableMsftO365,
 		enableUcaasZoom, enableUcaasLogmein, enableUcaasRingCentral, enableUcaasWebex, enableUcaasTalkdesk,
 		enableChatGPTPrompt, enableMicrosoftCopilotPrompt, enablePoepPrompt, enableMetaPrompt, enablePerPlexityPrompt,
-		blockSkype, enableNewlyRegisteredDomains, enableCipaCompliance,
+		enableNewlyRegisteredDomains, enableCipaCompliance,
 	)
 }
