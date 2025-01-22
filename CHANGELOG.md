@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.0.0 (January, 21 2025)
+## 4.0.0 (January, 21 2025) - BREAKING CHANGES
 
 ### Notes
 
