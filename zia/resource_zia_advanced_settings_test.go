@@ -5,14 +5,16 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccResourceAdvancedSettings_Basic(t *testing.T) {
 	resourceName := "zia_advanced_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckResourceAdvancedSettingsDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: Create the resource with specific values
 			{
@@ -58,6 +60,11 @@ func TestAccResourceAdvancedSettings_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckResourceAdvancedSettingsDestroy(s *terraform.State) error {
+	// Implement if there's anything to check upon resource destruction
+	return nil
 }
 
 // Helper function to generate test configuration for the resource

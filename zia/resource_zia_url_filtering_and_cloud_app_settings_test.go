@@ -5,14 +5,16 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 	resourceName := "zia_url_filtering_and_cloud_app_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckResourceURLFilteringCloludAppSettingsDestroy,
 		Steps: []resource.TestStep{
 			// Step 1: Create the resource with specific values
 			{
@@ -74,6 +76,11 @@ func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckResourceURLFilteringCloludAppSettingsDestroy(s *terraform.State) error {
+	// Implement if there's anything to check upon resource destruction
+	return nil
 }
 
 // Helper function to generate test configuration for the resource
