@@ -1,26 +1,28 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/user_authentication_settings"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/user_authentication_settings"
 )
 
 func resourceAuthSettingsUrls() *schema.Resource {
 	return &schema.Resource{
-		Read:   resourceAuthSettingsUrlsRead,
-		Create: resourceAuthSettingsUrlsCreate,
-		Update: resourceAuthSettingsUrlsUpdate,
-		Delete: resourceFuncNoOp,
+		ReadContext:   resourceAuthSettingsUrlsRead,
+		CreateContext: resourceAuthSettingsUrlsCreate,
+		UpdateContext: resourceAuthSettingsUrlsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.user_authentication_settings
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
-				urls, err := user_authentication_settings.Get(service)
+				urls, err := user_authentication_settings.Get(ctx, service)
 				if err != nil {
 					return nil, fmt.Errorf("error fetching urls from exception list: %s", err)
 				}
@@ -48,13 +50,13 @@ func resourceAuthSettingsUrls() *schema.Resource {
 	}
 }
 
-func resourceAuthSettingsUrlsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.user_authentication_settings
+func resourceAuthSettingsUrlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
-	res, err := user_authentication_settings.Get(service)
+	res, err := user_authentication_settings.Get(ctx, service)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("exempted_urls")
 	_ = d.Set("urls", res.URLs)
@@ -67,19 +69,18 @@ func expandAuthSettingsUrls(d *schema.ResourceData) user_authentication_settings
 	}
 }
 
-func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error {
-
+func resourceAuthSettingsUrlsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.user_authentication_settings
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	urls := expandAuthSettingsUrls(d)
-	_, err := user_authentication_settings.Update(service, urls)
+	_, err := user_authentication_settings.Update(ctx, service, urls)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("exempted_urls")
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -88,34 +89,33 @@ func resourceAuthSettingsUrlsCreate(d *schema.ResourceData, m interface{}) error
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceAuthSettingsUrlsRead(d, m)
+	return resourceAuthSettingsUrlsRead(ctx, d, meta)
 }
 
-func resourceAuthSettingsUrlsUpdate(d *schema.ResourceData, m interface{}) error {
-
+func resourceAuthSettingsUrlsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Acquire semaphore before making an API request
 	apiSemaphore <- struct{}{}
 	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
 
-	zClient := m.(*Client)
-	service := zClient.user_authentication_settings
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	urls := expandAuthSettingsUrls(d)
 
-	_, err := user_authentication_settings.Update(service, urls)
+	_, err := user_authentication_settings.Update(ctx, service, urls)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Trigger activation after creating the rule label
 	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return activationErr
+		return diag.FromErr(activationErr)
 	}
-	return resourceAuthSettingsUrlsRead(d, m)
+	return resourceAuthSettingsUrlsRead(ctx, d, meta)
 }

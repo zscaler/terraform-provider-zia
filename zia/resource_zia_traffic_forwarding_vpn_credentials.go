@@ -1,27 +1,29 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/vpncredentials"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/vpncredentials"
 )
 
 func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTrafficForwardingVPNCredentialsCreate,
-		Read:   resourceTrafficForwardingVPNCredentialsRead,
-		Update: resourceTrafficForwardingVPNCredentialsUpdate,
-		Delete: resourceTrafficForwardingVPNCredentialsDelete,
+		CreateContext: resourceTrafficForwardingVPNCredentialsCreate,
+		ReadContext:   resourceTrafficForwardingVPNCredentialsRead,
+		UpdateContext: resourceTrafficForwardingVPNCredentialsUpdate,
+		DeleteContext: resourceTrafficForwardingVPNCredentialsDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.vpncredentials
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 
@@ -34,7 +36,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				}
 
 				// If the ID is not an integer, try to import by FQDN.
-				vpnCredential, err := vpncredentials.GetByFQDN(service, id)
+				vpnCredential, err := vpncredentials.GetByFQDN(ctx, service, id)
 				if err == nil {
 					d.SetId(strconv.Itoa(vpnCredential.ID))
 					_ = d.Set("vpn_id", vpnCredential.ID)
@@ -42,7 +44,7 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				}
 
 				// If not found by FQDN, try to import by IP.
-				vpnCredential, err = vpncredentials.GetByIP(service, id)
+				vpnCredential, err = vpncredentials.GetByIP(ctx, service, id)
 				if err == nil {
 					d.SetId(strconv.Itoa(vpnCredential.ID))
 					_ = d.Set("vpn_id", vpnCredential.ID)
@@ -50,8 +52,10 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 				}
 
 				// Finally, try to import by VPN Type.
-				vpnCredential, err = vpncredentials.GetVPNByType(service, id)
-				if err == nil {
+				vpnCredentials, err := vpncredentials.GetVPNByType(ctx, service, id, nil, nil, nil)
+				if err == nil && len(vpnCredentials) > 0 {
+					// Assuming we want the first credential in the list.
+					vpnCredential := vpnCredentials[0] // Use the first match or apply additional filtering if needed.
 					d.SetId(strconv.Itoa(vpnCredential.ID))
 					_ = d.Set("vpn_id", vpnCredential.ID)
 					return []*schema.ResourceData{d}, nil
@@ -103,20 +107,20 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 	}
 }
 
-func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.vpncredentials
+func resourceTrafficForwardingVPNCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandVPNCredentials(d)
 	log.Printf("[INFO] Creating zia vpn credentials\n%+v\n", req)
 
 	if err := validateVpnCredentialType(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	resp, _, err := vpncredentials.Create(service, &req)
+	resp, _, err := vpncredentials.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia vpn credentials request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -128,13 +132,13 @@ func resourceTrafficForwardingVPNCredentialsCreate(d *schema.ResourceData, m int
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingVPNCredentialsRead(d, m)
+	return resourceTrafficForwardingVPNCredentialsRead(ctx, d, meta)
 }
 
 func validateVpnCredentialType(vpn vpncredentials.VPNCredentials) error {
@@ -148,23 +152,23 @@ func validateVpnCredentialType(vpn vpncredentials.VPNCredentials) error {
 	return nil
 }
 
-func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.vpncredentials
+func resourceTrafficForwardingVPNCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "vpn_id")
 	if !ok {
-		return fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set")
+		return diag.FromErr(fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set"))
 	}
-	resp, err := vpncredentials.Get(service, id)
+	resp, err := vpncredentials.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing vpn credentials %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting vpn credentials:\n%+v\n", resp)
@@ -179,9 +183,9 @@ func resourceTrafficForwardingVPNCredentialsRead(d *schema.ResourceData, m inter
 	return nil
 }
 
-func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.vpncredentials
+func resourceTrafficForwardingVPNCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "vpn_id")
 	if !ok {
@@ -189,14 +193,14 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 	}
 	log.Printf("[INFO] Updating vpn credentials ID: %v\n", id)
 	req := expandVPNCredentials(d)
-	if _, err := vpncredentials.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := vpncredentials.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := vpncredentials.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := vpncredentials.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -204,18 +208,18 @@ func resourceTrafficForwardingVPNCredentialsUpdate(d *schema.ResourceData, m int
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingVPNCredentialsRead(d, m)
+	return resourceTrafficForwardingVPNCredentialsRead(ctx, d, meta)
 }
 
-func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.vpncredentials
+func resourceTrafficForwardingVPNCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "vpn_id")
 	if !ok {
@@ -223,8 +227,8 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 	}
 	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", (d.Id()))
 
-	if err := vpncredentials.Delete(service, id); err != nil {
-		return err
+	if err := vpncredentials.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] vpn credentials deleted")
@@ -235,7 +239,7 @@ func resourceTrafficForwardingVPNCredentialsDelete(d *schema.ResourceData, m int
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

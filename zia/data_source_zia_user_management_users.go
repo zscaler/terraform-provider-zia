@@ -1,17 +1,19 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/usermanagement/users"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/users"
 )
 
 func dataSourceUserManagement() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserManagementRead,
+		ReadContext: dataSourceUserManagementRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -113,25 +115,26 @@ func dataSourceUserManagement() *schema.Resource {
 	}
 }
 
-func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *users.Users
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := zClient.users.Get(id)
+		res, err := users.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for user : %s\n", name)
-		res, err := zClient.users.GetUserByName(name)
+		res, err := users.GetUserByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -147,16 +150,16 @@ func dataSourceUserManagementRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("auth_methods", resp.AuthMethods)
 
 		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		// This function needs to be fixed, as the attributes are not application for user management
 		// See: https://help.zscaler.com/zia/user-management#/users-get
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

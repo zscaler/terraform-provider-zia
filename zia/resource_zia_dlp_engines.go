@@ -1,33 +1,35 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_engines"
 )
 
 func resourceDLPEngines() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDLPEnginesCreate,
-		Read:   resourceDLPEnginesRead,
-		Update: resourceDLPEnginesUpdate,
-		Delete: resourceDLPEnginesDelete,
+		CreateContext: resourceDLPEnginesCreate,
+		ReadContext:   resourceDLPEnginesRead,
+		UpdateContext: resourceDLPEnginesUpdate,
+		DeleteContext: resourceDLPEnginesDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.dlp_engines
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("engine_id", idInt)
 				} else {
-					resp, err := dlp_engines.GetByName(service, id)
+					resp, err := dlp_engines.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("engine_id", resp.ID)
@@ -72,16 +74,16 @@ func resourceDLPEngines() *schema.Resource {
 	}
 }
 
-func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_engines
+func resourceDLPEnginesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandDLPEngines(d)
 	log.Printf("[INFO] Creating zia dlp engine\n%+v\n", req)
 
-	resp, _, err := dlp_engines.Create(service, &req)
+	resp, _, err := dlp_engines.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia dlp engine request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -92,32 +94,32 @@ func resourceDLPEnginesCreate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceDLPEnginesRead(d, m)
+	return resourceDLPEnginesRead(ctx, d, meta)
 }
 
-func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_engines
+func resourceDLPEnginesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
-		return fmt.Errorf("no dlp engine id is set")
+		return diag.FromErr(fmt.Errorf("no dlp engine id is set"))
 	}
-	resp, err := dlp_engines.Get(service, id)
+	resp, err := dlp_engines.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia dlp engine%s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting zia dlp engine:\n%+v\n", resp)
@@ -132,9 +134,9 @@ func resourceDLPEnginesRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_engines
+func resourceDLPEnginesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
@@ -142,14 +144,14 @@ func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Updating zia dlp engine ID: %v\n", id)
 	req := expandDLPEngines(d)
-	if _, err := dlp_engines.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := dlp_engines.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := dlp_engines.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := dlp_engines.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -157,18 +159,18 @@ func resourceDLPEnginesUpdate(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceDLPEnginesRead(d, m)
+	return resourceDLPEnginesRead(ctx, d, meta)
 }
 
-func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_engines
+func resourceDLPEnginesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "engine_id")
 	if !ok {
@@ -176,8 +178,8 @@ func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting zia dlp engine ID: %v\n", (d.Id()))
 
-	if _, err := dlp_engines.Delete(service, id); err != nil {
-		return err
+	if _, err := dlp_engines.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia dlp engine deleted")
@@ -187,7 +189,7 @@ func resourceDLPEnginesDelete(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudbrowserisolation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudbrowserisolation"
 )
 
 func dataSourceCBIProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCBIProfileRead,
+		ReadContext: dataSourceCBIProfileRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeString,
@@ -36,17 +38,17 @@ func dataSourceCBIProfile() *schema.Resource {
 	}
 }
 
-func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.user_authentication_settings
+func dataSourceCBIProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *cloudbrowserisolation.IsolationProfile
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for cloud browser isolation profile name %s\n", name)
-		res, err := cloudbrowserisolation.GetByName(service, name)
+		res, err := cloudbrowserisolation.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -57,7 +59,7 @@ func dataSourceCBIProfileRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("default_profile", resp.DefaultProfile)
 
 	} else {
-		return fmt.Errorf("couldn't find any cloud browser isolation profile with name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any cloud browser isolation profile with name '%s'", name))
 	}
 
 	return nil

@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"fmt"
 	"log"
@@ -50,3 +51,4 @@ func main() {
 	_ = cli.Logout()
 	os.Exit(0)
 }
+*/

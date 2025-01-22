@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,10 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
 
 var (
@@ -21,25 +23,25 @@ var (
 
 func resourceDlpWebRules() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDlpWebRulesCreate,
-		Read:   resourceDlpWebRulesRead,
-		Update: resourceDlpWebRulesUpdate,
-		Delete: resourceDlpWebRulesDelete,
+		CreateContext: resourceDlpWebRulesCreate,
+		ReadContext:   resourceDlpWebRulesRead,
+		UpdateContext: resourceDlpWebRulesUpdate,
+		DeleteContext: resourceDlpWebRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.dlp_web_rules
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := dlp_web_rules.GetByName(service, id)
+					resp, err := dlp_web_rules.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -226,20 +228,20 @@ func resourceDlpWebRules() *schema.Resource {
 	}
 }
 
-func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_web_rules
+func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandDlpWebRules(d)
 
 	// Validate file types
 	if err := validateDLPRuleFileTypes(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Validate the OCR DLP web rules (assuming this is another validation function you have)
 	if err := validateOCRDlpWebRules(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Creating zia web dlp rule\n%+v\n", req)
@@ -250,7 +252,7 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	for {
 		dlpWebRulesLock.Lock()
 		if dlpWebStartingOrder == 0 {
-			list, _ := dlp_web_rules.GetAll(service)
+			list, _ := dlp_web_rules.GetAll(ctx, service)
 			for _, r := range list {
 				if r.Order > dlpWebStartingOrder {
 					dlpWebStartingOrder = r.Order
@@ -262,10 +264,11 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 		}
 		dlpWebRulesLock.Unlock()
 		startWithoutLocking := time.Now()
+
 		order := req.Order
 		req.Order = dlpWebStartingOrder
 
-		resp, err := dlp_web_rules.Create(service, &req)
+		resp, err := dlp_web_rules.Create(ctx, service, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
@@ -273,46 +276,44 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 					continue
 				}
 			}
-			return fmt.Errorf("error creating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
 		log.Printf("[INFO] Created zia web dlp rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-
 		reorder(order, resp.ID, "dlp_web_rules", func() (int, error) {
-			list, err := dlp_web_rules.GetAll(service)
+			list, err := dlp_web_rules.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := dlp_web_rules.Get(service, id)
+			rule, err := dlp_web_rules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = dlp_web_rules.Update(service, id, rule)
+			_, err = dlp_web_rules.Update(ctx, service, id, rule)
 			return err
 		})
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		err = resourceDlpWebRulesRead(d, m)
-		if err != nil {
+		if diags := resourceDlpWebRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second) // Wait before retrying
+				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
-		} else {
-			markOrderRuleAsDone(resp.ID, "dlp_web_rules")
-			break
+			return diags
 		}
+		markOrderRuleAsDone(resp.ID, "dlp_web_rules")
+		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -321,23 +322,23 @@ func resourceDlpWebRulesCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_web_rules
+func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return fmt.Errorf("no zia web dlp rule id is set")
+		return diag.FromErr(fmt.Errorf("no zia web dlp rule id is set"))
 	}
-	resp, err := dlp_web_rules.Get(service, id)
+	resp, err := dlp_web_rules.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing web dlp rule %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting web dlp rule:\n%+v\n", resp)
@@ -370,85 +371,85 @@ func resourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 		subRuleIDs[i] = strconv.Itoa(subRule.ID)
 	}
 	if err := d.Set("sub_rules", subRuleIDs); err != nil {
-		return fmt.Errorf("error setting sub_rules: %s", err)
+		return diag.FromErr(fmt.Errorf("error setting sub_rules: %s", err))
 	}
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("included_domain_profiles", flattenIDExtensionsListIDs(resp.IncludedDomainProfiles)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("excluded_domain_profiles", flattenIDExtensionsListIDs(resp.ExcludedDomainProfiles)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("url_categories", flattenIDExtensionsListIDs(resp.URLCategories)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("dlp_engines", flattenIDExtensionsListIDs(resp.DLPEngines)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("auditor", flattenCustomIDSet(resp.Auditor)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("notification_template", flattenCustomIDSet(resp.NotificationTemplate)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("icap_server", flattenCustomIDSet(resp.IcapServer)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIpGroups)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-		return fmt.Errorf("error setting workload_groups: %s", err)
+		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
 	return nil
 }
 
-func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_web_rules
+func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -458,16 +459,16 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	req := expandDlpWebRules(d)
 	// Validate file types
 	if err := validateDLPRuleFileTypes(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Validate the OCR DLP web rules (assuming this is another validation function you have)
 	if err := validateOCRDlpWebRules(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if _, err := dlp_web_rules.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := dlp_web_rules.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
@@ -477,7 +478,7 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	start := time.Now()
 
 	for {
-		_, err := dlp_web_rules.Update(service, id, &req)
+		_, err := dlp_web_rules.Update(ctx, service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if time.Since(start) < timeout {
@@ -485,41 +486,40 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 					continue
 				}
 			}
-			return fmt.Errorf("error updating resource: %s", err)
+			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
 		reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
-			list, err := dlp_web_rules.GetAll(service)
+			list, err := dlp_web_rules.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
-			rule, err := dlp_web_rules.Get(service, id)
+			rule, err := dlp_web_rules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 			rule.Order = order
-			_, err = dlp_web_rules.Update(service, id, rule)
+			_, err = dlp_web_rules.Update(ctx, service, id, rule)
 			return err
 		})
 
-		err = resourceDlpWebRulesRead(d, m)
-		if err != nil {
+		if diags := resourceDlpWebRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second) // Wait before retrying
+				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
-			return err
-		} else {
-			markOrderRuleAsDone(req.ID, "dlp_web_rules")
-			break
+			return diags
 		}
+		markOrderRuleAsDone(req.ID, "dlp_web_rules")
+		break
 	}
+
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
@@ -528,9 +528,9 @@ func resourceDlpWebRulesUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_web_rules
+func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
@@ -538,8 +538,8 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	}
 	log.Printf("[INFO] Deleting dlp rule ID: %v\n", (d.Id()))
 
-	if _, err := dlp_web_rules.Delete(service, id); err != nil {
-		return err
+	if _, err := dlp_web_rules.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] web dlp rule deleted")
@@ -550,7 +550,7 @@ func resourceDlpWebRulesDelete(d *schema.ResourceData, m interface{}) error {
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

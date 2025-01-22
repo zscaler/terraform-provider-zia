@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,10 +9,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlcategories"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlcategories"
 )
 
 func TestAccResourceURLCategoriesBasic(t *testing.T) {
@@ -60,14 +61,14 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 
 func testAccCheckURLCategoriesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.urlcategories
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.URLCategories {
 			continue
 		}
 
-		rule, err := urlcategories.Get(service, rs.Primary.ID)
+		rule, err := urlcategories.Get(context.Background(), service, rs.Primary.ID)
 
 		if err == nil {
 			return fmt.Errorf("id %s already exists", rs.Primary.ID)
@@ -92,9 +93,9 @@ func testAccCheckURLCategoriesExists(resource string, rule *urlcategories.URLCat
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.urlcategories
+		service := apiClient.Service
 
-		receivedRule, err := urlcategories.Get(service, rs.Primary.ID)
+		receivedRule, err := urlcategories.Get(context.Background(), service, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

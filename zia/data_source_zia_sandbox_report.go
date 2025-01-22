@@ -1,17 +1,19 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_report"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_report"
 )
 
 func dataSourceSandboxReport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSandboxReportRead,
+		ReadContext: dataSourceSandboxReportRead,
 		Schema: map[string]*schema.Schema{
 			"md5_hash": {
 				Type:     schema.TypeString,
@@ -228,73 +230,73 @@ func systemSummaryDetailSchema() *schema.Schema {
 }
 
 // dataSourceSandboxReportRead reads the sandbox report data source.
-func dataSourceSandboxReportRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_report
+func dataSourceSandboxReportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	md5Hash := d.Get("md5_hash").(string)
 	details := d.Get("details").(string)
 
-	resp, err := sandbox_report.GetReportMD5Hash(service, md5Hash, details)
+	resp, err := sandbox_report.GetReportMD5Hash(ctx, service, md5Hash, details)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if resp != nil && resp.Details != nil {
 		d.SetId(md5Hash)
 
 		if err := d.Set("md5_hash", md5Hash); err != nil {
-			return fmt.Errorf("error setting md5_hash: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting md5_hash: %s", err))
 		}
 
 		if resp.Details != nil {
 			if err := d.Set("summary", []interface{}{flattenSummaryDetail(resp.Details.Summary)}); err != nil {
-				return fmt.Errorf("error setting summary: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting summary: %s", err))
 			}
 			if err := d.Set("classification", []interface{}{flattenClassification(resp.Details.Classification)}); err != nil {
-				return fmt.Errorf("error setting classification: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting classification: %s", err))
 			}
 
 			if err := d.Set("file_properties", []interface{}{flattenFileProperties(&resp.Details.FileProperties)}); err != nil {
-				return fmt.Errorf("error setting file_properties: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting file_properties: %s", err))
 			}
 		}
 
 		if details == "full" {
 			// Set additional fields for full details
 			if err := d.Set("origin", []interface{}{flattenOrigin(resp.Details.Origin)}); err != nil {
-				return fmt.Errorf("error setting origin: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting origin: %s", err))
 			}
 
 			if err := d.Set("system_summary", flattenSystemSummaryDetails(resp.Details.SystemSummary)); err != nil {
-				return fmt.Errorf("error setting system_summary: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting system_summary: %s", err))
 			}
 
 			// Repeat for other SandboxRSS fields like spyware, networking, etc.
 			if err := d.Set("spyware", flattenSandboxRSS(resp.Details.Spyware)); err != nil {
-				return fmt.Errorf("error setting spyware: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting spyware: %s", err))
 			}
 			if err := d.Set("networking", flattenSandboxRSS(resp.Details.Networking)); err != nil {
-				return fmt.Errorf("error setting networking: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting networking: %s", err))
 			}
 			if err := d.Set("security_bypass", flattenSandboxRSS(resp.Details.SecurityBypass)); err != nil {
-				return fmt.Errorf("error setting security_bypass: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting security_bypass: %s", err))
 			}
 			if err := d.Set("exploit", flattenSandboxRSS(resp.Details.Exploit)); err != nil {
-				return fmt.Errorf("error setting exploit: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting exploit: %s", err))
 			}
 			if err := d.Set("stealth", flattenSandboxRSS(resp.Details.Stealth)); err != nil {
-				return fmt.Errorf("error setting stealth: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting stealth: %s", err))
 			}
 			if err := d.Set("persistence", flattenSandboxRSS(resp.Details.Persistence)); err != nil {
-				return fmt.Errorf("error setting persistence: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting persistence: %s", err))
 			}
 			if err := d.Set("persistence", flattenSandboxRSS(resp.Details.Persistence)); err != nil {
-				return fmt.Errorf("error setting persistence: %s", err)
+				return diag.FromErr(fmt.Errorf("error setting persistence: %s", err))
 			}
 		}
 	} else {
-		return fmt.Errorf("couldn't find any reports for MD5 hash: %s", md5Hash)
+		return diag.FromErr(fmt.Errorf("couldn't find any reports for MD5 hash: %s", md5Hash))
 	}
 
 	return nil

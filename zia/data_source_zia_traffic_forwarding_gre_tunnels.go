@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
 )
 
 func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingGreTunnelsRead,
+		ReadContext: dataSourceTrafficForwardingGreTunnelsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -164,17 +166,17 @@ func dataSourceTrafficForwardingGreTunnels() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnels
+func dataSourceTrafficForwardingGreTunnelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *gretunnels.GreTunnels
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %d\n", id)
-		res, err := gretunnels.GetGreTunnels(service, id)
+		res, err := gretunnels.GetGreTunnels(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -188,23 +190,23 @@ func dataSourceTrafficForwardingGreTunnelsRead(d *schema.ResourceData, m interfa
 		_ = d.Set("comment", resp.Comment)
 		_ = d.Set("ip_unnumbered", resp.IPUnnumbered)
 		if err := d.Set("primary_dest_vip", flattenGrePrimaryDestVip(resp.PrimaryDestVip)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("secondary_dest_vip", flattenGreSecondaryDestVip(resp.SecondaryDestVip)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("managed_by", flattenGreManagedBy(resp.ManagedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_modified_by", flattenGreLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any gre tunnel with id '%d'", id)
+		return diag.FromErr(fmt.Errorf("couldn't find any gre tunnel with id '%d'", id))
 	}
 
 	return nil

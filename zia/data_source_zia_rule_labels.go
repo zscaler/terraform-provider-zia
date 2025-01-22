@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 )
 
 func dataSourceRuleLabels() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRuleLabelsRead,
+		ReadContext: dataSourceRuleLabelsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -95,26 +97,26 @@ func dataSourceRuleLabels() *schema.Resource {
 	}
 }
 
-func dataSourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.rule_labels
+func dataSourceRuleLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *rule_labels.RuleLabels
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for rule label id: %d\n", id)
-		res, err := rule_labels.Get(service, id)
+		res, err := rule_labels.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for rule label name: %s\n", name)
-		res, err := rule_labels.GetRuleLabelByName(service, name)
+		res, err := rule_labels.GetRuleLabelByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -126,15 +128,15 @@ func dataSourceRuleLabelsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("referenced_rule_count", resp.ReferencedRuleCount)
 
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("created_by", flattenCreatedBy(resp.CreatedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any rule label name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any rule label name '%s' or id '%d'", name, id))
 	}
 
 	return nil

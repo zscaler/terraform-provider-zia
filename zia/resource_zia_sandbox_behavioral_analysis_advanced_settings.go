@@ -1,29 +1,31 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
 	"sort"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_settings"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_settings"
 )
 
 func resourceSandboxSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSandboxSettingsCreate,
-		Read:   resourceSandboxSettingsRead,
-		Update: resourceSandboxSettingsUpdate,
-		Delete: resourceFuncNoOp,
+		CreateContext: resourceSandboxSettingsCreate,
+		ReadContext:   resourceSandboxSettingsRead,
+		UpdateContext: resourceSandboxSettingsUpdate,
+		DeleteContext: resourceFuncNoOp,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.sandbox_settings
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				// Use the Get method from the SDK to fetch the MD5 file hashes
-				hashes, err := sandbox_settings.Get(service)
+				hashes, err := sandbox_settings.Get(ctx, service)
 				if err != nil {
 					return nil, fmt.Errorf("error fetching MD5 file hashes: %s", err)
 				}
@@ -79,20 +81,20 @@ func identifyHashType(hash string) string {
 	}
 }
 
-func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_settings
+func resourceSandboxSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 	fileHashes := expandAndSortSandboxSettings(d)
 
 	// Validate hashes
 	err := validateHashes(fileHashes.FileHashesToBeBlocked)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	_, err = sandbox_settings.Update(service, fileHashes)
+	_, err = sandbox_settings.Update(ctx, service, fileHashes)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId("hash_list")
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -101,21 +103,21 @@ func resourceSandboxSettingsCreate(d *schema.ResourceData, m interface{}) error 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSandboxSettingsRead(d, m)
+	return resourceSandboxSettingsRead(ctx, d, meta)
 }
 
-func resourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_settings
-	resp, err := sandbox_settings.Get(service)
+func resourceSandboxSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
+	resp, err := sandbox_settings.Get(ctx, service)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if resp != nil {
@@ -123,34 +125,34 @@ func resourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
 		sortedHashes := sortStringSlice(resp.FileHashesToBeBlocked)
 		err := d.Set("file_hashes_to_be_blocked", sortedHashes)
 		if err != nil {
-			return fmt.Errorf("error setting file hashes to be blocked: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting file hashes to be blocked: %s", err))
 		}
 	} else {
-		return fmt.Errorf("couldn't read file hash")
+		return diag.FromErr(fmt.Errorf("couldn't read file hash"))
 	}
 	return nil
 }
 
-func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_settings
+func resourceSandboxSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	stateHashes := expandAndSortSandboxSettings(d)
 
 	// Validate hashes
 	if err := validateHashes(stateHashes.FileHashesToBeBlocked); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	currentSettings, err := sandbox_settings.Get(service)
+	currentSettings, err := sandbox_settings.Get(ctx, service)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if !reflect.DeepEqual(stateHashes.FileHashesToBeBlocked, sortStringSlice(currentSettings.FileHashesToBeBlocked)) {
-		_, err := sandbox_settings.Update(service, stateHashes)
+		_, err := sandbox_settings.Update(ctx, service, stateHashes)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
@@ -159,13 +161,13 @@ func resourceSandboxSettingsUpdate(d *schema.ResourceData, m interface{}) error 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSandboxSettingsRead(d, m)
+	return resourceSandboxSettingsRead(ctx, d, meta)
 }
 
 func expandAndSortSandboxSettings(d *schema.ResourceData) sandbox_settings.BaAdvancedSettings {

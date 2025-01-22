@@ -1,17 +1,19 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlpdictionaries"
 )
 
 func dataSourceDLPDictionaries() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPDictionariesRead,
+		ReadContext: dataSourceDLPDictionariesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -202,26 +204,26 @@ func dataSourceDLPDictionaries() *schema.Resource {
 	}
 }
 
-func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlpdictionaries
+func dataSourceDLPDictionariesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlpdictionaries.DlpDictionary
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp dictionary id: %d\n", id)
-		res, err := dlpdictionaries.Get(service, id)
+		res, err := dlpdictionaries.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp dictionary: %s\n", name)
-		res, err := dlpdictionaries.GetByName(service, name)
+		res, err := dlpdictionaries.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -245,21 +247,21 @@ func dataSourceDLPDictionariesRead(d *schema.ResourceData, m interface{}) error 
 		_ = d.Set("proximity_length_enabled", resp.ProximityLengthEnabled)
 		_ = d.Set("proximity", resp.Proximity)
 		if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("patterns", flattenPatterns(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("exact_data_match_details", flattenEDMDetails(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("idm_profile_match_accuracy", flattenIDMProfileMatchAccuracy(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp dictionary with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp dictionary with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

@@ -1,15 +1,17 @@
 package zia
 
 import (
+	"context"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/virtualipaddress"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/virtualipaddress"
 )
 
 func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingGreVipRecommendedListRead,
+		ReadContext: dataSourceTrafficForwardingGreVipRecommendedListRead,
 		Schema: map[string]*schema.Schema{
 			"source_ip": {
 				Type:     schema.TypeString,
@@ -96,9 +98,9 @@ func dataSourceTrafficForwardingGreVipRecommendedList() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.virtualipaddress
+func dataSourceTrafficForwardingGreVipRecommendedListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	// Gather parameters from schema
 	sourceIP := d.Get("source_ip").(string)
@@ -135,9 +137,9 @@ func dataSourceTrafficForwardingGreVipRecommendedListRead(d *schema.ResourceData
 	}
 
 	// Call the new function with the options
-	resp, err := virtualipaddress.GetVIPRecommendedList(service, options...)
+	resp, err := virtualipaddress.GetVIPRecommendedList(ctx, service, options...)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Trim the list to the required count, if necessary

@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/rule_labels"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 )
 
 func TestAccResourceRuleLabelsBasic(t *testing.T) {
@@ -57,7 +58,7 @@ func TestAccResourceRuleLabelsBasic(t *testing.T) {
 
 func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.rule_labels
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.RuleLabels {
@@ -70,7 +71,7 @@ func testAccCheckRuleLabelsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := rule_labels.Get(service, id)
+		rule, err := rule_labels.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -101,9 +102,9 @@ func testAccCheckRuleLabelsExists(resource string, rule *rule_labels.RuleLabels)
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.rule_labels
+		service := apiClient.Service
 
-		receivedRule, err := rule_labels.Get(service, id)
+		receivedRule, err := rule_labels.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

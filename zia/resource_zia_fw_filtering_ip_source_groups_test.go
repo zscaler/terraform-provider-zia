@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipsourcegroups"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipsourcegroups"
 )
 
 func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccResourceFWIPSourceGroupsBasic(t *testing.T) {
 
 func testAccCheckFWIPSourceGroupsDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.ipsourcegroups
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.FWFilteringSourceGroup {
@@ -72,7 +73,7 @@ func testAccCheckFWIPSourceGroupsDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := ipsourcegroups.Get(service, id)
+		rule, err := ipsourcegroups.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -103,9 +104,9 @@ func testAccCheckFWIPSourceGroupsExists(resource string, rule *ipsourcegroups.IP
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.ipsourcegroups
+		service := apiClient.Service
 
-		receivedRule, err := ipsourcegroups.Get(service, id)
+		receivedRule, err := ipsourcegroups.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

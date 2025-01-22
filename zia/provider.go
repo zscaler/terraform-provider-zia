@@ -4,39 +4,75 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"runtime"
 
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common"
 )
 
-func Provider() *schema.Provider {
+func ZIAProvider() *schema.Provider {
 	p := &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"username": {
+			"client_id": {
 				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_USERNAME"),
-				Required:    true,
+				Optional:    true,
+				Description: "zpa client id",
+			},
+			"client_secret": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				Description:   "zpa client secret",
+				ConflictsWith: []string{"private_key"},
+			},
+			"private_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				Description:   "zpa private key",
+				ConflictsWith: []string{"client_secret"},
+			},
+			"vanity_domain": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Zscaler Vanity Domain",
+			},
+			"zscaler_cloud": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Zscaler Cloud Name",
+			},
+			"sandbox_token": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Zscaler Sandbox Token",
+			},
+			"sandbox_cloud": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Zscaler Sandbox Cloud",
+			},
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"password": {
-				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_PASSWORD"),
-				Required:    true,
-				Sensitive:   true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"api_key": {
-				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_API_KEY"),
-				Required:    true,
-				Sensitive:   true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"zia_cloud": {
-				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_CLOUD"),
+				Type: schema.TypeString,
 				ValidateFunc: validation.StringInSlice([]string{
 					"zscaler",
 					"zscalerone",
@@ -48,13 +84,34 @@ func Provider() *schema.Provider {
 					"zscalerten",
 					"zspreview",
 				}, false),
-				Required: true,
+				Optional: true,
 			},
-			"api_token": {
-				Type:        schema.TypeString,
-				DefaultFunc: envDefaultFunc("ZIA_SANDBOX_TOKEN"),
+			"use_legacy_client": {
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Sensitive:   true,
+				Description: "",
+			},
+			"http_proxy": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Alternate HTTP proxy of scheme://hostname or scheme://hostname:port format",
+			},
+			"max_retries": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ValidateDiagFunc: intAtMost(100),
+				Description:      "maximum number of retries to attempt before erroring out.",
+			},
+			"parallelism": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "Number of concurrent requests to make within a resource where bulk operations are not possible. Take note of https://help.zscaler.com/oneapi/understanding-rate-limiting.",
+			},
+			"request_timeout": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				ValidateDiagFunc: intBetween(0, 300),
+				Description:      "Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.",
 			},
 		},
 
@@ -65,6 +122,8 @@ func Provider() *schema.Provider {
 			"zia_dlp_notification_templates":                    resourceDLPNotificationTemplates(),
 			"zia_dlp_web_rules":                                 resourceDlpWebRules(),
 			"zia_firewall_filtering_rule":                       resourceFirewallFilteringRules(),
+			"zia_firewall_ips_rule":                             resourceFirewallIPSRules(),
+			"zia_firewall_dns_rule":                             resourceFirewallDNSRules(),
 			"zia_cloud_app_control_rule":                        resourceCloudAppControlRules(),
 			"zia_firewall_filtering_destination_groups":         resourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_ip_source_groups":           resourceFWIPSourceGroups(),
@@ -77,16 +136,29 @@ func Provider() *schema.Provider {
 			"zia_traffic_forwarding_vpn_credentials":            resourceTrafficForwardingVPNCredentials(),
 			"zia_forwarding_control_zpa_gateway":                resourceForwardingControlZPAGateway(),
 			//"zia_pac_files":                                     resourcePacFiles(),
-			"zia_location_management":         resourceLocationManagement(),
-			"zia_url_categories":              resourceURLCategories(),
-			"zia_url_filtering_rules":         resourceURLFilteringRules(),
-			"zia_user_management":             resourceUserManagement(),
-			"zia_activation_status":           resourceActivationStatus(),
-			"zia_rule_labels":                 resourceRuleLabels(),
-			"zia_auth_settings_urls":          resourceAuthSettingsUrls(),
-			"zia_security_settings":           resourceSecurityPolicySettings(),
-			"zia_sandbox_behavioral_analysis": resourceSandboxSettings(),
-			"zia_sandbox_file_submission":     resourceSandboxSubmission(),
+			"zia_location_management":                  resourceLocationManagement(),
+			"zia_url_categories":                       resourceURLCategories(),
+			"zia_url_filtering_rules":                  resourceURLFilteringRules(),
+			"zia_file_type_control_rules":              resourceFileTypeControlRules(),
+			"zia_user_management":                      resourceUserManagement(),
+			"zia_activation_status":                    resourceActivationStatus(),
+			"zia_rule_labels":                          resourceRuleLabels(),
+			"zia_auth_settings_urls":                   resourceAuthSettingsUrls(),
+			"zia_security_settings":                    resourceSecurityPolicySettings(),
+			"zia_sandbox_behavioral_analysis":          resourceSandboxSettings(),
+			"zia_sandbox_file_submission":              resourceSandboxSubmission(),
+			"zia_sandbox_rules":                        resourceSandboxRules(),
+			"zia_ssl_inspection_rules":                 resourceSSLInspectionRules(),
+			"zia_advanced_threat_settings":             resourceAdvancedThreatSettings(),
+			"zia_atp_malicious_urls":                   resourceATPMaliciousUrls(),
+			"zia_atp_security_exceptions":              resourceATPSecurityExceptions(),
+			"zia_advanced_settings":                    resourceAdvancedSettings(),
+			"zia_atp_malware_inspection":               resourceATPMalwareInspection(),
+			"zia_atp_malware_protocols":                resourceATPMalwareProtocols(),
+			"zia_atp_malware_settings":                 resourceATPMalwareSettings(),
+			"zia_atp_malware_policy":                   resourceATPMalwarePolicy(),
+			"zia_url_filtering_and_cloud_app_settings": resourceURLFilteringCloludAppSettings(),
+			"zia_end_user_notification":                resourceEndUserNotification(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -95,8 +167,10 @@ func Provider() *schema.Provider {
 			"zia_user_management":                               dataSourceUserManagement(),
 			"zia_group_management":                              dataSourceGroupManagement(),
 			"zia_department_management":                         dataSourceDepartmentManagement(),
-			"zia_firewall_filtering_rule":                       dataSourceFirewallFilteringRule(),
+			"zia_cloud_applications":                            dataSourceCloudApplications(),
 			"zia_cloud_app_control_rule":                        dataSourceCloudAppControlRules(),
+			"zia_file_type_control_rules":                       dataSourceFileTypeControlRules(),
+			"zia_firewall_filtering_rule":                       dataSourceFirewallFilteringRule(),
 			"zia_firewall_filtering_network_service":            dataSourceFWNetworkServices(),
 			"zia_firewall_filtering_network_service_groups":     dataSourceFWNetworkServiceGroups(),
 			"zia_firewall_filtering_network_application":        dataSourceFWNetworkApplication(),
@@ -106,6 +180,8 @@ func Provider() *schema.Provider {
 			"zia_firewall_filtering_ip_source_groups":           dataSourceFWIPSourceGroups(),
 			"zia_firewall_filtering_destination_groups":         dataSourceFWIPDestinationGroups(),
 			"zia_firewall_filtering_time_window":                dataSourceFWTimeWindow(),
+			"zia_firewall_ips_rule":                             dataSourceFirewallIPSRules(),
+			"zia_firewall_dns_rule":                             dataSourceFirewallDNSRules(),
 			"zia_forwarding_control_rule":                       dataSourceForwardingControlRule(),
 			// "zia_pac_files":                                     dataSourcePacFiles(),
 			"zia_url_categories":                              dataSourceURLCategories(),
@@ -138,11 +214,25 @@ func Provider() *schema.Provider {
 			"zia_security_settings":                           dataSourceSecurityPolicySettings(),
 			"zia_sandbox_behavioral_analysis":                 dataSourceSandboxSettings(),
 			"zia_sandbox_report":                              dataSourceSandboxReport(),
+			"zia_sandbox_rules":                               dataSourceSandboxRules(),
+			"zia_ssl_inspection_rules":                        dataSourceSSLInspectionRules(),
 			"zia_forwarding_control_zpa_gateway":              dataSourceForwardingControlZPAGateway(),
+			"zia_forwarding_control_proxy_gateway":            dataSourceForwardingControlProxyGateway(),
 			"zia_cloud_browser_isolation_profile":             dataSourceCBIProfile(),
 			"zia_workload_groups":                             dataSourceWorkloadGroup(),
+			"zia_advanced_threat_settings":                    dataSourceAdvancedThreatSettings(),
+			"zia_atp_malicious_urls":                          dataSourceATPMaliciousUrls(),
+			"zia_atp_security_exceptions":                     dataSourceATPSecurityExceptions(),
+			"zia_advanced_settings":                           dataSourceAdvancedSettings(),
+			"zia_atp_malware_inspection":                      dataSourceATPMalwareInspection(),
+			"zia_atp_malware_protocols":                       dataSourceATPMalwareProtocols(),
+			"zia_atp_malware_settings":                        dataSourceATPMalwareSettings(),
+			"zia_atp_malware_policy":                          dataSourceATPMalwarePolicy(),
+			"zia_url_filtering_and_cloud_app_settings":        dataSourceURLFilteringCloludAppSettings(),
+			"zia_end_user_notification":                       dataSourceEndUserNotification(),
 		},
 	}
+
 	p.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		terraformVersion := p.TerraformVersion
 		if terraformVersion == "" {
@@ -150,7 +240,7 @@ func Provider() *schema.Provider {
 			// We can therefore assume that if it's missing it's 0.10 or 0.11
 			terraformVersion = "0.11+compatible"
 		}
-		r, err := ziaConfigure(d, terraformVersion)
+		r, err := providerConfigure(d, terraformVersion)
 		if err != nil {
 			return nil, diag.Diagnostics{
 				diag.Diagnostic{
@@ -167,29 +257,27 @@ func Provider() *schema.Provider {
 	return p
 }
 
-func ziaConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
-	log.Printf("[INFO] Initializing ZIA client")
-	config := Config{
-		Username:   d.Get("username").(string),
-		Password:   d.Get("password").(string),
-		APIKey:     d.Get("api_key").(string),
-		ZIABaseURL: d.Get("zia_cloud").(string),
-		UserAgent:  fmt.Sprintf("(%s %s) Terraform/%s Version/%s", runtime.GOOS, runtime.GOARCH, terraformVersion, common.Version()),
+func providerConfigure(d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+	log.Printf("[INFO] Initializing Zscaler client")
+
+	// Create configuration from schema
+	config := NewConfig(d)
+	config.TerraformVersion = terraformVersion
+
+	// Load the correct SDK client (prioritizing V3)
+	if diags := config.loadClients(); diags.HasError() {
+		return nil, diags
 	}
 
-	return config.Client()
-}
-
-func envDefaultFunc(k string) schema.SchemaDefaultFunc {
-	return func() (interface{}, error) {
-		if v := os.Getenv(k); v != "" {
-			return v, nil
-		}
-
-		return nil, nil
+	// Return the configured client
+	client, err := config.Client()
+	if err != nil {
+		return nil, diag.Errorf("failed to configure Zscaler client: %v", err)
 	}
+
+	return client, nil
 }
 
-func resourceFuncNoOp(*schema.ResourceData, interface{}) error {
+func resourceFuncNoOp(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics {
 	return nil
 }

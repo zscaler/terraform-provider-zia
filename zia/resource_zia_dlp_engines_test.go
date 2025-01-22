@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_engines"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_engines"
 )
 
 func TestAccResourceDLPEnginesBasic(t *testing.T) {
@@ -59,7 +60,7 @@ func TestAccResourceDLPEnginesBasic(t *testing.T) {
 
 func testAccCheckDLPEnginesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.dlp_engines
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPEngines {
@@ -72,7 +73,7 @@ func testAccCheckDLPEnginesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		engine, err := dlp_engines.Get(service, id)
+		engine, err := dlp_engines.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -103,9 +104,9 @@ func testAccCheckDLPEnginesExists(resource string, engine *dlp_engines.DLPEngine
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.dlp_engines
+		service := apiClient.Service
 
-		receivedEngine, err := dlp_engines.Get(service, id)
+		receivedEngine, err := dlp_engines.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

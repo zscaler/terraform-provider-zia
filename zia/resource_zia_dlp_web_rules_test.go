@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
 
 func TestAccResourceDlpWebRules_Basic(t *testing.T) {
@@ -64,7 +65,7 @@ func TestAccResourceDlpWebRules_Basic(t *testing.T) {
 
 func testAccCheckDlpWebRulesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.dlp_web_rules
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.DLPWebRules {
@@ -77,7 +78,7 @@ func testAccCheckDlpWebRulesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := dlp_web_rules.Get(service, id)
+		rule, err := dlp_web_rules.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -108,9 +109,9 @@ func testAccCheckDlpWebRulesExists(resource string, rule *dlp_web_rules.WebDLPRu
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.dlp_web_rules
+		service := apiClient.Service
 
-		receivedRule, err := dlp_web_rules.Get(service, id)
+		receivedRule, err := dlp_web_rules.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -124,7 +125,7 @@ func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, name, description, ac
 
 	return fmt.Sprintf(`
 
-data "zia_url_categories" "corporate_marketing"{
+	data "zia_url_categories" "corporate_marketing"{
 	id = "CORPORATE_MARKETING"
 }
 
@@ -164,10 +165,6 @@ data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
 }
 
-data "zia_dlp_engines" "this" {
-	predefined_engine_name = "EXTERNAL"
-  }
-
 resource "%s" "%s" {
 	name 						= "tf-acc-test-%s"
 	description 				= "%s"
@@ -176,11 +173,10 @@ resource "%s" "%s" {
 	order 						= 1
 	rank 						= 7
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-	without_content_inspection 	= true
-	file_types                  = [ "ALL_OUTBOUND" ]
+	without_content_inspection 	= false
+	zscaler_incident_receiver = true
 	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 	severity = "RULE_SEVERITY_HIGH"
-	zscaler_incident_receiver 	= true
 	location_groups {
 		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
 	}
@@ -196,9 +192,6 @@ resource "%s" "%s" {
 	url_categories {
 		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
 	}
-	dlp_engines {
-		id = [data.zia_dlp_engines.this.id]
-	  }
 }
 
 data "%s" "%s" {

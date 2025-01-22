@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 )
 
 func dataSourceFWIPDestinationGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWIPDestinationGroupsRead,
+		ReadContext: dataSourceFWIPDestinationGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -49,26 +51,26 @@ func dataSourceFWIPDestinationGroups() *schema.Resource {
 	}
 }
 
-func dataSourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.ipdestinationgroups
+func dataSourceFWIPDestinationGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *ipdestinationgroups.IPDestinationGroups
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for ip destination groups id: %d\n", id)
-		res, err := ipdestinationgroups.Get(service, id)
+		res, err := ipdestinationgroups.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for ip destination groups : %s\n", name)
-		res, err := ipdestinationgroups.GetByName(service, name)
+		res, err := ipdestinationgroups.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -83,7 +85,7 @@ func dataSourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("countries", resp.Countries)
 
 	} else {
-		return fmt.Errorf("couldn't find any ip destination groups with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any ip destination groups with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

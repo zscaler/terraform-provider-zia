@@ -1,17 +1,19 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
 
 func dataSourceDlpWebRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDlpWebRulesRead,
+		ReadContext: dataSourceDlpWebRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -528,17 +530,17 @@ func dataSourceDlpWebRules() *schema.Resource {
 	}
 }
 
-func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_web_rules
+func dataSourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_web_rules.WebDLPRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp web rule id: %d\n", id)
-		res, err := dlp_web_rules.Get(service, id)
+		res, err := dlp_web_rules.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -546,9 +548,9 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp web rule: %s\n", name)
-		res, err := dlp_web_rules.GetByName(service, name)
+		res, err := dlp_web_rules.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -582,65 +584,65 @@ func dataSourceDlpWebRulesRead(d *schema.ResourceData, m interface{}) error {
 			subRuleIDs[i] = strconv.Itoa(subRule.ID)
 		}
 		if err := d.Set("sub_rules", subRuleIDs); err != nil {
-			return fmt.Errorf("error setting sub_rules: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting sub_rules: %s", err))
 		}
 
 		if err := d.Set("locations", flattenIDExtensions(resp.Locations)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("location_groups", flattenIDExtensions(resp.LocationGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("groups", flattenIDExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("departments", flattenIDExtensions(resp.Departments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("users", flattenIDExtensions(resp.Users)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("url_categories", flattenIDExtensions(resp.URLCategories)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dlp_engines", flattenIDExtensions(resp.DLPEngines)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("time_windows", flattenIDExtensions(resp.TimeWindows)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_modified_by", flattenIDExtensionsList(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("labels", flattenIDExtensions(resp.Labels)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("source_ip_groups", flattenIDExtensions(resp.SourceIpGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-			return fmt.Errorf("error setting workload_groups: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
 	} else {
-		return fmt.Errorf("couldn't find any web dlp rule with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any web dlp rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_idm_profiles"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_idm_profiles"
 )
 
 func dataSourceDLPIDMProfiles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPIDMProfilesRead,
+		ReadContext: dataSourceDLPIDMProfilesRead,
 		Schema: map[string]*schema.Schema{
 			"profile_id": {
 				Type:        schema.TypeInt,
@@ -165,26 +167,26 @@ func dataSourceDLPIDMProfiles() *schema.Resource {
 	}
 }
 
-func dataSourceDLPIDMProfilesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_idm_profiles
+func dataSourceDLPIDMProfilesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_idm_profiles.DLPIDMProfile
 	profileID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp idm profile id: %d\n", profileID)
-		res, err := dlp_idm_profiles.Get(service, profileID)
+		res, err := dlp_idm_profiles.Get(ctx, service, profileID)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	profileName, _ := d.Get("profile_name").(string)
 	if resp == nil && profileName != "" {
 		log.Printf("[INFO] Getting data for dlp idmp profile name: %s\n", profileName)
-		res, err := dlp_idm_profiles.GetByName(service, profileName)
+		res, err := dlp_idm_profiles.GetByName(ctx, service, profileName)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -212,14 +214,14 @@ func dataSourceDLPIDMProfilesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 
 		if err := d.Set("last_modified_by", flattenIDExtensionsList(resp.ModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("idm_client", flattenIDExtensionsList(resp.IDMClient)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any dlp idm profile name '%s' or id '%d'", profileName, profileID)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp idm profile name '%s' or id '%d'", profileName, profileID))
 	}
 
 	return nil

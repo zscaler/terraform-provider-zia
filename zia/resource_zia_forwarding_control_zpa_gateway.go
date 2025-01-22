@@ -1,34 +1,37 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/zpa_gateways"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/zpa_gateways"
 )
 
 func resourceForwardingControlZPAGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceForwardingControlZPAGatewayCreate,
-		Read:   resourceForwardingControlZPAGatewayRead,
-		Update: resourceForwardingControlZPAGatewayUpdate,
-		Delete: resourceForwardingControlZPAGatewayDelete,
+		CreateContext: resourceForwardingControlZPAGatewayCreate,
+		ReadContext:   resourceForwardingControlZPAGatewayRead,
+		UpdateContext: resourceForwardingControlZPAGatewayUpdate,
+		DeleteContext: resourceForwardingControlZPAGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("gateway_id", idInt)
 				} else {
-					resp, err := zClient.zpa_gateways.GetByName(id)
+					resp, err := zpa_gateways.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("gateway_id", resp.ID)
@@ -117,19 +120,20 @@ func validatePredefinedObject(req zpa_gateways.ZPAGateways) error {
 	return nil
 }
 
-func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceForwardingControlZPAGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandForwardingControlZPAGateway(d)
 	log.Printf("[INFO] Creating forwarding control zpa gateway\n%+v\n", req)
 
 	if err := validatePredefinedObject(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	resp, err := zClient.zpa_gateways.Create(&req)
+	resp, err := zpa_gateways.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Created forwarding control zpa gateway request. ID: %v\n", resp)
@@ -141,35 +145,36 @@ func resourceForwardingControlZPAGatewayCreate(d *schema.ResourceData, m interfa
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlZPAGatewayRead(d, m)
+	return resourceForwardingControlZPAGatewayRead(ctx, d, meta)
 }
 
-func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceForwardingControlZPAGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	log.Printf("[DEBUG] Current value of gateway_id: %v", d.Get("gateway_id"))
 
 	id, ok := getIntFromResourceData(d, "gateway_id")
 
 	if !ok {
-		return fmt.Errorf("no forwarding control zpa gateway id is set")
+		return diag.FromErr(fmt.Errorf("no forwarding control zpa gateway id is set"))
 	}
 
-	resp, err := zClient.zpa_gateways.Get(id)
+	resp, err := zpa_gateways.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing forwarding control zpa gateway %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting forwarding control zpa gateway:\n%+v\n", resp)
@@ -185,17 +190,18 @@ func resourceForwardingControlZPAGatewayRead(d *schema.ResourceData, m interface
 	_ = d.Set("type", resp.Type)
 
 	if err := d.Set("zpa_server_group", flattenZPAServerGroupSimple(resp.ZPAServerGroup)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("zpa_app_segments", flattenZPAGWAppSegments(resp.ZPAAppSegments)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceForwardingControlZPAGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "gateway_id")
 	if !ok {
@@ -209,16 +215,16 @@ func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interfa
 	req := expandForwardingControlZPAGateway(d)
 
 	if err := validatePredefinedObject(req); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := zClient.zpa_gateways.Get(id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := zpa_gateways.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, err := zClient.zpa_gateways.Update(id, &req); err != nil {
-		return err
+	if _, err := zpa_gateways.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -226,37 +232,38 @@ func resourceForwardingControlZPAGatewayUpdate(d *schema.ResourceData, m interfa
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlZPAGatewayRead(d, m)
+	return resourceForwardingControlZPAGatewayRead(ctx, d, meta)
 }
 
-func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
+func resourceForwardingControlZPAGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "gateway_id")
 	if !ok {
 		log.Printf("[ERROR] forwarding control zpa gateway not set: %v\n", id)
 	}
 	// Retrieve the rule to check if it's a predefined one
-	gwObj, err := zClient.zpa_gateways.Get(id)
+	gwObj, err := zpa_gateways.Get(ctx, service, id)
 	if err != nil {
-		return fmt.Errorf("error retrieving zpa gateway object %d: %v", id, err)
+		return diag.FromErr(fmt.Errorf("error retrieving zpa gateway object %d: %v", id, err))
 	}
 
 	// Validate if the rule can be deleted
 	if err := validatePredefinedObject(*gwObj); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Deleting forwarding control zpa gateway ID: %v\n", (d.Id()))
 
-	if _, err := zClient.zpa_gateways.Delete(id); err != nil {
-		return err
+	if _, err := zpa_gateways.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] forwarding control zpa gateway deleted")
@@ -266,7 +273,7 @@ func resourceForwardingControlZPAGatewayDelete(d *schema.ResourceData, m interfa
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

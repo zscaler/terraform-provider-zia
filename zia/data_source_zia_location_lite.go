@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationlite"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationlite"
 )
 
 func dataSourceLocationLite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationLiteRead,
+		ReadContext: dataSourceLocationLiteRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -96,26 +98,26 @@ func dataSourceLocationLite() *schema.Resource {
 	}
 }
 
-func dataSourceLocationLiteRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationlite
+func dataSourceLocationLiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *locationlite.LocationLite
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for location id: %d\n", id)
-		res, err := locationlite.GetLocationLiteID(service, id)
+		res, err := locationlite.GetLocationLiteID(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := locationlite.GetLocationLiteByName(service, name)
+		res, err := locationlite.GetLocationLiteByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -143,7 +145,7 @@ func dataSourceLocationLiteRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
 
 	} else {
-		return fmt.Errorf("couldn't find any location with name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any location with name '%s'", name))
 	}
 
 	return nil

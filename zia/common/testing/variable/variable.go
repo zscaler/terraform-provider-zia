@@ -10,6 +10,52 @@ const (
 	URLFilteringRuleStateUpdate  = "DISABLED"
 )
 
+// Firewall IPS rules
+const (
+	FWIPSRuleResourceName = "testAcc_firewall_ips_rule"
+	FWIPSRuleDescription  = "testAcc_firewall_ips_rule"
+	FWIPSAction           = "ALLOW"
+	FWIPSActionUpdate     = "BLOCK"
+	FWIPSState            = "ENABLED"
+	FWIPSUpdate           = "DISABLED"
+)
+
+// Firewall DNS rules
+const (
+	FWDNSRuleResourceName = "testAcc_firewall_dns_rule"
+	FWDNSRuleDescription  = "testAcc_firewall_dns_rule"
+	FWDNSAction           = "REDIR_RES"
+	FWDNSActionUpdate     = "BLOCK"
+	FWDNSState            = "ENABLED"
+	FWDNSUpdate           = "DISABLED"
+)
+
+// File Type Control rules
+const (
+	FileTypeControlRuleResourceName = "testAcc_firewall_dns_rule"
+	FileTypeControlRuleDescription  = "testAcc_firewall_dns_rule"
+	FileTypeControlRuleAction       = "ALLOW"
+	FileTypeControlRuleState        = "ENABLED"
+)
+
+// Sandbox rules
+const (
+	SandboxRuleResourceName = "testAcc_sandbox_rule"
+	SandboxRuleDescription  = "testAcc_sandbox_rule"
+	SandboxAction           = "ALLOW"
+	SandboxActionUpdate     = "BLOCK"
+	SandboxState            = "ENABLED"
+	SandboxStateUpdate      = "DISABLED"
+)
+
+// SSL Inspection rules
+const (
+	SSLInspectionRuleName        = "testAcc_ssl_rule"
+	SSLInspectionRuleDescription = "testAcc_ssl_rule"
+	SSLInspectionRuleState       = "ENABLED"
+	RoadWarriorKerberos          = true
+)
+
 // Custom URL Categories resource/datasource
 const (
 	CustomCategory = true
@@ -111,7 +157,7 @@ const (
 	DLPWebRuleDesc           = "this is an acceptance test"
 	DLPRuleResourceAction    = "ALLOW"
 	DLPRuleResourceState     = "ENABLED"
-	DLPRuleContentInspection = true
+	DLPRuleContentInspection = false
 	DLPMatchOnly             = false
 )
 
@@ -134,10 +180,9 @@ const (
 
 // Admin Users
 const (
-	AdminUserLoginName = "tf-acc-test-@bd-hashicorp.com"
+	AdminUserLoginName = "tf-acc-test-@securitygeek.io"
 	AdminUserName      = "tf-acc-test-admin"
-	AdminUserEmail     = "tf-acc-test-@bd-hashicorp.com"
-	AdminUserPassword  = "Password@123!"
+	AdminUserEmail     = "tf-acc-test-@securitygeek.io"
 )
 
 // User Management

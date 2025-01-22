@@ -1,34 +1,36 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/staticips"
 )
 
 func resourceTrafficForwardingStaticIP() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTrafficForwardingStaticIPCreate,
-		Read:   resourceTrafficForwardingStaticIPRead,
-		Update: resourceTrafficForwardingStaticIPUpdate,
-		Delete: resourceTrafficForwardingStaticIPDelete,
+		CreateContext: resourceTrafficForwardingStaticIPCreate,
+		ReadContext:   resourceTrafficForwardingStaticIPRead,
+		UpdateContext: resourceTrafficForwardingStaticIPUpdate,
+		DeleteContext: resourceTrafficForwardingStaticIPDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.staticips
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("static_ip_id", idInt)
 				} else {
-					resp, err := staticips.GetByIPAddress(service, id)
+					resp, err := staticips.GetByIPAddress(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("static_ip_id", resp.ID)
@@ -91,19 +93,19 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 	}
 }
 
-func resourceTrafficForwardingStaticIPCreate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.staticips
+func resourceTrafficForwardingStaticIPCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	if err := checkGeoOverride(d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	req := expandTrafficForwardingStaticIP(d)
 	log.Printf("[INFO] Creating zia static ip\n%+v\n", req)
 
-	resp, _, err := staticips.Create(service, &req)
+	resp, _, err := staticips.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	log.Printf("[INFO] Created zia static ip request. ID: %v\n", resp)
 	d.SetId(strconv.Itoa(resp.ID))
@@ -115,32 +117,32 @@ func resourceTrafficForwardingStaticIPCreate(d *schema.ResourceData, m interface
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingStaticIPRead(d, m)
+	return resourceTrafficForwardingStaticIPRead(ctx, d, meta)
 }
 
-func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.staticips
+func resourceTrafficForwardingStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "static_ip_id")
 	if !ok {
-		return fmt.Errorf("no Traffic Forwarding zia static ip id is set")
+		return diag.FromErr(fmt.Errorf("no Traffic Forwarding zia static ip id is set"))
 	}
-	resp, err := staticips.Get(service, id)
+	resp, err := staticips.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing static ip %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Getting static ip:\n%+v\n", resp)
@@ -156,28 +158,28 @@ func resourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}
 	return nil
 }
 
-func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.staticips
+func resourceTrafficForwardingStaticIPUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "static_ip_id")
 	if !ok {
 		log.Printf("[ERROR] static ip ID not set: %v\n", id)
 	}
 	if err := checkGeoOverride(d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Updating static ip ID: %v\n", id)
 	req := expandTrafficForwardingStaticIP(d)
-	if _, err := staticips.Get(service, id); err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+	if _, err := staticips.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	if _, _, err := staticips.Update(service, id, &req); err != nil {
-		return err
+	if _, _, err := staticips.Update(ctx, service, id, &req); err != nil {
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -185,13 +187,13 @@ func resourceTrafficForwardingStaticIPUpdate(d *schema.ResourceData, m interface
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceTrafficForwardingStaticIPRead(d, m)
+	return resourceTrafficForwardingStaticIPRead(ctx, d, meta)
 }
 
 func checkGeoOverride(d *schema.ResourceData) error {
@@ -210,9 +212,9 @@ func checkGeoOverride(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.staticips
+func resourceTrafficForwardingStaticIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "static_ip_id")
 	if !ok {
@@ -220,8 +222,8 @@ func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface
 	}
 	log.Printf("[INFO] Deleting static ip ID: %v\n", (d.Id()))
 
-	if _, err := staticips.Delete(service, id); err != nil {
-		return err
+	if _, err := staticips.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] static ip deleted")
@@ -232,7 +234,7 @@ func resourceTrafficForwardingStaticIPDelete(d *schema.ResourceData, m interface
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

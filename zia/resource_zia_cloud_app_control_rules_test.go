@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/cloudappcontrol"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
 
 func TestAccResourceCloudAppControlRulesBasic(t *testing.T) {
@@ -86,7 +87,7 @@ func TestAccResourceCloudAppControlRulesBasic(t *testing.T) {
 
 func testAccCheckCloudAppControlRulesDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.cloudappcontrol
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.CloudAppControlRule {
@@ -100,7 +101,7 @@ func testAccCheckCloudAppControlRulesDestroy(s *terraform.State) error {
 		}
 
 		ruleType := rs.Primary.Attributes["type"]
-		rule, err := cloudappcontrol.GetByRuleID(service, ruleType, id)
+		rule, err := cloudappcontrol.GetByRuleID(context.Background(), service, ruleType, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -133,9 +134,9 @@ func testAccCheckCloudAppControlRulesExists(resource string, rule *cloudappcontr
 		ruleType := rs.Primary.Attributes["type"]
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.cloudappcontrol
+		service := apiClient.Service
 
-		receivedRule, err := cloudappcontrol.GetByRuleID(service, ruleType, id)
+		receivedRule, err := cloudappcontrol.GetByRuleID(context.Background(), service, ruleType, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

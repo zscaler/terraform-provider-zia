@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationgroups"
 )
 
 func dataSourceLocationGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationGroupRead,
+		ReadContext: dataSourceLocationGroupRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -187,17 +189,17 @@ func dataSourceLocationGroup() *schema.Resource {
 	}
 }
 
-func dataSourceLocationGroupRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.locationgroups
+func dataSourceLocationGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *locationgroups.LocationGroup
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting time window id: %d\n", id)
-		res, err := locationgroups.GetLocationGroup(service, id)
+		res, err := locationgroups.GetLocationGroup(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -205,9 +207,9 @@ func dataSourceLocationGroupRead(d *schema.ResourceData, m interface{}) error {
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for location name: %s\n", name)
-		res, err := locationgroups.GetLocationGroupByName(service, name)
+		res, err := locationgroups.GetLocationGroupByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -222,19 +224,19 @@ func dataSourceLocationGroupRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("predefined", resp.Predefined)
 
 		if err := d.Set("dynamic_location_group_criteria", flattenDynamicLocationGroupCriteria(resp.DynamicLocationGroupCriteria)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("locations", flattenGroupsLocations(resp)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_mod_user", flattenLastModUser(resp.LastModUser)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any location group with name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any location group with name '%s'", name))
 	}
 
 	return nil

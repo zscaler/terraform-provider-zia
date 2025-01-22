@@ -1,15 +1,17 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/security_policy_settings"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/security_policy_settings"
 )
 
 func dataSourceSecurityPolicySettings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityPolicySettingsRead,
+		ReadContext: dataSourceSecurityPolicySettingsRead,
 		Schema: map[string]*schema.Schema{
 			"whitelist_urls": {
 				Type:     schema.TypeSet,
@@ -29,11 +31,11 @@ func dataSourceSecurityPolicySettings() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.security_policy_settings
+func dataSourceSecurityPolicySettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
-	resp, err := security_policy_settings.GetListUrls(service)
+	resp, err := security_policy_settings.GetListUrls(ctx, service)
 	if err != nil {
 		return nil
 	}
@@ -44,7 +46,7 @@ func dataSourceSecurityPolicySettingsRead(d *schema.ResourceData, m interface{})
 		_ = d.Set("blacklist_urls", resp.Black)
 
 	} else {
-		return fmt.Errorf("couldn't find the activation status")
+		return diag.FromErr(fmt.Errorf("couldn't find the activation status"))
 	}
 
 	return nil

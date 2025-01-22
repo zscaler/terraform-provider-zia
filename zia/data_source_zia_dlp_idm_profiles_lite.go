@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_idm_profile_lite"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_idm_profile_lite"
 )
 
 func dataSourceDLPIDMProfileLite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPIDMProfileLiteRead,
+		ReadContext: dataSourceDLPIDMProfileLiteRead,
 		Schema: map[string]*schema.Schema{
 			"profile_id": {
 				Type:        schema.TypeInt,
@@ -94,9 +96,9 @@ func dataSourceDLPIDMProfileLite() *schema.Resource {
 	}
 }
 
-func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_idm_profile_lite
+func dataSourceDLPIDMProfileLiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_idm_profile_lite.DLPIDMProfileLite
 	activeOnly := d.Get("active_only").(bool) // Retrieve the active_only value
@@ -104,9 +106,9 @@ func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) erro
 	profileLiteID, ok := getIntFromResourceData(d, "profile_id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp idm profile id: %d\n", profileLiteID)
-		res, err := dlp_idm_profile_lite.GetDLPProfileLiteID(service, profileLiteID, activeOnly) // Use activeOnly here
+		res, err := dlp_idm_profile_lite.GetDLPProfileLiteID(ctx, service, profileLiteID, activeOnly) // Use activeOnly here
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -114,9 +116,9 @@ func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) erro
 	profileLiteName, _ := d.Get("template_name").(string)
 	if resp == nil && profileLiteName != "" {
 		log.Printf("[INFO] Getting data for dlp idm template name: %s\n", profileLiteName)
-		res, err := dlp_idm_profile_lite.GetDLPProfileLiteByName(service, profileLiteName, activeOnly) // Use activeOnly here
+		res, err := dlp_idm_profile_lite.GetDLPProfileLiteByName(ctx, service, profileLiteName, activeOnly) // Use activeOnly here
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -128,14 +130,14 @@ func dataSourceDLPIDMProfileLiteRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 
 		if err := d.Set("last_modified_by", flattenIDExtensionsList(resp.ModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("client_vm", flattenIDExtensionsList(resp.ClientVM)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any dlp idm profile name '%s' or id '%d'", profileLiteName, profileLiteID)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp idm profile name '%s' or id '%d'", profileLiteName, profileLiteID))
 	}
 
 	return nil

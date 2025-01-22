@@ -1,15 +1,17 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/sandbox/sandbox_settings"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_settings"
 )
 
 func dataSourceSandboxSettings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSandboxSettingsRead,
+		ReadContext: dataSourceSandboxSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"file_hashes_to_be_blocked": {
 				Type:     schema.TypeSet,
@@ -22,11 +24,11 @@ func dataSourceSandboxSettings() *schema.Resource {
 	}
 }
 
-func dataSourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.sandbox_settings
+func dataSourceSandboxSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
-	resp, err := sandbox_settings.Get(service)
+	resp, err := sandbox_settings.Get(ctx, service)
 	if err != nil {
 		return nil
 	}
@@ -36,7 +38,7 @@ func dataSourceSandboxSettingsRead(d *schema.ResourceData, m interface{}) error 
 		_ = d.Set("file_hashes_to_be_blocked", resp.FileHashesToBeBlocked)
 
 	} else {
-		return fmt.Errorf("couldn't find any file hashes")
+		return diag.FromErr(fmt.Errorf("couldn't find any file hashes"))
 	}
 
 	return nil

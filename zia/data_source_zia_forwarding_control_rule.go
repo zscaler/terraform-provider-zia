@@ -1,17 +1,19 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/forwarding_control_policy/forwarding_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
 func dataSourceForwardingControlRule() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceForwardingControlRuleRead,
+		ReadContext: dataSourceForwardingControlRuleRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -552,26 +554,26 @@ func dataSourceForwardingControlRule() *schema.Resource {
 	}
 }
 
-func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.forwarding_rules
+func dataSourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *forwarding_rules.ForwardingRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for forwarding control rule id: %d\n", id)
-		res, err := forwarding_rules.Get(service, id)
+		res, err := forwarding_rules.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for forwarding control rule : %s\n", name)
-		res, err := forwarding_rules.GetByName(service, name)
+		res, err := forwarding_rules.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -593,82 +595,82 @@ func dataSourceForwardingControlRuleRead(d *schema.ResourceData, m interface{}) 
 		_ = d.Set("zpa_broker_rule", resp.ZPABrokerRule)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationsGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("ec_groups", flattenIDNameExtensions(resp.ECGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("src_ip_groups", flattenIDNameExtensions(resp.SrcIpGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("src_ipv6_groups", flattenIDNameExtensions(resp.SrcIpv6Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dest_ip_groups", flattenIDNameExtensions(resp.DestIpGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("dest_ipv6_groups", flattenIDNameExtensions(resp.DestIpv6Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_services", flattenIDNameExtensions(resp.NwServices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_service_groups", flattenIDNameExtensions(resp.NwServiceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("nw_application_groups", flattenIDNameExtensions(resp.NwApplicationGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("zpa_application_segments", flattenZPAApplicationSegments(resp.ZPAApplicationSegments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("zpa_application_segment_groups", flattenZPAApplicationSegmentGroups(resp.ZPAApplicationSegmentGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	} else {
-		return fmt.Errorf("couldn't find any forwarding rule with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any forwarding rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

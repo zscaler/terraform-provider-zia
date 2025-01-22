@@ -14,172 +14,120 @@
     <img src="https://raw.githubusercontent.com/zscaler/zscaler-terraformer/master/images/zscaler_terraformer-logo.svg" alt="Zscaler logo" title="Zscaler" height="50" />
 </a>
 
-Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
-=========================================================================
+## Support Disclaimer
+
+-> **Disclaimer:** Please refer to our [General Support Statement](docs/guides/support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](docs/guides/troubleshooting.md) for guidance on typical problems.
+
+## Terraform Provider for ☁️Zscaler Internet Access (ZIA)☁️
+
+The ZIA provider is a Terraform plugin that allows for the full lifecycle management of Zscaler Internet Access resources.
 
 - Website: [https://www.terraform.io](https://registry.terraform.io/providers/zscaler/zia/latest)
 - Documentation: <https://help.zscaler.com/zia>
 - Zscaler Community: [Zscaler Community](https://community.zscaler.com/)
 
-## Support Disclaimer
+## Examples
 
--> **Disclaimer:** Please refer to our [General Support Statement](docs/guides/support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](docs/guides/troubleshooting.md) for guidance on typical problems.
+All the resources and data sources have [one or more examples](./examples) to give you an idea of how to use this
+provider to build your own Zscaler Internet Access configuration. Provider's official documentation is located in the
+[official terraform registry](https://registry.terraform.io/providers/zscaler/zia/latest/docs).
 
-Requirements
-------------
+## Requirements
 
-- Install [Terraform](https://www.terraform.io/downloads.html) 0.12.x/0.13.x/0.14.x/0.15.x (0.11.x or lower is incompatible)
-- Install [Go](https://golang.org/doc/install) 1.16+ (This will be used to build the provider plugin.)
+- Install [Terraform](https://www.terraform.io/downloads.html) 0.14.0 or newer (to run acceptance tests)
+- [Go](https://golang.org/doc/install) (to build the provider plugin)
 - Create a directory, go, follow this [doc](https://github.com/golang/go/wiki/SettingGOPATH) to edit ~/.bash_profile to setup the GOPATH environment variable
 
-Building The Provider (Terraform v0.12+)
----------------------
+## Upgrade
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-zia`
+If you have been using version 3.x of the ZIA Terraform Provider, please upgrade to the latest version to take advantage of
+all the new features, fixes, and functionality. Please refer to this [Upgrade Guide](https://github.com/zscaler/terraform-provider-zia/issues/1338)
+for guidance on how to upgrade to version 4.x. Also, please check our [Releases](https://github.com/zscaler/terraform-provider-zia/releases) page for more details on major, minor, and patch updates.
 
-```sh
-mkdir -p $GOPATH/src/github.com/terraform-providers
-cd $GOPATH/src/github.com/terraform-providers
-git clone https://github.com/terraform-providers/terraform-provider-zia.git
-```
+## Quick Start
 
-To clone on windows
+If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (please
+check the [requirements](#requirements) before proceeding).
 
-```sh
-mkdir %GOPATH%\src\github.com\terraform-providers
-cd %GOPATH%\src\github.com\terraform-providers
-git clone https://github.com/terraform-providers/terraform-provider-zia.git
-```
+_Note:_ This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside
+your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your
+home directory outside the standard GOPATH (i.e `$HOME/development/terraform-providers/`).
 
-Enter the provider directory and build the provider
+Clone repository to: `$HOME/development/terraform-providers/`
 
 ```sh
-cd $GOPATH/src/github.com/terraform-providers/terraform-provider-zia
-make fmt
-make build
+$ mkdir -p $HOME/development/terraform-providers/; cd $HOME/development/terraform-providers/
+$ git clone git@github.com:zscaler/terraform-provider-zia.git
+...
 ```
 
-To build on Windows
+Enter the provider directory and run `make tools`. This will install the needed tools for the provider.
 
 ```sh
-cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-zia
-go fmt
-go install
+$ make tools
 ```
 
-Building The Provider (Terraform v0.13+)
------------------------
-
-### MacOS / Linux
-
-Run the following command:
+To compile the provider, run `make build13`. This will build the provider and put the provider binary in the `$GOPATH/bin`
+directory.
 
 ```sh
-make build13
-```
-
-### Windows
-
-Run the following commands for cmd:
-
-```sh
-cd %GOPATH%\src\github.com\terraform-providers\terraform-provider-zia
-go fmt
-go install
-xcopy "%GOPATH%\bin\terraform-provider-zia.exe" "%APPDATA%\terraform.d\plugins\zscaler.com\zia\zia\1.0.0\windows_amd64\" /Y
-```
-
-Run the following commands if using powershell:
-
-```sh
-cd "$env:GOPATH\src\github.com\terraform-providers\terraform-provider-zia"
-go fmt
-go install
-xcopy "$env:GOPATH\bin\terraform-provider-zia.exe" "$env:APPDATA\terraform.d\plugins\zscaler.com\zia\zia\1.0.0\windows_amd64\" /Y
-```
-
-**Note**: For contributions created from forks, the repository should still be cloned under the `$GOPATH/src/github.com/terraform-providers/terraform-provider-zia` directory to allow the provided `make` commands to properly run, build, and test this project.
-
-Using Zscaler Internet Access Provider (Terraform v0.12+)
------------------------
-
-Activate the provider by adding the following to `~/.terraformrc` on Linux/Unix.
-
-```sh
-providers {
-  "zia" = "$GOPATH/bin/terraform-provider-zia"
-}
-```
-
-For Windows, the file should be at '%APPDATA%\terraform.rc'. Do not change $GOPATH to %GOPATH%.
-
-In Windows, for terraform 0.11.8 and lower use the above text.
-
-In Windows, for terraform 0.11.9 and higher use the following at '%APPDATA%\terraform.rc'
-
-```sh
-providers {
-  "zia" = "$GOPATH/bin/terraform-provider-zia.exe"
-}
-```
-
-If the rc file is not present, it should be created
-
-Using Zscaler Internet Access Provider (Terraform v0.13+)
------------------------
-
-For Terraform v0.13+, to use a locally built version of a provider you must add the following snippet to every module
-that you want to use the provider in.
-
-```hcl
-terraform {
-  required_providers {
-    zia = {
-      source  = "zscaler/zia"
-      version = "2.0.2"
-    }
-  }
-}
-```
-
-Examples
---------
-
-- Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/examples) for the complete list of examples.
-- Visit [here](https://github.com/zscaler/terraform-provider-zia/tree/master/docs) for the complete documentation of all resources.
-
-Issues
-=========
-
-Please feel free to open an issue using [Github Issues](https://github.com/zscaler/terraform-provider-zia/issues) if you run into any problems using this zia Terraform provider.
-
-Developing the Provider
----------------------------
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (version 1.16+ is *required*). You'll also need to correctly setup a [GOPATH](http://golang.org/doc/code.html#GOPATH), as well as adding `$GOPATH/bin` to your `$PATH`.
-
-To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-```sh
-$ make build
+$ make build13
 ...
 $ $GOPATH/bin/terraform-provider-zia
 ...
 ```
 
-In order to test the provider, you can simply run `make test`.
+## Testing the Provider
+
+In order to test the provider, you can run `make test`.
 
 ```sh
-make test
+$ make test
 ```
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
-*Note:* Acceptance tests create real resources, and often cost money to run.
+_Note:_ Acceptance tests create real resources.
 
 ```sh
-make testacc
+$ make testacc
 ```
+
+## Using the Provider
+
+To use a released provider in your Terraform environment,
+run [`terraform init`](https://www.terraform.io/docs/commands/init.html) and Terraform will automatically install the
+provider. To specify a particular provider version when installing released providers, see
+the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#version-provider-versions)
+.
+
+To instead use a custom-built provider in your Terraform environment (e.g. the provider binary from the build
+instructions above), follow the instructions
+to [install it as a plugin](https://www.terraform.io/docs/plugins/basics.html#installing-plugins). After placing the
+custom-built provider into your plugins' directory, run `terraform init` to initialize it.
+
+For either installation method, documentation about the provider specific configuration options can be found on
+the [provider's website](https://registry.terraform.io/providers/zscaler/zia/latest/docs).
+
+## Contributing
+
+Terraform is the work of thousands of contributors. We really appreciate your help!
+
+We have these minimum requirements for source code contributions.
+
+Bug fix pull requests must include:
+
+- [Terraform Plugin Acceptance Tests](https://developer.hashicorp.com/terraform/plugin/sdkv2/testing/acceptance-tests).
+
+Pull requests with new resources and data sources must include:
+
+- Make API calls with the [zscaler-sdk-go v3](https://github.com/zscaler/zscaler-sdk-go) client
+- Include [Terraform Plugin Acceptance Tests](https://developer.hashicorp.com/terraform/plugin/sdkv2/testing/acceptance-tests)
+
+Issues on GitHub are intended to be related to the bugs or feature requests with provider codebase.
+See [Plugin SDK Community](https://www.terraform.io/community)
+and [Discuss forum](https://discuss.hashicorp.com/c/terraform-providers/31/none) for a list of community resources to
+ask questions about Terraform.
 
 License
 =========

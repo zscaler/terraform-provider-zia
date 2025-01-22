@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
 func dataSourceURLFilteringRules() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceURLFilteringRulesRead,
+		ReadContext: dataSourceURLFilteringRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -539,17 +541,17 @@ func dataSourceURLFilteringRules() *schema.Resource {
 	}
 }
 
-func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.urlfilteringpolicies
+func dataSourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *urlfilteringpolicies.URLFilteringRule
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data url filtering policy id: %d\n", id)
-		res, err := urlfilteringpolicies.Get(service, id)
+		res, err := urlfilteringpolicies.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -557,9 +559,9 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting url filtering policy : %s\n", name)
-		res, err := urlfilteringpolicies.GetByName(service, name)
+		res, err := urlfilteringpolicies.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -589,71 +591,71 @@ func dataSourceURLFilteringRulesRead(d *schema.ResourceData, m interface{}) erro
 		_ = d.Set("user_agent_types", resp.UserAgentTypes)
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("departments", flattenIDNameExtensions(resp.Departments)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("users", flattenIDNameExtensions(resp.Users)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("time_windows", flattenIDNameExtensions(resp.TimeWindows)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("override_users", flattenIDNameExtensions(resp.OverrideUsers)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("override_groups", flattenIDNameExtensions(resp.OverrideGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("location_groups", flattenIDNameExtensions(resp.LocationGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("source_ip_groups", flattenIDNameExtensions(resp.SourceIPGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if resp.CBIProfile.ID != "" {
 			if err := d.Set("cbi_profile", flattenCBIProfile(&resp.CBIProfile)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
-			return fmt.Errorf("error setting workload_groups: %s", err)
+			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
 	} else {
-		return fmt.Errorf("couldn't find any url filtering rule with name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any url filtering rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

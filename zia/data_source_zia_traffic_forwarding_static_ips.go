@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/staticips"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/staticips"
 )
 
 func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingStaticIPRead,
+		ReadContext: dataSourceTrafficForwardingStaticIPRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeInt,
@@ -106,26 +108,26 @@ func dataSourceTrafficForwardingStaticIP() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.staticips
+func dataSourceTrafficForwardingStaticIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *staticips.StaticIP
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for static ip id: %d\n", id)
-		res, err := staticips.Get(service, id)
+		res, err := staticips.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	ipAddress, _ := d.Get("ip_address").(string)
 	if resp == nil && ipAddress != "" {
 		log.Printf("[INFO] Getting data for static ip : %s\n", ipAddress)
-		res, err := staticips.GetByIPAddress(service, ipAddress)
+		res, err := staticips.GetByIPAddress(ctx, service, ipAddress)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -141,19 +143,19 @@ func dataSourceTrafficForwardingStaticIPRead(d *schema.ResourceData, m interface
 		_ = d.Set("last_modification_time", resp.LastModificationTime)
 
 		if err := d.Set("managed_by", flattenStaticManagedBy(resp.ManagedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("last_modified_by", flattenStaticLastModifiedBy(resp.LastModifiedBy)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("city", flattenCity(resp.City)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 	} else {
-		return fmt.Errorf("couldn't find any static ip address with id '%d'", id)
+		return diag.FromErr(fmt.Errorf("couldn't find any static ip address with id '%d'", id))
 	}
 
 	return nil

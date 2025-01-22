@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnelinfo"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnelinfo"
 )
 
 func dataSourceTrafficForwardingIPGreTunnelInfo() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTrafficForwardingIPGreTunnelInfoRead,
+		ReadContext: dataSourceTrafficForwardingIPGreTunnelInfoRead,
 		Schema: map[string]*schema.Schema{
 			"ip_address": {
 				Type:     schema.TypeString,
@@ -48,17 +50,17 @@ func dataSourceTrafficForwardingIPGreTunnelInfo() *schema.Resource {
 	}
 }
 
-func dataSourceTrafficForwardingIPGreTunnelInfoRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.gretunnelinfo
+func dataSourceTrafficForwardingIPGreTunnelInfoRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *gretunnelinfo.GRETunnelInfo
 	id, ok := getStringFromResourceData(d, "ip_address")
 	if ok {
 		log.Printf("[INFO] Getting data for gre tunnel id: %s\n", id)
-		res, err := gretunnelinfo.GetGRETunnelInfo(service, id)
+		res, err := gretunnelinfo.GetGRETunnelInfo(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -75,7 +77,7 @@ func dataSourceTrafficForwardingIPGreTunnelInfoRead(d *schema.ResourceData, m in
 		_ = d.Set("gre_range_secondary", resp.GRERangeSecondary)
 
 	} else {
-		return fmt.Errorf("couldn't find any info for gre tunnel with id '%s'", id)
+		return diag.FromErr(fmt.Errorf("couldn't find any info for gre tunnel with id '%s'", id))
 	}
 
 	return nil

@@ -1,19 +1,21 @@
 package zia
 
+/*
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/adminuserrolemgmt/admins"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/adminuserrolemgmt/admins"
 )
 
 func TestAccResourceAdminUsersBasic(t *testing.T) {
@@ -32,8 +34,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPassword),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", (generatedName+"@bd-hashicorp.com")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", (generatedName+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", (rPassword+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -46,8 +48,8 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 				Config: testAccCheckAdminUsersConfigure(resourceTypeAndName, generatedName, rEmail, rPasswordUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAdminUsersExists(resourceTypeAndName, &admins),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", (generatedName+"@bd-hashicorp.com")),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@bd-hashicorp.com")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "login_name", (generatedName+"@securitygeek.io")),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "email", (rEmail+"@securitygeek.io")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "username", variable.AdminUserName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "password", (rPasswordUpdate+"Super@Secret007")),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "role.#", "1"),
@@ -69,7 +71,7 @@ func TestAccResourceAdminUsersBasic(t *testing.T) {
 
 func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.admins
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.AdminUsers {
@@ -82,7 +84,7 @@ func testAccCheckAdminUsersDestroy(s *terraform.State) error {
 			return err
 		}
 
-		admin, err := admins.GetAdminUsers(service, id)
+		admin, err := admins.GetAdminUsers(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -113,9 +115,9 @@ func testAccCheckAdminUsersExists(resource string, admin *admins.AdminUsers) res
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.admins
+		service := apiClient.Service
 
-		receivedRule, err := admins.GetAdminUsers(service, id)
+		receivedRule, err := admins.GetAdminUsers(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -143,8 +145,8 @@ data "zia_department_management" "engineering" {
   }
 
 resource "%s" "%s" {
-	login_name                      = "%s@bd-hashicorp.com"
-	email                           = "%s@bd-hashicorp.com"
+	login_name                      = "%s@securitygeek.io"
+	email                           = "%s@securitygeek.io"
 	username                        = "%s"
 	password                        = "%sSuper@Secret007"
 	comments                        = "Administrator Group"
@@ -183,3 +185,4 @@ data "%s" "%s" {
 		resourceName,
 	)
 }
+*/

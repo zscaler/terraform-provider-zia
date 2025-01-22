@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/devicegroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/devicegroups"
 )
 
 func dataSourceDeviceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDeviceGroupsRead,
+		ReadContext: dataSourceDeviceGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -56,17 +58,17 @@ func dataSourceDeviceGroups() *schema.Resource {
 	}
 }
 
-func dataSourceDeviceGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.devicegroups
+func dataSourceDeviceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *devicegroups.DeviceGroups
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
-		res, err := devicegroups.GetDeviceGroupByName(service, name)
+		res, err := devicegroups.GetDeviceGroupByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -82,7 +84,7 @@ func dataSourceDeviceGroupsRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("device_count", resp.DeviceCount)
 
 	} else {
-		return fmt.Errorf("couldn't find any device group name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any device group name '%s'", name))
 	}
 
 	return nil

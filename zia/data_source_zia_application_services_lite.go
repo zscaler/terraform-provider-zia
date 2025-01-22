@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/applicationservices"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/applicationservices"
 )
 
 func dataSourceFWApplicationServicesLite() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFWApplicationServicesLiteRead,
+		ReadContext: dataSourceFWApplicationServicesLiteRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -31,17 +33,17 @@ func dataSourceFWApplicationServicesLite() *schema.Resource {
 	}
 }
 
-func dataSourceFWApplicationServicesLiteRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.applicationservices
+func dataSourceFWApplicationServicesLiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *applicationservices.ApplicationServicesLite
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for application service name: %s\n", name)
-		res, err := applicationservices.GetByName(service, name)
+		res, err := applicationservices.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -52,7 +54,7 @@ func dataSourceFWApplicationServicesLiteRead(d *schema.ResourceData, m interface
 		_ = d.Set("name_l10n_tag", resp.NameL10nTag)
 
 	} else {
-		return fmt.Errorf("couldn't find any application service name '%s'", name)
+		return diag.FromErr(fmt.Errorf("couldn't find any application service name '%s'", name))
 	}
 
 	return nil

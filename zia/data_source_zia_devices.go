@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/devicegroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/devicegroups"
 )
 
 func dataSourceDevices() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDevicesRead,
+		ReadContext: dataSourceDevicesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -73,26 +75,26 @@ func dataSourceDevices() *schema.Resource {
 	}
 }
 
-func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.devicegroups
+func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *devicegroups.Devices
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for device group id: %d\n", id)
-		res, err := devicegroups.GetDevicesByID(service, id)
+		res, err := devicegroups.GetDevicesByID(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for device group name: %s\n", name)
-		res, err := devicegroups.GetDevicesByName(service, name)
+		res, err := devicegroups.GetDevicesByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -100,9 +102,9 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	model, _ := d.Get("device_model").(string)
 	if resp == nil && model != "" {
 		log.Printf("[INFO] Getting data for device model : %s\n", model)
-		res, err := devicegroups.GetDevicesByModel(service, model)
+		res, err := devicegroups.GetDevicesByModel(ctx, service, model)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -110,9 +112,9 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	owner, _ := d.Get("owner_name").(string)
 	if resp == nil && owner != "" {
 		log.Printf("[INFO] Getting data for owner : %s\n", owner)
-		res, err := devicegroups.GetDevicesByOwner(service, owner)
+		res, err := devicegroups.GetDevicesByOwner(ctx, service, owner)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -120,9 +122,9 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	osType, _ := d.Get("os_type").(string)
 	if resp == nil && osType != "" {
 		log.Printf("[INFO] Getting data for OS Type : %s\n", osType)
-		res, err := devicegroups.GetDevicesByOSType(service, osType)
+		res, err := devicegroups.GetDevicesByOSType(ctx, service, osType)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -130,9 +132,9 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	osVersion, _ := d.Get("os_version").(string)
 	if resp == nil && osVersion != "" {
 		log.Printf("[INFO] Getting data for OS Version : %s\n", osVersion)
-		res, err := devicegroups.GetDevicesByOSVersion(service, osVersion)
+		res, err := devicegroups.GetDevicesByOSVersion(ctx, service, osVersion)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -140,9 +142,9 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 	// Check if no attributes are set and return all devices
 	if resp == nil && name == "" && model == "" && owner == "" && osType == "" && osVersion == "" {
 		log.Printf("[INFO] No specific attributes provided, getting all devices.")
-		allDevices, err := devicegroups.GetAllDevices(service)
+		allDevices, err := devicegroups.GetAllDevices(ctx, service)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if len(allDevices) > 0 {
 			resp = &allDevices[0]
@@ -163,7 +165,7 @@ func dataSourceDevicesRead(d *schema.ResourceData, m interface{}) error {
 		_ = d.Set("owner_user_id", resp.OwnerUserId)
 		_ = d.Set("owner_name", resp.OwnerName)
 	} else {
-		return fmt.Errorf("couldn't find any device with the provided attributes")
+		return diag.FromErr(fmt.Errorf("couldn't find any device with the provided attributes"))
 	}
 
 	return nil

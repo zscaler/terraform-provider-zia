@@ -1,37 +1,39 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	client "github.com/zscaler/zscaler-sdk-go/v2/zia"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/common"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/filteringrules"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/firewallpolicies/ipdestinationgroups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 )
 
 func resourceFWIPDestinationGroups() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFWIPDestinationGroupsCreate,
-		Read:   resourceFWIPDestinationGroupsRead,
-		Update: resourceFWIPDestinationGroupsUpdate,
-		Delete: resourceFWIPDestinationGroupsDelete,
+		CreateContext: resourceFWIPDestinationGroupsCreate,
+		ReadContext:   resourceFWIPDestinationGroupsRead,
+		UpdateContext: resourceFWIPDestinationGroupsUpdate,
+		DeleteContext: resourceFWIPDestinationGroupsDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
-				zClient := m.(*Client)
-				service := zClient.ipdestinationgroups
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				zClient := meta.(*Client)
+				service := zClient.Service
 
 				id := d.Id()
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("group_id", idInt)
 				} else {
-					resp, err := ipdestinationgroups.GetByName(service, id)
+					resp, err := ipdestinationgroups.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("group_id", resp.ID)
@@ -92,25 +94,25 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 	}
 }
 
-func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) error {
+func resourceFWIPDestinationGroupsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	groupType := d.Get("type").(string)
 	if groupType == "DSTN_OTHER" {
 		ipCategories, ipCategoriesOk := d.GetOk("ip_categories")
 		countries, countriesOk := d.GetOk("countries")
 		if (!ipCategoriesOk || ipCategories.(*schema.Set).Len() == 0) && (!countriesOk || countries.(*schema.Set).Len() == 0) {
-			return fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set")
+			return diag.FromErr(fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set"))
 		}
 	}
 
-	zClient := m.(*Client)
-	service := zClient.ipdestinationgroups
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	req := expandIPDestinationGroups(d)
 	log.Printf("[INFO] Creating zia ip destination groups\n%+v\n", req)
 
-	resp, err := ipdestinationgroups.Create(service, &req)
+	resp, err := ipdestinationgroups.Create(ctx, service, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[INFO] Created zia ip destination groups request. ID: %v\n", resp)
@@ -123,32 +125,32 @@ func resourceFWIPDestinationGroupsCreate(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFWIPDestinationGroupsRead(d, m)
+	return resourceFWIPDestinationGroupsRead(ctx, d, meta)
 }
 
-func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.ipdestinationgroups
+func resourceFWIPDestinationGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
-		return fmt.Errorf("no ip destination groups id is set")
+		return diag.FromErr(fmt.Errorf("no ip destination groups id is set"))
 	}
-	resp, err := ipdestinationgroups.Get(service, id)
+	resp, err := ipdestinationgroups.Get(ctx, service, id)
 	if err != nil {
-		if respErr, ok := err.(*client.ErrorResponse); ok && respErr.IsObjectNotFound() {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing zia ip destination groups %s from state because it no longer exists in ZIA", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return diag.FromErr(err)
 	}
 
 	processedCountries := make([]string, len(resp.Countries))
@@ -170,7 +172,7 @@ func resourceFWIPDestinationGroupsRead(d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceFWIPDestinationGroupsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	groupType := d.Get("type").(string)
 
 	if groupType == "DSTN_OTHER" || d.HasChange("countries") || d.HasChange("ip_categories") {
@@ -178,23 +180,23 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 		countries, countriesOk := d.GetOk("countries")
 
 		if (!ipCategoriesOk || ipCategories.(*schema.Set).Len() == 0) && (!countriesOk || countries.(*schema.Set).Len() == 0) {
-			return fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set")
+			return diag.FromErr(fmt.Errorf("when 'type' is set to 'DSTN_OTHER', either 'ip_categories' or 'countries' must be set"))
 		}
 	}
 
-	zClient := m.(*Client)
-	service := zClient.ipdestinationgroups
+	zClient := meta.(*Client)
+	service := zClient.Service
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
-		return fmt.Errorf("[ERROR] IP destination groups ID not set: %v", id)
+		return diag.FromErr(fmt.Errorf("[ERROR] IP destination groups ID not set: %v", id))
 	}
 
 	log.Printf("[INFO] Updating ZIA IP destination groups ID: %v", id)
 	req := expandIPDestinationGroups(d)
 
-	_, _, err := ipdestinationgroups.Update(service, id, &req)
+	_, _, err := ipdestinationgroups.Update(ctx, service, id, &req)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -202,18 +204,18 @@ func resourceFWIPDestinationGroupsUpdate(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFWIPDestinationGroupsRead(d, m)
+	return resourceFWIPDestinationGroupsRead(ctx, d, meta)
 }
 
-func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.ipdestinationgroups
+func resourceFWIPDestinationGroupsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	id, ok := getIntFromResourceData(d, "group_id")
 	if !ok {
@@ -232,10 +234,10 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 		},
 	)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
-	if _, err := ipdestinationgroups.Delete(service, id); err != nil {
-		return err
+	if _, err := ipdestinationgroups.Delete(ctx, service, id); err != nil {
+		return diag.FromErr(err)
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia ip destination groups deleted")
@@ -245,7 +247,7 @@ func resourceFWIPDestinationGroupsDelete(d *schema.ResourceData, m interface{}) 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return activationErr
+			return diag.FromErr(activationErr)
 		}
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")

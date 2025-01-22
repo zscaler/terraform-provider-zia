@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/location/locationmanagement"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 )
 
 func TestAccResourceLocationManagementBasic(t *testing.T) {
@@ -84,7 +85,7 @@ func TestAccResourceLocationManagementBasic(t *testing.T) {
 
 func testAccCheckLocationManagementDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.locationmanagement
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingLocManagement {
@@ -97,7 +98,7 @@ func testAccCheckLocationManagementDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := locationmanagement.GetLocation(service, id)
+		rule, err := locationmanagement.GetLocation(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -128,14 +129,14 @@ func testAccCheckLocationManagementExists(resource string, rule *locationmanagem
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.locationmanagement
+		service := apiClient.Service
 
 		var receivedLoc *locationmanagement.Locations
 
 		// Integrate retry here
 		retryErr := RetryOnError(func() error {
 			var innerErr error
-			receivedLoc, innerErr = locationmanagement.GetLocation(service, id)
+			receivedLoc, innerErr = locationmanagement.GetLocation(context.Background(), service, id)
 			if innerErr != nil {
 				return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, innerErr)
 			}

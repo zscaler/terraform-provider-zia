@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,10 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v3/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/trafficforwarding/gretunnels"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
 )
 
 func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
@@ -63,7 +64,7 @@ func TestAccResourceTrafficForwardingGRETunnelBasic(t *testing.T) {
 
 func testAccCheckTrafficForwardingGRETunnelDestroy(s *terraform.State) error {
 	apiClient := testAccProvider.Meta().(*Client)
-	service := apiClient.gretunnels
+	service := apiClient.Service
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourcetype.TrafficForwardingGRETunnel {
@@ -76,7 +77,7 @@ func testAccCheckTrafficForwardingGRETunnelDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := gretunnels.GetGreTunnels(service, id)
+		rule, err := gretunnels.GetGreTunnels(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -107,9 +108,9 @@ func testAccCheckTrafficForwardingGRETunnelExists(resource string, rule *gretunn
 		}
 
 		apiClient := testAccProvider.Meta().(*Client)
-		service := apiClient.gretunnels
+		service := apiClient.Service
 
-		receivedGRETunnel, err := gretunnels.GetGreTunnels(service, id)
+		receivedGRETunnel, err := gretunnels.GetGreTunnels(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}
@@ -140,7 +141,6 @@ func testAccCheckTrafficForwardingGRETunnelConfigure(resourceTypeAndName, genera
 }
 
 func getTrafficForwardingGRETunnel_HCL(generatedName, comment string, withinCountry, ipUnnumbered bool, randomIP string) string {
-
 	return fmt.Sprintf(`
 
 data "zia_gre_internal_ip_range_list" "this"{

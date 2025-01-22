@@ -1,16 +1,18 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v2/zia/services/dlp/dlp_incident_receiver_servers"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_incident_receiver_servers"
 )
 
 func dataSourceDLPIncidentReceiverServers() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDLPIncidentReceiverServersRead,
+		ReadContext: dataSourceDLPIncidentReceiverServersRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -41,26 +43,26 @@ func dataSourceDLPIncidentReceiverServers() *schema.Resource {
 	}
 }
 
-func dataSourceDLPIncidentReceiverServersRead(d *schema.ResourceData, m interface{}) error {
-	zClient := m.(*Client)
-	service := zClient.dlp_incident_receiver_servers
+func dataSourceDLPIncidentReceiverServersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	zClient := meta.(*Client)
+	service := zClient.Service
 
 	var resp *dlp_incident_receiver_servers.IncidentReceiverServers
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for dlp incident receiver server id: %d\n", id)
-		res, err := dlp_incident_receiver_servers.Get(service, id)
+		res, err := dlp_incident_receiver_servers.Get(ctx, service, id)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for dlp incident receiver server name: %s\n", name)
-		res, err := dlp_incident_receiver_servers.GetByName(service, name)
+		res, err := dlp_incident_receiver_servers.GetByName(ctx, service, name)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
@@ -73,7 +75,7 @@ func dataSourceDLPIncidentReceiverServersRead(d *schema.ResourceData, m interfac
 		_ = d.Set("flags", resp.Flags)
 
 	} else {
-		return fmt.Errorf("couldn't find any dlp incident receiver server name '%s' or id '%d'", name, id)
+		return diag.FromErr(fmt.Errorf("couldn't find any dlp incident receiver server name '%s' or id '%d'", name, id))
 	}
 
 	return nil
