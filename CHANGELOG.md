@@ -1,10 +1,21 @@
 # Changelog
 
-## 4.0.0 (January, 21 2025) - BREAKING CHANGES
+## 4.0.1 (January, 29 2025)
 
 ### Notes
 
-- Release date: **(January, 21 2025)**
+- Release date: **(January, 29 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhacements
+
+- [PR #384](https://github.com/zscaler/terraform-provider-zia/pull/384) - Fixed panic related to attribute `proxy_gateway` in the resource `zia_ssl_inspection_rules`.
+
+## 4.0.0 (January, 22 2025) - BREAKING CHANGES
+
+### Notes
+
+- Release date: **(January, 22 2025)**
 - Supported Terraform version: **v1.x**
 
 #### Enhancements - Zscaler OneAPI Support

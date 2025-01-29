@@ -21,7 +21,7 @@ func resourceAdvancedSettings() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				diags := resourceAdvancedSettingsRead(ctx, d, meta)
 				if diags.HasError() {
-					return nil, fmt.Errorf("failed to read advanced settings during import: %s", diags[0].Summary)
+					return nil, fmt.Errorf("import read error: %v", diags)
 				}
 				d.SetId("advanced_settings")
 				return []*schema.ResourceData{d}, nil
@@ -384,7 +384,7 @@ func resourceAdvancedSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("advanced_threat_settings")
+	d.SetId("advanced_settings")
 
 	// Sleep for 1 seconds before potentially triggering the activation
 	time.Sleep(1 * time.Second)
@@ -406,63 +406,68 @@ func resourceAdvancedSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	service := zClient.Service
 
 	// Fetch data from the API
-	res, err := advanced_settings.GetAdvancedSettings(ctx, service)
+	resp, err := advanced_settings.GetAdvancedSettings(ctx, service)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Set ID for the data source
-	d.SetId("advanced_settings")
+	if resp != nil {
+		// Set ID for the data source
+		d.SetId("advanced_settings")
 
-	_ = d.Set("auth_bypass_urls", res.AuthBypassUrls)
-	_ = d.Set("kerberos_bypass_urls", res.KerberosBypassUrls)
-	_ = d.Set("digest_auth_bypass_urls", res.DigestAuthBypassUrls)
-	_ = d.Set("dns_resolution_on_transparent_proxy_exempt_urls", res.DnsResolutionOnTransparentProxyExemptUrls)
-	_ = d.Set("dns_resolution_on_transparent_proxy_urls", res.DnsResolutionOnTransparentProxyUrls)
-	_ = d.Set("enable_dns_resolution_on_transparent_proxy", res.EnableDnsResolutionOnTransparentProxy)
-	_ = d.Set("enable_ipv6_dns_resolution_on_transparent_proxy", res.EnableIPv6DnsResolutionOnTransparentProxy)
-	_ = d.Set("enable_ipv6_dns_optimization_on_all_transparent_proxy", res.EnableIPv6DnsOptimizationOnAllTransparentProxy)
-	_ = d.Set("enable_evaluate_policy_on_global_ssl_bypass", res.EnableEvaluatePolicyOnGlobalSSLBypass)
-	_ = d.Set("enable_office365", res.EnableOffice365)
-	_ = d.Set("log_internal_ip", res.LogInternalIp)
-	_ = d.Set("enforce_surrogate_ip_for_windows_app", res.EnforceSurrogateIpForWindowsApp)
-	_ = d.Set("track_http_tunnel_on_http_ports", res.TrackHttpTunnelOnHttpPorts)
-	_ = d.Set("block_http_tunnel_on_non_http_ports", res.BlockHttpTunnelOnNonHttpPorts)
-	_ = d.Set("block_domain_fronting_on_host_header", res.BlockDomainFrontingOnHostHeader)
-	_ = d.Set("zscaler_client_connector_1_and_pac_road_warrior_in_firewall", res.ZscalerClientConnector1AndPacRoadWarriorInFirewall)
-	_ = d.Set("cascade_url_filtering", res.CascadeUrlFiltering)
-	_ = d.Set("enable_policy_for_unauthenticated_traffic", res.EnablePolicyForUnauthenticatedTraffic)
-	_ = d.Set("block_non_compliant_http_request_on_http_ports", res.BlockNonCompliantHttpRequestOnHttpPorts)
-	_ = d.Set("enable_admin_rank_access", res.EnableAdminRankAccess)
-	_ = d.Set("http2_nonbrowser_traffic_enabled", res.Http2NonbrowserTrafficEnabled)
-	_ = d.Set("ecs_for_all_enabled", res.EcsForAllEnabled)
-	_ = d.Set("dynamic_user_risk_enabled", res.DynamicUserRiskEnabled)
-	_ = d.Set("block_connect_host_sni_mismatch", res.BlockConnectHostSniMismatch)
-	_ = d.Set("prefer_sni_over_conn_host", res.PreferSniOverConnHost)
-	_ = d.Set("sipa_xff_header_enabled", res.SipaXffHeaderEnabled)
-	_ = d.Set("block_non_http_on_http_port_enabled", res.BlockNonHttpOnHttpPortEnabled)
-	_ = d.Set("ui_session_timeout", res.UISessionTimeout)
-	_ = d.Set("auth_bypass_apps", res.AuthBypassApps)
-	_ = d.Set("kerberos_bypass_apps", res.KerberosBypassApps)
-	_ = d.Set("basic_bypass_apps", res.BasicBypassApps)
-	_ = d.Set("digest_auth_bypass_apps", res.DigestAuthBypassApps)
-	_ = d.Set("dns_resolution_on_transparent_proxy_exempt_apps", res.DnsResolutionOnTransparentProxyExemptApps)
-	_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_exempt_apps", res.DnsResolutionOnTransparentProxyIPv6ExemptApps)
-	_ = d.Set("dns_resolution_on_transparent_proxy_apps", res.DnsResolutionOnTransparentProxyApps)
-	_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_apps", res.DnsResolutionOnTransparentProxyIPv6Apps)
-	_ = d.Set("block_domain_fronting_apps", res.BlockDomainFrontingApps)
-	_ = d.Set("prefer_sni_over_conn_host_apps", res.PreferSniOverConnHostApps)
-	_ = d.Set("dns_resolution_on_transparent_proxy_exempt_url_categories", res.DnsResolutionOnTransparentProxyExemptUrlCategories)
-	_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_exempt_url_categories", res.DnsResolutionOnTransparentProxyIPv6ExemptUrlCategories)
-	_ = d.Set("dns_resolution_on_transparent_proxy_url_categories", res.DnsResolutionOnTransparentProxyUrlCategories)
-	_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_url_categories", res.DnsResolutionOnTransparentProxyIPv6UrlCategories)
-	_ = d.Set("auth_bypass_url_categories", res.AuthBypassUrlCategories)
-	_ = d.Set("domain_fronting_bypass_url_categories", res.DomainFrontingBypassUrlCategories)
-	_ = d.Set("kerberos_bypass_url_categories", res.KerberosBypassUrlCategories)
-	_ = d.Set("basic_bypass_url_categories", res.BasicBypassUrlCategories)
-	_ = d.Set("http_range_header_remove_url_categories", res.HttpRangeHeaderRemoveUrlCategories)
-	_ = d.Set("digest_auth_bypass_url_categories", res.DigestAuthBypassUrlCategories)
-	_ = d.Set("sni_dns_optimization_bypass_url_categories", res.SniDnsOptimizationBypassUrlCategories)
+		_ = d.Set("auth_bypass_urls", resp.AuthBypassUrls)
+		_ = d.Set("kerberos_bypass_urls", resp.KerberosBypassUrls)
+		_ = d.Set("digest_auth_bypass_urls", resp.DigestAuthBypassUrls)
+		_ = d.Set("dns_resolution_on_transparent_proxy_exempt_urls", resp.DnsResolutionOnTransparentProxyExemptUrls)
+		_ = d.Set("dns_resolution_on_transparent_proxy_urls", resp.DnsResolutionOnTransparentProxyUrls)
+		_ = d.Set("enable_dns_resolution_on_transparent_proxy", resp.EnableDnsResolutionOnTransparentProxy)
+		_ = d.Set("enable_ipv6_dns_resolution_on_transparent_proxy", resp.EnableIPv6DnsResolutionOnTransparentProxy)
+		_ = d.Set("enable_ipv6_dns_optimization_on_all_transparent_proxy", resp.EnableIPv6DnsOptimizationOnAllTransparentProxy)
+		_ = d.Set("enable_evaluate_policy_on_global_ssl_bypass", resp.EnableEvaluatePolicyOnGlobalSSLBypass)
+		_ = d.Set("enable_office365", resp.EnableOffice365)
+		_ = d.Set("log_internal_ip", resp.LogInternalIp)
+		_ = d.Set("enforce_surrogate_ip_for_windows_app", resp.EnforceSurrogateIpForWindowsApp)
+		_ = d.Set("track_http_tunnel_on_http_ports", resp.TrackHttpTunnelOnHttpPorts)
+		_ = d.Set("block_http_tunnel_on_non_http_ports", resp.BlockHttpTunnelOnNonHttpPorts)
+		_ = d.Set("block_domain_fronting_on_host_header", resp.BlockDomainFrontingOnHostHeader)
+		_ = d.Set("zscaler_client_connector_1_and_pac_road_warrior_in_firewall", resp.ZscalerClientConnector1AndPacRoadWarriorInFirewall)
+		_ = d.Set("cascade_url_filtering", resp.CascadeUrlFiltering)
+		_ = d.Set("enable_policy_for_unauthenticated_traffic", resp.EnablePolicyForUnauthenticatedTraffic)
+		_ = d.Set("block_non_compliant_http_request_on_http_ports", resp.BlockNonCompliantHttpRequestOnHttpPorts)
+		_ = d.Set("enable_admin_rank_access", resp.EnableAdminRankAccess)
+		_ = d.Set("http2_nonbrowser_traffic_enabled", resp.Http2NonbrowserTrafficEnabled)
+		_ = d.Set("ecs_for_all_enabled", resp.EcsForAllEnabled)
+		_ = d.Set("dynamic_user_risk_enabled", resp.DynamicUserRiskEnabled)
+		_ = d.Set("block_connect_host_sni_mismatch", resp.BlockConnectHostSniMismatch)
+		_ = d.Set("prefer_sni_over_conn_host", resp.PreferSniOverConnHost)
+		_ = d.Set("sipa_xff_header_enabled", resp.SipaXffHeaderEnabled)
+		_ = d.Set("block_non_http_on_http_port_enabled", resp.BlockNonHttpOnHttpPortEnabled)
+		_ = d.Set("ui_session_timeout", resp.UISessionTimeout)
+		_ = d.Set("auth_bypass_apps", resp.AuthBypassApps)
+		_ = d.Set("kerberos_bypass_apps", resp.KerberosBypassApps)
+		_ = d.Set("basic_bypass_apps", resp.BasicBypassApps)
+		_ = d.Set("digest_auth_bypass_apps", resp.DigestAuthBypassApps)
+		_ = d.Set("dns_resolution_on_transparent_proxy_exempt_apps", resp.DnsResolutionOnTransparentProxyExemptApps)
+		_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_exempt_apps", resp.DnsResolutionOnTransparentProxyIPv6ExemptApps)
+		_ = d.Set("dns_resolution_on_transparent_proxy_apps", resp.DnsResolutionOnTransparentProxyApps)
+		_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_apps", resp.DnsResolutionOnTransparentProxyIPv6Apps)
+		_ = d.Set("block_domain_fronting_apps", resp.BlockDomainFrontingApps)
+		_ = d.Set("prefer_sni_over_conn_host_apps", resp.PreferSniOverConnHostApps)
+		_ = d.Set("dns_resolution_on_transparent_proxy_exempt_url_categories", resp.DnsResolutionOnTransparentProxyExemptUrlCategories)
+		_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_exempt_url_categories", resp.DnsResolutionOnTransparentProxyIPv6ExemptUrlCategories)
+		_ = d.Set("dns_resolution_on_transparent_proxy_url_categories", resp.DnsResolutionOnTransparentProxyUrlCategories)
+		_ = d.Set("dns_resolution_on_transparent_proxy_ipv6_url_categories", resp.DnsResolutionOnTransparentProxyIPv6UrlCategories)
+		_ = d.Set("auth_bypass_url_categories", resp.AuthBypassUrlCategories)
+		_ = d.Set("domain_fronting_bypass_url_categories", resp.DomainFrontingBypassUrlCategories)
+		_ = d.Set("kerberos_bypass_url_categories", resp.KerberosBypassUrlCategories)
+		_ = d.Set("basic_bypass_url_categories", resp.BasicBypassUrlCategories)
+		_ = d.Set("http_range_header_remove_url_categories", resp.HttpRangeHeaderRemoveUrlCategories)
+		_ = d.Set("digest_auth_bypass_url_categories", resp.DigestAuthBypassUrlCategories)
+		_ = d.Set("sni_dns_optimization_bypass_url_categories", resp.SniDnsOptimizationBypassUrlCategories)
+
+	} else {
+		return diag.FromErr(fmt.Errorf("couldn't read advanced settings"))
+	}
 
 	return nil
 }
@@ -478,7 +483,7 @@ func resourceAdvancedSettingsUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	d.SetId("advanced_threat_settings")
+	d.SetId("advanced_settings")
 
 	// Sleep for 1 seconds before potentially triggering the activation
 	time.Sleep(1 * time.Second)

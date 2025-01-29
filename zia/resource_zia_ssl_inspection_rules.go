@@ -137,11 +137,6 @@ func resourceSSLInspectionRules() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									// "default_certificate": {
-									// 	Type:     schema.TypeBool,
-									// 	Optional: true,
-									// 	Computed: true,
-									// },
 								},
 							},
 						},
@@ -165,6 +160,7 @@ func resourceSSLInspectionRules() *schema.Resource {
 									"min_client_tls_version": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"CLIENT_TLS_1_0",
 											"CLIENT_TLS_1_1",
@@ -175,6 +171,7 @@ func resourceSSLInspectionRules() *schema.Resource {
 									"min_server_tls_version": {
 										Type:     schema.TypeString,
 										Optional: true,
+										Computed: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											"SERVER_TLS_1_0",
 											"SERVER_TLS_1_1",
@@ -230,20 +227,20 @@ func resourceSSLInspectionRules() *schema.Resource {
 					},
 				},
 			},
-			"locations":        setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
-			"location_groups":  setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
-			"users":            setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
-			"groups":           setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
-			"departments":      setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
-			"time_windows":     setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
-			"labels":           setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
-			"device_groups":    setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":          setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
-			"source_ip_groups": setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			"dest_ip_groups":   setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
-			"workload_groups":  setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
-			"proxy_gateways":   setIDsSchemaTypeCustom(nil, "The proxy chaining gateway for which this rule is applicable. Ignore if the forwarding method is not Proxy Chaining."),
-			// "zpa_app_segments":    setIDsSchemaTypeCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
+			"locations":           setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
+			"location_groups":     setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
+			"users":               setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
+			"groups":              setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
+			"departments":         setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
+			"time_windows":        setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
+			"labels":              setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"source_ip_groups":    setIDsSchemaTypeCustom(nil, "list of source ip groups"),
+			"dest_ip_groups":      setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"workload_groups":     setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
+			"proxy_gateways":      setIDsSchemaTypeCustom(nil, "The proxy chaining gateway for which this rule is applicable. Ignore if the forwarding method is not Proxy Chaining."),
+			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"url_categories":      getURLCategories(),
 			"user_agent_types":    getUserAgentTypes(),
 			"device_trust_levels": getDeviceTrustLevels(),
@@ -415,13 +412,13 @@ func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("proxy_gateways", flattenIDNameExtensions(resp.ProxyGateways)); err != nil {
+	if err := d.Set("proxy_gateways", flattenIDExtensionsListIDs(resp.ProxyGateways)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// if err := d.Set("zpa_app_segments", flattenIDExtensionsListIDs(resp.ZPAAppSegments)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
@@ -562,8 +559,8 @@ func expandSSLInspectionRules(d *schema.ResourceData) sslinspection.SSLInspectio
 		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                 expandIDNameExtensionsSet(d, "labels"),
 		ProxyGateways:          expandIDNameExtensionsSet(d, "proxy_gateways"),
-		// ZPAAppSegments:         expandIDNameExtensionsSet(d, "zpa_app_segments"),
-		WorkloadGroups: expandWorkloadGroups(d, "workload_groups"),
+		ZPAAppSegments:         expandZPAAppSegmentSet(d, "zpa_app_segments"),
+		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
 	}
 
 	// ADD THIS:

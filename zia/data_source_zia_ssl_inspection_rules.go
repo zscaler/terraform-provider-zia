@@ -530,11 +530,11 @@ func dataSourceSSLInspectionRules() *schema.Resource {
 							Computed:    true,
 							Description: "The name of the Application Segment",
 						},
-						"external_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Indicates the external ID. Applicable only when this reference is of an external entity.",
-						},
+						// "external_id": {
+						// 	Type:        schema.TypeString,
+						// 	Computed:    true,
+						// 	Description: "Indicates the external ID. Applicable only when this reference is of an external entity.",
+						// },
 					},
 				},
 			},
@@ -767,7 +767,7 @@ func dataSourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceDat
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("proxy_gateways", flattenIDNameExtensions(resp.ProxyGateways)); err != nil {
+		if err := d.Set("proxy_gateways", flattenIDExtensionsListIDs(resp.ProxyGateways)); err != nil {
 			return diag.FromErr(err)
 		}
 

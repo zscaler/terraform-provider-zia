@@ -772,8 +772,7 @@ func getSSLInspectionPlatforms() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Description: "Supported Protocol criteria",
-		Required:    true,
-		MinItems:    1,
+		Optional:    true,
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateSSLInspectionPlatforms(), // Use ValidateDiagFunc here
