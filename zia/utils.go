@@ -317,3 +317,31 @@ func processCountries(countries []string) []string {
 	}
 	return processedCountries
 }
+
+/*
+func normalizeDataJSON(val interface{}) string {
+	dataMap := map[string]interface{}{}
+
+	// Ignoring errors since we know it is valid
+	_ = json.Unmarshal([]byte(val.(string)), &dataMap)
+	ret, _ := json.Marshal(dataMap)
+
+	return string(ret)
+}
+
+func noChangeInObjectFromUnmarshaledJSON(k, oldJSON, newJSON string, d *schema.ResourceData) bool {
+	if newJSON == "" {
+		return true
+	}
+	var oldObj map[string]any
+	var newObj map[string]any
+	if err := json.Unmarshal([]byte(oldJSON), &oldObj); err != nil {
+		return false
+	}
+	if err := json.Unmarshal([]byte(newJSON), &newObj); err != nil {
+		return false
+	}
+
+	return reflect.DeepEqual(oldObj, newObj)
+}
+*/

@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.0.2 (January, 31 2025)
+
+### Notes
+
+- Release date: **(January, 31 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #388](https://github.com/zscaler/terraform-provider-zia/pull/388) - Fixed ZIA import resource for `zia_dlp_notification_templates` due to heredoc missformatting.
+- [PR #388](https://github.com/zscaler/zscaler-terraformer/pull/257). Fixed ZIA import resource for `zia_end_user_notification` due to heredoc missformatting and attribute validation issue. - [Issue #387](https://github.com/zscaler/terraform-provider-zia/issues/387)
+- [PR #388](https://github.com/zscaler/zscaler-terraformer/pull/388). Fixed ZIA import resources for: `zia_forwarding_control_zpa_gateway` due to missing attribute `type`.
+
 ## 4.0.1 (January, 29 2025)
 
 ### Notes

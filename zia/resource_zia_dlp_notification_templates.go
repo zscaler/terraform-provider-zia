@@ -60,9 +60,12 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 				Description:  "The DLP notification template name",
 			},
 			"subject": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The Subject line that is displayed within the DLP notification email",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The Subject line that is displayed within the DLP notification email",
+				ValidateDiagFunc: stringIsMultiLine,        // Validates that it's a valid multi-line string
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"attach_content": {
 				Type:        schema.TypeBool,
@@ -70,14 +73,20 @@ func resourceDLPNotificationTemplates() *schema.Resource {
 				Description: "f set to true, the content that is violation is attached to the DLP notification email",
 			},
 			"plain_text_message": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The template for the plain text UTF-8 message body that must be displayed in the DLP notification email",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The template for the plain text UTF-8 message body that must be displayed in the DLP notification email",
+				ValidateDiagFunc: stringIsMultiLine,        // Validates that it's a valid multi-line string
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"html_message": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The template for the HTML message body that must be displayed in the DLP notification email",
+				Type:             schema.TypeString,
+				Required:         true,
+				Description:      "The template for the HTML message body that must be displayed in the DLP notification email",
+				ValidateDiagFunc: stringIsMultiLine,        // Validates that it's a valid multi-line string
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"tls_enabled": {
 				Type:        schema.TypeBool,
@@ -142,10 +151,10 @@ func resourceDLPNotificationTemplatesRead(ctx context.Context, d *schema.Resourc
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("template_id", resp.ID)
 	_ = d.Set("name", resp.Name)
-	_ = d.Set("subject", resp.Subject)
 	_ = d.Set("attach_content", resp.AttachContent)
-	_ = d.Set("plain_text_message", resp.PlainTextMessage)
-	_ = d.Set("html_message", resp.HtmlMessage)
+	_ = d.Set("subject", normalizeMultiLineString(resp.Subject))
+	_ = d.Set("plain_text_message", normalizeMultiLineString(resp.PlainTextMessage))
+	_ = d.Set("html_message", normalizeMultiLineString(resp.HtmlMessage))
 	_ = d.Set("tls_enabled", resp.TLSEnabled)
 
 	return nil
@@ -221,10 +230,10 @@ func expandDLPNotificationTemplates(d *schema.ResourceData) dlp_notification_tem
 	result := dlp_notification_templates.DlpNotificationTemplates{
 		ID:               id,
 		Name:             d.Get("name").(string),
-		Subject:          d.Get("subject").(string),
 		AttachContent:    d.Get("attach_content").(bool),
-		PlainTextMessage: d.Get("plain_text_message").(string),
-		HtmlMessage:      d.Get("html_message").(string),
+		Subject:          unescapeTerraformVariables(d.Get("subject").(string)),
+		PlainTextMessage: unescapeTerraformVariables(d.Get("plain_text_message").(string)),
+		HtmlMessage:      unescapeTerraformVariables(d.Get("html_message").(string)),
 		TLSEnabled:       d.Get("tls_enabled").(bool),
 	}
 	return result

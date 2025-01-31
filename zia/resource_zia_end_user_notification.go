@@ -107,15 +107,15 @@ func resourceEndUserNotification() *schema.Resource {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
-				Description:  "The custom frequency (in days) for showing the AUP to the end users. Valid range is 1 to 180.",
-				ValidateFunc: validation.IntBetween(1, 180),
+				Description:  "The custom frequency (in days) for showing the AUP to the end users. Valid range is 0 to 180.",
+				ValidateFunc: validation.IntBetween(0, 180),
 			},
 			"aup_day_offset": {
 				Type:         schema.TypeInt,
 				Computed:     true,
 				Optional:     true,
-				Description:  "Specifies which day of the week or month the AUP is shown for users when aupFrequency is set. Valid range is 1 to 31.",
-				ValidateFunc: validation.IntBetween(1, 31),
+				Description:  "Specifies which day of the week or month the AUP is shown for users when aupFrequency is set. Valid range is 0 to 31.",
+				ValidateFunc: validation.IntBetween(0, 31),
 			},
 			"aup_message": {
 				Type:        schema.TypeString,
@@ -279,10 +279,12 @@ func resourceEndUserNotification() *schema.Resource {
 				Description: "The message that appears in the IdP Proxy notification",
 			},
 			"quarantine_custom_notification_text": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Optional:    true,
-				Description: "The message that appears in the quarantine notification",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "The message that appears in the quarantine notification",
+				ValidateDiagFunc: stringIsMultiLine,        // Validates that it's a valid multi-line string
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 		},
 	}
@@ -356,7 +358,8 @@ func resourceEndUserNotificationRead(ctx context.Context, d *schema.ResourceData
 	_ = d.Set("caution_per_domain", res.CautionPerDomain)
 	_ = d.Set("caution_custom_text", res.CautionCustomText)
 	_ = d.Set("idp_proxy_notification_text", res.IDPProxyNotificationText)
-	_ = d.Set("quarantine_custom_notification_text", res.QuarantineCustomNotificationText)
+	// Apply formatting fixes before storing in state
+	_ = d.Set("quarantine_custom_notification_text", normalizeMultiLineString(res.QuarantineCustomNotificationText))
 
 	return nil
 }

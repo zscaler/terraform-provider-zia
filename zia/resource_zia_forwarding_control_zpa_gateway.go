@@ -183,9 +183,10 @@ func resourceForwardingControlZPAGatewayRead(ctx context.Context, d *schema.Reso
 	_ = d.Set("gateway_id", resp.ID)
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("description", resp.Description)
-	log.Printf("[DEBUG] Type returned from API: %s", resp.Type)
+	// Ensure `type` is always set to "ZPA"
 	if resp.Type == "" {
-		resp.Type = d.Get("type").(string)
+		log.Printf("[WARN] API response is missing the 'type' attribute. Defaulting to 'ZPA'.")
+		resp.Type = "ZPA"
 	}
 	_ = d.Set("type", resp.Type)
 
