@@ -1478,3 +1478,72 @@ func validateSSLInspectionPlatforms() schema.SchemaValidateDiagFunc {
 var supportedSSLInspectionPlatforms = []string{
 	"SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX",
 }
+
+/*
+func stringIsJSON(i interface{}, k cty.Path) diag.Diagnostics {
+	v, ok := i.(string)
+	if !ok {
+		return diag.Errorf("expected type of %s to be string", k)
+	}
+	if v == "" {
+		return diag.Errorf("expected %q JSON to not be empty, got %v", k, i)
+	}
+	if _, err := structure.NormalizeJsonString(v); err != nil {
+		return diag.Errorf("%q contains an invalid JSON: %s", k, err)
+	}
+	return nil
+}
+*/
+
+func stringIsMultiLine(i interface{}, k cty.Path) diag.Diagnostics {
+	v, ok := i.(string)
+	if !ok {
+		return diag.Errorf("expected type of %s to be string", k)
+	}
+	if v == "" {
+		return diag.Errorf("expected %q text to not be empty, got %v", k, i)
+	}
+	return nil
+}
+
+// Ensures consistent formatting for multi-line text (aligns properly)
+func normalizeMultiLineString(val interface{}) string {
+	str, ok := val.(string)
+	if !ok || str == "" {
+		return ""
+	}
+
+	// Trim leading/trailing whitespace for consistency
+	str = strings.TrimSpace(str)
+
+	// Ensure uniform indentation by trimming each line
+	lines := strings.Split(str, "\n")
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+	}
+
+	// Escape Terraform variable interpolation (`$` → `$$`)
+	escapedStr := strings.Join(lines, "\n")
+	escapedStr = strings.ReplaceAll(escapedStr, "$", "$$")
+
+	// Ensure the final newline to match Terraform formatting
+	return escapedStr + "\n"
+}
+
+// Suppresses differences in multi-line text by ignoring whitespace discrepancies
+func noChangeInMultiLineText(k, oldText, newText string, d *schema.ResourceData) bool {
+	if newText == "" {
+		return true
+	}
+
+	// Normalize both values and compare
+	oldTextNormalized := normalizeMultiLineString(oldText)
+	newTextNormalized := normalizeMultiLineString(newText)
+
+	return oldTextNormalized == newTextNormalized
+}
+
+func unescapeTerraformVariables(val string) string {
+	// Convert `$$` back to `$` for the API
+	return strings.ReplaceAll(val, "$$", "$")
+}
