@@ -12,9 +12,31 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.0.2``
+``Last updated: v4.0.3``
 
 ---
+
+## 4.0.3 (February, 5 2025)
+
+### Notes
+
+- Release date: **(February, 5  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #391](https://github.com/zscaler/terraform-provider-zia/pull/391) - Added new url categories to validation function. The following new categories have been added:
+  - `GLOBAL_INT_OFC365_ALLOW`
+  - `GLOBAL_INT_OFC365_DEFAULT`
+  - `GLOBAL_INT_OFC365_OPTIMIZE`
+
+### IMPORTANT WARNING
+
+- [PR #391](https://github.com/zscaler/terraform-provider-zia/pull/391) - For security reasons, authentication via configuration yaml file is not supported in this provider. Please use one of the documented authentication methods:
+  - Environment Variables
+  - Provider Block configuration
+
+For information on the supported authentication methods please visit the Terraform Provider Registry [here](https://registry.terraform.io/providers/zscaler/zia/latest/docs)
 
 ## 4.0.2 (January, 31 2025)
 
