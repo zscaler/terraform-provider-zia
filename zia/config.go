@@ -327,93 +327,6 @@ func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
 	return wrappedV2Client, nil
 }
 
-/*
-// zscalerSDKV3Client initializes the SDK V3 client
-func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
-	customUserAgent := generateUserAgent(c.TerraformVersion)
-
-	setters := []zscaler.ConfigSetter{
-		zscaler.WithCache(false),
-		zscaler.WithHttpClientPtr(http.DefaultClient),
-		zscaler.WithRateLimitMaxRetries(int32(c.retryCount)),
-		zscaler.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),
-		zscaler.WithUserAgentExtra(""), // Set the custom user agent
-	}
-
-	// Configure HTTP proxy if provided
-	if c.httpProxy != "" {
-		_url, err := url.Parse(c.httpProxy)
-		if err != nil {
-			return nil, err
-		}
-		setters = append(setters, zscaler.WithProxyHost(_url.Hostname()))
-
-		sPort := _url.Port()
-		if sPort == "" {
-			sPort = "80"
-		}
-		iPort, err := strconv.Atoi(sPort)
-		if err != nil {
-			return nil, err
-		}
-		setters = append(setters, zscaler.WithProxyPort(int32(iPort)))
-	}
-
-	// Main switch to handle the different authentication methods
-	switch {
-
-	// Method 1: clientID + clientSecret + vanityDomain + customerID
-	case c.clientID != "" && c.clientSecret != "" && c.vanityDomain != "":
-		setters = append(setters,
-			zscaler.WithClientID(c.clientID),
-			zscaler.WithClientSecret(c.clientSecret),
-			zscaler.WithVanityDomain(c.vanityDomain),
-			zscaler.WithSandboxToken(c.sandboxToken),
-			zscaler.WithSandboxCloud(c.sandboxCloud),
-			zscaler.WithUserAgentExtra(""),
-		)
-
-		if c.cloud != "" {
-			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
-		}
-
-	// Method 2: clientID + privateKey + vanityDomain + customerID
-	case c.clientID != "" && c.privateKey != "" && c.vanityDomain != "":
-		setters = append(setters,
-			zscaler.WithClientID(c.clientID),
-			zscaler.WithPrivateKey(c.privateKey),
-			zscaler.WithVanityDomain(c.vanityDomain),
-			zscaler.WithSandboxToken(c.sandboxToken),
-			zscaler.WithSandboxCloud(c.sandboxCloud),
-			zscaler.WithUserAgentExtra(""),
-		)
-
-		if c.cloud != "" {
-			setters = append(setters, zscaler.WithZscalerCloud(c.cloud))
-		}
-
-	default:
-		return nil, fmt.Errorf("invalid authentication configuration: missing required parameters")
-	}
-
-	// Create the Zscaler configuration with the assembled setters
-	config, err := zscaler.NewConfiguration(setters...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create SDK V3 configuration: %v", err)
-	}
-
-	config.UserAgent = customUserAgent
-
-	// Initialize the client with the configuration
-	v3Client, err := zscaler.NewOneAPIClient(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create Zscaler API client: %v", err)
-	}
-
-	return v3Client.Client, nil // Return *Client here
-}
-*/
-
 func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
 	customUserAgent := generateUserAgent(c.TerraformVersion)
 
@@ -525,31 +438,6 @@ func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
 
 	return v3Client.Client, nil
 }
-
-/*
-// Client instantiates the provider client with necessary configurations.
-func (c *Config) Client() (*Client, error) {
-	if c.useLegacyClient {
-		wrappedV2Client, err := zscalerSDKV2Client(c)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize legacy v2 client: %w", err)
-		}
-
-		return &Client{
-			Service: zscaler.NewService(wrappedV2Client.Client, nil),
-		}, nil
-	}
-
-	// Fallback to v3 client initialization
-	v3Client, err := zscalerSDKV3Client(c)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize v3 client: %w", err)
-	}
-	return &Client{
-		Service: zscaler.NewService(v3Client, nil),
-	}, nil
-}
-*/
 
 func (c *Config) Client() (*Client, error) {
 	// Handle Sandbox-only credentials
