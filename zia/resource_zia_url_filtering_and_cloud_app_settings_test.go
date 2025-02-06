@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccResourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
+func TestAccResourceURLFilteringCloudAppSettings_Basic(t *testing.T) {
 	resourceName := "zia_url_filtering_and_cloud_app_settings.test"
 
 	resource.Test(t, resource.TestCase{

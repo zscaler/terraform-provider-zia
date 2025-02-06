@@ -201,7 +201,7 @@ resource "%s" "%s" {
 	type 					= "STREAMING_MEDIA"
 	actions 				= ["ALLOW_STREAMING_VIEW_LISTEN", "ALLOW_STREAMING_UPLOAD"]
 	applications 			= ["YOUTUBE", "GOOGLE_STREAMING"]
-    order 					= 1
+    order 					= 3
 	rank					= 7
 	device_trust_levels 	= [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	user_agent_types 		= [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER" ]

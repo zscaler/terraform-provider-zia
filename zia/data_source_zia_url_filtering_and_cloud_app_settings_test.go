@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccDataSourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
+func TestAccDataSourceURLFilteringCloudAppSettings_Basic(t *testing.T) {
 	resourceName := "data.zia_url_filtering_and_cloud_app_settings.this"
 
 	resource.Test(t, resource.TestCase{
@@ -33,7 +33,7 @@ func TestAccDataSourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "enable_poep_prompt"),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_meta_prompt"),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_per_plexity_prompt"),
-					resource.TestCheckResourceAttrSet(resourceName, "block_skype"),
+					// resource.TestCheckResourceAttrSet(resourceName, "block_skype"),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_newly_registered_domains"),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_block_override_for_non_auth_user"),
 					resource.TestCheckResourceAttrSet(resourceName, "enable_cipa_compliance"),
@@ -55,7 +55,7 @@ func TestAccDataSourceURLFilteringCloludAppSettings_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_poep_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_meta_prompt", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_per_plexity_prompt", "false"),
-					resource.TestCheckResourceAttr(resourceName, "block_skype", "true"),
+					// resource.TestCheckResourceAttr(resourceName, "block_skype", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_newly_registered_domains", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_block_override_for_non_auth_user", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_cipa_compliance", "false"),

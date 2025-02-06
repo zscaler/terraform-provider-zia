@@ -124,6 +124,7 @@ func TestProviderValidate(t *testing.T) {
 		"ZSCALER_CLOUD",
 	}
 	envVals := make(map[string]string)
+
 	// Save and clear ZIA env vars to test configuration cleanly
 	for _, key := range envKeys {
 		val := os.Getenv(key)
@@ -139,12 +140,14 @@ func TestProviderValidate(t *testing.T) {
 		clientID     string
 		clientSecret string
 		vanityDomain string
+		cloud        string // Optional field
 		expectError  bool
 	}{
-		{"valid client_id + client_secret", "clientID", "clientSecret", "vanityDomain", false},
-		{"missing client_id", "", "clientSecret", "vanityDomain", true},
-		{"missing clientID", "clientID", "clientSecret", "vanityDomain", true},
-		{"missing vanity domain", "clientID", "clientSecret", "", true},
+		{"valid client_id + client_secret", "clientID", "clientSecret", "vanityDomain", "cloud", false},
+		{"missing client_id", "", "clientSecret", "vanityDomain", "cloud", true},
+		{"missing clientSecret", "clientID", "", "vanityDomain", "cloud", true},
+		{"missing vanity domain", "clientID", "clientSecret", "", "cloud", true},
+		{"valid client_id + client_secret without cloud", "clientID", "clientSecret", "vanityDomain", "", false}, // Ensures cloud is optional
 	}
 
 	// Execute each test case
@@ -157,6 +160,9 @@ func TestProviderValidate(t *testing.T) {
 		}
 		if test.clientSecret != "" {
 			resourceConfig["client_secret"] = test.clientSecret
+		}
+		if test.cloud != "" {
+			resourceConfig["cloud"] = test.cloud
 		}
 
 		config := terraform.NewResourceConfigRaw(resourceConfig)
@@ -188,6 +194,7 @@ func sdkV3ClientForTest() (*zscaler.Client, error) {
 		clientID:     os.Getenv("ZSCALER_CLIENT_ID"),
 		clientSecret: os.Getenv("ZSCALER_CLIENT_SECRET"),
 		vanityDomain: os.Getenv("ZSCALER_VANITY_DOMAIN"),
+		cloud:        os.Getenv("ZSCALER_CLOUD"),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize SDK V3 client: %w", err)

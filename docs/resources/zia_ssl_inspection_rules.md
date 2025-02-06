@@ -19,6 +19,8 @@ The most common default and predefined rules:
 |-----------------------------|--------------------------|-------------------|
 |  `Zscaler Recommended Exemptions`                 |      `Predefined`       |           `Yes`          |
 |  `Office 365 One Click`             |      `Predefined`       |           `Yes`          |
+|  `Office365 Inspection`             |      `Predefined`       |           `Yes`          |
+|  `UCaaS One Click`             |      `Predefined`       |           `Yes`          |
 |  `Default SSL Inspection Rule`             |      `Default`       |           `No`          |
 |-------------------------|-------------------------|-----------------|
 
