@@ -195,6 +195,33 @@ func resourceFirewallDNSRules() *schema.Resource {
 	}
 }
 
+/*
+func validateFirewallDNSRule(req firewalldnscontrolpolicies.FirewallDNSRules) error {
+	if req.Name == "Office 365 One Click Rule" || req.Name == "ZPA Resolver for Road Warrior" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "ZPA Resolver for Locations" || req.Name == "Critical risk DNS categories" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "Critical risk DNS tunnels" || req.Name == "High risk DNS categories" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "High risk DNS tunnels" || req.Name == "Risky DNS categories" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "Risky DNS tunnels" || req.Name == "Fallback ZPA Resolver for Locations" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "Risky DNS tunnels" || req.Name == "Fallback ZPA Resolver for Road Warrior" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	if req.Name == "Unknown DNS Traffic" || req.Name == "Default Firewall DNS Rule" {
+		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
+	}
+	return nil
+}
+*/
+
 func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
@@ -492,10 +519,15 @@ func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[ERROR] firewall dns rule not set: %v\n", id)
 	}
 
-	// Retrieve the rule to check if it's a predefined one
-	_, err := firewalldnscontrolpolicies.Get(ctx, service, id)
+	// Retrieve the rule to check if it's predefined
+	rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error retrieving firewall dns rule %d: %v", id, err))
+		return diag.FromErr(fmt.Errorf("error retrieving firewall DNS rule %d: %v", id, err))
+	}
+
+	// Prevent deletion if the rule is predefined
+	if rule.Predefined {
+		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
 	log.Printf("[INFO] Deleting firewall dns rule ID: %v\n", (d.Id()))

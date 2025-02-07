@@ -10,6 +10,37 @@ description: |-
 
 The **zia_firewall_dns_rule** resource allows the creation and management of ZIA Cloud Firewall DNS rules in the Zscaler Internet Access.
 
+**NOTE 1** Zscaler Cloud Firewall DNS Rules contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
+
+The most common default and predefined rules:
+
+|              Rule Names                      |  Default or Predefined   |   Rule Number Associated |
+|:--------------------------------------------:|:------------------------:|:------------------------:|
+|-----------------------------|--------------------------|-------------------|
+|  `Office 365 One Click Rule`                 |      `Predefined`       |           `Yes`          |
+|  `ZPA Resolver for Road Warrior`             |      `Predefined`       |           `Yes`          |
+|  `Critical risk DNS categories`              |      `Predefined`       |           `Yes`          |
+|  `Critical risk DNS tunnels`                 |      `Predefined`       |           `Yes`          |
+|  `High risk DNS categories`                  |      `Predefined`       |           `Yes`          |
+|  `High risk DNS tunnels`                     |      `Predefined`       |           `Yes`          |
+|  `Risky DNS categories`                      |      `Predefined`       |           `Yes`          |
+|  `Risky DNS Risky DNS tunnels`               |      `Predefined`       |           `Yes`          |
+|  `Unknown DNS Traffic`                       |      `Predefined`       |           `Yes`          |
+|  `Default Firewall DNS Rule`                 |      `Predefined`       |           `Yes`          |
+|  `ZPA Resolver for Locations`                |        `Default`        |           `No`           |
+|  `Fallback ZPA Resolver for Locations`       |        `Default`        |           `No`           |
+|  `Fallback ZPA Resolver for Road Warrior`    |        `Default`        |           `No`           |
+|-------------------------|-------------------------|-----------------|
+
+**NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
+
+- `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
+- `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to
+- `labels` (list) - Labels that are applicable to the rule.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+
+**NOTE 3** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
+
 ## Example Usage - Create Firewall DNS Rules - Redirect Action
 
 ```hcl

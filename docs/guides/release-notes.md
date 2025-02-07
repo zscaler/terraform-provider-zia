@@ -12,9 +12,34 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.0.3``
+``Last updated: v4.0.4``
 
 ---
+
+## 4.0.4 (February, 6 2025)
+
+### Notes
+
+- Release date: **(February, 6  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #392](https://github.com/zscaler/terraform-provider-zia/pull/392) - Improved the rule reorder logic to expedite reorder process for the following resources:
+  - `zia_firewall_filtering_rule`
+  - `zia_firewall_dns_rule`
+  - `zia_firewall_ips_rule`
+  - `zia_file_type_control_rules`
+  - `zia_forwarding_control_rule`
+  - `zia_ssl_inspection_rules`
+  - `zia_sandbox_rules`
+
+### Documentation
+
+- [PR #392](https://github.com/zscaler/terraform-provider-zia/pull/392) - Updated documentation for tghe following resources describing reorder process and concept of predefined vs default rules
+  - `zia_firewall_filtering_rule`
+  - `zia_firewall_dns_rule`
+  - `zia_ssl_inspection_rules`
 
 ## 4.0.3 (February, 5 2025)
 

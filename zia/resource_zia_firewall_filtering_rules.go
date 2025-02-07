@@ -170,6 +170,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 	}
 }
 
+/*
 func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
 		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
@@ -182,6 +183,7 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 	}
 	return nil
 }
+*/
 
 func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
@@ -190,9 +192,9 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
-	if err := validateFirewallRule(req); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := validateFirewallRule(req); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
@@ -410,9 +412,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
-	if err := validateFirewallRule(req); err != nil {
-		return diag.FromErr(err)
-	}
+
 	if _, err := filteringrules.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
@@ -491,8 +491,9 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	// Validate if the rule can be deleted
-	if err := validateFirewallRule(*rule); err != nil {
-		return diag.FromErr(err)
+	// Prevent deletion if the rule is predefined
+	if rule.Predefined {
+		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
 	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))

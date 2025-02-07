@@ -10,6 +10,29 @@ description: |-
 
 The **zia_ssl_inspection_rules** resource allows the creation and management of SSL Inspection rules in the Zscaler Internet Access.
 
+**NOTE 1** Zscaler SSL Inspection rules contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
+
+The most common default and predefined rules:
+
+|              Rule Names                      |  Default or Predefined   |   Rule Number Associated |
+|:--------------------------------------------:|:------------------------:|:------------------------:|
+|-----------------------------|--------------------------|-------------------|
+|  `Zscaler Recommended Exemptions`                 |      `Predefined`       |           `Yes`          |
+|  `Office 365 One Click`             |      `Predefined`       |           `Yes`          |
+|  `Office365 Inspection`             |      `Predefined`       |           `Yes`          |
+|  `UCaaS One Click`             |      `Predefined`       |           `Yes`          |
+|  `Default SSL Inspection Rule`             |      `Default`       |           `No`          |
+|-------------------------|-------------------------|-----------------|
+
+**NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
+
+- `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
+- `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to
+- `labels` (list) - Labels that are applicable to the rule.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+
+**NOTE 3** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
+
 ## Example Usage - Action - DECRYPT
 
 ```hcl

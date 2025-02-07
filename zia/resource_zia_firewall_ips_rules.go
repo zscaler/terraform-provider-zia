@@ -471,10 +471,15 @@ func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[ERROR] firewall ips rule not set: %v\n", id)
 	}
 
-	// Retrieve the rule to check if it's a predefined one
-	_, err := firewallipscontrolpolicies.Get(ctx, service, id)
+	// Retrieve the rule to check if it's predefined
+	rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error retrieving firewall ips rule %d: %v", id, err))
+		return diag.FromErr(fmt.Errorf("error retrieving firewall IPS rule %d: %v", id, err))
+	}
+
+	// Prevent deletion if the rule is predefined
+	if rule.Predefined {
+		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
 	log.Printf("[INFO] Deleting firewall ips rule ID: %v\n", (d.Id()))
