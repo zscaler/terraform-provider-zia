@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.0.5 (February, 10 2025)
+
+### Notes
+
+- Release date: **(February, 10  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #393](https://github.com/zscaler/terraform-provider-zia/pull/393) - Fixed the custom ID for the following resources:
+  - `zia_auth_settings_urls`
+  - `zia_sandbox_behavioral_analysis`
+  - `zia_security_settings`
+
 ## 4.0.4 (February, 6 2025)
 
 ### Notes

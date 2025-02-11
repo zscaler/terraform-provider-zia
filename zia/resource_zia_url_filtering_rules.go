@@ -763,7 +763,6 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 			"id":   cbiProfile.ID,
 			"name": cbiProfile.Name,
 			"url":  cbiProfile.URL,
-			// "profile_seq": cbiProfile.ProfileSeq,
 		},
 	}
 }

@@ -173,13 +173,6 @@ func NewConfig(d *schema.ResourceData) *Config {
 		config.sandboxCloud = os.Getenv("ZSCALER_SANDBOX_CLOUD")
 	}
 
-	if val, ok := d.GetOk("cloud"); ok {
-		config.cloud = val.(string)
-	}
-	if config.cloud == "" && os.Getenv("ZSCALER_CLOUD") != "" {
-		config.cloud = os.Getenv("ZSCALER_CLOUD")
-	}
-
 	if val, ok := d.GetOk("max_retries"); ok {
 		config.retryCount = val.(int)
 	}

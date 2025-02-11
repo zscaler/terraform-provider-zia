@@ -129,7 +129,7 @@ func validateURLFilteringCategories() schema.SchemaValidateDiagFunc {
 }
 
 var supportedURLFilteringRequestMethods = []string{
-	"OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT", "OTHER",
+	"OPTIONS", "GET", "HEAD", "POST", "PUT", "DELETE", "TRACE", "CONNECT", "OTHER", "PROPFIND", "PROPPATCH", "MOVE", "MKCOL", "LOCK", "COPY", "UNLOCK", "PATCH",
 }
 
 func validateURLFilteringRequestMethods() schema.SchemaValidateDiagFunc {

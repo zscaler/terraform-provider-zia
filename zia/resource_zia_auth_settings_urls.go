@@ -58,7 +58,7 @@ func resourceAuthSettingsUrlsRead(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("exempted_urls")
+	d.SetId("all_urls")
 	_ = d.Set("urls", res.URLs)
 	return nil
 }
@@ -82,7 +82,7 @@ func resourceAuthSettingsUrlsCreate(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("exempted_urls")
+	d.SetId("all_urls")
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
