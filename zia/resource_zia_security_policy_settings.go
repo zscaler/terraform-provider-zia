@@ -87,7 +87,7 @@ func resourceSecurityPolicySettingsCreate(ctx context.Context, d *schema.Resourc
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("url_list")
+	d.SetId("all_urls")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -143,7 +143,7 @@ func resourceSecurityPolicySettingsRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if resp != nil {
-		d.SetId("url_id")
+		d.SetId("all_urls")
 		_ = d.Set("whitelist_urls", resp.White)
 		_ = d.Set("blacklist_urls", resp.Black)
 

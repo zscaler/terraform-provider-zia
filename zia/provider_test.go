@@ -143,11 +143,11 @@ func TestProviderValidate(t *testing.T) {
 		cloud        string // Optional field
 		expectError  bool
 	}{
-		{"valid client_id + client_secret", "clientID", "clientSecret", "vanityDomain", "cloud", false},
-		{"missing client_id", "", "clientSecret", "vanityDomain", "cloud", true},
-		{"missing clientSecret", "clientID", "", "vanityDomain", "cloud", true},
-		{"missing vanity domain", "clientID", "clientSecret", "", "cloud", true},
-		{"valid client_id + client_secret without cloud", "clientID", "clientSecret", "vanityDomain", "", false}, // Ensures cloud is optional
+		{"valid client_id + client_secret", "clientID", "clientSecret", "vanityDomain", "zscaler_cloud", false},
+		{"missing client_id", "", "clientSecret", "vanityDomain", "zscaler_cloud", true},
+		{"missing clientSecret", "clientID", "", "vanityDomain", "zscaler_cloud", true},
+		{"missing vanity domain", "clientID", "clientSecret", "", "zscaler_cloud", true},
+		{"valid client_id + client_secret without zscaler_cloud", "clientID", "clientSecret", "vanityDomain", "", false}, // Ensures cloud is optional
 	}
 
 	// Execute each test case
@@ -162,7 +162,7 @@ func TestProviderValidate(t *testing.T) {
 			resourceConfig["client_secret"] = test.clientSecret
 		}
 		if test.cloud != "" {
-			resourceConfig["cloud"] = test.cloud
+			resourceConfig["zscaler_cloud"] = test.cloud
 		}
 
 		config := terraform.NewResourceConfigRaw(resourceConfig)

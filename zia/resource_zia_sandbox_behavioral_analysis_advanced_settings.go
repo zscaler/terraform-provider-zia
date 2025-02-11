@@ -96,7 +96,7 @@ func resourceSandboxSettingsCreate(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId("hash_list")
+	d.SetId("sandbox_settings")
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
@@ -121,7 +121,7 @@ func resourceSandboxSettingsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if resp != nil {
-		d.SetId("hash_list")
+		d.SetId("sandbox_settings")
 		sortedHashes := sortStringSlice(resp.FileHashesToBeBlocked)
 		err := d.Set("file_hashes_to_be_blocked", sortedHashes)
 		if err != nil {
