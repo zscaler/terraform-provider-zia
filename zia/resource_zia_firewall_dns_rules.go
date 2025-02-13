@@ -195,33 +195,6 @@ func resourceFirewallDNSRules() *schema.Resource {
 	}
 }
 
-/*
-func validateFirewallDNSRule(req firewalldnscontrolpolicies.FirewallDNSRules) error {
-	if req.Name == "Office 365 One Click Rule" || req.Name == "ZPA Resolver for Road Warrior" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "ZPA Resolver for Locations" || req.Name == "Critical risk DNS categories" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Critical risk DNS tunnels" || req.Name == "High risk DNS categories" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "High risk DNS tunnels" || req.Name == "Risky DNS categories" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Risky DNS tunnels" || req.Name == "Fallback ZPA Resolver for Locations" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Risky DNS tunnels" || req.Name == "Fallback ZPA Resolver for Road Warrior" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Unknown DNS Traffic" || req.Name == "Default Firewall DNS Rule" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	return nil
-}
-*/
-
 func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service

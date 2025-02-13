@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,10 +17,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 )
 
-// var (
-// 	sandboxLock          sync.Mutex
-// 	sandboxStartingOrder int
-// )
+var (
+	sandboxLock          sync.Mutex
+	sandboxStartingOrder int
+)
 
 func resourceSandboxRules() *schema.Resource {
 	return &schema.Resource{
@@ -166,46 +168,78 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 	start := time.Now()
 
 	for {
-		// Attempt to create the sandbox rule
+		sandboxLock.Lock()
+		if sandboxStartingOrder == 0 {
+			list, _ := sandbox_rules.GetAll(ctx, service)
+			for _, r := range list {
+				if r.Order > sandboxStartingOrder {
+					sandboxStartingOrder = r.Order
+				}
+			}
+			if sandboxStartingOrder == 0 {
+				sandboxStartingOrder = 1
+			}
+		}
+		sandboxLock.Unlock()
+		startWithoutLocking := time.Now()
+
+		order := req.Order
+		req.Order = sandboxStartingOrder
+
 		resp, err := sandbox_rules.Create(ctx, service, &req)
 		if err != nil {
-			// Handle specific retry scenarios
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && time.Since(start) < timeout {
-				log.Printf("[WARN] Retrying sandbox rule creation due to: %s", err)
-				time.Sleep(5 * time.Second) // Wait before retrying
-				continue
+			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				if reg.MatchString(err.Error()) {
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+				}
+				if time.Since(start) < timeout {
+					log.Printf("[INFO] Creating sandbox rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
+					time.Sleep(10 * time.Second) // Wait before retrying
+					continue
+				}
 			}
 			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
-		// Log successful creation and set resource ID
-		log.Printf("[INFO] Created ZIA sandbox rule successfully. ID: %v", resp.ID)
+		log.Printf("[INFO] Created zia sandbox rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		reorder(order, resp.ID, "sandbox_rules", func() (int, error) {
+			list, err := sandbox_rules.GetAll(ctx, service)
+			return len(list), err
+		}, func(id, order int) error {
+			rule, err := sandbox_rules.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+			rule.Order = order
+			_, err = sandbox_rules.Update(ctx, service, id, rule)
+			return err
+		})
+
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		// Validate by reading the created resource
 		if diags := resourceSandboxRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				log.Printf("[WARN] Retrying sandbox rule read after creation.")
 				time.Sleep(10 * time.Second) // Wait before retrying
 				continue
 			}
 			return diags
 		}
-
+		markOrderRuleAsDone(resp.ID, "sandbox_rules")
 		break
 	}
 
-	// Optional: Sleep briefly before triggering activation
+	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	// Trigger activation if required
+	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return diag.FromErr(fmt.Errorf("error triggering activation: %s", activationErr))
+			return diag.FromErr(activationErr)
 		}
 	} else {
-		log.Printf("[INFO] Skipping configuration activation as ZIA_ACTIVATION is not set to true.")
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return nil
@@ -299,6 +333,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] sandbox rule ID not set: %v\n", id)
+		return diag.FromErr(fmt.Errorf("sandbox rule ID not set"))
 	}
 	log.Printf("[INFO] Updating sandbox rule ID: %v\n", id)
 	req := expandSandboxRules(d)
@@ -317,8 +352,9 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := sandbox_rules.Update(ctx, service, id, &req)
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				log.Printf("[INFO] Updating sandbox rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
 				if time.Since(start) < timeout {
-					time.Sleep(5 * time.Second) // Wait before retrying
+					time.Sleep(10 * time.Second) // Wait before retrying
 					continue
 				}
 			}
