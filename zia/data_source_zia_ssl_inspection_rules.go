@@ -115,14 +115,14 @@ func dataSourceSSLInspectionRules() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"default_certificate": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
+									// "name": {
+									// 	Type:     schema.TypeString,
+									// 	Computed: true,
+									// },
+									// "default_certificate": {
+									// 	Type:     schema.TypeBool,
+									// 	Computed: true,
+									// },
 								},
 							},
 						},
@@ -811,7 +811,7 @@ func flattenSSLInterceptionCert(cert *sslinspection.SSLInterceptionCert) []inter
 	}
 	c := make(map[string]interface{})
 	c["id"] = cert.ID
-	c["name"] = cert.Name
+	// c["name"] = cert.Name
 	// c["default_certificate"] = cert.DefaultCertificate
 	return []interface{}{c}
 }
