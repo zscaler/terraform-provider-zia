@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.0.6``
+``Last updated: v4.0.7``
 
 ---
+
+## 4.0.7 (February, 13 2025)
+
+### Notes
+
+- Release date: **(February, 13  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #397](https://github.com/zscaler/terraform-provider-zia/pull/397) - Fixed panic with `zia_ssl_inspection_rules` due to misconfigured flattening ID function within the read function.
 
 ## 4.0.6 (February, 12 2025)
 
