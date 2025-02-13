@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.0.6 (February, 12 2025)
+
+### Notes
+
+- Release date: **(February, 12  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #396](https://github.com/zscaler/terraform-provider-zia/pull/396) - Fixed `zia_ssl_inspection_rules` validation error and panic issue.
+
 ## 4.0.5 (February, 10 2025)
 
 ### Notes

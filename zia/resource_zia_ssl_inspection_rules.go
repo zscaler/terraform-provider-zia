@@ -31,6 +31,93 @@ func resourceSSLInspectionRules() *schema.Resource {
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			// Extract the action block
+			actionList := d.Get("action").([]interface{})
+			if len(actionList) == 0 {
+				return fmt.Errorf("action block must be set")
+			}
+			actionMap := actionList[0].(map[string]interface{})
+
+			// Extract action type
+			actionType := actionMap["type"].(string)
+
+			// Validate based on action type
+			switch actionType {
+			case "DECRYPT":
+				// Ensure decryptSubActions is set and not empty
+				decryptSubActionsList := actionMap["decrypt_sub_actions"].([]interface{})
+				if len(decryptSubActionsList) == 0 {
+					return fmt.Errorf("when action.type is 'DECRYPT', decrypt_sub_actions block must be set")
+				}
+				decryptSubActionsMap := decryptSubActionsList[0].(map[string]interface{})
+
+				// Ensure all required fields in decryptSubActions are set
+				if decryptSubActionsMap["server_certificates"].(string) == "" ||
+					decryptSubActionsMap["min_client_tls_version"].(string) == "" ||
+					decryptSubActionsMap["min_server_tls_version"].(string) == "" {
+					return fmt.Errorf("when action.type is 'DECRYPT', all required fields in decrypt_sub_actions must be set")
+				}
+
+				// Ensure sslInterceptionCert is not set if overrideDefaultCertificate is false
+				overrideDefaultCertificate := actionMap["override_default_certificate"].(bool)
+				sslInterceptionCertList := actionMap["ssl_interception_cert"].([]interface{})
+				if !overrideDefaultCertificate && len(sslInterceptionCertList) > 0 {
+					return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is false, ssl_interception_cert cannot be set")
+				}
+
+				if actionMap["show_eun"].(bool) || actionMap["show_eunatp"].(bool) {
+					return fmt.Errorf("when action.type is 'DECRYPT', neither show_eun nor show_eunatp can be set")
+				}
+
+			case "DO_NOT_DECRYPT":
+				// Ensure doNotDecryptSubActions is set and not empty
+				doNotDecryptSubActionsList := actionMap["do_not_decrypt_sub_actions"].([]interface{})
+				if len(doNotDecryptSubActionsList) == 0 {
+					return fmt.Errorf("when action.type is 'DO_NOT_DECRYPT', do_not_decrypt_sub_actions block must be set")
+				}
+				doNotDecryptSubActionsMap := doNotDecryptSubActionsList[0].(map[string]interface{})
+
+				// If bypassOtherPolicies is true, serverCertificates and minTLSVersion cannot be set
+				bypassOtherPolicies := doNotDecryptSubActionsMap["bypass_other_policies"].(bool)
+				if bypassOtherPolicies {
+					if doNotDecryptSubActionsMap["server_certificates"].(string) != "" ||
+						doNotDecryptSubActionsMap["min_tls_version"].(string) != "" {
+						return fmt.Errorf("when action.type is 'DO_NOT_DECRYPT' and bypass_other_policies is true, serverCertificates and minTLSVersion cannot be set")
+					}
+				} else {
+					// If bypassOtherPolicies is false, ensure serverCertificates and minTLSVersion are set
+					if doNotDecryptSubActionsMap["server_certificates"].(string) == "" ||
+						doNotDecryptSubActionsMap["min_tls_version"].(string) == "" {
+						return fmt.Errorf("when action.type is 'DO_NOT_DECRYPT' and bypass_other_policies is false, serverCertificates and minTLSVersion must be set")
+					}
+				}
+
+			case "BLOCK":
+				// Ensure decryptSubActions and doNotDecryptSubActions are not set
+				if len(actionMap["decrypt_sub_actions"].([]interface{})) > 0 ||
+					len(actionMap["do_not_decrypt_sub_actions"].([]interface{})) > 0 {
+					return fmt.Errorf("when action.type is 'BLOCK', neither decrypt_sub_actions nor do_not_decrypt_sub_actions can be set")
+				}
+
+				// When action.type is BLOCK and overrideDefaultCertificate is false,
+				// sslInterceptionCert cannot be set
+				overrideDefaultCertificate := actionMap["override_default_certificate"].(bool)
+				sslInterceptionCertList := actionMap["ssl_interception_cert"].([]interface{})
+				if !overrideDefaultCertificate && len(sslInterceptionCertList) > 0 {
+					return fmt.Errorf("when action.type is 'BLOCK' and override_default_certificate is false, ssl_interception_cert cannot be set")
+				}
+
+				if actionMap["show_eunatp"].(bool) {
+					return fmt.Errorf("when action.type is 'BLOCK', show_eunatp cannot be set")
+				}
+
+			default:
+				return fmt.Errorf("invalid action type: %s", actionType)
+			}
+
+			return nil
+		},
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				zClient := meta.(*Client)
@@ -133,10 +220,10 @@ func resourceSSLInspectionRules() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
+									// "name": {
+									// 	Type:     schema.TypeString,
+									// 	Optional: true,
+									// },
 								},
 							},
 						},
@@ -618,9 +705,9 @@ func expandSSLInterceptionCert(m map[string]interface{}) *sslinspection.SSLInter
 	if v, ok := m["id"].(int); ok {
 		cert.ID = v
 	}
-	if v, ok := m["name"].(string); ok {
-		cert.Name = v
-	}
+	// if v, ok := m["name"].(string); ok {
+	// 	cert.Name = v
+	// }
 	// if v, ok := m["default_certificate"].(bool); ok {
 	// 	cert.DefaultCertificate = v
 	// }
