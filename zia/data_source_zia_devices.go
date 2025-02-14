@@ -17,6 +17,7 @@ func dataSourceDevices() *schema.Resource {
 			"id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "The unique identifier for the device.",
 			},
 			"name": {

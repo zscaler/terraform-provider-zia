@@ -123,6 +123,13 @@ The most common default rules are:
       - `id` - (Integer) Identifier that uniquely identifies an entity
 - `departments` (list) - Apply to any number of departments When not used it implies `Any` to apply the rule to all departments.
       - `id` - (Integer) Identifier that uniquely identifies an entity
+- `devices` (list) - Specifies devices that are managed using Zscaler Client Connector.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+- `device_groups` (list) - This field is applicable for devices that are managed using Zscaler Client Connector.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+
+- `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
+
 - `time_windows` (list) - You can manually select up to `2` time intervals. When not used it implies `always` to apply the rule to all time intervals.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 
