@@ -634,6 +634,7 @@ func expandSSLInspectionRules(d *schema.ResourceData) sslinspection.SSLInspectio
 		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
 		Platforms:              SetToStringList(d, "platforms"),
 		UserAgentTypes:         SetToStringList(d, "user_agent_types"),
+		URLCategories:          SetToStringList(d, "url_categories"),
 		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:                expandIDNameExtensionsSet(d, "devices"),
 		Locations:              expandIDNameExtensionsSet(d, "locations"),

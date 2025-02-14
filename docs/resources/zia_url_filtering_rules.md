@@ -148,6 +148,12 @@ The following arguments are supported:
 * `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
 * `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
+
+* `devices` (list) - Specifies devices that are managed using Zscaler Client Connector.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+* `device_groups` (list) - This field is applicable for devices that are managed using Zscaler Client Connector.
+      - `id` - (Integer) Identifier that uniquely identifies an entity
+
 * `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`

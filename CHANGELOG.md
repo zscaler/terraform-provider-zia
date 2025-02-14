@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.0.8 (February, 14 2025)
+
+### Notes
+
+- Release date: **(February, 14 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #402](https://github.com/zscaler/terraform-provider-zia/pull/402) - Fixed missing `url_category` attribute within the expand function for the resource `zia_ssl_inspection_rules`.
+
 ## 4.0.7 (February, 13 2025)
 
 ### Notes
