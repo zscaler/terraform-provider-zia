@@ -10,6 +10,7 @@
 ### Bug Fixes
 
 - [PR #402](https://github.com/zscaler/terraform-provider-zia/pull/402) - Fixed missing `url_category` attribute within the expand function for the resource `zia_ssl_inspection_rules`.
+- [PR #402](https://github.com/zscaler/terraform-provider-zia/pull/402) - Updated provider to [zscaler-sdk-go v4.0.2](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.1.6)
 
 ## 4.0.7 (February, 13 2025)
 
