@@ -5,7 +5,7 @@ go 1.23.1
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/fabiotavarespr/iso3166 v0.0.3
-	github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
+	github.com/hashicorp/go-cty v1.4.1
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
