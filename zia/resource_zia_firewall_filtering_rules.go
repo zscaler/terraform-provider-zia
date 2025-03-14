@@ -219,6 +219,12 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		req.Order = firewallFilteringStartingOrder
 
 		resp, err := filteringrules.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -425,6 +431,12 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 
 	for {
 		_, err := filteringrules.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)

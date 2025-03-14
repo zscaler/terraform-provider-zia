@@ -225,6 +225,12 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		req.Order = firewallDNSStartingOrder
 
 		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -433,6 +439,12 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 	for {
 		_, err := firewalldnscontrolpolicies.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall dns rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)

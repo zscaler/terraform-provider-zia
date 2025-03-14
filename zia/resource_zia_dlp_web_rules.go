@@ -27,6 +27,7 @@ func resourceDlpWebRules() *schema.Resource {
 		ReadContext:   resourceDlpWebRulesRead,
 		UpdateContext: resourceDlpWebRulesUpdate,
 		DeleteContext: resourceDlpWebRulesDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
@@ -52,6 +53,7 @@ func resourceDlpWebRules() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:     schema.TypeString,
@@ -239,7 +241,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	// Validate the OCR DLP web rules (assuming this is another validation function you have)
+	// Validate OCR DLP rules
 	if err := validateOCRDlpWebRules(req); err != nil {
 		return diag.FromErr(err)
 	}
@@ -269,6 +271,12 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		req.Order = dlpWebStartingOrder
 
 		resp, err := dlp_web_rules.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
@@ -454,24 +462,19 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] web dlp rule ID not set: %v\n", id)
+		return diag.FromErr(fmt.Errorf("web dlp rule ID not set"))
 	}
-	log.Printf("[INFO] Updating web dlp rule ID: %v\n", id)
+
 	req := expandDlpWebRules(d)
+
 	// Validate file types
 	if err := validateDLPRuleFileTypes(req); err != nil {
 		return diag.FromErr(err)
 	}
 
-	// Validate the OCR DLP web rules (assuming this is another validation function you have)
+	// Validate OCR DLP rules
 	if err := validateOCRDlpWebRules(req); err != nil {
 		return diag.FromErr(err)
-	}
-
-	if _, err := dlp_web_rules.Get(ctx, service, id); err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			d.SetId("")
-			return nil
-		}
 	}
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
@@ -479,50 +482,22 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	for {
 		_, err := dlp_web_rules.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				if time.Since(start) < timeout {
-					time.Sleep(5 * time.Second) // Wait before retrying
-					continue
-				}
+			log.Printf("[INFO] Retrying due to API error: %s", err)
+			if time.Since(start) < timeout {
+				time.Sleep(5 * time.Second) // Wait before retrying
+				continue
 			}
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "dlp_web_rules", func() (int, error) {
-			list, err := dlp_web_rules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := dlp_web_rules.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			rule.Order = order
-			_, err = dlp_web_rules.Update(ctx, service, id, rule)
-			return err
-		})
-
-		if diags := resourceDlpWebRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
-		markOrderRuleAsDone(req.ID, "dlp_web_rules")
 		break
-	}
-
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
-	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
-			return diag.FromErr(activationErr)
-		}
-	} else {
-		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return nil

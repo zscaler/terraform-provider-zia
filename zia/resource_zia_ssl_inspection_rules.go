@@ -367,6 +367,12 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		req.Order = sslInspectionStartingOrder
 
 		resp, err := sslinspection.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
@@ -538,6 +544,12 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 
 	for {
 		_, err := sslinspection.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating ssl inspection rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)

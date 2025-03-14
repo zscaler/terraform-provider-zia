@@ -187,6 +187,12 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		req.Order = sandboxStartingOrder
 
 		resp, err := sandbox_rules.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -350,6 +356,12 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	for {
 		_, err := sandbox_rules.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating sandbox rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)

@@ -257,6 +257,12 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		req.Order = fileTypeStartingOrder
 
 		resp, err := filetypecontrol.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
@@ -421,6 +427,12 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 
 	for {
 		_, err := filetypecontrol.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if time.Since(start) < timeout {
