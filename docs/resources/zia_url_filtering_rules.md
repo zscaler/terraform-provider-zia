@@ -131,6 +131,7 @@ The following arguments are supported:
 ### Optional
 
 * `request_methods` - (Optional) Request method for which the rule must be applied. If not set, rule will be applied to all methods
+Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `CONNECT`, `OTHER`, `PROPFIND`, `PROPPATCH`, `MOVE`, `MKCOL`, `LOCK`, `COPY`, `UNLOCK`, `PATCH`,, `HTTPS_RULE`, `HTTP_RULE`, `SSL_RULE`, `TUNNEL_RULE`, `WEBSOCKETSSL_RULE`, `WEBSOCKET_RULE`,
 * `rank` - (Optional) Admin rank of the admin who creates this rule
 * `state` - (Optional) Rule State
 * `end_user_notification_url` - (Optional) URL of end user notification page to be displayed when the rule is matched. Not applicable if either 'overrideUsers' or 'overrideGroups' is specified.

@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.0.9 (March, 14 2025)
+
+### Notes
+
+- Release date: **(March, 14 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #410](https://github.com/zscaler/terraform-provider-zia/pull/410) - Fixed `zia_dlp_web_rules` resource to fail fast during API errors.
+- [PR #410](https://github.com/zscaler/terraform-provider-zia/pull/410) - Added fix to `zia_sandbox_rules` to ignore the `order` attribute for the default rule named: `Default BA Rule`. This will prevent potential drifts when rule is returned with a non default order number.
+
 ## 4.0.8 (February, 14 2025)
 
 ### Notes

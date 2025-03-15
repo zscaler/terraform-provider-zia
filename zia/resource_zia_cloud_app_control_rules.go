@@ -242,6 +242,12 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		req.Order = cloudAppRuleStartingOrder
 
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Creating cloud app control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -451,6 +457,12 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 
 	for {
 		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)

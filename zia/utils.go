@@ -318,6 +318,20 @@ func processCountries(countries []string) []string {
 	return processedCountries
 }
 
+func handleInvalidInputError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	// Check if the error message contains "INVALID_INPUT_ARGUMENT"
+	if strings.Contains(err.Error(), `"code":"INVALID_INPUT_ARGUMENT"`) {
+		log.Printf("[ERROR] Failing immediately due to INVALID_INPUT_ARGUMENT: %s", err.Error())
+		return fmt.Errorf("ZIA API Error: %s. This feature may not be enabled in your account. Please verify your configuration", err.Error())
+	}
+
+	return err
+}
+
 /*
 func normalizeDataJSON(val interface{}) string {
 	dataMap := map[string]interface{}{}

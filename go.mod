@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
-	github.com/zscaler/zscaler-sdk-go/v3 v3.1.6
+	github.com/zscaler/zscaler-sdk-go/v3 v3.1.8
 )
 
 require (
@@ -62,9 +62,9 @@ require (
 	golang.org/x/crypto v0.35.0 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/net v0.36.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/tools v0.29.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect

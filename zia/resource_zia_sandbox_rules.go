@@ -172,6 +172,10 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		if sandboxStartingOrder == 0 {
 			list, _ := sandbox_rules.GetAll(ctx, service)
 			for _, r := range list {
+				// Ignore default rule
+				if r.Order == 127 || r.Name == "Default BA Rule" {
+					continue
+				}
 				if r.Order > sandboxStartingOrder {
 					sandboxStartingOrder = r.Order
 				}
@@ -187,6 +191,12 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		req.Order = sandboxStartingOrder
 
 		resp, err := sandbox_rules.Create(ctx, service, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -205,7 +215,8 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Created zia sandbox rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorder(order, resp.ID, "sandbox_rules", func() (int, error) {
 			list, err := sandbox_rules.GetAll(ctx, service)
-			return len(list), err
+			filteredList := filterOutDefaultRule(list)
+			return len(filteredList), err
 		}, func(id, order int) error {
 			rule, err := sandbox_rules.Get(ctx, service, id)
 			if err != nil {
@@ -262,6 +273,13 @@ func resourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		return diag.FromErr(err)
+	}
+
+	// Ignore Default BA Rule to prevent drift
+	if resp.Order == 127 || resp.Name == "Default BA Rule" {
+		log.Printf("[INFO] Skipping default rule '%s' with order %d to prevent drift", resp.Name, resp.Order)
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[INFO] Getting sandbox rules:\n%+v\n", resp)
@@ -350,6 +368,12 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	for {
 		_, err := sandbox_rules.Update(ctx, service, id, &req)
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := handleInvalidInputError(err); customErr != nil {
+			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		}
+
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating sandbox rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -363,7 +387,8 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		reorder(req.Order, req.ID, "sandbox_rules", func() (int, error) {
 			list, err := sandbox_rules.GetAll(ctx, service)
-			return len(list), err
+			filteredList := filterOutDefaultRule(list)
+			return len(filteredList), err
 		}, func(id, order int) error {
 			rule, err := sandbox_rules.Get(ctx, service, id)
 			if err != nil {
@@ -462,4 +487,16 @@ func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 		ZPAAppSegments:     expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result
+}
+
+func filterOutDefaultRule(rules []sandbox_rules.SandboxRules) []sandbox_rules.SandboxRules {
+	var filteredRules []sandbox_rules.SandboxRules
+	for _, rule := range rules {
+		if rule.Order != 127 && rule.Name != "Default BA Rule" {
+			filteredRules = append(filteredRules, rule)
+		} else {
+			log.Printf("[INFO] Ignoring default rule '%s' with order %d", rule.Name, rule.Order)
+		}
+	}
+	return filteredRules
 }
