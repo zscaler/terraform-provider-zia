@@ -14,7 +14,7 @@ The **zia_atp_security_exceptions** resource alows you to updates security excep
 
 ```hcl
 resource "zia_atp_security_exceptions" "this" {
-    malicious_urls = [
+    bypass_urls = [
         "site1.example.com",
         "site2.example.com",
         "site3.example.com",
