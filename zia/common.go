@@ -53,9 +53,9 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 		ids.MaxItems = *maxItems
 	}
 	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Computed:    true,
+		Type:     schema.TypeSet,
+		Optional: true,
+		// Computed:    true,
 		MaxItems:    1,
 		Description: desc,
 		Elem: &schema.Resource{
@@ -312,9 +312,10 @@ func flattenCustomIDSet(customID *common.IDCustom) []interface{} {
 }
 
 func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-	if list == nil {
+	if len(list) == 0 {
 		return nil
 	}
+
 	ids := []int{}
 	for _, item := range list {
 		if item.ID == 0 && item.Name == "" {
@@ -322,12 +323,36 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 		}
 		ids = append(ids, item.ID)
 	}
+
+	// ✨ If the id list is empty, return nil so Terraform treats the block as absent
+	if len(ids) == 0 {
+		return nil
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"id": ids,
 		},
 	}
 }
+
+// func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
+// 	if len(list) == 0 {
+// 		return nil
+// 	}
+// 	ids := []int{}
+// 	for _, item := range list {
+// 		if item.ID == 0 && item.Name == "" {
+// 			continue
+// 		}
+// 		ids = append(ids, item.ID)
+// 	}
+// 	return []interface{}{
+// 		map[string]interface{}{
+// 			"id": ids,
+// 		},
+// 	}
+// }
 
 // Flattening function used in the Forwarding Control Policy Resource
 func flattenIDNameSet(idName *common.IDName) []interface{} {

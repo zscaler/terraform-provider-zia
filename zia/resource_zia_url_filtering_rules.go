@@ -501,19 +501,19 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -523,10 +523,10 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 
 	// Ensure override_users and override_groups are only set when block_override is true and action is BLOCK
 	if resp.Action == "BLOCK" && resp.BlockOverride {
-		if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
+		if err := d.Set("override_users", flattenIDExtensionsListIDs(resp.OverrideUsers)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
+		if err := d.Set("override_groups", flattenIDExtensionsListIDs(resp.OverrideGroups)); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
@@ -535,22 +535,22 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 		_ = d.Set("override_groups", nil)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIPGroups)); err != nil {
+	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIPGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {

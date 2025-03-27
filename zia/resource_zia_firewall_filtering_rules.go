@@ -334,66 +334,66 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationsGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
+	if err := d.Set("src_ip_groups", flattenIDExtensionsListIDs(resp.SrcIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
+	if err := d.Set("dest_ip_groups", flattenIDExtensionsListIDs(resp.DestIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
+	if err := d.Set("nw_services", flattenIDExtensionsListIDs(resp.NwServices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
+	if err := d.Set("nw_service_groups", flattenIDExtensionsListIDs(resp.NwServiceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
+	if err := d.Set("nw_application_groups", flattenIDExtensionsListIDs(resp.NwApplicationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("app_services", flattenIDs(resp.AppServices)); err != nil {
+	if err := d.Set("app_services", flattenIDExtensionsListIDs(resp.AppServices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("app_service_groups", flattenIDs(resp.AppServiceGroups)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("app_service_groups", flattenIDExtensionsListIDs(resp.AppServiceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {

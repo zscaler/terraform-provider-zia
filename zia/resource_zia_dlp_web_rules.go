@@ -280,7 +280,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
 				if time.Since(start) < timeout {
-					time.Sleep(5 * time.Second) // Wait before retrying
+					time.Sleep(5 * time.Second)
 					continue
 				}
 			}
@@ -288,37 +288,65 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		log.Printf("[INFO] Created zia web dlp rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "dlp_web_rules", func() (int, error) {
-			list, err := dlp_web_rules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := dlp_web_rules.Get(ctx, service, id)
-			if err != nil {
+
+		// Determine whether it's a sub-rule
+		isSubRule := req.ParentRule != 0
+		resourceType := "dlp_web_rules"
+		if isSubRule {
+			resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
+		}
+
+		reorder(order, resp.ID, resourceType,
+			func() (int, error) {
+				if isSubRule {
+					parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
+					if err != nil {
+						return 0, err
+					}
+					return len(parent.SubRules), nil
+				}
+				list, err := dlp_web_rules.GetAll(ctx, service)
+				return len(list), err
+			},
+			func(id, order int) error {
+				rule, err := dlp_web_rules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order
+
+				if rule.ParentRule != 0 {
+					log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order)
+				} else {
+					log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order)
+				}
+
+				_, err = dlp_web_rules.Update(ctx, service, id, rule)
+				if err != nil {
+					log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
+				}
 				return err
-			}
-			rule.Order = order
-			_, err = dlp_web_rules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
 		if diags := resourceDlpWebRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
+				time.Sleep(10 * time.Second)
 				continue
 			}
 			return diags
 		}
-		markOrderRuleAsDone(resp.ID, "dlp_web_rules")
+
+		markOrderRuleAsDone(resp.ID, resourceType)
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
@@ -437,16 +465,16 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("excluded_groups", flattenIDExtensions(resp.ExcludedGroups)); err != nil {
+	if err := d.Set("excluded_groups", flattenIDExtensionsListIDs(resp.ExcludedGroups)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("excluded_departments", flattenIDExtensions(resp.ExcludedDepartments)); err != nil {
+	if err := d.Set("excluded_departments", flattenIDExtensionsListIDs(resp.ExcludedDepartments)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
+	if err := d.Set("excluded_users", flattenIDExtensionsListIDs(resp.ExcludedUsers)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIpGroups)); err != nil {
+	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
@@ -485,13 +513,13 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
 			log.Printf("[INFO] Retrying due to API error: %s", err)
 			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second) // Wait before retrying
+				time.Sleep(5 * time.Second)
 				continue
 			}
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
@@ -499,6 +527,51 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		break
 	}
+
+	// Handle ordering update after a successful rule update
+	isSubRule := req.ParentRule != 0
+	resourceType := "dlp_web_rules"
+	if isSubRule {
+		resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
+	}
+
+	reorder(req.Order, id, resourceType,
+		func() (int, error) {
+			if isSubRule {
+				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
+				if err != nil {
+					return 0, err
+				}
+				return len(parent.SubRules), nil
+			}
+			list, err := dlp_web_rules.GetAll(ctx, service)
+			return len(list), err
+		},
+		func(id, order int) error {
+			rule, err := dlp_web_rules.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+
+			// Update the order
+			rule.Order = order
+
+			// Log and ensure ParentRule is set for sub-rules
+			if rule.ParentRule != 0 {
+				log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order)
+			} else {
+				log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order)
+			}
+
+			_, err = dlp_web_rules.Update(ctx, service, id, rule)
+			if err != nil {
+				log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
+			}
+			return err
+		},
+	)
+
+	markOrderRuleAsDone(id, resourceType)
 
 	return nil
 }

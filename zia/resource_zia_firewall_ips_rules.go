@@ -323,23 +323,23 @@ func resourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationsGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -347,43 +347,43 @@ func resourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
+	if err := d.Set("src_ip_groups", flattenIDExtensionsListIDs(resp.SrcIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("src_ipv6_groups", flattenIDs(resp.SrcIpv6Groups)); err != nil {
+	if err := d.Set("src_ipv6_groups", flattenIDExtensionsListIDs(resp.SrcIpv6Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
+	if err := d.Set("dest_ip_groups", flattenIDExtensionsListIDs(resp.DestIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dest_ipv6_groups", flattenIDs(resp.DestIpv6Groups)); err != nil {
+	if err := d.Set("dest_ipv6_groups", flattenIDExtensionsListIDs(resp.DestIpv6Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
+	if err := d.Set("nw_services", flattenIDExtensionsListIDs(resp.NwServices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
+	if err := d.Set("nw_service_groups", flattenIDExtensionsListIDs(resp.NwServiceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("threat_categories", flattenIDs(resp.ThreatCategories)); err != nil {
+	if err := d.Set("threat_categories", flattenIDExtensionsListIDs(resp.ThreatCategories)); err != nil {
 		return diag.FromErr(err)
 	}
 

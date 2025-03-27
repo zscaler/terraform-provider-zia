@@ -361,11 +361,11 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	sizeQuotaMB := resp.SizeQuota / 1024
 	_ = d.Set("size_quota", sizeQuotaMB)
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 
