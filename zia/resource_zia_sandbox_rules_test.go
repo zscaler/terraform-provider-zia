@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 )
 
-func TestAccResourceSandboxRulesBasic(t *testing.T) {
+func TestAccResourceSandboxRules_Basic(t *testing.T) {
 	var rules sandbox_rules.SandboxRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.SandboxRules)
 

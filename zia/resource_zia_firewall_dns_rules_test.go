@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
 )
 
-func TestAccResourceFirewallDNSRulesBasic(t *testing.T) {
+func TestAccResourceFirewallDNSRules_Basic(t *testing.T) {
 	var rules firewalldnscontrolpolicies.FirewallDNSRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallDNSRules)
 
@@ -203,7 +203,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 11
+	order = 1
 	redirect_ip = "1.2.3.4"
 	dest_countries = ["CA", "US"]
 	source_countries = ["CA", "US"]

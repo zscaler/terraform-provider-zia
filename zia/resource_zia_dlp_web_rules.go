@@ -91,10 +91,10 @@ func resourceDlpWebRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The rule order of execution for the DLP policy rule with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the DLP policy rule with respect to other rules.",
 			},
 			"severity": {
 				Type:        schema.TypeString,
@@ -273,8 +273,8 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		resp, err := dlp_web_rules.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -512,7 +512,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := dlp_web_rules.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
 			return diag.Errorf("%v", customErr)
 		}
 
@@ -609,10 +609,18 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
+
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandDlpWebRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	result := dlp_web_rules.WebDLPRules{
 		ID:                       id,
 		Name:                     d.Get("name").(string),
-		Order:                    d.Get("order").(int),
+		Order:                    order,
 		Rank:                     d.Get("rank").(int),
 		Description:              d.Get("description").(string),
 		Action:                   d.Get("action").(string),

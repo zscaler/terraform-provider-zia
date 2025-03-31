@@ -1,7 +1,5 @@
 package zia
 
-/*
-
 import (
 	"context"
 	"fmt"
@@ -9,18 +7,18 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // TODO: NEEDS FIXING BY ENGINEERING: "{"code":"RBA_LIMITED","message":"Functional scope restriction requires PROXY_GATEWAY"}"
 // ONEAPI-915 - ZIA API Tests – Results (RBA_LIMITED) and Other Errors
 
-func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
+func TestAccResourceForwardingControlRule_Basic(t *testing.T) {
 	var rules forwarding_rules.ForwardingRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ForwardingControlRule)
 
@@ -49,7 +47,6 @@ func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlState),
-					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -68,7 +65,6 @@ func TestAccResourceForwardingControlRuleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.FowardingControlUpdateDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlUpdateState),
-					resource.TestCheckResourceAttrSet(resourceTypeAndName, "order"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
@@ -265,4 +261,3 @@ resource "%s" "%s" {
 		dstIPGroupTypeAndName,
 	)
 }
-*/

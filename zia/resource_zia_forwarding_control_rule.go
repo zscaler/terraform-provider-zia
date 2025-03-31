@@ -159,9 +159,10 @@ func resourceForwardingControlRule() *schema.Resource {
 				}, false),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The order of execution for the forwarding rule order",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The order of execution for the forwarding rule order",
 			},
 			"rank": {
 				Type:        schema.TypeInt,
@@ -521,6 +522,13 @@ func resourceForwardingControlRuleDelete(ctx context.Context, d *schema.Resource
 func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.ForwardingRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFirewallIPSRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	// Process the DestCountries to add the prefix where needed
 	rawDestCountries := SetToStringList(d, "dest_countries")
 	processedDestCountries := make([]string, len(rawDestCountries))
@@ -536,7 +544,7 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		ID:                  id,
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		Rank:                d.Get("rank").(int),
 		Type:                d.Get("type").(string),
 		State:               d.Get("state").(string),

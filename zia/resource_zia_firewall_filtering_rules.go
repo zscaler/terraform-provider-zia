@@ -76,10 +76,11 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Rule order number of the Firewall Filtering policy rule",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -192,10 +193,6 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
-	// if err := validateFirewallRule(req); err != nil {
-	// 	return diag.FromErr(err)
-	// }
-
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
@@ -221,8 +218,8 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		resp, err := filteringrules.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -241,18 +238,35 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		}
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filteringrules.Get(ctx, service, id)
-			if err != nil {
+		reorder(order, resp.ID, "firewall_filtering_rules",
+			func() (int, error) {
+				allRules, err := filteringrules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				nonPredefined := 0
+				for _, rule := range allRules {
+					if !rule.Predefined {
+						nonPredefined++
+					}
+				}
+				return nonPredefined, nil
+			},
+			func(id, order int) error {
+				// Custom updateOrder that skips predefined rules
+				rule, err := filteringrules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				if rule.Predefined {
+					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d", id)
+					return nil
+				}
+				rule.Order = order
+				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filteringrules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -303,6 +317,11 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	if resp.Predefined {
+		log.Printf("[INFO] Rule ID %d is predefined — ignoring from Terraform state", resp.ID)
+		d.SetId("") // clear from Terraform state
+		return nil
+	}
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
@@ -433,8 +452,8 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 		_, err := filteringrules.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -448,18 +467,40 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filteringrules.Get(ctx, service, id)
-			if err != nil {
+		reorder(req.Order, req.ID, "firewall_filtering_rules",
+			func() (int, error) {
+				allRules, err := filteringrules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				nonPredefined := 0
+				for _, rule := range allRules {
+					if !rule.Predefined {
+						nonPredefined++
+					}
+				}
+				return nonPredefined, nil
+			},
+			func(id, order int) error {
+				rule, err := filteringrules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				if rule.Predefined {
+					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
+					return nil
+				}
+
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order {
+					return nil
+				}
+
+				rule.Order = order
+				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filteringrules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+		)
 
 		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
@@ -475,7 +516,6 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
@@ -533,6 +573,13 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFirewallFilteringRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	// Process DestCountries and SourceCountries using the helper function
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
@@ -540,7 +587,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	result := filteringrules.FirewallFilteringRules{
 		ID:                  id,
 		Name:                d.Get("name").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		Rank:                d.Get("rank").(int),
 		Action:              d.Get("action").(string),
 		State:               d.Get("state").(string),

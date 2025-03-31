@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/filetypecontrol"
 )
 
-func TestAccResourceFileTypeControlRulesBasic(t *testing.T) {
+func TestAccResourceFileTypeControlRules_Basic(t *testing.T) {
 	var rules filetypecontrol.FileTypeRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FileTypeControlRules)
 

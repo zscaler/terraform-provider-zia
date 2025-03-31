@@ -92,10 +92,10 @@ func resourceSandboxRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The rule order of execution for the  sandbox rules with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the  sandbox rules with respect to other rules.",
 			},
 			"ba_rule_action": {
 				Type:        schema.TypeString,
@@ -193,8 +193,8 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		resp, err := sandbox_rules.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -370,8 +370,8 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := sandbox_rules.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -459,11 +459,18 @@ func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, met
 func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandSandboxRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	result := sandbox_rules.SandboxRules{
 		ID:                 id,
 		Name:               d.Get("name").(string),
 		Description:        d.Get("description").(string),
-		Order:              d.Get("order").(int),
+		Order:              order,
 		Rank:               d.Get("rank").(int),
 		State:              d.Get("state").(string),
 		BaRuleAction:       d.Get("ba_rule_action").(string),

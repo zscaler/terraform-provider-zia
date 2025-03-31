@@ -105,9 +105,10 @@ func resourceCloudAppControlRules() *schema.Resource {
 				Description: "Additional information about the forwarding rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The order of execution for the forwarding rule order",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The order of execution for the forwarding rule order",
 			},
 			"state": {
 				Type:        schema.TypeString,
@@ -244,8 +245,8 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -459,8 +460,8 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -554,6 +555,13 @@ func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceD
 func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebApplicationRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandCloudAppControlRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	validityStartTimeStr := d.Get("validity_start_time").(string)
 	validityEndTimeStr := d.Get("validity_end_time").(string)
 
@@ -598,7 +606,7 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
 		Type:                d.Get("type").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		State:               d.Get("state").(string),
 		Rank:                d.Get("rank").(int),
 		TimeQuota:           d.Get("time_quota").(int),

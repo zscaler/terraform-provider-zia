@@ -77,10 +77,10 @@ func resourceFirewallDNSRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Rule order number of the Firewall Filtering policy rule",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -227,8 +227,8 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -247,7 +247,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[INFO] Created zia firewall dns rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
+		reorder(order, resp.ID, "firewall_dns_rule", func() (int, error) {
 			list, err := firewalldnscontrolpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
@@ -270,7 +270,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			}
 			return diags
 		}
-		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
+		markOrderRuleAsDone(resp.ID, "firewall_dns_rule")
 		break
 	}
 
@@ -344,7 +344,7 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 
-	if err := d.Set("application_groups", flattenIDs(resp.ApplicationGroups)); err != nil {
+	if err := d.Set("application_groups", flattenIDExtensionsListIDs(resp.ApplicationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -441,10 +441,9 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := firewalldnscontrolpolicies.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
-
 		if err != nil {
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				log.Printf("[INFO] Updating firewall dns rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
@@ -456,7 +455,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
+		reorder(req.Order, req.ID, "firewall_dns_rule", func() (int, error) {
 			list, err := firewalldnscontrolpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
@@ -476,7 +475,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 			return diags
 		}
-		markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
+		markOrderRuleAsDone(req.ID, "firewall_dns_rule")
 		break
 	}
 
@@ -540,6 +539,13 @@ func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData,
 func expandFirewallDNSRules(d *schema.ResourceData) firewalldnscontrolpolicies.FirewallDNSRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFirewallDNSRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	// Process DestCountries and SourceCountries using the helper function
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
@@ -548,7 +554,7 @@ func expandFirewallDNSRules(d *schema.ResourceData) firewalldnscontrolpolicies.F
 		ID:                  id,
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		Rank:                d.Get("rank").(int),
 		Action:              d.Get("action").(string),
 		State:               d.Get("state").(string),

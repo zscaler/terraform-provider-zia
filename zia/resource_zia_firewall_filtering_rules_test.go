@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
 
-func TestAccResourceFirewallFilteringRuleBasic(t *testing.T) {
+func TestAccResourceFirewallFilteringRule_Basic(t *testing.T) {
 	var rules filteringrules.FirewallFilteringRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallFilteringRules)
 
@@ -229,7 +229,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 4
+	order = 1
 	enable_full_logging = "%s"
 	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
 	nw_services {

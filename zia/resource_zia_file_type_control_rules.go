@@ -130,10 +130,10 @@ func resourceFileTypeControlRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The rule order of execution for the  File Type Control rule with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the  File Type Control rule with respect to other rules.",
 			},
 			"filtering_action": {
 				Type:        schema.TypeString,
@@ -259,8 +259,8 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		resp, err := filetypecontrol.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -429,8 +429,8 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		_, err := filetypecontrol.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -516,6 +516,13 @@ func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceD
 func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileTypeRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFileTypeControlRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	sizeQuotaMB := d.Get("size_quota").(int)
 	sizeQuotaKB, err := convertAndValidateSizeQuota(sizeQuotaMB)
 	if err != nil {
@@ -526,7 +533,7 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		ID:                id,
 		Name:              d.Get("name").(string),
 		Description:       d.Get("description").(string),
-		Order:             d.Get("order").(int),
+		Order:             order,
 		Rank:              d.Get("rank").(int),
 		State:             d.Get("state").(string),
 		FilteringAction:   d.Get("filtering_action").(string),

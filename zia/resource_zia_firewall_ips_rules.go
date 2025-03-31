@@ -76,10 +76,10 @@ func resourceFirewallIPSRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Rule order number of the Firewall Filtering policy rule",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -211,8 +211,8 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		resp, err := firewallipscontrolpolicies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -231,7 +231,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[INFO] Created zia firewall ips rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
+		reorder(order, resp.ID, "firewall_ips_rule", func() (int, error) {
 			list, err := firewallipscontrolpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
@@ -254,7 +254,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			}
 			return diags
 		}
-		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
+		markOrderRuleAsDone(resp.ID, "firewall_ips_rule")
 		break
 	}
 
@@ -420,8 +420,8 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		_, err := firewallipscontrolpolicies.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -435,7 +435,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
+		reorder(req.Order, req.ID, "firewall_ips_rule", func() (int, error) {
 			list, err := firewallipscontrolpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
@@ -455,7 +455,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 			return diags
 		}
-		markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
+		markOrderRuleAsDone(req.ID, "firewall_ips_rule")
 		break
 	}
 
@@ -519,6 +519,13 @@ func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData,
 func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.FirewallIPSRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFirewallIPSRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	// Process DestCountries and SourceCountries using the helper function
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
@@ -526,7 +533,7 @@ func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.F
 	result := firewallipscontrolpolicies.FirewallIPSRules{
 		ID:                id,
 		Name:              d.Get("name").(string),
-		Order:             d.Get("order").(int),
+		Order:             order,
 		Rank:              d.Get("rank").(int),
 		Action:            d.Get("action").(string),
 		State:             d.Get("state").(string),

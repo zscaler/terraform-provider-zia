@@ -192,10 +192,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description:  "Additional information about the URL Filtering rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Order of execution of rule with respect to other URL Filtering rules",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -367,8 +367,8 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -582,8 +582,8 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		_, _, err := urlfilteringpolicies.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -670,6 +670,13 @@ func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData
 func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFilteringRule {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandSSLInspectionRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	validityStartTimeStr := d.Get("validity_start_time").(string)
 	validityEndTimeStr := d.Get("validity_end_time").(string)
 
@@ -713,7 +720,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		ID:                     id,
 		Name:                   d.Get("name").(string),
 		Description:            d.Get("description").(string),
-		Order:                  d.Get("order").(int),
+		Order:                  order,
 		Protocols:              SetToStringList(d, "protocols"),
 		URLCategories:          SetToStringList(d, "url_categories"),
 		UserRiskScoreLevels:    SetToStringList(d, "user_risk_score_levels"),

@@ -16,7 +16,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
-func TestAccResourceURLFilteringRulesBasic(t *testing.T) {
+func TestAccResourceURLFilteringRules_Basic(t *testing.T) {
 	var rules urlfilteringpolicies.URLFilteringRule
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLFilteringRules)
 

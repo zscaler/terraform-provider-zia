@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
 )
 
-func TestAccResourceFirewallIPSRulesBasic(t *testing.T) {
+func TestAccResourceFirewallIPSRules_Basic(t *testing.T) {
 	var rules firewallipscontrolpolicies.FirewallIPSRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallIPSRules)
 
