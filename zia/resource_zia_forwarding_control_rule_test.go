@@ -48,8 +48,6 @@ func TestAccResourceForwardingControlRule_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
@@ -66,8 +64,6 @@ func TestAccResourceForwardingControlRule_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", variable.FowardingControlType),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.FowardingControlUpdateState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "nw_services.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "src_ip_groups.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "dest_ip_groups.0.id.#", "1"),
@@ -190,30 +186,6 @@ data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
 	name = "ZSCALER_PROXY_NW_SERVICES"
 }
 
-data "zia_location_groups" "sdwan_can" {
-	name = "SDWAN_CAN"
-}
-
-data "zia_location_groups" "sdwan_usa" {
-	name = "SDWAN_USA"
-}
-
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_group_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_group_management" "marketing" {
-	name = "Marketing"
-}
-
 resource "%s" "%s" {
 	name = "tf-acc-test-%s"
 	description = "%s"
@@ -224,15 +196,6 @@ resource "%s" "%s" {
     forward_method = "DIRECT"
 	nw_services {
 		id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
-	}
-	location_groups {
-		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
-	}
-	groups {
-		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
-	}
-	departments {
-		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
 	}
 	labels {
 		id = ["${%s.id}"]

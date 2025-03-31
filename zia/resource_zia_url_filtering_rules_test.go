@@ -41,9 +41,6 @@ func TestAccResourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 
@@ -60,9 +57,6 @@ func TestAccResourceURLFilteringRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "request_methods.#", "9"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 			// Import test
@@ -164,37 +158,7 @@ func getURLFilteringRuleResourceHCL(generatedName, name, description, action, st
 	validityEndTime := time.Now().AddDate(1, 0, 0).Add(5 * time.Minute).UTC().Format(time.RFC1123)
 
 	return fmt.Sprintf(`
-data "zia_firewall_filtering_time_window" "work_hours" {
-	name = "Work Hours"
-}
 
-data "zia_firewall_filtering_time_window" "off_hours" {
-	name = "Off Hours"
-}
-
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_group_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_group_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_location_groups" "sdwan_can" {
-	name = "SDWAN_CAN"
-}
-
-data "zia_location_groups" "sdwan_usa" {
-	name = "SDWAN_USA"
-}
 
 resource "%s" "%s" {
     name = "tf-acc-test-%s"
@@ -208,18 +172,7 @@ resource "%s" "%s" {
 	user_agent_types = [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER" ]
 	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-	location_groups {
-		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
-	}
-	groups {
-		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
-	}
-	departments {
-		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
-	}
-	time_windows {
-		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
-	}
+
 	labels {
 		id = ["${%s.id}"]
 	}

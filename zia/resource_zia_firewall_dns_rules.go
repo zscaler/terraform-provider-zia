@@ -376,7 +376,7 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
