@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.0.9``
+``Last updated: v4.0.10``
 
 ---
+
+## 4.0.10 (March, 26 2025)
+
+### Notes
+
+- Release date: **(March, 26 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fixed `zia_dlp_web_rules` sub rule reorder logic to ensure rules are ordered correctly.
+- [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Replaced attribute `malicious_urls` with `bypass_urls` in the resource `zia_atp_security_exceptions` documentation.
+- [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fixed the flattening function `flattenIDExtensionsListIDs` and schema function `setIDsSchemaTypeCustom`. This will ensure Terraform identifies plan changes when block lists are removed from the configuration.
 
 ## 4.0.9 (March, 14 2025)
 

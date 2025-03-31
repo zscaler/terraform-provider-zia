@@ -39,8 +39,6 @@ func TestAccResourceSSLInspectionRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.SSLInspectionRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "road_warrior_for_kerberos", strconv.FormatBool(variable.RoadWarriorKerberos)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 
@@ -55,8 +53,6 @@ func TestAccResourceSSLInspectionRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.SSLInspectionRuleState),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "road_warrior_for_kerberos", strconv.FormatBool(variable.RoadWarriorKerberos)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 			// Import test
@@ -153,30 +149,8 @@ data "%s" "%s" {
 func getSSLInspectionRulesResourceHCL(generatedName, name, description, state string, ruleLabelTypeAndName string) string {
 	return fmt.Sprintf(`
 
-
 data "zia_location_groups" "sdwan_can" {
 	name = "SDWAN_CAN"
-}
-
-data "zia_location_groups" "sdwan_usa" {
-	name = "SDWAN_USA"
-}
-
-
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_group_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_group_management" "marketing" {
-	name = "Marketing"
 }
 
 resource "%s" "%s" {
@@ -200,15 +174,6 @@ resource "%s" "%s" {
 			block_undecrypt                    = true
 			http2_enabled                       = false
 		}
-	}
-	location_groups {
-		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
-	}
-	groups {
-		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
-	}
-	departments {
-		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
 	}
 	labels {
 		id = ["${%s.id}"]

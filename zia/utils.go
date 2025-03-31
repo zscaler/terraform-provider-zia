@@ -2,6 +2,8 @@ package zia
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -11,6 +13,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/activation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
@@ -318,18 +321,67 @@ func processCountries(countries []string) []string {
 	return processedCountries
 }
 
-func handleInvalidInputError(err error) error {
+// func handleInvalidInputError(err error) error {
+// 	if err == nil {
+// 		return nil
+// 	}
+
+// 	if strings.Contains(err.Error(), `"code":"INVALID_INPUT_ARGUMENT"`) {
+// 		log.Printf("[ERROR] Failing immediately due to INVALID_INPUT_ARGUMENT: %s", err.Error())
+// 		return err
+// 	}
+
+// 	return nil
+// }
+
+var failFastErrorCodes = []string{
+	"INVALID_INPUT_ARGUMENT",
+	"TRIAL_EXPIRED",
+	"EDIT_LOCK_NOT_AVAILABLE",
+	"DUPLICATE_ITEM",
+	// Add more codes here as needed
+}
+
+// failFastOnErrorCodes detects known fatal API error codes and returns the original error to fail immediately.
+func failFastOnErrorCodes(err error) error {
 	if err == nil {
 		return nil
 	}
 
-	// Check if the error message contains "INVALID_INPUT_ARGUMENT"
-	if strings.Contains(err.Error(), `"code":"INVALID_INPUT_ARGUMENT"`) {
-		log.Printf("[ERROR] Failing immediately due to INVALID_INPUT_ARGUMENT: %s", err.Error())
-		return fmt.Errorf("ZIA API Error: %s. This feature may not be enabled in your account. Please verify your configuration", err.Error())
+	// Case 1: SDK's structured ErrorResponse (preferred path)
+	var apiErr *errorx.ErrorResponse
+	if errors.As(err, &apiErr) {
+		code := extractErrorCodeFromBody(apiErr.Message)
+		for _, c := range failFastErrorCodes {
+			if code == c {
+				log.Printf("[ERROR] Failing immediately due to API error code '%s': %s", c, apiErr.Message)
+				return err
+			}
+		}
 	}
 
-	return err
+	// Case 2: fallback for unstructured errors
+	errMsg := err.Error()
+	for _, code := range failFastErrorCodes {
+		match := fmt.Sprintf(`"code":"%s"`, code)
+		if strings.Contains(errMsg, match) {
+			log.Printf("[WARN] Failing due to fallback match for code '%s': %s", code, errMsg)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func extractErrorCodeFromBody(body string) string {
+	type apiErrorBody struct {
+		Code string `json:"code"`
+	}
+	var parsed apiErrorBody
+	if err := json.Unmarshal([]byte(body), &parsed); err == nil {
+		return parsed.Code
+	}
+	return ""
 }
 
 /*

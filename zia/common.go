@@ -53,6 +53,32 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 		ids.MaxItems = *maxItems
 	}
 	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		// Computed:    true,
+		MaxItems:    1,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": ids,
+			},
+		},
+	}
+}
+
+// Used for Computed Attributes
+func setIDsSchemaTypeCustomSpecial(maxItems *int, desc string) *schema.Schema {
+	ids := &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeInt,
+		},
+	}
+	if maxItems != nil && *maxItems > 0 {
+		ids.MaxItems = *maxItems
+	}
+	return &schema.Schema{
 		Type:        schema.TypeSet,
 		Optional:    true,
 		Computed:    true,
@@ -65,7 +91,6 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 		},
 	}
 }
-
 func setSingleIDSchemaTypeCustom(desc string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
@@ -312,9 +337,11 @@ func flattenCustomIDSet(customID *common.IDCustom) []interface{} {
 }
 
 func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-	if list == nil {
+	// Skip if the list is empty
+	if len(list) == 0 {
 		return nil
 	}
+
 	ids := []int{}
 	for _, item := range list {
 		if item.ID == 0 && item.Name == "" {
@@ -322,12 +349,36 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 		}
 		ids = append(ids, item.ID)
 	}
+
+	// Skip if no valid IDs
+	if len(ids) == 0 {
+		return nil
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"id": ids,
 		},
 	}
 }
+
+// func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
+// 	if len(list) == 0 {
+// 		return nil
+// 	}
+// 	ids := []int{}
+// 	for _, item := range list {
+// 		if item.ID == 0 && item.Name == "" {
+// 			continue
+// 		}
+// 		ids = append(ids, item.ID)
+// 	}
+// 	return []interface{}{
+// 		map[string]interface{}{
+// 			"id": ids,
+// 		},
+// 	}
+// }
 
 // Flattening function used in the Forwarding Control Policy Resource
 func flattenIDNameSet(idName *common.IDName) []interface{} {
@@ -740,7 +791,7 @@ func getSandboxFileTypes() *schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateSandboxRuleFileTypes(),
 		},
-		Optional: true,
+		Required: true,
 	}
 }
 
@@ -823,8 +874,8 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
-	ticker := time.NewTicker(time.Second * 5) // create a ticker that ticks every half minute
-	defer ticker.Stop()                       // stop the ticker when the loop ends
+	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
+	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
 		select {

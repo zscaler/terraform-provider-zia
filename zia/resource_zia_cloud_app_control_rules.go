@@ -105,9 +105,10 @@ func resourceCloudAppControlRules() *schema.Resource {
 				Description: "Additional information about the forwarding rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The order of execution for the forwarding rule order",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The order of execution for the forwarding rule order",
 			},
 			"state": {
 				Type:        schema.TypeString,
@@ -244,8 +245,8 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -378,45 +379,45 @@ func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Tenancy Profile IDs before setting: %+v\n", resp.TenancyProfileIDs)
-	if err := d.Set("tenancy_profile_ids", flattenIDs(resp.TenancyProfileIDs)); err != nil {
+	if err := d.Set("tenancy_profile_ids", flattenIDExtensionsListIDs(resp.TenancyProfileIDs)); err != nil {
 		return diag.FromErr(err)
 	}
 	log.Printf("[DEBUG] Tenancy Profile IDs after setting: %+v\n", d.Get("tenancy_profile_ids"))
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -459,8 +460,8 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -554,6 +555,13 @@ func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceD
 func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebApplicationRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandCloudAppControlRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	validityStartTimeStr := d.Get("validity_start_time").(string)
 	validityEndTimeStr := d.Get("validity_end_time").(string)
 
@@ -598,7 +606,7 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		Name:                d.Get("name").(string),
 		Description:         d.Get("description").(string),
 		Type:                d.Get("type").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		State:               d.Get("state").(string),
 		Rank:                d.Get("rank").(int),
 		TimeQuota:           d.Get("time_quota").(int),

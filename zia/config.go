@@ -62,7 +62,7 @@ func NewConfig(d *schema.ResourceData) *Config {
 		backoff:        true,
 		minWait:        30,
 		maxWait:        300,
-		retryCount:     5,
+		retryCount:     30,
 		parallelism:    1,
 		logLevel:       int(hclog.Error),
 		requestTimeout: 0,

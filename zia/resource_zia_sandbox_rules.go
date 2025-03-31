@@ -92,10 +92,10 @@ func resourceSandboxRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "The rule order of execution for the  sandbox rules with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the  sandbox rules with respect to other rules.",
 			},
 			"ba_rule_action": {
 				Type:        schema.TypeString,
@@ -137,17 +137,13 @@ func resourceSandboxRules() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
-			"device_groups":        setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":              setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"locations":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for the which policy must be applied. If not set, policy is applied for all locations."),
 			"location_groups":      setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of locations groups for which rule must be applied."),
 			"departments":          setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of departments to which the sandbox rules must be applied."),
 			"groups":               setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of groups to which the sandbox rules must be applied."),
 			"users":                setIDsSchemaTypeCustom(intPtr(4), "The Name-ID pairs of users to which the sandbox rules must be applied."),
-			"time_windows":         setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
 			"labels":               setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"zpa_app_segments":     setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
-			"device_trust_levels":  getDeviceTrustLevels(),
 			"url_categories":       getURLCategories(),
 			"ba_policy_categories": getBaPolicyCategories(),
 			"file_types":           getSandboxFileTypes(),
@@ -193,8 +189,8 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		resp, err := sandbox_rules.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -301,39 +297,27 @@ func resourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -370,8 +354,8 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := sandbox_rules.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -459,11 +443,18 @@ func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, met
 func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandSandboxRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	result := sandbox_rules.SandboxRules{
 		ID:                 id,
 		Name:               d.Get("name").(string),
 		Description:        d.Get("description").(string),
-		Order:              d.Get("order").(int),
+		Order:              order,
 		Rank:               d.Get("rank").(int),
 		State:              d.Get("state").(string),
 		BaRuleAction:       d.Get("ba_rule_action").(string),
@@ -475,14 +466,11 @@ func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 		BaPolicyCategories: SetToStringList(d, "ba_policy_categories"),
 		URLCategories:      SetToStringList(d, "url_categories"),
 		FileTypes:          SetToStringList(d, "file_types"),
-		DeviceGroups:       expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:            expandIDNameExtensionsSet(d, "devices"),
 		Locations:          expandIDNameExtensionsSet(d, "locations"),
 		LocationGroups:     expandIDNameExtensionsSet(d, "location_groups"),
 		Groups:             expandIDNameExtensionsSet(d, "groups"),
 		Departments:        expandIDNameExtensionsSet(d, "departments"),
 		Users:              expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:        expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:             expandIDNameExtensionsSet(d, "labels"),
 		ZPAAppSegments:     expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}

@@ -342,8 +342,8 @@ func resourceLocationManagement() *schema.Resource {
 				Optional:    true,
 				Description: "",
 			},
-			"dynamic_location_groups": setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations for which rule must be applied"),
-			"static_location_groups":  setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"dynamic_location_groups": setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"static_location_groups":  setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
@@ -500,11 +500,11 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dynamic_location_groups", flattenIDs(resp.DynamiclocationGroups)); err != nil {
+	if err := d.Set("dynamic_location_groups", flattenIDExtensionsListIDs(resp.DynamiclocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("static_location_groups", flattenIDs(resp.StaticLocationGroups)); err != nil {
+	if err := d.Set("static_location_groups", flattenIDExtensionsListIDs(resp.StaticLocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 

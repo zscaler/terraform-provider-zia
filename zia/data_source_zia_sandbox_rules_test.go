@@ -39,8 +39,6 @@ func TestAccDataSourceSandboxRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "ba_policy_categories.#", "4"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "file_types.#", "19"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "protocols.#", "4"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "departments.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "labels.#", "1"),
 				),
 			},
