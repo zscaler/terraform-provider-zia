@@ -2,6 +2,8 @@ module github.com/zscaler/terraform-provider-zia/v4
 
 go 1.23.1
 
+toolchain go1.24.1
+
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/fabiotavarespr/iso3166 v0.0.3
@@ -9,7 +11,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.36.1
-	github.com/zscaler/zscaler-sdk-go/v3 v3.1.10
+	github.com/zscaler/zscaler-sdk-go/v3 v3.1.13
 )
 
 require (
