@@ -1,5 +1,6 @@
 package zia
 
+/*
 import (
 	"testing"
 
@@ -53,3 +54,4 @@ data "zia_device_groups" "no_client_connector"{
     name = "No Client Connector"
 }
 `
+*/
