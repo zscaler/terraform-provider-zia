@@ -137,17 +137,13 @@ func resourceSandboxRules() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
-			"device_groups":        setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":              setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"locations":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for the which policy must be applied. If not set, policy is applied for all locations."),
 			"location_groups":      setIDsSchemaTypeCustom(intPtr(32), "Name-ID pairs of locations groups for which rule must be applied."),
 			"departments":          setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of departments to which the sandbox rules must be applied."),
 			"groups":               setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of groups to which the sandbox rules must be applied."),
 			"users":                setIDsSchemaTypeCustom(intPtr(4), "The Name-ID pairs of users to which the sandbox rules must be applied."),
-			"time_windows":         setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
 			"labels":               setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"zpa_app_segments":     setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
-			"device_trust_levels":  getDeviceTrustLevels(),
 			"url_categories":       getURLCategories(),
 			"ba_policy_categories": getBaPolicyCategories(),
 			"file_types":           getSandboxFileTypes(),
@@ -301,14 +297,6 @@ func resourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 
-	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -326,10 +314,6 @@ func resourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -482,14 +466,11 @@ func expandSandboxRules(d *schema.ResourceData) sandbox_rules.SandboxRules {
 		BaPolicyCategories: SetToStringList(d, "ba_policy_categories"),
 		URLCategories:      SetToStringList(d, "url_categories"),
 		FileTypes:          SetToStringList(d, "file_types"),
-		DeviceGroups:       expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:            expandIDNameExtensionsSet(d, "devices"),
 		Locations:          expandIDNameExtensionsSet(d, "locations"),
 		LocationGroups:     expandIDNameExtensionsSet(d, "location_groups"),
 		Groups:             expandIDNameExtensionsSet(d, "groups"),
 		Departments:        expandIDNameExtensionsSet(d, "departments"),
 		Users:              expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:        expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:             expandIDNameExtensionsSet(d, "labels"),
 		ZPAAppSegments:     expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}

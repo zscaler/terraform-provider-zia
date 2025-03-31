@@ -93,8 +93,6 @@ In addition to all arguments above, the following attributes are supported:
 * `url_categories` - (List of Strings) The list of URL categories to which the DLP policy rule must be applied.
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
 
-`Devices`
-
 `Who, Where and When` supports the following attributes:
 
 * `locations` - (List of Objects) You can manually select up to `8` locations. When not used it implies `Any` to apply the rule to all groups.

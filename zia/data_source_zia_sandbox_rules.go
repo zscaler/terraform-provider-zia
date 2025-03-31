@@ -229,33 +229,6 @@ func dataSourceSandboxRules() *schema.Resource {
 					},
 				},
 			},
-			"time_windows": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "This is an immutable reference to an entity that mainly consists of id and name.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "A unique identifier for an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:        schema.TypeMap,
-							Computed:    true,
-							Description: "Additional information about the entity",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"last_modified_time": {
 				Type:        schema.TypeInt,
 				Computed:    true,
@@ -292,60 +265,6 @@ func dataSourceSandboxRules() *schema.Resource {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "This is an immutable reference to an entity that mainly consists of id and name.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "A unique identifier for an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:        schema.TypeMap,
-							Computed:    true,
-							Description: "Additional information about the entity",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"device_groups": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Name-ID pairs of device groups for which the rule is applied",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "A unique identifier for an entity",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The configured name of the entity",
-						},
-						"extensions": {
-							Type:        schema.TypeMap,
-							Computed:    true,
-							Description: "Additional information about the entity",
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"devices": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "Name-ID pairs of device for which the rule is applied",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -437,14 +356,6 @@ func dataSourceSandboxRulesRead(ctx context.Context, d *schema.ResourceData, met
 		_ = d.Set("url_categories", resp.URLCategories)
 		_ = d.Set("protocols", resp.Protocols)
 		_ = d.Set("file_types", resp.FileTypes)
-
-		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("device_groups", flattenIDNameExtensions(resp.DeviceGroups)); err != nil {
-			return diag.FromErr(err)
-		}
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return diag.FromErr(err)
