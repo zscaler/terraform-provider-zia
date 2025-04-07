@@ -16,11 +16,11 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 4.0.10 (March, 26 2025)
+## 4.0.10 (April, 7 2025)
 
 ### Notes
 
-- Release date: **(March, 26 2025)**
+- Release date: **(April, 7 2025)**
 - Supported Terraform version: **v1.x**
 
 ### Bug Fixes
@@ -28,6 +28,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 - [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fixed `zia_dlp_web_rules` sub rule reorder logic to ensure rules are ordered correctly.
 - [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Replaced attribute `malicious_urls` with `bypass_urls` in the resource `zia_atp_security_exceptions` documentation.
 - [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fixed the flattening function `flattenIDExtensionsListIDs` and schema function `setIDsSchemaTypeCustom`. This will ensure Terraform identifies plan changes when block lists are removed from the configuration.
+- [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fix to attribute the `order` attribute in all rule based resources to ensure consistency on ordering logic.
+- [PR #416](https://github.com/zscaler/terraform-provider-zia/pull/416) - Fix  custom order logic on the resource `zia_firewall_filtering_rules` to ensure pre-defined rules are placed in the correct position to prevent drifts
 
 ## 4.0.9 (March, 14 2025)
 

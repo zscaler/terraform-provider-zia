@@ -873,7 +873,7 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 }
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
+func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error, beforeReorder func()) {
 	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
@@ -896,6 +896,9 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 				// sort by order (ascending)
 				sorted := sortOrders(rules.orders[resourceType])
 				log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
+				if beforeReorder != nil {
+					beforeReorder()
+				}
 				for _, v := range sorted {
 					if v.Order <= count {
 						if err := updateOrder(v.ID, v.Order); err != nil {
@@ -921,7 +924,7 @@ func markOrderRuleAsDone(id int, resourceType string) {
 	rules.Unlock()
 }
 
-func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
+func reorderWithBeforeReorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error, beforeReorder func()) {
 	rules.Lock()
 	shouldCallReorder := false
 	if len(rules.orders) == 0 {
@@ -942,6 +945,10 @@ func reorder(order, id int, resourceType string, getCount func() (int, error), u
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
 		// one resource will wait until all resources are done and reorder then return
-		reorderAll(resourceType, getCount, updateOrder)
+		reorderAll(resourceType, getCount, updateOrder, beforeReorder)
 	}
+}
+
+func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
+	reorderWithBeforeReorder(order, id, resourceType, getCount, updateOrder, nil)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
@@ -186,6 +188,32 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 }
 */
 
+func beforeReorderFirewallFilteringRules(ctx context.Context, service *zscaler.Service) func() {
+	return func() {
+		log.Printf("[INFO] beforeReorderFirewallFilteringRules")
+		// get all predefined rules and set their order to come first
+		rules, err := filteringrules.GetAll(ctx, service)
+		if err != nil {
+			log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
+		}
+		// first order predefined rules by their order
+		sort.Slice(rules, func(i, j int) bool {
+			return rules[i].Order < rules[j].Order
+		})
+		order := 1
+		for _, r := range rules {
+			if r.Predefined {
+				r.Order = order
+				_, err = filteringrules.Update(ctx, service, r.ID, &r)
+				if err != nil {
+					log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
+				}
+				order++
+			}
+		}
+	}
+}
+
 func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
@@ -207,6 +235,8 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			}
 			if firewallFilteringStartingOrder == 0 {
 				firewallFilteringStartingOrder = 1
+			} else {
+				firewallFilteringStartingOrder++
 			}
 		}
 		firewallFilteringLock.Unlock()
@@ -238,34 +268,31 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		}
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_filtering_rules",
+		reorderWithBeforeReorder(order, resp.ID, "firewall_filtering_rules",
 			func() (int, error) {
 				allRules, err := filteringrules.GetAll(ctx, service)
 				if err != nil {
 					return 0, err
 				}
-				nonPredefined := 0
-				for _, rule := range allRules {
-					if !rule.Predefined {
-						nonPredefined++
-					}
-				}
-				return nonPredefined, nil
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
 			},
 			func(id, order int) error {
-				// Custom updateOrder that skips predefined rules
+				// Custom updateOrder that handles predefined rules
 				rule, err := filteringrules.Get(ctx, service, id)
 				if err != nil {
 					return err
 				}
 				if rule.Predefined {
-					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d", id)
+					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
 					return nil
 				}
+
 				rule.Order = order
 				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
 			},
+			beforeReorderFirewallFilteringRules(ctx, service),
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -467,19 +494,14 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_filtering_rules",
+		reorderWithBeforeReorder(req.Order, req.ID, "firewall_filtering_rules",
 			func() (int, error) {
 				allRules, err := filteringrules.GetAll(ctx, service)
 				if err != nil {
 					return 0, err
 				}
-				nonPredefined := 0
-				for _, rule := range allRules {
-					if !rule.Predefined {
-						nonPredefined++
-					}
-				}
-				return nonPredefined, nil
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
 			},
 			func(id, order int) error {
 				rule, err := filteringrules.Get(ctx, service, id)
@@ -500,6 +522,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
 			},
+			beforeReorderFirewallFilteringRules(ctx, service),
 		)
 
 		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
