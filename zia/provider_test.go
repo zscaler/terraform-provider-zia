@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 )
@@ -147,35 +147,38 @@ func TestProviderValidate(t *testing.T) {
 		{"missing client_id", "", "clientSecret", "vanityDomain", "zscaler_cloud", true},
 		{"missing clientSecret", "clientID", "", "vanityDomain", "zscaler_cloud", true},
 		{"missing vanity domain", "clientID", "clientSecret", "", "zscaler_cloud", true},
-		{"valid client_id + client_secret without zscaler_cloud", "clientID", "clientSecret", "vanityDomain", "", false}, // Ensures cloud is optional
+		{"valid client_id + client_secret without zscaler_cloud", "clientID", "clientSecret", "vanityDomain", "", false},
 	}
 
 	// Execute each test case
 	for _, test := range tests {
-		resourceConfig := map[string]interface{}{
-			"vanity_domain": test.vanityDomain,
-		}
-		if test.clientID != "" {
-			resourceConfig["client_id"] = test.clientID
-		}
-		if test.clientSecret != "" {
-			resourceConfig["client_secret"] = test.clientSecret
-		}
-		if test.cloud != "" {
-			resourceConfig["zscaler_cloud"] = test.cloud
-		}
+		t.Run(test.name, func(t *testing.T) {
+			// Raw config
+			resourceConfig := map[string]interface{}{
+				"vanity_domain": test.vanityDomain,
+			}
+			if test.clientID != "" {
+				resourceConfig["client_id"] = test.clientID
+			}
+			if test.clientSecret != "" {
+				resourceConfig["client_secret"] = test.clientSecret
+			}
+			if test.cloud != "" {
+				resourceConfig["zscaler_cloud"] = test.cloud
+			}
 
-		config := terraform.NewResourceConfigRaw(resourceConfig)
-		provider := ZIAProvider()
-		err := provider.Validate(config)
+			provider := ZIAProvider()
+			rawData := schema.TestResourceDataRaw(t, provider.Schema, resourceConfig)
 
-		// Check expectations based on each test case setup
-		if test.expectError && err == nil {
-			t.Errorf("test %q: expected error but received none", test.name)
-		}
-		if !test.expectError && err != nil {
-			t.Errorf("test %q: did not expect error but received error: %+v", test.name, err)
-		}
+			_, diags := provider.ConfigureContextFunc(context.Background(), rawData)
+
+			if test.expectError && !diags.HasError() {
+				t.Errorf("expected error but received none")
+			}
+			if !test.expectError && diags.HasError() {
+				t.Errorf("did not expect error but received: %+v", diags)
+			}
+		})
 	}
 
 	// Restore environment variables after the tests

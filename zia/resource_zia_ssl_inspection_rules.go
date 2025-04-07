@@ -169,9 +169,10 @@ func resourceSSLInspectionRules() *schema.Resource {
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "The rule order of execution for the  SSL Inspection rules with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the  SSL Inspection rules with respect to other rules.",
 			},
 			"road_warrior_for_kerberos": {
 				Type:        schema.TypeBool,
@@ -369,8 +370,8 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		resp, err := sslinspection.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -465,43 +466,43 @@ func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIPGroups)); err != nil {
+	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIPGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
+	if err := d.Set("dest_ip_groups", flattenIDExtensionsListIDs(resp.DestIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -546,8 +547,8 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		_, err := sslinspection.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -634,11 +635,18 @@ func resourceSSLInspectionRulesDelete(ctx context.Context, d *schema.ResourceDat
 func expandSSLInspectionRules(d *schema.ResourceData) sslinspection.SSLInspectionRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandSSLInspectionRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	result := sslinspection.SSLInspectionRules{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
 		Description:            d.Get("description").(string),
-		Order:                  d.Get("order").(int),
+		Order:                  order,
 		Rank:                   d.Get("rank").(int),
 		State:                  d.Get("state").(string),
 		RoadWarriorForKerberos: d.Get("road_warrior_for_kerberos").(bool),

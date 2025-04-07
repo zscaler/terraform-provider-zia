@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
@@ -76,10 +78,11 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Rule order number of the Firewall Filtering policy rule",
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -185,16 +188,38 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 }
 */
 
+func beforeReorderFirewallFilteringRules(ctx context.Context, service *zscaler.Service) func() {
+	return func() {
+		log.Printf("[INFO] beforeReorderFirewallFilteringRules")
+		// get all predefined rules and set their order to come first
+		rules, err := filteringrules.GetAll(ctx, service)
+		if err != nil {
+			log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
+		}
+		// first order predefined rules by their order
+		sort.Slice(rules, func(i, j int) bool {
+			return rules[i].Order < rules[j].Order
+		})
+		order := 1
+		for _, r := range rules {
+			if r.Predefined {
+				r.Order = order
+				_, err = filteringrules.Update(ctx, service, r.ID, &r)
+				if err != nil {
+					log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
+				}
+				order++
+			}
+		}
+	}
+}
+
 func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
-
-	// if err := validateFirewallRule(req); err != nil {
-	// 	return diag.FromErr(err)
-	// }
 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
@@ -210,6 +235,8 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			}
 			if firewallFilteringStartingOrder == 0 {
 				firewallFilteringStartingOrder = 1
+			} else {
+				firewallFilteringStartingOrder++
 			}
 		}
 		firewallFilteringLock.Unlock()
@@ -221,8 +248,8 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		resp, err := filteringrules.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -241,18 +268,32 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		}
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filteringrules.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(order, resp.ID, "firewall_filtering_rules",
+			func() (int, error) {
+				allRules, err := filteringrules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id, order int) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := filteringrules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				if rule.Predefined {
+					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
+					return nil
+				}
+
+				rule.Order = order
+				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filteringrules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			beforeReorderFirewallFilteringRules(ctx, service),
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -303,6 +344,11 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	if resp.Predefined {
+		log.Printf("[INFO] Rule ID %d is predefined — ignoring from Terraform state", resp.ID)
+		d.SetId("") // clear from Terraform state
+		return nil
+	}
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
@@ -334,66 +380,66 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationsGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationsGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("src_ip_groups", flattenIDs(resp.SrcIpGroups)); err != nil {
+	if err := d.Set("src_ip_groups", flattenIDExtensionsListIDs(resp.SrcIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dest_ip_groups", flattenIDs(resp.DestIpGroups)); err != nil {
+	if err := d.Set("dest_ip_groups", flattenIDExtensionsListIDs(resp.DestIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_services", flattenIDs(resp.NwServices)); err != nil {
+	if err := d.Set("nw_services", flattenIDExtensionsListIDs(resp.NwServices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_service_groups", flattenIDs(resp.NwServiceGroups)); err != nil {
+	if err := d.Set("nw_service_groups", flattenIDExtensionsListIDs(resp.NwServiceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("nw_application_groups", flattenIDs(resp.NwApplicationGroups)); err != nil {
+	if err := d.Set("nw_application_groups", flattenIDExtensionsListIDs(resp.NwApplicationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("app_services", flattenIDs(resp.AppServices)); err != nil {
+	if err := d.Set("app_services", flattenIDExtensionsListIDs(resp.AppServices)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("app_service_groups", flattenIDs(resp.AppServiceGroups)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("app_service_groups", flattenIDExtensionsListIDs(resp.AppServiceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
@@ -433,8 +479,8 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 		_, err := filteringrules.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -448,18 +494,36 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_filtering_rules", func() (int, error) {
-			list, err := filteringrules.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filteringrules.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(req.Order, req.ID, "firewall_filtering_rules",
+			func() (int, error) {
+				allRules, err := filteringrules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id, order int) error {
+				rule, err := filteringrules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				if rule.Predefined {
+					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
+					return nil
+				}
+
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order {
+					return nil
+				}
+
+				rule.Order = order
+				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filteringrules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			beforeReorderFirewallFilteringRules(ctx, service),
+		)
 
 		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
@@ -475,7 +539,6 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
 		if activationErr := triggerActivation(zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
@@ -533,6 +596,13 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandFirewallFilteringRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	// Process DestCountries and SourceCountries using the helper function
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
@@ -540,7 +610,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	result := filteringrules.FirewallFilteringRules{
 		ID:                  id,
 		Name:                d.Get("name").(string),
-		Order:               d.Get("order").(int),
+		Order:               order,
 		Rank:                d.Get("rank").(int),
 		Action:              d.Get("action").(string),
 		State:               d.Get("state").(string),

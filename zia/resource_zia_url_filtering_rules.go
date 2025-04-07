@@ -192,10 +192,10 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description:  "Additional information about the URL Filtering rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Computed:    true,
-				Description: "Order of execution of rule with respect to other URL Filtering rules",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Order of execution of rule with respect to other URL Filtering rules",
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -367,8 +367,8 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -501,32 +501,32 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if err := d.Set("locations", flattenIDs(resp.Locations)); err != nil {
+	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenIDExtensionsListIDs(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("departments", flattenIDs(resp.Departments)); err != nil {
+	if err := d.Set("departments", flattenIDExtensionsListIDs(resp.Departments)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("users", flattenIDs(resp.Users)); err != nil {
+	if err := d.Set("users", flattenIDExtensionsListIDs(resp.Users)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Ensure override_users and override_groups are only set when block_override is true and action is BLOCK
 	if resp.Action == "BLOCK" && resp.BlockOverride {
-		if err := d.Set("override_users", flattenIDs(resp.OverrideUsers)); err != nil {
+		if err := d.Set("override_users", flattenIDExtensionsListIDs(resp.OverrideUsers)); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("override_groups", flattenIDs(resp.OverrideGroups)); err != nil {
+		if err := d.Set("override_groups", flattenIDExtensionsListIDs(resp.OverrideGroups)); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
@@ -535,22 +535,22 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 		_ = d.Set("override_groups", nil)
 	}
 
-	if err := d.Set("location_groups", flattenIDs(resp.LocationGroups)); err != nil {
+	if err := d.Set("location_groups", flattenIDExtensionsListIDs(resp.LocationGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("labels", flattenIDs(resp.Labels)); err != nil {
+	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("device_groups", flattenIDs(resp.DeviceGroups)); err != nil {
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("devices", flattenIDs(resp.Devices)); err != nil {
+	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("source_ip_groups", flattenIDs(resp.SourceIPGroups)); err != nil {
+	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIPGroups)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
@@ -582,8 +582,8 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		_, _, err := urlfilteringpolicies.Update(ctx, service, id, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := handleInvalidInputError(err); customErr != nil {
-			return diag.Errorf("%v", customErr) // Ensure our message is returned
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
 
 		if err != nil {
@@ -670,6 +670,13 @@ func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData
 func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFilteringRule {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
+	// Retrieve the order and fallback to 1 if it's 0
+	order := d.Get("order").(int)
+	if order == 0 {
+		log.Printf("[WARN] expandSSLInspectionRules: Rule ID %d has order=0. Falling back to order=1", id)
+		order = 1
+	}
+
 	validityStartTimeStr := d.Get("validity_start_time").(string)
 	validityEndTimeStr := d.Get("validity_end_time").(string)
 
@@ -713,7 +720,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		ID:                     id,
 		Name:                   d.Get("name").(string),
 		Description:            d.Get("description").(string),
-		Order:                  d.Get("order").(int),
+		Order:                  order,
 		Protocols:              SetToStringList(d, "protocols"),
 		URLCategories:          SetToStringList(d, "url_categories"),
 		UserRiskScoreLevels:    SetToStringList(d, "user_risk_score_levels"),

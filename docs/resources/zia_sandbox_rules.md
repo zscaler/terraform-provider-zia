@@ -93,8 +93,6 @@ In addition to all arguments above, the following attributes are supported:
 * `url_categories` - (List of Strings) The list of URL categories to which the DLP policy rule must be applied.
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
 
-`Devices`
-
 `Who, Where and When` supports the following attributes:
 
 * `locations` - (List of Objects) You can manually select up to `8` locations. When not used it implies `Any` to apply the rule to all groups.
@@ -113,3 +111,35 @@ In addition to all arguments above, the following attributes are supported:
 
 * `zpa_app_segments` (List of Objects) The ZPA application segments to which the rule applies
       - `id` - (Integer) Identifier that uniquely identifies an entity
+
+|                              **Supported File Types**                                           |
+|:--------------------------------------------------------------------------------------------------------|
+|---------------------------------------------------------------------------------------|
+| `FTCATEGORY_BAT`, `FTCATEGORY_APK`, `FTCATEGORY_WINDOWS_SCRIPT_FILES`,|
+| `FTCATEGORY_JAVA_APPLET`, `FTCATEGORY_PDF_DOCUMENT`, `FTCATEGORY_MS_RTF`,|
+| `FTCATEGORY_FLASH`, `FTCATEGORY_POWERSHELL`, `FTCATEGORY_WINDOWS_LIBRARY`,|
+| `FTCATEGORY_MS_EXCEL`, `FTCATEGORY_HTA`, `FTCATEGORY_VISUAL_BASIC_SCRIPT`,|
+| `FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_TAR`, `FTCATEGORY_WINDOWS_EXECUTABLES`, |
+| `FTCATEGORY_SCZIP`, `FTCATEGORY_RAR`, `FTCATEGORY_ZIP`, `FTCATEGORY_P7Z`,|
+| `FTCATEGORY_MICROSOFT_INSTALLER`, `FTCATEGORY_BZIP2`, `FTCATEGORY_PYTHON`,|
+| `FTCATEGORY_MS_WORD`|
+|-------------------------------------------------------------------------------------------|
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_sandbox_rules** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_sandbox_rules.example <rule_id>
+```
+
+or
+
+```shell
+terraform import zia_sandbox_rules.example <rule_name>
+```

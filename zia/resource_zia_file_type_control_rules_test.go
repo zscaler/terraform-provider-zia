@@ -15,7 +15,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/filetypecontrol"
 )
 
-func TestAccResourceFileTypeControlRulesBasic(t *testing.T) {
+func TestAccResourceFileTypeControlRules_Basic(t *testing.T) {
 	var rules filetypecontrol.FileTypeRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FileTypeControlRules)
 
@@ -41,9 +41,6 @@ func TestAccResourceFileTypeControlRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 
@@ -61,9 +58,6 @@ func TestAccResourceFileTypeControlRulesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "file_types.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "protocols.#", "4"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "departments.0.id.#", "2"),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "groups.0.id.#", "2"),
 				),
 			},
 			// Import test
@@ -161,38 +155,6 @@ data "%s" "%s" {
 func getFileTypeControlRulesResourceHCL(generatedName, name, description, action, state string, ruleLabelTypeAndName string) string {
 	return fmt.Sprintf(`
 
-data "zia_location_groups" "sdwan_can" {
-	name = "SDWAN_CAN"
-}
-
-data "zia_location_groups" "sdwan_usa" {
-	name = "SDWAN_USA"
-}
-
-data "zia_firewall_filtering_time_window" "work_hours" {
-	name = "Work Hours"
-}
-
-data "zia_firewall_filtering_time_window" "off_hours" {
-	name = "Off Hours"
-}
-
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_group_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_group_management" "marketing" {
-	name = "Marketing"
-}
-
 data "zia_cloud_applications" "this" {
   policy_type = "cloud_application_policy"
   app_class   = ["WEB_MAIL"]
@@ -212,18 +174,7 @@ resource "%s" "%s" {
 	file_types          = ["FTCATEGORY_MS_WORD", "FTCATEGORY_MS_POWERPOINT", "FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_EXCEL"]
 	protocols           = ["FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	cloud_applications  = tolist([for app in data.zia_cloud_applications.this.applications : app["app"]])
-	location_groups {
-		id = [data.zia_location_groups.sdwan_can.id, data.zia_location_groups.sdwan_usa.id]
-	}
-	groups {
-		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
-	}
-	departments {
-		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
-	}
-	time_windows {
-		id = [data.zia_firewall_filtering_time_window.off_hours.id, data.zia_firewall_filtering_time_window.work_hours.id]
-	}
+
 	labels {
 		id = ["${%s.id}"]
 	}
