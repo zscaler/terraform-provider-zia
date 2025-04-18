@@ -336,10 +336,36 @@ func flattenCustomIDSet(customID *common.IDCustom) []interface{} {
 	}
 }
 
+// func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
+// 	// Skip if the list is empty
+// 	if len(list) == 0 {
+// 		return nil
+// 	}
+
+// 	ids := []int{}
+// 	for _, item := range list {
+// 		if item.ID == 0 && item.Name == "" {
+// 			continue
+// 		}
+// 		ids = append(ids, item.ID)
+// 	}
+
+// 	// Skip if no valid IDs
+// 	if len(ids) == 0 {
+// 		return nil
+// 	}
+
+// 	return []interface{}{
+// 		map[string]interface{}{
+// 			"id": ids,
+// 		},
+// 	}
+// }
+
 func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-	// Skip if the list is empty
 	if len(list) == 0 {
-		return nil
+		// Return an empty slice instead of nil
+		return []interface{}{}
 	}
 
 	ids := []int{}
@@ -350,11 +376,12 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 		ids = append(ids, item.ID)
 	}
 
-	// Skip if no valid IDs
 	if len(ids) == 0 {
-		return nil
+		// Again return []interface{}{} instead of nil
+		return []interface{}{}
 	}
 
+	// The rest remains the same
 	return []interface{}{
 		map[string]interface{}{
 			"id": ids,
@@ -827,6 +854,19 @@ func getSSLInspectionPlatforms() *schema.Schema {
 		Elem: &schema.Schema{
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateSSLInspectionPlatforms(), // Use ValidateDiagFunc here
+		},
+	}
+}
+
+func getAdminRolePermissions() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Request method for which the rule must be applied. If not set, rule will be applied to all methods",
+		Optional:    true,
+		Computed:    true,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateAdminRolePermissions(),
 		},
 	}
 }

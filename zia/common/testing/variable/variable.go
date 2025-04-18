@@ -196,6 +196,11 @@ const (
 	RuleLabelDescription = "testAcc_rule_label"
 )
 
+// Admin Roles
+const (
+	RoleName = "testAcc_admin_role"
+)
+
 // Activation
 const (
 	Status = "ACTIVE"

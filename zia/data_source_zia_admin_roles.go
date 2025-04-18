@@ -17,6 +17,7 @@ func dataSourceAdminRoles() *schema.Resource {
 			"id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "Admin role Id.",
 			},
 			"name": {
@@ -33,6 +34,11 @@ func dataSourceAdminRoles() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "Policy access permission.",
+			},
+			"alerting_access": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Alerting access permission",
 			},
 			"dashboard_access": {
 				Type:        schema.TypeString,
@@ -54,6 +60,11 @@ func dataSourceAdminRoles() *schema.Resource {
 				Computed:    true,
 				Description: "Username access permission. When set to NONE, the username will be obfuscated.",
 			},
+			"device_info_access": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Device information access permission. When set to NONE, device information is obfuscated.",
+			},
 			"admin_acct_access": {
 				Type:        schema.TypeString,
 				Computed:    true,
@@ -70,6 +81,22 @@ func dataSourceAdminRoles() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "List of functional areas to which this role has access. This attribute is subject to change.",
 			},
+			"feature_permissions": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Description: "Feature access permission. Indicates which features an admin role can access and if the admin has both read and write access, or read-only access.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"ext_feature_permissions": {
+				Type:        schema.TypeMap,
+				Computed:    true,
+				Description: "External feature access permission.",
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"is_non_editable": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -84,6 +111,11 @@ func dataSourceAdminRoles() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The admin role type. ()This attribute is subject to change.)",
+			},
+			"report_time_duration": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Time duration allocated to the report dashboard. ",
 			},
 		},
 	}
@@ -109,17 +141,21 @@ func dataSourceAdminRolesRead(ctx context.Context, d *schema.ResourceData, meta 
 		_ = d.Set("rank", resp.Rank)
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("policy_access", resp.PolicyAccess)
+		_ = d.Set("alerting_access", resp.AlertingAccess)
 		_ = d.Set("dashboard_access", resp.DashboardAccess)
 		_ = d.Set("report_access", resp.ReportAccess)
-		_ = d.Set("is_auditor", resp.IsAuditor)
 		_ = d.Set("analysis_access", resp.AnalysisAccess)
 		_ = d.Set("username_access", resp.UsernameAccess)
+		_ = d.Set("device_info_access", resp.DeviceInfoAccess)
 		_ = d.Set("admin_acct_access", resp.AdminAcctAccess)
 		_ = d.Set("is_auditor", resp.IsAuditor)
 		_ = d.Set("permissions", resp.Permissions)
+		_ = d.Set("feature_permissions", resp.FeaturePermissions)
+		_ = d.Set("ext_feature_permissions", resp.ExtFeaturePermissions)
 		_ = d.Set("is_non_editable", resp.IsNonEditable)
 		_ = d.Set("logs_limit", resp.LogsLimit)
 		_ = d.Set("role_type", resp.RoleType)
+		_ = d.Set("report_time_duration", resp.ReportTimeDuration)
 
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't find any admin role name '%s'", name))

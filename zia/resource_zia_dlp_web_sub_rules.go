@@ -6,7 +6,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -16,17 +15,12 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
 
-var (
-	dlpWebRulesLock     sync.Mutex
-	dlpWebStartingOrder int
-)
-
-func resourceDlpWebRules() *schema.Resource {
+func resourceDlpWebSubRules() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceDlpWebRulesCreate,
-		ReadContext:   resourceDlpWebRulesRead,
-		UpdateContext: resourceDlpWebRulesUpdate,
-		DeleteContext: resourceDlpWebRulesDelete,
+		CreateContext: resourceDlpWebSubRulesCreate,
+		ReadContext:   resourceDlpWebSubRulesRead,
+		UpdateContext: resourceDlpWebSubRulesUpdate,
+		DeleteContext: resourceDlpWebSubRulesDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -231,11 +225,11 @@ func resourceDlpWebRules() *schema.Resource {
 	}
 }
 
-func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDlpWebSubRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	req := expandDlpWebRules(d)
+	req := expandDlpWebSubRules(d)
 
 	// Validate file types
 	if err := validateDLPRuleFileTypes(req); err != nil {
@@ -334,7 +328,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		if diags := resourceDlpWebRulesRead(ctx, d, meta); diags.HasError() {
+		if diags := resourceDlpWebSubRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
 				time.Sleep(10 * time.Second)
 				continue
@@ -359,7 +353,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDlpWebSubRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -478,14 +472,13 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
-
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
 	return nil
 }
 
-func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDlpWebSubRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -495,7 +488,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(fmt.Errorf("web dlp rule ID not set"))
 	}
 
-	req := expandDlpWebRules(d)
+	req := expandDlpWebSubRules(d)
 
 	// Validate file types
 	if err := validateDLPRuleFileTypes(req); err != nil {
@@ -578,7 +571,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceDlpWebSubRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -609,13 +602,13 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
+func expandDlpWebSubRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
 	// Retrieve the order and fallback to 1 if it's 0
 	order := d.Get("order").(int)
 	if order == 0 {
-		log.Printf("[WARN] expandDlpWebRules: Rule ID %d has order=0. Falling back to order=1", id)
+		log.Printf("[WARN] expandDlpWebSubRules: Rule ID %d has order=0. Falling back to order=1", id)
 		order = 1
 	}
 
@@ -664,13 +657,13 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	return result
 }
 
-func expandSubRules(set *schema.Set) []dlp_web_rules.SubRule {
-	var subRules []dlp_web_rules.SubRule
-	for _, item := range set.List() {
-		subRuleID, err := strconv.Atoi(item.(string))
-		if err == nil {
-			subRules = append(subRules, dlp_web_rules.SubRule{ID: subRuleID})
-		}
-	}
-	return subRules
-}
+// func expandSubRules(set *schema.Set) []dlp_web_rules.SubRule {
+// 	var subRules []dlp_web_rules.SubRule
+// 	for _, item := range set.List() {
+// 		subRuleID, err := strconv.Atoi(item.(string))
+// 		if err == nil {
+// 			subRules = append(subRules, dlp_web_rules.SubRule{ID: subRuleID})
+// 		}
+// 	}
+// 	return subRules
+// }
