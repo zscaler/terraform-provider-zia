@@ -1,15 +1,14 @@
 # Changelog
 
-## 4.1.0 (April, 17 2025)
+## 4.1.0 (April, 18 2025)
 
 ### Notes
 
-- Release date: **(April, 17 2025)**
+- Release date: **(April, 18 2025)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancement
 
-- [PR #422](https://github.com/zscaler/terraform-provider-zia/pull/422) - Added new resource `zia_dlp_web_sub_rules` to manage DLP Web Sub Rules.
 - [PR #422](https://github.com/zscaler/terraform-provider-zia/pull/422) - Added new resource `resource_zia_admin_roles` to Admin Roles.
 
 ## 4.0.10 (April, 7 2025)

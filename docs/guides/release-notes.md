@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.0.10``
+``Last updated: v4.1.0``
 
 ---
+
+## 4.1.0 (April, 18 2025)
+
+### Notes
+
+- Release date: **(April, 18 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancement
+
+- [PR #422](https://github.com/zscaler/terraform-provider-zia/pull/422) - Added new resource `resource_zia_admin_roles` to Admin Roles.
 
 ## 4.0.10 (April, 7 2025)
 
