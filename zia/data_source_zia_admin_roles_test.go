@@ -4,47 +4,36 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
+	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
 )
 
 func TestAccDataSourceAdminRoles_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminRoles)
+
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAdminRolesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDataSourceAdminRolesConfig_basic,
+				Config: testAccCheckAdminRolesConfigure(resourceTypeAndName, generatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAdminRolesCheck("data.zia_admin_roles.super_admin"),
-					testAccDataSourceAdminRolesCheck("data.zia_admin_roles.velocloud"),
-					testAccDataSourceAdminRolesCheck("data.zia_admin_roles.silverpeak"),
-					testAccDataSourceAdminRolesCheck("data.zia_admin_roles.engineering"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "rank", resourceTypeAndName, "rank"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "alerting_access", resourceTypeAndName, "alerting_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "dashboard_access", resourceTypeAndName, "dashboard_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "report_access", resourceTypeAndName, "report_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "analysis_access", resourceTypeAndName, "analysis_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "username_access", resourceTypeAndName, "username_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "device_info_access", resourceTypeAndName, "device_info_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "admin_acct_access", resourceTypeAndName, "admin_acct_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "policy_access", resourceTypeAndName, "policy_access"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "role_type", resourceTypeAndName, "role_type"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "logs_limit", resourceTypeAndName, "logs_limit"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "report_time_duration", resourceTypeAndName, "report_time_duration"),
 				),
 			},
 		},
 	})
 }
-
-func testAccDataSourceAdminRolesCheck(name string) resource.TestCheckFunc {
-	return resource.ComposeTestCheckFunc(
-		resource.TestCheckResourceAttrSet(name, "id"),
-		resource.TestCheckResourceAttrSet(name, "name"),
-	)
-}
-
-var testAccCheckDataSourceAdminRolesConfig_basic = `
-data "zia_admin_roles" "super_admin" {
-	name = "Super Admin"
-}
-
-data "zia_admin_roles" "velocloud" {
-	name = "SDWAN-VeloCloud"
-}
-
-data "zia_admin_roles" "silverpeak" {
-	name = "SDWAN-SilverPeak"
-}
-
-data "zia_admin_roles" "engineering" {
-	name = "Engineering_Role"
-}
-`

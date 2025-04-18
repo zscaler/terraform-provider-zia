@@ -32,7 +32,6 @@ func TestAccResourceSandboxRules_Basic(t *testing.T) {
 				Config: testAccCheckSandboxRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.SandboxRuleDescription, variable.SandboxState, variable.SandboxAction, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSandboxRulesExists(resourceTypeAndName, &rules),
-					testAccCheckSandboxRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.SandboxRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.SandboxState),
@@ -48,7 +47,6 @@ func TestAccResourceSandboxRules_Basic(t *testing.T) {
 			{
 				Config: testAccCheckSandboxRulesConfigure(resourceTypeAndName, generatedName, generatedName, variable.SandboxRuleDescription, variable.SandboxState, variable.SandboxAction, ruleLabelTypeAndName, ruleLabelHCL),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSandboxRulesExists(resourceTypeAndName, &rules),
 					testAccCheckSandboxRulesExists(resourceTypeAndName, &rules),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.SandboxRuleDescription),

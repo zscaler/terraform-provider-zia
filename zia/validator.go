@@ -1480,6 +1480,45 @@ var supportedSSLInspectionPlatforms = []string{
 	"SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX",
 }
 
+func validateAdminRolePermissions() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for Admin Role Permissions validation",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedAdminRolePermissions, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var supportedAdminRolePermissions = []string{
+	"NSS_CONFIGURATION", "LOCATIONS", "HOSTED_PAC_FILES", "EZ_AGENT_CONFIGURATIONS",
+	"SECURE_AGENT_NOTIFICATIONS", "VPN_CREDENTIALS", "AUTHENTICATION_SETTINGS", "STATIC_IPS",
+	"GRE_TUNNELS", "CLIENT_CONNECTOR_PORTAL", "SECURE", "POLICY_RESOURCE_MANAGEMENT",
+	"CUSTOM_URL_CAT", "OVERRIDE_EXISTING_CAT", "TENANT_PROFILE_MANAGEMENT", "COMPLY",
+	"SSL_POLICY", "ADVANCED_SETTINGS", "PROXY_GATEWAY", "SUBCLOUDS", "IDENTITY_PROXY_SETTINGS",
+	"USER_MANAGEMENT", "APIKEY_MANAGEMENT", "FIREWALL_DNS", "VZEN_CONFIGURATION",
+	"PARTNER_INTEGRATION", "USER_ACCESS", "CUSTOMER_ACCT_INFO", "CUSTOMER_SUBSCRIPTION",
+	"CUSTOMER_ORG_SETTINGS", "ZIA_TRAFFIC_CAPTURE", "REMOTE_ASSISTANCE_MANAGEMENT",
+}
+
 /*
 func stringIsJSON(i interface{}, k cty.Path) diag.Diagnostics {
 	v, ok := i.(string)
