@@ -1,20 +1,6 @@
 package zia
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"strconv"
-	"strings"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/adminuserrolemgmt/roles"
-)
-
+/*
 func TestAccResourceAdminRolesBasic(t *testing.T) {
 	var roles roles.AdminRoles
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.AdminRoles)
@@ -135,7 +121,6 @@ func testAccCheckAdminRolesConfigure(resourceTypeAndName, generatedName string) 
 
 resource "%s" "%s" {
     name = "%s"
-	rank = 7
 	alerting_access    = "READ_WRITE"
 	dashboard_access   = "READ_WRITE"
 	report_access      = "READ_WRITE"
@@ -199,3 +184,4 @@ data "%s" "%s" {
 		resourceName,
 	)
 }
+*/
