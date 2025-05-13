@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.1.0``
+``Last updated: v4.1.1``
 
 ---
+
+## 4.1.1 (May, 13 2025)
+
+### Notes
+
+- Release date: **(May, 13 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancement
+
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Fixed `zia_dlp_web_rules` sub-rule exception reordering process.
 
 ## 4.1.0 (April, 18 2025)
 

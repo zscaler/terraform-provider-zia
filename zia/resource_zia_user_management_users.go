@@ -202,7 +202,7 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 	_ = d.Set("comments", resp.Comments)
 	_ = d.Set("temp_auth_email", resp.TempAuthEmail)
 
-	if err := d.Set("groups", flattenIDs(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -315,7 +315,7 @@ func expandUsers(d *schema.ResourceData) users.Users {
 		Comments:      d.Get("comments").(string),
 		TempAuthEmail: d.Get("temp_auth_email").(string),
 		Password:      d.Get("password").(string),
-		Groups:        expandIDNameExtensionsSet(d, "groups"),
+		Groups:        expandUserGroups(d, "groups"),
 	}
 
 	department := expandUserDepartment(d)

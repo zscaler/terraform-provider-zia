@@ -164,30 +164,18 @@ func resourceFileTypeControlRules() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "The list of cloud applications to which the File Type Control rule must be applied.",
 			},
-			"time_quota": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(15, 600),
-				Description:  "Time quota in minutes, after which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
-			},
-			"size_quota": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(10, 100000),
-				Description:  "Size quota in KB beyond which the URL Filtering rule is applied. If not set, no quota is enforced. If a policy rule action is set to 'BLOCK', this field is not applicable.",
-			},
 			"min_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 96000),
+				ValidateFunc: validation.IntBetween(0, 409600),
 				Description:  "Minimum file size (in KB) used for evaluation of the FTP rule",
 			},
 			"max_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(0, 96000),
+				ValidateFunc: validation.IntBetween(0, 409600),
 				Description:  "Maximum file size (in KB) used for evaluation of the FTP rule",
 			},
 			"capture_pcap": {
@@ -356,10 +344,6 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("max_size", resp.MaxSize)
 	_ = d.Set("min_size", resp.MinSize)
-	_ = d.Set("time_quota", resp.TimeQuota)
-
-	sizeQuotaMB := resp.SizeQuota / 1024
-	_ = d.Set("size_quota", sizeQuotaMB)
 
 	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
 		return diag.FromErr(err)
@@ -523,12 +507,6 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		order = 1
 	}
 
-	sizeQuotaMB := d.Get("size_quota").(int)
-	sizeQuotaKB, err := convertAndValidateSizeQuota(sizeQuotaMB)
-	if err != nil {
-		log.Printf("[ERROR] Invalid size_quota: %v", err)
-	}
-
 	result := filetypecontrol.FileTypeRules{
 		ID:                id,
 		Name:              d.Get("name").(string),
@@ -543,8 +521,6 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		CapturePCAP:       d.Get("capture_pcap").(bool),
 		MinSize:           d.Get("min_size").(int),
 		MaxSize:           d.Get("max_size").(int),
-		TimeQuota:         d.Get("time_quota").(int),
-		SizeQuota:         sizeQuotaKB,
 		DeviceTrustLevels: SetToStringList(d, "device_trust_levels"),
 		Protocols:         SetToStringList(d, "protocols"),
 		FileTypes:         SetToStringList(d, "file_types"),

@@ -537,6 +537,43 @@ func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} 
 	return department
 }
 
+func flattenUserGroups(userGroups []common.UserGroups) []interface{} {
+	if userGroups == nil {
+		return nil
+	}
+
+	groupList := make([]interface{}, len(userGroups))
+	for i, wg := range userGroups {
+		grMap := make(map[string]interface{})
+		grMap["id"] = wg.ID
+		grMap["name"] = wg.Name
+		groupList[i] = grMap
+	}
+
+	return groupList
+}
+
+func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.UserGroups
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil && itemMap["id"] != nil {
+				set := itemMap["id"].(*schema.Set)
+				for _, id := range set.List() {
+					result = append(result, common.UserGroups{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.UserGroups{}
+}
+
 func resourceNetworkPortsSchema(desc string) *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
