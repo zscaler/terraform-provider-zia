@@ -19,14 +19,14 @@ on:
 
 jobs:
 
-  zia-zsbeta-tests:
+  zia-zs3-tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         goVersion: ["1.21"]
         environment:
-          - ZIA_ZSBETA
+          - ZIA_ZS3
     environment: ${{ matrix.environment }}
     steps:
       - name: Checkout code
