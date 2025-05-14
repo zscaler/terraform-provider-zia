@@ -12,7 +12,7 @@ The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP
 
 ⚠️ **WARNING:** Zscaler Internet Access DLP supports a maximum of 127 Web DLP Rules to be created via API.
 
-## Example Usage - "ALL_OUTBOUND" File Type"
+## Example Usage - "FTCATEGORY_ALL_OUTBOUND" File Type"
 
 ```hcl
 data "zia_dlp_engines" "this" {
@@ -27,9 +27,9 @@ resource "zia_dlp_web_rules" "this" {
   rank                       = 7
   state                      = "ENABLED"
   protocols                  = [ "FTP_RULE", "HTTPS_RULE", "HTTP_RULE" ]
-  file_types                 = [ "ALL_OUTBOUND" ]
+  file_types                 = [ "FTCATEGORY_ALL_OUTBOUND" ]
   zscaler_incident_receiver  = false
-  without_content_inspection = false
+  without_content_inspection = true
   user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
   severity                   = "RULE_SEVERITY_HIGH"
   dlp_engines {
@@ -166,6 +166,7 @@ The following arguments are supported:
   * `ANY`
   * `NONE`
   * `BLOCK`
+  * `CONFIRM`
   * `ALLOW`
   * `ICAP_RESPONSE`
 
@@ -177,9 +178,9 @@ The following arguments are supported:
 
   * ~> Note: `BITMAP`, `JPEG`, `PNG`, and `TIFF` file types are exclusively supported when optical character recognition `ocr_enabled` is set to `true` for DLP rules with content inspection.
 
-  * ~> Note: `ALL_OUTBOUND` file type is applicable only when the predefined DLP engine called `EXTERNAL` is used and when the attribute `without_content_inspection` is set to `false`.
+  * ~> Note: `FTCATEGORY_ALL_OUTBOUND` file type is applicable only when the predefined DLP engine called `EXTERNAL` is used and when the attribute `without_content_inspection` is set to `false`.
 
-  * ~> Note: `ALL_OUTBOUND` file type cannot be used alongside any other file type.
+  * ~> Note: `FTCATEGORY_ALL_OUTBOUND` file type cannot be used alongside any other file type.
 
 * `cloud_applications` - (Optional) The list of cloud applications to which the DLP policy rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post)
 
@@ -250,61 +251,48 @@ The following arguments are supported:
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
-|              Inspection Type              |                   File Types                                  |
-|:------------------------------------------|:--------------------------------------------------------------|
-|--------------------------------|-------------------------------------------------------|
-|                                           | `FTCATEGORY_ENCRYPT`, `FTCATEGORY_P7Z`,                       |
-|                                           | `FTCATEGORY_BZIP2`, `FTCATEGORY_CAB`,                         |
-|                                           | `FTCATEGORY_FCL`, `FTCATEGORY_GZIP`,                          |
-|       `WITHOUT INSPECTION`                | `FTCATEGORY_ISO`, `FTCATEGORY_LZH`,                           |
-|                                           | `FTCATEGORY_RAR`,`FTCATEGORY_STUFFIT`,                        |
-|                                           | `FTCATEGORY_TAR`, `FTCATEGORY_XZ`,                            |
-|                                           | `FTCATEGORY_ZIP`, `FTCATEGORY_SCZIP`,                         |
-|                                           | `FTCATEGORY_ZIPX`                                             |
-|--------------------------------|--------------------------------------------------------|
-|--------------------------------|--------------------------------------------------------|
-|                                           | `FTCATEGORY_ACCDB`, `FTCATEGORY_APPLE_DOCUMENTS`,             |
-|                                           | `FTCATEGORY_ASM`, `FTCATEGORY_AU3`,                           |
-|                                           | `FTCATEGORY_BASH_SCRIPTS`, `FTCATEGORY_BASIC_SOURCE_CODE`,    |
-|                                           | `FTCATEGORY_BCP`,`FTCATEGORY_BITMAP`,                         |
-|                                           | `FTCATEGORY_BORLAND_CPP_FILES`, `FTCATEGORY_C_FILES`,         |
-|                                           | `FTCATEGORY_COBOL`,`FTCATEGORY_CSV`,                          |
-|                                           | `FTCATEGORY_CSX`,`FTCATEGORY_DAT`,                            |
-|                                           | `FTCATEGORY_DCM`, `FTCATEGORY_DELPHI`,                        |
-|                                           | `FTCATEGORY_F_FILES`,`FTCATEGORY_FOR`,                        |
-|                                           | `FTCATEGORY_FORM_DATA_POST`, `FTCATEGORY_DSP`,                |
-|                                           | `FTCATEGORY_EML_FILES`, `FTCATEGORY_GO_FILES`,                |
-|                                           | `FTCATEGORY_HTTP`,`FTCATEGORY_IFC`,                           |
-|                                           | `FTCATEGORY_INCLUDE_FILES`,`FTCATEGORY_INF`,                  |
-|                                           | `FTCATEGORY_JAVA_FILES`,`FTCATEGORY_JPEG`,                    |
-|                                           | `FTCATEGORY_JSON`,`FTCATEGORY_LOG_FILES`,                     |
-|                                           | `FTCATEGORY_MAKE_FILES`, `FTCATEGORY_MATLAB_FILES`,           |
-|                                           | `FTCATEGORY_MS_EXCEL`,`FTCATEGORY_MS_MDB`,                    |
-|                                           | `FTCATEGORY_MS_MSG`,`FTCATEGORY_MS_POWERPOINT`,               |
-|          `WITH INSPECTION`                | `FTCATEGORY_MS_PUB`,`FTCATEGORY_MS_RTF`,                      |
-|                                           | `FTCATEGORY_MS_WORD`,`FTCATEGORY_MSC`,                        |
-|                                           | `FTCATEGORY_NATVIS`,`FTCATEGORY_OLM`,                         |
-|                                           | `FTCATEGORY_OPEN_OFFICE_PRESENTATIONS`,                       |
-|                                           | `FTCATEGORY_OPEN_OFFICE_SPREADSHEETS`,                        |
-|                                           | `FTCATEGORY_MS_CPP_FILES`, `FTCATEGORY_PDF_DOCUMENT`,         |
-|                                           | `FTCATEGORY_PERL_FILES`,`FTCATEGORY_PNG`,                     |
-|                                           | `FTCATEGORY_POD`,`FTCATEGORY_POWERSHELL`,                     |
-|                                           | `FTCATEGORY_PYTHON`, `FTCATEGORY_RES_FILES`,                  |
-|                                           | `FTCATEGORY_RPY`,`FTCATEGORY_RSP`,                            |
-|                                           | `FTCATEGORY_RUBY_FILES`,`FTCATEGORY_SAS`,                     |
-|                                           | `FTCATEGORY_SC`,`FTCATEGORY_SCALA`,                           |
-|                                           | `FTCATEGORY_SCT`,`FTCATEGORY_SHELL_SCRAP`,                    |
-|                                           | `FTCATEGORY_SQL`,`FTCATEGORY_TABLEAU_FILES`,                  |
-|                                           | `FTCATEGORY_TIFF`, `FTCATEGORY_TLH`                           |
-|                                           | `FTCATEGORY_TLI`,`FTCATEGORY_TXT`,                            |
-|                                           | `FTCATEGORY_UNK_TXT`,`FTCATEGORY_XAML`                        |
-|                                           | `FTCATEGORY_VISUAL_BASIC_SCRIPT`,                             |
-|                                           | `FTCATEGORY_VISUAL_CPP_FILES`,`FTCATEGORY_VSDX`,              |
-|                                           | `FTCATEGORY_X1B`,`FTCATEGORY_VISUAL_BASIC_FILES`,             |
-|                                           | `FTCATEGORY_XML`, `FTCATEGORY_YAML_FILES`,                    |
-|                                           | `FTCATEGORY_JAVA_APPLET`,`FTCATEGORY_JAVASCRIPT`              |
-|                                           | `FTCATEGORY_WINDOWS_SCRIPT_FILES`                             |
-|------------------------------|----------------------------------------------------------|
+| Inspection Type         | File Types |
+|:------------------------|:-----------|
+| `WITH INSPECTION`       | `FTCATEGORY_ACCDB`, `FTCATEGORY_APPLE_DOCUMENTS`, `FTCATEGORY_ASM` |
+| `WITH INSPECTION`       | `FTCATEGORY_AU3`, `FTCATEGORY_BASH_SCRIPTS`, `FTCATEGORY_BASIC_SOURCE_CODE` |
+| `WITH INSPECTION`       | `FTCATEGORY_BCP`, `FTCATEGORY_BITMAP`, `FTCATEGORY_BORLAND_CPP_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_COBOL`, `FTCATEGORY_CSV`, `FTCATEGORY_CSX` |
+| `WITH INSPECTION`       | `FTCATEGORY_C_FILES`, `FTCATEGORY_DAT`, `FTCATEGORY_DCM` |
+| `WITH INSPECTION`       | `FTCATEGORY_DELPHI`, `FTCATEGORY_DSP`, `FTCATEGORY_EML_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_FOR`, `FTCATEGORY_FORM_DATA_POST`, `FTCATEGORY_F_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_GO_FILES`, `FTCATEGORY_HTTP`, `FTCATEGORY_IFC` |
+| `WITH INSPECTION`       | `FTCATEGORY_INCLUDE_FILES`, `FTCATEGORY_INF`, `FTCATEGORY_JAVASCRIPT` |
+| `WITH INSPECTION`       | `FTCATEGORY_JAVA_APPLET`, `FTCATEGORY_JAVA_FILES`, `FTCATEGORY_JPEG` |
+| `WITH INSPECTION`       | `FTCATEGORY_JSON`, `FTCATEGORY_LOG_FILES`, `FTCATEGORY_MAKE_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_MATLAB_FILES`, `FTCATEGORY_MSC`, `FTCATEGORY_MS_CPP_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_MS_EXCEL`, `FTCATEGORY_MS_MDB`, `FTCATEGORY_MS_MSG` |
+| `WITH INSPECTION`       | `FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_MS_PUB`, `FTCATEGORY_MS_RTF` |
+| `WITH INSPECTION`       | `FTCATEGORY_MS_WORD`, `FTCATEGORY_NATVIS`, `FTCATEGORY_OLM` |
+| `WITH INSPECTION`       | `FTCATEGORY_OPEN_OFFICE_DOC`, `FTCATEGORY_OPEN_OFFICE_PRESENTATIONS`, `FTCATEGORY_OPEN_OFFICE_SPREADSHEETS` |
+| `WITH INSPECTION`       | `FTCATEGORY_PDF_DOCUMENT`, `FTCATEGORY_PERL_FILES`, `FTCATEGORY_PNG` |
+| `WITH INSPECTION`       | `FTCATEGORY_POD`, `FTCATEGORY_POWERSHELL`, `FTCATEGORY_PYTHON` |
+| `WITH INSPECTION`       | `FTCATEGORY_RES_FILES`, `FTCATEGORY_RPY`, `FTCATEGORY_RSP` |
+| `WITH INSPECTION`       | `FTCATEGORY_RUBY_FILES`, `FTCATEGORY_SAS`, `FTCATEGORY_SC` |
+| `WITH INSPECTION`       | `FTCATEGORY_SCALA`, `FTCATEGORY_SCT`, `FTCATEGORY_SCZIP` |
+| `WITH INSPECTION`       | `FTCATEGORY_SHELL_SCRAP`, `FTCATEGORY_SQL`, `FTCATEGORY_TABLEAU_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_TIFF`, `FTCATEGORY_TLH`, `FTCATEGORY_TLI` |
+| `WITH INSPECTION`       | `FTCATEGORY_TXT`, `FTCATEGORY_UNK_TXT`, `FTCATEGORY_VISUAL_BASIC_FILES` |
+| `WITH INSPECTION`       | `FTCATEGORY_VISUAL_BASIC_SCRIPT`, `FTCATEGORY_VISUAL_CPP_FILES`, `FTCATEGORY_VSDX` |
+| `WITH INSPECTION`       | `FTCATEGORY_WINDOWS_SCRIPT_FILES`, `FTCATEGORY_X1B`, `FTCATEGORY_XAML` |
+| `WITH INSPECTION`       | `FTCATEGORY_XML`, `FTCATEGORY_YAML_FILES` |
+|:------------------------|:-----------|
+| `WITHOUT INSPECTION`    | `FTCATEGORY_AAC`, `FTCATEGORY_ACCDB`, `FTCATEGORY_ACIS` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_ADE`, `FTCATEGORY_APPINSTALLER`, `FTCATEGORY_APPLE_DOCUMENTS` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_APPX`, `FTCATEGORY_ASHX`, `FTCATEGORY_ASM` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_AU3`, `FTCATEGORY_AUTOCAD`, `FTCATEGORY_A_FILE` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_BASH_SCRIPTS`, `FTCATEGORY_BASIC_SOURCE_CODE`, `FTCATEGORY_BCP` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_BGI`, `FTCATEGORY_BIN`, `FTCATEGORY_BINHEX` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_BITMAP`, `FTCATEGORY_BORLAND_CPP_FILES`, `FTCATEGORY_BZIP2` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_C_FILES`, `FTCATEGORY_CAB`, `FTCATEGORY_CATALOG` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_CER`, `FTCATEGORY_CERT`, `FTCATEGORY_CGR` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_CHEMDRAW_FILES`, `FTCATEGORY_CML`, `FTCATEGORY_COBOL` |
+| `WITHOUT INSPECTION`    | `FTCATEGORY_COMPILED_HTML_HELP`, `FTCATEGORY_CP`, `FTCATEGORY_CPIO`, `FTCATEGORY_MS_PROJ` |
+|:------------------------|:---|
 
 ## Import
 

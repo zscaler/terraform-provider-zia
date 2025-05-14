@@ -17,8 +17,9 @@ import (
 )
 
 var (
-	dlpWebRulesLock     sync.Mutex
-	dlpWebStartingOrder int
+	dlpWebRulesLock             sync.Mutex
+	dlpWebStartingOrder         int
+	dlpWebSubRulesStartingOrder map[int]int = make(map[int]int)
 )
 
 func resourceDlpWebRules() *schema.Resource {
@@ -158,6 +159,7 @@ func resourceDlpWebRules() *schema.Resource {
 					"ANY",
 					"NONE",
 					"BLOCK",
+					"CONFIRM",
 					"ALLOW",
 					"ICAP_RESPONSE",
 				}, false),
@@ -184,6 +186,11 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "The match only criteria for DLP engines.",
 			},
+			"inspect_http_get_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "",
+			},
 			"without_content_inspection": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -205,7 +212,6 @@ func resourceDlpWebRules() *schema.Resource {
 			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Default:     true,
 				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
 			},
 			"locations":                setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
@@ -251,25 +257,48 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
-
+	// Determine whether it's a sub-rule
+	isSubRule := req.ParentRule != 0
 	for {
 		dlpWebRulesLock.Lock()
-		if dlpWebStartingOrder == 0 {
-			list, _ := dlp_web_rules.GetAll(ctx, service)
-			for _, r := range list {
-				if r.Order > dlpWebStartingOrder {
-					dlpWebStartingOrder = r.Order
+		if isSubRule {
+			if dlpWebSubRulesStartingOrder[req.ParentRule] == 0 {
+				list, _ := dlp_web_rules.Get(ctx, service, req.ParentRule)
+				for _, subRule := range list.SubRules {
+					r, err := dlp_web_rules.Get(ctx, service, subRule.ID)
+					if err != nil {
+						return diag.FromErr(err)
+					}
+					if r.Order > dlpWebSubRulesStartingOrder[req.ParentRule] {
+						dlpWebSubRulesStartingOrder[req.ParentRule] = r.Order
+					}
+				}
+				if dlpWebSubRulesStartingOrder[req.ParentRule] == 0 {
+					dlpWebSubRulesStartingOrder[req.ParentRule] = 1
 				}
 			}
+		} else {
 			if dlpWebStartingOrder == 0 {
-				dlpWebStartingOrder = 1
+				list, _ := dlp_web_rules.GetAll(ctx, service)
+				for _, r := range list {
+					if r.Order > dlpWebStartingOrder {
+						dlpWebStartingOrder = r.Order
+					}
+				}
+				if dlpWebStartingOrder == 0 {
+					dlpWebStartingOrder = 1
+				}
 			}
 		}
 		dlpWebRulesLock.Unlock()
 		startWithoutLocking := time.Now()
 
 		order := req.Order
-		req.Order = dlpWebStartingOrder
+		if isSubRule {
+			req.Order = dlpWebSubRulesStartingOrder[req.ParentRule]
+		} else {
+			req.Order = dlpWebStartingOrder
+		}
 
 		resp, err := dlp_web_rules.Create(ctx, service, &req)
 
@@ -290,8 +319,6 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		log.Printf("[INFO] Created zia web dlp rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 
-		// Determine whether it's a sub-rule
-		isSubRule := req.ParentRule != 0
 		resourceType := "dlp_web_rules"
 		if isSubRule {
 			resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
@@ -396,6 +423,7 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 	_ = d.Set("severity", resp.Severity)
 	_ = d.Set("parent_rule", resp.ParentRule)
 	_ = d.Set("match_only", resp.MatchOnly)
+	_ = d.Set("inspect_http_get_enabled", resp.InspectHttpGetEnabled)
 	_ = d.Set("external_auditor_email", resp.ExternalAuditorEmail)
 	_ = d.Set("without_content_inspection", resp.WithoutContentInspection)
 	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
@@ -478,7 +506,6 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("source_ip_groups", flattenIDExtensionsListIDs(resp.SourceIpGroups)); err != nil {
 		return diag.FromErr(err)
 	}
-
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
@@ -589,6 +616,10 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Deleting dlp rule ID: %v\n", (d.Id()))
 
 	if _, err := dlp_web_rules.Delete(ctx, service, id); err != nil {
+		if strings.Contains(err.Error(), "RESOURCE_NOT_FOUND") {
+			log.Printf("[INFO] web dlp rule %d not found, skipping deletion", id)
+			return nil
+		}
 		return diag.FromErr(err)
 	}
 	d.SetId("")
@@ -634,6 +665,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		DLPDownloadScanEnabled:   d.Get("dlp_download_scan_enabled").(bool),
 		ZCCNotificationsEnabled:  d.Get("zcc_notifications_enabled").(bool),
 		ZscalerIncidentReceiver:  d.Get("zscaler_incident_receiver").(bool),
+		InspectHttpGetEnabled:    d.Get("inspect_http_get_enabled").(bool),
 		MinSize:                  d.Get("min_size").(int),
 		ParentRule:               d.Get("parent_rule").(int),
 		Protocols:                SetToStringList(d, "protocols"),

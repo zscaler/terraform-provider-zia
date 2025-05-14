@@ -65,8 +65,6 @@ The following arguments are supported:
 * `state` - (String) Rule State. Supported Values: `ENABLED` and `DISABLED`
 * `order` - (Integer) Order of policy execution with respect to other file-type policies.
 * `filtering_action` - (String) Action taken when traffic matches policy. Supported values: `BLOCK`, `CAUTION`, `ALLOW`.
-* `time_quota` - (Integer) Time quota in minutes, after which the policy must be applied. Ignored if action is BLOCK.
-* `size_quota` - (Integer) Size quota in MB, beyond which the policy must be applied. Ignored if action is BLOCK.
 * `rank` - (Integer) Admin rank of the admin who creates this rule. Supported values: Range `1` to `7`
 * `capture_pcap` - (Boolean) A Boolean value that indicates whether packet capture (PCAP) is enabled.
 * `operation` - (String) File operation performed. Supported Values: `UPLOAD`, `DOWNLOAD` or `UPLOAD_DOWNLOAD`
@@ -74,8 +72,8 @@ The following arguments are supported:
     **NOTE** The attribute can only be set when the `file_types` list contain the following values: `FTCATEGORY_MS_WORD`, `FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_PDF_DOCUMENT`, `FTCATEGORY_MS_EXCEL`.
 * `unscannable` - (Boolean) Flag to check whether a file is scannable.
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
-* `min_size` - (Integer) Minimum file size (in KB) used for evaluation of the rule.
-* `max_size` - (Integer) Maximum file size (in KB) used for evaluation of the rule.
+* `min_size` - (Integer) Minimum file size (in KB) used for evaluation of the rule. Values between: `0` and `409600`
+* `max_size` - (Integer) Maximum file size (in KB) used for evaluation of the rule. Values between: `0` and `409600`
 * `protocols` - (List of Strings) Protocol for the given rule. Supported Values are: `ANY_RULE`, `SMRULEF_CASCADING_ALLOWED`, `FOHTTP_RULE`, `FTP_RULE`, `HTTPS_RULE`, `HTTP_RULE`
 * `cloud_applications` - (List of Strings) The list of cloud applications to which the File Type Control policy rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 * `device_trust_levels` - (List of Strings) List of device trust levels for which the rule must be applied. While the High Trust, Medium Trust, or Low Trust evaluation is applicable only to Zscaler Client Connector traffic, Unknown evaluation applies to all traffic. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`

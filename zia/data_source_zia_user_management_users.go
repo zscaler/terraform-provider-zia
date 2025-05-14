@@ -153,9 +153,7 @@ func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, m
 			return diag.FromErr(err)
 		}
 
-		// This function needs to be fixed, as the attributes are not application for user management
-		// See: https://help.zscaler.com/zia/user-management#/users-get
-		if err := d.Set("groups", flattenIDNameExtensions(resp.Groups)); err != nil {
+		if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
 			return diag.FromErr(err)
 		}
 	} else {
