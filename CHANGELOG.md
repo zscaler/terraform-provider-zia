@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.1.1 (May, 13 2025)
+
+### Notes
+
+- Release date: **(May, 13 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancement
+
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new action to `CONFIRM` to resource `zia_dlp_web_rules`
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new file_types to `FTCATEGORY_MS_PROJ` and `FTCATEGORY_APPINSTALLER` to resource `zia_dlp_web_rules`
+
 ## 4.1.0 (April, 18 2025)
 
 ### Notes

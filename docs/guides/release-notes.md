@@ -25,7 +25,8 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancement
 
-- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Fixed `zia_dlp_web_rules` sub-rule exception reordering process.
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new action to `CONFIRM` to resource `zia_dlp_web_rules`
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new file_types to `FTCATEGORY_MS_PROJ` and `FTCATEGORY_APPINSTALLER` to resource `zia_dlp_web_rules`
 
 ## 4.1.0 (April, 18 2025)
 
