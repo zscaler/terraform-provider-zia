@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.1.1``
+``Last updated: v4.1.2``
 
 ---
+
+## 4.1.2 (May, 20 2025)
+
+### Notes
+
+- Release date: **(May, 13 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancement
+
+- [PR #431](https://github.com/zscaler/terraform-provider-zia/pull/431) - Upgraded to [Zscaler SDK GO v3.3.1] - Fixing ZIA User Pagination parameters.
 
 ## 4.1.1 (May, 13 2025)
 
