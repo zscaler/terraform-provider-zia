@@ -17,6 +17,10 @@ on:
     - cron: '0 13 * * 1-5' # UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
 
   zia-zs3-tests:
