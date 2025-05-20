@@ -9,7 +9,7 @@
 
 ### Enhancement
 
-- [PR #431](https://github.com/zscaler/terraform-provider-zia/pull/431) - Upgraded to [Zscaler SDK GO v3.3.1] - Fixing ZIA User Pagination parameters.
+- [PR #431](https://github.com/zscaler/terraform-provider-zia/pull/431) - Upgraded to [Zscaler SDK GO v3.3.1](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.3.1) - Fixing ZIA User Pagination parameters.
 
 ## 4.1.1 (May, 13 2025)
 
