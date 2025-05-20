@@ -221,10 +221,6 @@ func resourceSSLInspectionRules() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									// "name": {
-									// 	Type:     schema.TypeString,
-									// 	Optional: true,
-									// },
 								},
 							},
 						},

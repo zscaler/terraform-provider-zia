@@ -12,6 +12,10 @@
 - [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new action to `CONFIRM` to resource `zia_dlp_web_rules`
 - [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Added new file_types to `FTCATEGORY_MS_PROJ` and `FTCATEGORY_APPINSTALLER` to resource `zia_dlp_web_rules`
 
+### Bug Fixes
+
+- [PR #429](https://github.com/zscaler/terraform-provider-zia/pull/429) - Fixed `zia_dlp_web_rules` sub-rule exception reordering process.
+
 ## 4.1.0 (April, 18 2025)
 
 ### Notes

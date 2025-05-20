@@ -116,13 +116,12 @@ func ZIAProvider() *schema.Provider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
-			"zia_admin_users":                resourceAdminUsers(),
-			"zia_admin_roles":                resourceAdminRoles(),
-			"zia_dlp_dictionaries":           resourceDLPDictionaries(),
-			"zia_dlp_engines":                resourceDLPEngines(),
-			"zia_dlp_notification_templates": resourceDLPNotificationTemplates(),
-			"zia_dlp_web_rules":              resourceDlpWebRules(),
-			//"zia_dlp_web_sub_rules":                             resourceDlpWebSubRules(),
+			"zia_admin_users":                                   resourceAdminUsers(),
+			"zia_admin_roles":                                   resourceAdminRoles(),
+			"zia_dlp_dictionaries":                              resourceDLPDictionaries(),
+			"zia_dlp_engines":                                   resourceDLPEngines(),
+			"zia_dlp_notification_templates":                    resourceDLPNotificationTemplates(),
+			"zia_dlp_web_rules":                                 resourceDlpWebRules(),
 			"zia_firewall_filtering_rule":                       resourceFirewallFilteringRules(),
 			"zia_firewall_ips_rule":                             resourceFirewallIPSRules(),
 			"zia_firewall_dns_rule":                             resourceFirewallDNSRules(),
@@ -161,6 +160,8 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_policy":                   resourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings": resourceURLFilteringCloludAppSettings(),
 			"zia_end_user_notification":                resourceEndUserNotification(),
+			"zia_nss_servers":                          resourceNSSServers(),
+			"zia_ftp_control_policy":                   resourceFTPControlPolicy(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -232,6 +233,8 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_policy":                          dataSourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings":        dataSourceURLFilteringCloludAppSettings(),
 			"zia_end_user_notification":                       dataSourceEndUserNotification(),
+			"zia_nss_servers":                                 dataSourceNSSServers(),
+			"zia_ftp_control_policy":                          dataSourceFTPControlPolicy(),
 		},
 	}
 
