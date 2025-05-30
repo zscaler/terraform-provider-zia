@@ -344,11 +344,11 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	if resp.Predefined {
-		log.Printf("[INFO] Rule ID %d is predefined — ignoring from Terraform state", resp.ID)
-		d.SetId("") // clear from Terraform state
-		return nil
-	}
+	// if resp.Predefined {
+	// 	log.Printf("[INFO] Rule ID %d is predefined — ignoring from Terraform state", resp.ID)
+	// 	d.SetId("") // clear from Terraform state
+	// 	return nil
+	// }
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")

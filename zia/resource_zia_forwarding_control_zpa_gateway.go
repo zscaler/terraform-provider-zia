@@ -108,6 +108,10 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 						},
 					},
 				},
+				// Set: func(v interface{}) int {
+				// 	m := v.(map[string]interface{})
+				// 	return schema.HashString(fmt.Sprintf("%s:%s", m["name"], m["external_id"]))
+				// },
 			},
 		},
 	}
