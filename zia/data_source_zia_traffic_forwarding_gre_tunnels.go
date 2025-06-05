@@ -180,7 +180,15 @@ func dataSourceTrafficForwardingGreTunnelsRead(ctx context.Context, d *schema.Re
 		}
 		resp = res
 	}
-
+	sourceIP, _ := d.Get("source_ip").(string)
+	if resp == nil && sourceIP != "" {
+		log.Printf("[INFO] Getting data for gre source ip address: %s\n", sourceIP)
+		res, err := gretunnels.GetByIPAddress(ctx, service, sourceIP)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		resp = res
+	}
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("source_ip", resp.SourceIP)
