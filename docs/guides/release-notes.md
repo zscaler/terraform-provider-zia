@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.1.4``
+``Last updated: v4.1.5``
 
 ---
+
+## 4.1.5 (June, 5 2025)
+
+### Notes
+
+- Release date: **(June, 5 2025)**
+- Supported Terraform version: **v1.x**
+
+### Documentation
+
+- [PR #435](https://github.com/zscaler/terraform-provider-zia/pull/435) - Fixed documentation spellings
 
 ## 4.1.4 (June, 5 2025)
 
