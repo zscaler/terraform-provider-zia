@@ -1,27 +1,27 @@
 ---
 subcategory: "Firewall Policies"
 layout: "zscaler"
-page_title: "ZIA): firewall_ips_rules"
+page_title: "ZIA): firewall_ips_rule"
 description: |-
   Get information about firewall IPS Control policy rule.
 
 ---
-# Data Source: zia_firewall_ips_rules
+# Data Source: zia_firewall_ips_rule
 
-Use the **zia_firewall_ips_rules** data source to get information about a cloud firewall IPS rule available in the Zscaler Internet Access.
+Use the **zia_firewall_ips_rule** data source to get information about a cloud firewall IPS rule available in the Zscaler Internet Access.
 
 ## Example Usage
 
 ```hcl
 # ZIA Firewall IPS Rule by name
-data "zia_firewall_ips_rules" "this" {
+data "zia_firewall_ips_rule" "this" {
     name = "Default Cloud IPS Rule"
 }
 ```
 
 ```hcl
 # ZIA Firewall IPS Rule by ID
-data "zia_firewall_ips_rules" "this" {
+data "zia_firewall_ips_rule" "this" {
     id = "12365478"
 }
 ```

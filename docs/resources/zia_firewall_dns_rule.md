@@ -1,7 +1,7 @@
 ---
 subcategory: "Firewall Policies"
 layout: "zscaler"
-page_title: "ZIA: firewall_dns_rules"
+page_title: "ZIA: firewall_dns_rule"
 description: |-
   Creates and manages ZIA Cloud firewall DNS rule.
 ---

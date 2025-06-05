@@ -1,22 +1,22 @@
 ---
 subcategory: "Firewall Policies"
 layout: "zscaler"
-page_title: "ZIA: firewall_filtering_network_application_groups"
+page_title: "ZIA: firewall_filtering_network_application_group"
 description: |-
   Get information about firewall rule network application groups.
 
 ---
 
 
-# Data Source) zia_firewall_filtering_network_application_groups
+# Data Source - zia_firewall_filtering_application_services_group
 
-Use the **zia_firewall_filtering_network_application_groups** data source to get information about a network application group available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network application rule.
+Use the **zia_firewall_filtering_application_services_group** data source to get information about a network application group available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network application rule.
 
 ## Example Usage
 
 ```hcl
 # ZIA Network Application Groups
-data "zia_firewall_filtering_network_application_groups" "example" {
+data "zia_firewall_filtering_application_services_group" "example" {
     name = "example"
 }
 ```
