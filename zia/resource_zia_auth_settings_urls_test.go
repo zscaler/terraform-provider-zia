@@ -11,7 +11,7 @@ import (
 func TestAccResourceAuthSettingsUrls_basic(t *testing.T) {
 	resourceName := "zia_auth_settings_urls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAuthSettingsUrlsDestroy,
 		Steps: []resource.TestStep{

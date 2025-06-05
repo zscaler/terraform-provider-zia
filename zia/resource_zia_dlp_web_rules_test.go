@@ -171,7 +171,7 @@ resource "%s" "%s" {
     action 						= "%s"
     state 						= "%s"
 	order 						= 1
-	rank 						= 7
+	rank 						= 0
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
 	zscaler_incident_receiver = true

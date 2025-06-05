@@ -1,16 +1,16 @@
 # Changelog
 
-## 4.1.3 (June, 2 2025)
+## 4.1.3 (June, 5 2025)
 
 ### Notes
 
-- Release date: **(June, 2 2025)**
+- Release date: **(June, 5 2025)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancement
 
-- [PR #434](https://github.com/zscaler/terraform-provider-zia/pull/434) - Fixed `zia_firewall_filtering_rule` import issue with predefined rules.
-- [PR #434](https://github.com/zscaler/terraform-provider-zia/pull/434) - Fixed country name and timezone validation for `zia_location_management` resource.
+- [PR #435](https://github.com/zscaler/terraform-provider-zia/pull/435) - Fixed `zia_firewall_filtering_rule` import issue with predefined rules.
+- [PR #435](https://github.com/zscaler/terraform-provider-zia/pull/435) - Fixed country name and timezone validation for `zia_location_management` resource.
 
 ## 4.1.2 (May, 20 2025)
 

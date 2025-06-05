@@ -32,14 +32,14 @@ func TestAccResourceEndUserNotificationBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "display_reason", "false"),
 					resource.TestCheckResourceAttr(resourceName, "idp_proxy_notification_text", ""),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "org_policy_link", "http://8061240.zscalerbeta.net/policy.html"),
+					resource.TestCheckResourceAttr(resourceName, "org_policy_link", "http://24326813.zscalerthree.net/policy.html"),
 					resource.TestCheckResourceAttr(resourceName, "quarantine_custom_notification_text", "We are checking this file for a potential security risk. The file you attempted to download is being analyzed for your protection.\nIt is not blocked. The analysis can take up to 10 minutes, depending on the size and type of the file. If safe, your file downloads automatically.\nIf unsafe, the file will be blocked.\n"),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", "https://redirect.acme.com"),
 					resource.TestCheckResourceAttr(resourceName, "security_review_custom_location", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_review_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_review_submit_to_security_cloud", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_review_text", "Click to request security review."),
-					resource.TestCheckResourceAttr(resourceName, "support_email", "support@8061240.zscalerbeta.net"),
+					resource.TestCheckResourceAttr(resourceName, "support_email", "support@24326813.zscalerthree.net"),
 					resource.TestCheckResourceAttr(resourceName, "support_phone", "+91-9000000000"),
 					resource.TestCheckResourceAttr(resourceName, "url_cat_review_custom_location", ""),
 					resource.TestCheckResourceAttr(resourceName, "url_cat_review_enabled", "true"),
@@ -83,7 +83,7 @@ resource "zia_end_user_notification" "test" {
   display_reason                      = false
   idp_proxy_notification_text         = ""
   notification_type                   = "CUSTOM"
-  org_policy_link                     = "http://8061240.zscalerbeta.net/policy.html"
+  org_policy_link                     = "http://24326813.zscalerthree.net/policy.html"
   quarantine_custom_notification_text = <<-EOT
 We are checking this file for a potential security risk. The file you attempted to download is being analyzed for your protection.
 It is not blocked. The analysis can take up to 10 minutes, depending on the size and type of the file. If safe, your file downloads automatically.
@@ -96,7 +96,7 @@ EOT
   security_review_enabled                  = true
   security_review_submit_to_security_cloud = true
   security_review_text                     = "Click to request security review."
-  support_email                            = "support@8061240.zscalerbeta.net"
+  support_email                            = "support@24326813.zscalerthree.net"
   support_phone                            = "+91-9000000000"
   url_cat_review_custom_location           = ""
   url_cat_review_enabled                   = true

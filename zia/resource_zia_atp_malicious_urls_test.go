@@ -11,7 +11,7 @@ import (
 func TestAccResourceATPMaliciousUrls_basic(t *testing.T) {
 	resourceName := "zia_atp_malicious_urls.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckATPMaliciousUrlsDestroy,
 		Steps: []resource.TestStep{

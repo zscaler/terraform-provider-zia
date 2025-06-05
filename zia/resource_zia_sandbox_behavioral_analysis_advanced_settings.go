@@ -115,21 +115,24 @@ func resourceSandboxSettingsCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceSandboxSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
+
 	resp, err := sandbox_settings.Get(ctx, service)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if resp != nil {
-		d.SetId("sandbox_settings")
-		sortedHashes := sortStringSlice(resp.FileHashesToBeBlocked)
-		err := d.Set("file_hashes_to_be_blocked", sortedHashes)
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error setting file hashes to be blocked: %s", err))
-		}
-	} else {
-		return diag.FromErr(fmt.Errorf("couldn't read file hash"))
+	// ✅ Always set static ID regardless of API response
+	d.SetId("sandbox_settings")
+
+	hashes := []string{}
+	if resp != nil && resp.FileHashesToBeBlocked != nil {
+		hashes = sortStringSlice(resp.FileHashesToBeBlocked)
 	}
+
+	if err := d.Set("file_hashes_to_be_blocked", hashes); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting file_hashes_to_be_blocked: %s", err))
+	}
+
 	return nil
 }
 
