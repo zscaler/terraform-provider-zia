@@ -157,7 +157,7 @@ resource "%s" "%s" {
 	name = "tf-acc-test-%s"
 	description = "%s"
 	state = "%s"
-	order = 6
+	order = 1
 	rank  = 7
 	road_warrior_for_kerberos 	 = true
 	cloud_applications           = ["CHATGPT_AI", "ANDI"]

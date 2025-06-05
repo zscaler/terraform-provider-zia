@@ -40,7 +40,7 @@ func TestResourceSandboxSettings_basic(t *testing.T) {
 		"f3dcf80b6251cfba1cd754006f693a73",
 		"2c50efc0fef1601ce1b96b1b7cf991fb",
 	}
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSandboxSettingsDestroy,
 		Steps: []resource.TestStep{
@@ -80,6 +80,7 @@ func TestResourceSandboxSettings_basic(t *testing.T) {
 			// Import test
 			{
 				ResourceName:      resourceName,
+				ImportStateId:     "sandbox_settings",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

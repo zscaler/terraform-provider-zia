@@ -181,9 +181,9 @@ The following arguments are supported:
 ### Optional
 
 * `description` - (String) Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.
-* `country` - (Optional) Country
-* `state` - (Optional) Country
-* `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT.
+* `country` - (Optional) Country - See list of supported country names [here](https://help.zscaler.com/zia/location-management#/locations-post)
+* `state` - (Optional) Country - State Name i.e `California`
+* `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT. See list of supported country names [here](https://help.zscaler.com/zia/location-management#/locations-post)
 * `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`, `WORKLOAD`.
 
 * `aup_block_internet_until_accepted` - (Boolean) For First Time AUP Behavior, Block Internet Access. When set, all internet access (including non-HTTP traffic) is disabled until the user accepts the AUP.

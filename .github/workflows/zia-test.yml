@@ -23,7 +23,7 @@ permissions:
 
 jobs:
 
-  zia-zs3-tests:
+  zia-zs3tests:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -82,9 +82,7 @@ jobs:
           ZSCALER_CLIENT_SECRET: ${{ secrets.ZSCALER_CLIENT_SECRET }}
           ZSCALER_VANITY_DOMAIN: ${{ secrets.ZSCALER_VANITY_DOMAIN }}
           ZSCALER_CLOUD: ${{ secrets.ZSCALER_CLOUD }}
-          # ZSCALER_SDK_LOG: ${{ secrets.ZSCALER_SDK_LOG }}
-          # ZSCALER_SDK_VERBOSE: ${{ secrets.ZSCALER_SDK_VERBOSE }}
-          ZIA_SDK_TEST_SWEEP: ${{ secrets.ZIA_SDK_TEST_SWEEP }}
+          ZPA_CUSTOMER_ID: ${{ secrets.ZPA_CUSTOMER_ID }}
           ZSCALER_SANDBOX_TOKEN: ${{ secrets.ZSCALER_SANDBOX_TOKEN }}
           ZSCALER_SANDBOX_CLOUD: ${{ secrets.ZSCALER_SANDBOX_CLOUD }}
           TF_ACC: ${{ secrets.TF_ACC }}

@@ -11,7 +11,7 @@ import (
 func TestAccResourceSecurityPolicySettings_basic(t *testing.T) {
 	resourceName := "zia_security_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSecurityPolicySettingsDestroy,
 		Steps: []resource.TestStep{

@@ -11,7 +11,7 @@ import (
 func TestAccResourceATPSecurityExceptions_basic(t *testing.T) {
 	resourceName := "zia_atp_security_exceptions.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckATPSecurityExceptionsDestroy,
 		Steps: []resource.TestStep{
@@ -32,7 +32,6 @@ func TestAccResourceATPSecurityExceptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bypass_urls.0", ".newexample.com"),
 				),
 			},
-			// Import test
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,

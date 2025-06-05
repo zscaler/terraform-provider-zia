@@ -1,5 +1,5 @@
 resource "zia_traffic_forwarding_gre_tunnel" "example" {
-  source_ip = zia_traffic_forwarding_static_ip.example.ip_address
+  source_ip = zia_traffic_forwarding_static_ip.example_1.ip_address
   comment   = "GRE Tunnel Created with Terraform"
   depends_on = [ zia_traffic_forwarding_static_ip.example ]
   within_country = true

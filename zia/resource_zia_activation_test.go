@@ -9,7 +9,7 @@ import (
 
 func TestAccResourceActivationStatus(t *testing.T) {
 	resourceName := "zia_activation_status.this"
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		Providers:    testAccProviders, // Ensure you have a provider configuration for testing
 		CheckDestroy: testAccCheckActivationStatusDestroy,
 		Steps: []resource.TestStep{
