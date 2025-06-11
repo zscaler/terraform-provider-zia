@@ -10,8 +10,8 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
 )
 
-func TestAccDataSourceFirewallIPSRules_Basic(t *testing.T) {
-	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallIPSRules)
+func TestAccDataSourceNatControlRules_Basic(t *testing.T) {
+	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.NatControlRules)
 
 	// Generate Rule Label HCL Resource
 	ruleLabelTypeAndName, _, ruleLabelGeneratedName := method.GenerateRandomSourcesTypeAndName(resourcetype.RuleLabels)
@@ -28,26 +28,24 @@ func TestAccDataSourceFirewallIPSRules_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckFirewallIPSRulesDestroy,
+		CheckDestroy: testAccCheckNatControlRulesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckFirewallIPSRulesConfigure(
+				Config: testAccCheckNatControlRulesConfigure(
 					resourceTypeAndName, generatedName, generatedName, variable.FWIPSRuleDescription,
-					variable.FWIPSAction, variable.FWIPSState, variable.FWRuleEnableLogging,
-					ruleLabelTypeAndName, ruleLabelHCL, sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL,
+					variable.FWIPSState, variable.FWRuleEnableLogging, ruleLabelTypeAndName, ruleLabelHCL,
+					sourceIPGroupTypeAndName, sourceIPGroupHCL, dstIPGroupTypeAndName, dstIPGroupHCL,
 				),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "description", resourceTypeAndName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "action", resourceTypeAndName, "action"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "state", resourceTypeAndName, "state"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "order", resourceTypeAndName, "order"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "redirect_ip", resourceTypeAndName, "redirect_ip"),
+					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "redirect_port", resourceTypeAndName, "redirect_port"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "enable_full_logging", strconv.FormatBool(variable.FWRuleEnableLogging)),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "nw_services.#", "1"),
-					// resource.TestCheckResourceAttr(dataSourceTypeAndName, "departments.#", "2"),
-					// resource.TestCheckResourceAttr(dataSourceTypeAndName, "groups.#", "2"),
-					// resource.TestCheckResourceAttr(dataSourceTypeAndName, "time_windows.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "labels.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "src_ip_groups.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTypeAndName, "dest_ip_groups.#", "1"),

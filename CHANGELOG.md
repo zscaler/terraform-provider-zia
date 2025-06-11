@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.2.0 (June, 11 2025)
+
+### Notes
+
+- Release date: **(June, 11 2025)**
+- Supported Terraform version: **v1.x**
+
+### NEW - RESOURCES, DATA SOURCES
+
+- [PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) - The following new resources and data sources have been introduced:
+
+- Added the datasource and resource ``zia_subscription_alert`` [PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Subscription Alerts
+- Added the datasource and resource ``zia_forwarding_control_proxies``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage proxy for a third-party proxy service
+- Added the datasource and resource ``zia_ftp_control_policy``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage FTP Control status and the list of URL categories for which FTP is allowed
+- Added the datasource and resource ``zia_mobile_malware_protection_policy``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage Mobile Malware Protection rule
+- Added the datasource and resource ``zia_nat_control_rules``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage DNAT Control policy rule
+- Added the datasource and resource ``zia_nss_server``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage NSS server objects
+- Added the datasource and resource ``zia_virtual_service_edge_cluster``[PR #439](https://github.com/zscaler/terraform-provider-zia/pull/439) :rocket: - Manage Virtual Service Edge cluster
+
 ## 4.1.5 (June, 5 2025)
 
 ### Notes

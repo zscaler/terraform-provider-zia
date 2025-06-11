@@ -2340,21 +2340,41 @@ var supportedAdminRolePermissions = []string{
 	"CUSTOMER_ORG_SETTINGS", "ZIA_TRAFFIC_CAPTURE", "REMOTE_ASSISTANCE_MANAGEMENT",
 }
 
-/*
-func stringIsJSON(i interface{}, k cty.Path) diag.Diagnostics {
-	v, ok := i.(string)
-	if !ok {
-		return diag.Errorf("expected type of %s to be string", k)
+func validateAlertSubscriptionSeverity() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for Sandbox Protocols validation",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedAlertSubscriptionSeverity, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
 	}
-	if v == "" {
-		return diag.Errorf("expected %q JSON to not be empty, got %v", k, i)
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		return diag.Errorf("%q contains an invalid JSON: %s", k, err)
-	}
-	return nil
 }
-*/
+
+var supportedAlertSubscriptionSeverity = []string{
+	"CRITICAL",
+	"MAJOR",
+	"MINOR",
+	"INFO",
+	"DEBUG",
+}
 
 func stringIsMultiLine(i interface{}, k cty.Path) diag.Diagnostics {
 	v, ok := i.(string)

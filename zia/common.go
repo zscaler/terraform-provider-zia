@@ -161,6 +161,28 @@ func setExtIDNameSchemaCustom(maxItems *int, description string) *schema.Schema 
 	return schema
 }
 
+func setIDExternalIDCustom(maxItems *int, desc string) *schema.Schema {
+	idList := &schema.Schema{
+		Type:     schema.TypeList,
+		Elem:     &schema.Schema{Type: schema.TypeInt},
+		Required: true,
+	}
+	if maxItems != nil && *maxItems > 0 {
+		idList.MaxItems = *maxItems
+	}
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		MaxItems:    1,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": idList,
+			},
+		},
+	}
+}
+
 func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.IDNameExtensions {
 	setInterface, ok := m[key]
 	if ok {
@@ -499,6 +521,19 @@ func flattenLastModifiedBy(lastModifiedBy *common.IDNameExtensions) []interface{
 			"id":         lastModifiedBy.ID,
 			"name":       lastModifiedBy.Name,
 			"extensions": lastModifiedBy.Extensions,
+		})
+	}
+	return lastModified
+}
+
+func flattenLastModifiedByExternalID(lastModifiedBy *common.IDNameExternalID) []interface{} {
+	lastModified := make([]interface{}, 0)
+	if lastModifiedBy != nil {
+		lastModified = append(lastModified, map[string]interface{}{
+			"id":          lastModifiedBy.ID,
+			"name":        lastModifiedBy.Name,
+			"extensions":  lastModifiedBy.Extensions,
+			"external_id": lastModifiedBy.ExternalID,
 		})
 	}
 	return lastModified
@@ -905,6 +940,18 @@ func getAdminRolePermissions() *schema.Schema {
 			Type:             schema.TypeString,
 			ValidateDiagFunc: validateAdminRolePermissions(),
 		},
+	}
+}
+
+func getAlertSubscriptionSeverity() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Lists the severity levels of the Patient 0, Secure Alert class, System Alerts class",
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateAlertSubscriptionSeverity(),
+		},
+		Optional: true,
 	}
 }
 

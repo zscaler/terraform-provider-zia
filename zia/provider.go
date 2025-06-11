@@ -132,6 +132,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_firewall_filtering_network_service_groups":     resourceFWNetworkServiceGroups(),
 			"zia_firewall_filtering_network_application_groups": resourceFWNetworkApplicationGroups(),
 			"zia_forwarding_control_rule":                       resourceForwardingControlRule(),
+			"zia_nat_control_rules":                             resourceNatControlRules(),
 			"zia_traffic_forwarding_gre_tunnel":                 resourceTrafficForwardingGRETunnel(),
 			"zia_traffic_forwarding_static_ip":                  resourceTrafficForwardingStaticIP(),
 			"zia_traffic_forwarding_vpn_credentials":            resourceTrafficForwardingVPNCredentials(),
@@ -159,6 +160,12 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_policy":                            resourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings":          resourceURLFilteringCloludAppSettings(),
 			"zia_end_user_notification":                         resourceEndUserNotification(),
+			"zia_nss_server":                                    resourceNSSServer(),
+			"zia_subscription_alert":                            resourceSubscriptionAlerts(),
+			"zia_forwarding_control_proxies":                    resourceForwardingControlProxies(),
+			"zia_ftp_control_policy":                            resourceFTPControlPolicy(),
+			"zia_mobile_malware_protection_policy":              resourceMobileMalwareProtectionPolicy(),
+			"zia_virtual_service_edge_cluster":                  resourceVZENCluster(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -183,6 +190,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_firewall_ips_rule":                             dataSourceFirewallIPSRules(),
 			"zia_firewall_dns_rule":                             dataSourceFirewallDNSRules(),
 			"zia_forwarding_control_rule":                       dataSourceForwardingControlRule(),
+			"zia_nat_control_rules":                             dataSourceNatControlRules(),
 			"zia_url_categories":                                dataSourceURLCategories(),
 			"zia_url_filtering_rules":                           dataSourceURLFilteringRules(),
 			"zia_traffic_forwarding_public_node_vips":           dataSourceTrafficForwardingPublicNodeVIPs(),
@@ -229,6 +237,12 @@ func ZIAProvider() *schema.Provider {
 			"zia_atp_malware_policy":                            dataSourceATPMalwarePolicy(),
 			"zia_url_filtering_and_cloud_app_settings":          dataSourceURLFilteringCloludAppSettings(),
 			"zia_end_user_notification":                         dataSourceEndUserNotification(),
+			"zia_nss_server":                                    dataSourceNSSServer(),
+			"zia_subscription_alert":                            dataSourceSubscriptionAlerts(),
+			"zia_forwarding_control_proxies":                    dataSourceForwardingControlProxies(),
+			"zia_ftp_control_policy":                            dataSourceFTPControlPolicy(),
+			"zia_mobile_malware_protection_policy":              dataSourceMobileMalwareProtectionPolicy(),
+			"zia_virtual_service_edge_cluster":                  dataSourceVZENCluster(),
 		},
 	}
 
