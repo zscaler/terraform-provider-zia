@@ -33,4 +33,9 @@ const (
 	AuthSettingsURLs                = "zia_auth_settings_urls"
 	Activation                      = "zia_activation_status"
 	AdminRoles                      = "zia_admin_roles"
+	SubscriptionAlerts              = "zia_subscription_alert"
+	ForwardingControlProxies        = "zia_forwarding_control_proxies"
+	NatControlRules                 = "zia_nat_control_rules"
+	ServiceEdgeCluster              = "zia_virtual_service_edge_cluster"
+	NSSServer                       = "zia_nss_server"
 )

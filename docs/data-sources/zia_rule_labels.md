@@ -24,7 +24,7 @@ data "zia_rule_labels" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the rule label to be exported.
-* `id` - (String) The unique identifer for the device group.
+* `id` - (String) The unique identifer for the rule label.
 
 ## Attribute Reference
 

@@ -213,3 +213,45 @@ const (
 	CloudAppControlRuleType         = "STREAMING_MEDIA"
 	CloudAppControlRuleState        = "ENABLED"
 )
+
+const (
+	AlertEmail       = "alert@acme.com"
+	AlertDescription = "testAcc_Alert_Subscription"
+)
+
+// Forwarding Control Proxies
+const (
+	ProxyDescription           = "testAcc_proxy"
+	ProxyType                  = "PROXYCHAIN"
+	ProxyAddress               = "192.168.1.150"
+	ProxyPort                  = 5000
+	ProxyInsertXauHeader       = true
+	ProxyBase64EncodeXauHeader = true
+)
+
+// NAT Control rules
+const (
+	NATControlRuleName        = "testAcc_nat_control_rule"
+	NATControlRuleDescription = "testAcc_nat_control_rule"
+	NATControlRuleState       = "ENABLED"
+	NATControlRuleUpdate      = "DISABLED"
+	NATControlRuleLogging     = true
+	NATControlRedirectPort    = 5000
+	NATControlRedirectIP      = "192.168.100.150"
+)
+
+// Service Edge Cluster
+const (
+	VzenType           = "VIP"
+	VzenStatus         = "ENABLED"
+	VzenIPAddress      = "10.0.0.2"
+	VzenSubnetMask     = "255.255.255.0"
+	VzenDefaultGateway = "10.0.0.3"
+	VzenIpSecEnabled   = true
+)
+
+// Rule Labels
+const (
+	NSSStatus = "ENABLED"
+	NSSType   = "NSS_FOR_FIREWALL"
+)
