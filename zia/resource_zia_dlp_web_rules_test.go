@@ -165,6 +165,10 @@ data "zia_location_groups" "sdwan_usa" {
 	name = "SDWAN_USA"
 }
 
+data "zia_dlp_notification_templates" "this" {
+  name = "BD_DLP_Notification_Template"
+}
+
 resource "%s" "%s" {
 	name 						= "tf-acc-test-%s"
 	description 				= "%s"
@@ -177,6 +181,7 @@ resource "%s" "%s" {
 	zscaler_incident_receiver = true
 	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 	severity = "RULE_SEVERITY_HIGH"
+	external_auditor_email     = "auditor@acme.com"
 	location_groups {
 		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
 	}
@@ -192,6 +197,9 @@ resource "%s" "%s" {
 	url_categories {
 		id = [data.zia_url_categories.corporate_marketing.val, data.zia_url_categories.finance.val]
 	}
+    notification_template {
+     	id = data.zia_dlp_notification_templates.this.id
+    }
 }
 
 data "%s" "%s" {

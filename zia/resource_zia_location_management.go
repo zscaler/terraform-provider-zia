@@ -231,6 +231,18 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "",
 			},
+			"default_extranet_ts_pool": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates that the traffic selector specified in the extranet is the designated default traffic selector",
+			},
+			"default_extranet_dns": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Computed:    true,
+				Description: "Indicates that the DNS server configuration used in the extranet is the designated default DNS server",
+			},
 			"idle_time_in_minutes": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -330,6 +342,7 @@ func resourceLocationManagement() *schema.Resource {
 					"GUESTWIFI",
 					"IOT",
 					"WORKLOAD",
+					"EXTRANET",
 				}, false),
 			},
 			"exclude_from_dynamic_groups": {
@@ -344,6 +357,9 @@ func resourceLocationManagement() *schema.Resource {
 			},
 			"dynamic_location_groups": setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
 			"static_location_groups":  setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"extranet":                setSingleIDSchemaTypeCustom("The ID of the extranet resource that must be assigned to the location"),
+			"extranet_ip_pool":        setSingleIDSchemaTypeCustom("The ID of the traffic selector specified in the extranet"),
+			"extranet_dns":            setSingleIDSchemaTypeCustom("The ID of the DNS server configuration used in the extranet"),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
@@ -492,6 +508,8 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("aup_timeout_in_days", resp.AUPTimeoutInDays)
 	_ = d.Set("profile", resp.Profile)
 	_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
+	_ = d.Set("default_extranet_ts_pool", resp.DefaultExtranetTsPool)
+	_ = d.Set("default_extranet_dns", resp.DefaultExtranetDns)
 	_ = d.Set("ipv6_dns_64prefix", resp.IPv6Dns64Prefix)
 	_ = d.Set("exclude_from_dynamic_groups", resp.ExcludeFromDynamicGroups)
 	_ = d.Set("exclude_from_manual_groups", resp.ExcludeFromManualGroups)
@@ -508,6 +526,15 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("extranet", flattenCustomIDSet(resp.Extranet)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("extranet_ip_pool", flattenCustomIDSet(resp.ExtranetIpPool)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("extranet_dns", flattenCustomIDSet(resp.ExtranetDns)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -662,8 +689,13 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		Other6SubLocation:                   d.Get("other6_sublocation").(bool),
 		ExcludeFromDynamicGroups:            d.Get("exclude_from_dynamic_groups").(bool),
 		ExcludeFromManualGroups:             d.Get("exclude_from_manual_groups").(bool),
+		DefaultExtranetTsPool:               d.Get("default_extranet_ts_pool").(bool),
+		DefaultExtranetDns:                  d.Get("default_extranet_dns").(bool),
 		DynamiclocationGroups:               expandIDNameExtensionsSet(d, "dynamic_location_groups"),
 		StaticLocationGroups:                expandIDNameExtensionsSet(d, "static_location_groups"),
+		Extranet:                            expandIDNameExtensionsSetSingle(d, "extranet"),
+		ExtranetIpPool:                      expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
+		ExtranetDns:                         expandIDNameExtensionsSetSingle(d, "extranet_dns"),
 
 		AUPTimeoutInDays: d.Get("aup_timeout_in_days").(int),
 		Profile:          d.Get("profile").(string),

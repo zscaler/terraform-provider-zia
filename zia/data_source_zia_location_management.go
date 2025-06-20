@@ -131,6 +131,42 @@ func dataSourceLocationManagement() *schema.Resource {
 					},
 				},
 			},
+			"extranet": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"extranet_ip_pool": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"extranet_dns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"auth_required": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -228,6 +264,16 @@ func dataSourceLocationManagement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"default_extranet_ts_pool": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates that the traffic selector specified in the extranet is the designated default traffic selector",
+			},
+			"default_extranet_dns": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates that the DNS server configuration used in the extranet is the designated default DNS server",
+			},
 		},
 	}
 }
@@ -301,8 +347,20 @@ func dataSourceLocationManagementRead(ctx context.Context, d *schema.ResourceDat
 		_ = d.Set("aup_timeout_in_days", resp.AUPTimeoutInDays)
 		_ = d.Set("profile", resp.Profile)
 		_ = d.Set("description", resp.Description)
+		_ = d.Set("default_extranet_ts_pool", resp.DefaultExtranetTsPool)
+		_ = d.Set("default_extranet_dns", resp.DefaultExtranetDns)
 
 		if err := d.Set("vpn_credentials", flattenLocationVPNCredentials(resp.VPNCredentials)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("extranet", flattenCustomIDSet(resp.Extranet)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("extranet_ip_pool", flattenCustomIDSet(resp.ExtranetIpPool)); err != nil {
+			return diag.FromErr(err)
+		}
+		if err := d.Set("extranet_dns", flattenCustomIDSet(resp.ExtranetDns)); err != nil {
 			return diag.FromErr(err)
 		}
 

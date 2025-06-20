@@ -26,6 +26,15 @@
 - [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_domain_profiles`` - SaaS Security API (Casb Domain Profiles)
 - [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_tenant_restriction_profile`` - Tenant Restriction Profile
 
+### Enhancements
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - The resource `zia_location_management` now supports the following attributes.
+- `extranet` - The ID of the extranet resource that must be assigned to the location
+- `extranetip_pool` - The ID of the traffic selector specified in the extranet
+- `extranet_dns` - The ID of the DNS server configuration used in the extranet
+- `default_extranet_ts_pool` - A Boolean value indicating that the traffic selector specified in the extranet is the designated default traffic selector
+- `default_extranet_dns` - A Boolean value indicating that the DNS server configuration used in the extranet is the designated default DNS server
+
 ### Bug Fixes
 
 - [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added validation to ``zia_dlp_web_rules`` to prevent conflict between attributes: `auditor`, `external_auditor_email` and `notification_template`

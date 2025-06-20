@@ -81,3 +81,12 @@ In addition to all arguments above, the following attributes are exported:
   * `id` - (Number) Identifier that uniquely identifies an entity
   * `name` - (String) The configured name of the entity
   * `extensions` - (Map of String)
+
+* `extranet` - (Block, Max: 1) The ID of the extranet resource that must be assigned to the location
+  * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `extranet_ip_pool` - (Block, Max: 1) The ID of the traffic selector specified in the extranet
+  * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `extranet_dns` - (Block, Max: 1) The ID of the DNS server configuration used in the extranet
+  * `id` - (int) The Identifier that uniquely identifies an entity
