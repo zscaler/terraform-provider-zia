@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_static_ip"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-static-ip
+    API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/staticIP-get
     Gets static IP address for the specified ID
 ---
 
-# Data Source: zia_traffic_forwarding_static_ip
+# zia_traffic_forwarding_static_ip (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-static-ip)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/staticIP-get)
 
 Use the **zia_traffic_forwarding_static_ip** data source to get information about all provisioned static IP addresses. This resource can then be utilized when creating a GRE Tunnel or VPN Credential resource of Type `IP`
 

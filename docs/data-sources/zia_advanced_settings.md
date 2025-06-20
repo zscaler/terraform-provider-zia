@@ -3,10 +3,15 @@ subcategory: "Advanced Settings"
 layout: "zscaler"
 page_title: "ZIA: advanced_settings"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-advanced-settings
+  API documentation https://help.zscaler.com/zia/advanced-settings#/advancedSettings-get
   Retrieves information about the advanced settings configured in the ZIA Admin Portal
 ---
 
-# Data Source: zia_advanced_settings
+# zia_advanced_settings (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-advanced-settings)
+* [API documentation](https://help.zscaler.com/zia/advanced-settings#/advancedSettings-get)
 
 The **zia_advanced_settings** Retrieves information about the advanced settings configured in the ZIA Admin Portal. To learn more see [Configuring Advanced Settings](https://help.zscaler.com/zia/configuring-advanced-settings)
 

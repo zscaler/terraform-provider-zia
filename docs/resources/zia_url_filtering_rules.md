@@ -3,9 +3,15 @@ subcategory: "URL Filtering Rule"
 layout: "zscaler"
 page_title: "ZIA:  url_filtering_rules"
 description: |-
-       Creates and manages a URL Filtering Policy rule.
+    Official documentation https://help.zscaler.com/zia/about-url-filtering
+    API documentation https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-get
+    Creates and manages a URL Filtering Policy rule.
 ---
-# Resource: zia_url_filtering_rules
+
+# zia_url_filtering_rules (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-filtering)
+* [API documentation](https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-post)
 
 The **zia_url_filtering_rules** resource creates and manages a URL filtering rules within the Zscaler Internet Access cloud.
 

@@ -8,6 +8,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -384,30 +385,21 @@ func extractErrorCodeFromBody(body string) string {
 	return ""
 }
 
-/*
-func normalizeDataJSON(val interface{}) string {
-	dataMap := map[string]interface{}{}
+func suppressEquivalentIntListOrdering(k, old, new string, d *schema.ResourceData) bool {
+	oldList := strings.Split(strings.Trim(old, "[] "), ",")
+	newList := strings.Split(strings.Trim(new, "[] "), ",")
 
-	// Ignoring errors since we know it is valid
-	_ = json.Unmarshal([]byte(val.(string)), &dataMap)
-	ret, _ := json.Marshal(dataMap)
-
-	return string(ret)
-}
-
-func noChangeInObjectFromUnmarshaledJSON(k, oldJSON, newJSON string, d *schema.ResourceData) bool {
-	if newJSON == "" {
-		return true
-	}
-	var oldObj map[string]any
-	var newObj map[string]any
-	if err := json.Unmarshal([]byte(oldJSON), &oldObj); err != nil {
-		return false
-	}
-	if err := json.Unmarshal([]byte(newJSON), &newObj); err != nil {
+	if len(oldList) != len(newList) {
 		return false
 	}
 
-	return reflect.DeepEqual(oldObj, newObj)
+	sort.Strings(oldList)
+	sort.Strings(newList)
+
+	for i := range oldList {
+		if strings.TrimSpace(oldList[i]) != strings.TrimSpace(newList[i]) {
+			return false
+		}
+	}
+	return true
 }
-*/

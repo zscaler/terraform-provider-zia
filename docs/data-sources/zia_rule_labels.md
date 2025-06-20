@@ -3,10 +3,15 @@ subcategory: "Rule Labels"
 layout: "zscaler"
 page_title: "ZIA: rule_labels"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-rule-labels
+  API documentation https://help.zscaler.com/zia/rule-labels#/ruleLabels-get
   Get information about rule labels details.
-
 ---
-# Data Source: zia_rule_labels
+
+# zia_rule_labels (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-rule-labels)
+* [API documentation](https://help.zscaler.com/zia/rule-labels#/ruleLabels-get)
 
 Use the **zia_rule_labels** data source to get information about a rule label resource in the Zscaler Internet Access cloud or via the API. This data source can then be associated with resources such as: Firewall Rules and URL filtering rules
 

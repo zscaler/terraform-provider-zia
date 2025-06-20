@@ -3,10 +3,15 @@ subcategory: "Subscription Alerts"
 layout: "zscaler"
 page_title: "ZIA: subscription_alert"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-alert-subscriptions
+  API documentation https://help.zscaler.com/zia/alerts#/alertSubscriptions-get
   Creates and manages Alert Subscriptions.
-
 ---
-# Resource: zia_subscription_alert
+
+# zia_subscription_alert (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-alert-subscriptions)
+* [API documentation](https://help.zscaler.com/zia/alerts#/alertSubscriptions-get)
 
 Use the **zia_subscription_alert** resource allows the creation and management of Alert Subscriptions in the Zscaler Internet Access.
 

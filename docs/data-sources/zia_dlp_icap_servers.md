@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_icap_servers"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-icap-communication-between-zscaler-and-dlp-servers
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/icapServers/lite-get
   Gets a the list of DLP servers using ICAP
 ---
 
-# Data Source: zia_dlp_engines
+# zia_dlp_engines (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-icap-communication-between-zscaler-and-dlp-servers)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/icapServers/lite-get)
 
 Use the **zia_dlp_engines** data source to get information about a the list of DLP servers using ICAP in the Zscaler Internet Access cloud or via the API.
 

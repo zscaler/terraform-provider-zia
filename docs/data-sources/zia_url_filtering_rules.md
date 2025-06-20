@@ -3,9 +3,15 @@ subcategory: "URL Filtering Rule"
 layout: "zscaler"
 page_title: "ZIA: url_filtering_rules"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-url-filtering
+    API documentation https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-get
     Gets a list of all of URL Filtering Policy rules.
 ---
-# Data Source: zia_url_filtering_rules
+
+# zia_url_filtering_rules (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-filtering)
+* [API documentation](https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-post)
 
 Use the **zia_url_filtering_rules** data source to get information about a URL filtering rule information for the specified `Name`.
 

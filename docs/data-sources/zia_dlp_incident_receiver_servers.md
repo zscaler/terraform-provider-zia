@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_incident_receiver_servers"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-zscaler-incident-receiver
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/incidentReceiverServers-get
   Get information about ZIA DLP Incident Receiver Servers.
 ---
 
-# Data Source: zia_dlp_incident_receiver_servers
+# zia_dlp_incident_receiver_servers (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-zscaler-incident-receiver)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/incidentReceiverServers-get)
 
 Use the **zia_dlp_incident_receiver_servers** data source to get information about a ZIA DLP Incident Receiver Server in the Zscaler Internet Access cloud or via the API.
 

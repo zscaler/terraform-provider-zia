@@ -4,8 +4,10 @@ page_title: "Support Guide"
 
 # General Support Statement
 
-The ZIA Terraform provider is supported and maintained by the Zscaler Technology Alliances team, and we welcome questions on how to use the provider.
+The ZIA Terraform provider is supported and maintained by the Zscaler Technology Alliances in partnership with Zscaler Engineering teams, and we welcome questions on how to use the provider.
 Please, refer to our [troubleshooting guide](troubleshooting.md) for guidance on typical problems.
+
+⚠️ **IMPORTANT:**:: Please ensure any sensitive information is redacted as Issues and Pull Requests are publicly viewable.
 
 ## Support Ticket Severity
 

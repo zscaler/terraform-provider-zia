@@ -3,10 +3,15 @@ subcategory: "Sandbox Policy & Settings"
 layout: "zscaler"
 page_title: "ZIA): sandbox_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-sandbox
+  API documentation https://help.zscaler.com/zia/sandbox-policy-settings#/sandboxRules-get
   Retrieves the list of all Sandbox policy rules configured in the ZIA Admin Portal.
-
 ---
-# Data Source: zia_sandbox_rules
+
+# zia_sandbox_rules (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-sandbox)
+* [API documentation](https://help.zscaler.com/zia/sandbox-policy-settings#/sandboxRules-get)
 
 Use the **zia_sandbox_rules** data source to get information about a sandbox rule in the Zscaler Internet Access.
 

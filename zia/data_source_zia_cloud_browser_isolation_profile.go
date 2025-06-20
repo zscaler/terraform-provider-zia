@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudbrowserisolation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/browser_isolation"
 )
 
 func dataSourceCBIProfile() *schema.Resource {
@@ -42,11 +42,11 @@ func dataSourceCBIProfileRead(ctx context.Context, d *schema.ResourceData, meta 
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	var resp *cloudbrowserisolation.IsolationProfile
+	var resp *browser_isolation.CBIProfile
 	name, ok := d.Get("name").(string)
 	if ok && name != "" {
 		log.Printf("[INFO] Getting data for cloud browser isolation profile name %s\n", name)
-		res, err := cloudbrowserisolation.GetByName(ctx, service, name)
+		res, err := browser_isolation.GetByName(ctx, service, name)
 		if err != nil {
 			return diag.FromErr(err)
 		}

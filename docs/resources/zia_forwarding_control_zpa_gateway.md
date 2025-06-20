@@ -3,10 +3,15 @@ subcategory: "Forwarding Control Policy"
 layout: "zscaler"
 page_title: "ZIA: forwarding_control_zpa_gateway"
 description: |-
-    Creates and manages ZIA forwarding control zpa gateway used in IP Source Anchoring.
-
+  Official documentation https://help.zscaler.com/zia/configuring-forwarding-policy
+  API documentation https://help.zscaler.com/zia/forwarding-control-policy#/zpaGateways-post
+  Creates and manages ZIA forwarding control zpa gateway used in IP Source Anchoring.
 ---
-# Resource: forwarding_control_zpa_gateway
+
+# forwarding_control_zpa_gateway (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-forwarding-policy)
+* [API documentation](https://help.zscaler.com/zia/forwarding-control-policy#/zpaGateways-post)
 
 Use the **forwarding_control_zpa_gateway** resource allows the creation and management of ZIA forwarding control ZPA Gateway used in IP Source Anchoring integration between Zscaler Internet Access and Zscaler Private Access. This resource can then be associated with a ZIA Forwarding Control Rule.
 

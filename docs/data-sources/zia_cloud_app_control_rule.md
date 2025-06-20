@@ -3,10 +3,15 @@ subcategory: "Cloud App Control Policy"
 layout: "zscaler"
 page_title: "ZIA: cloud_app_control_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/adding-rules-cloud-app-control-policy
+  API documentation https://help.zscaler.com/zia/cloud-app-control-policy#/webApplicationRules/{rule_type}-get
   Get information about ZIA DLP Web Rules.
 ---
 
-# Data Source: zia_cloud_app_control_rule
+# zia_cloud_app_control_rule (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/adding-rules-cloud-app-control-policy)
+* [API documentation](https://help.zscaler.com/zia/cloud-app-control-policy#/webApplicationRules/{rule_type}-get)
 
 Use the **zia_cloud_app_control_rule** data source to get information about a ZIA Cloud Application Control Policy in the Zscaler Internet Access cloud or via the API.
 

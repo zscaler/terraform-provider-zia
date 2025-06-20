@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_gre_tunnel_info"
 description: |-
+  Official documentation https://help.zscaler.com/zia/traffic-forwarding-0#/orgProvisioning/ipGreTunnelInfo-get
+  API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/orgProvisioning/ipGreTunnelInfo-get
   Gets a list of IP addresses with GRE tunnel details.
 ---
 
-# Data Source: zia_traffic_forwarding_gre_tunnel_info
+# zia_traffic_forwarding_gre_tunnel_info (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/orgProvisioning/ipGreTunnelInfo-get)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/orgProvisioning/ipGreTunnelInfo-get)
 
 The **zia_traffic_forwarding_gre_tunnel_info** data source to get information about provisioned GRE tunnel information created in the Zscaler Internet Access portal.
 

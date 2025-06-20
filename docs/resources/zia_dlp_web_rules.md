@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_web_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-dlp-policy-rules-content-inspection#Rules
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-get
   Creates and manages ZIA DLP Web Rules.
 ---
 
-# Resource: zia_dlp_web_rules
+# zia_dlp_web_rules (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-dlp-policy-rules-content-inspection#Rules)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-get)
 
 The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP Web Rules in the Zscaler Internet Access cloud or via the API.
 

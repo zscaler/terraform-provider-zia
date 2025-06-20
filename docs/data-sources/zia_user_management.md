@@ -3,10 +3,15 @@ subcategory: "User Management"
 layout: "zscaler"
 page_title: "ZIA: user_management"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-url-filteringhttps://help.zscaler.com/zia/user-management#/users-get
+    API documentation https://help.zscaler.com/zia/user-management#/users-get
     Gets a list of all users and allows user filtering by name, department, or group
-
 ---
-# Data Source: zia_user_management
+
+# zia_user_management (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-filteringhttps://help.zscaler.com/zia/user-management#/users-get)
+* [API documentation](https://help.zscaler.com/zia/about-url-filteringhttps://help.zscaler.com/zia/user-management#/users-get)
 
 Use the **zia_user_management** data source to get information about a user account that may have been created in the Zscaler Internet Access portal or via API. This data source can then be associated with a ZIA cloud firewall filtering rule, and URL filtering rules.
 

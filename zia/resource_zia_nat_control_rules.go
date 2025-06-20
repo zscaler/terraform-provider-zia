@@ -66,10 +66,9 @@ func resourceNatControlRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Name of the nat control policy rule",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the nat control policy rule",
 			},
 			"description": {
 				Type:         schema.TypeString,

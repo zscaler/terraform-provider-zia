@@ -3,10 +3,15 @@ subcategory: "File Type Control Policy"
 layout: "zscaler"
 page_title: "ZIA: file_type_control_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-file-type-control
+  API documentation https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-post
   Retrieves all the rules in the File Type Control policy.
 ---
 
-# Data Source: zia_file_type_control_rules
+# zia_file_type_control_rules (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-file-type-control)
+* [API documentation](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-post)
 
 Use the **zia_file_type_control_rules** data source to retrieves File Type Control rules.
 

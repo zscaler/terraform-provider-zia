@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_ip_source_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get
   Creates and manages ZIA Cloud firewall IP source groups.
 ---
 
-# Resource: zia_firewall_filtering_ip_source_groups
+# zia_firewall_filtering_ip_source_groups (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get)
 
 The **zia_firewall_filtering_ip_source_groups** resource allows the creation and management of ZIA Cloud Firewall IP source groups in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule.
 

@@ -3,10 +3,15 @@ subcategory: "Service Edge Cluster"
 layout: "zscaler"
 page_title: "ZIA: virtual_service_edge_cluster"
 description: |-
-  Adds a new Virtual Service Edge cluster.
-
+    Official documentation https://help.zscaler.com/zia/about-virtual-service-edge-clusters
+    API documentation https://help.zscaler.com/zia/service-edges#/virtualZenClusters-get
+    Adds a new Virtual Service Edge cluster.
 ---
-# Resource: zia_virtual_service_edge_cluster
+
+# zia_virtual_service_edge_cluster (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-virtual-service-edge-clusters)
+* [API documentation](https://help.zscaler.com/zia/service-edges#/virtualZenClusters-get)
 
 Use the **zia_virtual_service_edge_cluster** resource allows the creation and management of Service Edge Cluster objects in the Zscaler Internet Access.
 

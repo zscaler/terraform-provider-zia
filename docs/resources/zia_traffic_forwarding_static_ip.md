@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_static_ip"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-static-ip
+    API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/staticIP-get
     Creates and manages static IP addresses.
 ---
 
-# Resource: zia_traffic_forwarding_static_ip
+# zia_traffic_forwarding_static_ip (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-static-ip)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/staticIP-get)
 
 The **zia_traffic_forwarding_static_ip** resource allows the creation and management of static ip addresses in the Zscaler Internet Access cloud. The resource, can then be associated with other resources such as:
 

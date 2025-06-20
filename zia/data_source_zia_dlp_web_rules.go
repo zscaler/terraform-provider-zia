@@ -475,6 +475,32 @@ func dataSourceDlpWebRules() *schema.Resource {
 					},
 				},
 			},
+			"included_domain_profiles": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The name-ID pairs of the users that are excluded from the DLP policy rule.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The name of the workload group",
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 			"workload_groups": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -591,6 +617,9 @@ func dataSourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta
 			return diag.FromErr(err)
 		}
 
+		if err := d.Set("included_domain_profiles", flattenIDExtensions(resp.IncludedDomainProfiles)); err != nil {
+			return diag.FromErr(err)
+		}
 		if err := d.Set("location_groups", flattenIDExtensions(resp.LocationGroups)); err != nil {
 			return diag.FromErr(err)
 		}

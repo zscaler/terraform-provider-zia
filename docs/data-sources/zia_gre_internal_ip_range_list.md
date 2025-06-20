@@ -3,11 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: gre_internal_ip_range_list"
 description: |-
+  Official documentation https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels/availableInternalIpRanges-get
+  API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels/availableInternalIpRanges-get
   Gets the next available GRE tunnel internal IP address ranges.
-
 ---
 
-# Data Source: zia_gre_internal_ip_range_list
+# zia_gre_internal_ip_range_list (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels/availableInternalIpRanges-get)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels/availableInternalIpRanges-get)
 
 Use the **zia_gre_internal_ip_range_list** data source to get information about the next available GRE tunnel internal ip ranges for the purposes of GRE tunnel creation in the Zscaler Internet Access when the `ip_unnumbered` parameter is set to `false`
 

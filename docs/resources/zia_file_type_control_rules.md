@@ -3,10 +3,15 @@ subcategory: "File Type Control Policy"
 layout: "zscaler"
 page_title: "ZIA: file_type_control_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-file-type-control
+  API documentation https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-post
   Creates and manages ZIA Cloud firewall filtering rule.
 ---
 
-# Resource: zia_file_type_control_rules
+# zia_file_type_control_rules (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-file-type-control)
+* [API documentation](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-post)
 
 The **zia_file_type_control_rules** resource allows the creation and management of ZIA file type control rules in the Zscaler Internet Access.
 

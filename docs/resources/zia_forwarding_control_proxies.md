@@ -3,10 +3,15 @@ subcategory: "Forwarding Control Policy"
 layout: "zscaler"
 page_title: "ZIA: zia_forwarding_control_proxies"
 description: |-
-    Creates and manages ZIA forwarding control proxies for third-party proxy services.
-
+  Official documentation https://help.zscaler.com/zia/about-third-party-proxies
+  API documentation https://help.zscaler.com/zia/forwarding-control-policy#/proxies-get
+  Creates and manages ZIA forwarding control proxies for third-party proxy services.
 ---
-# Resource: zia_forwarding_control_proxies
+
+# zia_forwarding_control_proxies (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-third-party-proxies)
+* [API documentation](https://help.zscaler.com/zia/forwarding-control-policy#/proxies-get)
 
 Use the **zia_forwarding_control_proxies** resource allows the creation and management of ZIA forwarding control Proxies for third-party proxy services integration between Zscaler Internet Access and Zscaler Private Access. This resource can then be associated with a ZIA Forwarding Control Rule.
 

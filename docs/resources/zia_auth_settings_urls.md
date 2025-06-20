@@ -3,10 +3,15 @@ subcategory: "User Authentication Settings"
 layout: "zscaler"
 page_title: "ZIA: auth_settings_urls"
 description: |-
+  Official documentation https://help.zscaler.com/zia/url-format-guidelines
+  API documentation https://help.zscaler.com/zia/user-authentication-settings#/authSettings/exemptedUrls-get
   Adds a URL to or removes a URL from the cookie authentication exempt list
 ---
 
-# Resource: zia_auth_settings_urls
+# zia_auth_settings_urls (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/url-format-guidelines)
+* [API documentation](https://help.zscaler.com/zia/user-authentication-settings#/authSettings/exemptedUrls-get)
 
 The **zia_auth_settings_urls** resource alows you to add or remove a URL from the cookie authentication exempt list in the Zscaler Internet Access cloud or via the API. To learn more see [URL Format Guidelines](https://help.zscaler.com/zia/url-format-guidelines)
 

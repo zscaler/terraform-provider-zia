@@ -3,11 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_application_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups/{groupId}-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups/{groupId}-get
   Creates and manages ZIA Cloud firewall Network Application Groups.
 ---
 
+# zia_firewall_filtering_network_application_groups (Resource)
 
-# Resource: zia_firewall_filtering_network_application_groups
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups/{groupId}-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups/{groupId}-get)
 
 The **zia_firewall_filtering_network_application_groups** resource allows the creation and management of ZIA Cloud Firewall IP source groups in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule.
 

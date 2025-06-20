@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
+  API documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
   Creates and manages ZIA Cloud firewall filtering rule.
 ---
 
-# Resource: zia_firewall_filtering_rule
+# zia_firewall_filtering_rule (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post)
 
 The **zia_firewall_filtering_rule** resource allows the creation and management of ZIA Cloud Firewall filtering rules in the Zscaler Internet Access.
 

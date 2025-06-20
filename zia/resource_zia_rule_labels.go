@@ -55,7 +55,7 @@ func resourceRuleLabels() *schema.Resource {
 			},
 			"name": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {

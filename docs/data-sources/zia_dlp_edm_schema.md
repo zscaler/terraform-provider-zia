@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_edm_schema"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-exact-data-match
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpExactDataMatchSchemas-get
   Gets the list of DLP Exact Data Match (EDM) templates
 ---
 
-# Data Source: zia_dlp_edm_schema
+# zia_dlp_edm_schema (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-exact-data-match)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpExactDataMatchSchemas-get)
 
 Use the **zia_dlp_edm_schema** data source to get information about a the list of DLP Exact Data Match (EDM) templates in the Zscaler Internet Access cloud or via the API.
 

@@ -1755,79 +1755,76 @@ func validateOCRDlpWebRules(dlp dlp_web_rules.WebDLPRules) error {
 	return nil
 }
 
-// func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
-// 	// Define allowed file types for both true and false states of `withoutContentInspection`
-// 	allowedFileTypesWithoutInspection := []string{
-// "FORM_DATA_POST", "DB", "JAVASCRIPT", "FOR", "MS_POWERPOINT", "TMP", "MATLAB_FILES", "NATVIS", "PNG", "SC", "RUBY_FILES",
-// "CAB", "PERL_FILES", "APPLE_DOCUMENTS", "CSX", "POSTSCRIPT", "ZIP", "CATALOG", "BITMAP", "SCZIP", "BORLAND_CPP_FILES",
-// "RAR", "SQL", "APPX", "NETMON", "MS_RTF", "PARASOLID", "INF", "ACCDB", "IGS", "HIGH_EFFICIENCY_IMAGE_FILES", "RPY",
-// "OAB", "CER", "FTCATEGORY_ENCRYPT", "ENCRYPT", "MM", "DSP", "YAML_FILES", "CHEMDRAW_FILES", "HBS", "SCT", "PS2", "INI", "CERT", "SLDPRT",
-// "ICS", "MS_EXCEL", "MS_MSG", "QLIKVIEW_FILES", "MS_MDB", "VISUAL_BASIC_SCRIPT", "MAKE_FILES", "BCP", "MS_CPP_FILES",
-// "AAC", "COMPILED_HTML_HELP", "DB2", "SDB", "MS_PST", "JAVA_APPLET", "ADE", "COBOL", "AUTOCAD", "VSDX", "MS_WORD", "CP",
-// "BGI", "DAT", "DER", "ASM", "TAR", "BASH_SCRIPTS", "MUI", "PYTHON", "TLB", "HIVE", "KEY", "IMG", "GIF", "STL", "STUFFIT",
-// "INCLUDE_FILES", "TABLEAU_FILES", "XZ", "AU3", "PCAP", "DELPHI", "P12", "PHOTOSHOP", "TIFF", "FLASH", "TLI", "VISUAL_CPP_FILES",
-// "EML_FILES", "GREENSHOT", "C_FILES", "JAVA_FILES", "MANIFEST", "NFM", "IFC", "VIRTUAL_HARD_DISK", "ISO", "LOG_FILES", "GZIP",
-// "EXP", "FCL", "BZIP2", "DMD", "P7Z", "PRT", "NCB", "X1B", "DRAWIO", "XAML", "CML", "ASHX", "PGP", "PS3", "ACIS", "VISUAL_BASIC_FILES",
-// "TXT", "DRV", "NLS", "F_FILES", "P7B", "JPEG", "TLH", "CSV", "POD", "SAS", "WINDOWS_META_FORMAT", "RSP", "KDBX", "WINDOWS_SCRIPT_FILES",
-// "SCALA", "ONENOTE", "CGR", "BASIC_SOURCE_CODE", "MSC", "POWERSHELL", "PEM", "INTEGRATED_CIRCUIT_FILES", "GO_FILES", "PDF_DOCUMENT",
-// "DBF", "JKS", "VDA", "RES_FILES", "A_FILE", "SHELL_SCRAP", "ALL_OUTBOUND", "FTCATEGORY_ENCRYPT", "FTCATEGORY_P7Z", "FTCATEGORY_BZIP2",
-// 		"FTCATEGORY_CAB", "FTCATEGORY_CPIO", "FTCATEGORY_FCL", "FTCATEGORY_GZIP", "FTCATEGORY_ISO", "FTCATEGORY_LZH", "FTCATEGORY_RAR", "FTCATEGORY_STUFFIT",
-// 		"FTCATEGORY_TAR", "FTCATEGORY_XZ", "FTCATEGORY_ZIP", "FTCATEGORY_SCZIP", "FTCATEGORY_ZIPX",
-// 	}
+var supportedCasbRuleCollaborationScope = []string{
+	"ANY", "COLLABORATION_SCOPE_EXTERNAL_COLLAB_VIEW", "COLLABORATION_SCOPE_EXTERNAL_COLLAB_EDIT",
+	"COLLABORATION_SCOPE_EXTERNAL_LINK_VIEW", "COLLABORATION_SCOPE_EXTERNAL_LINK_EDIT",
+	"COLLABORATION_SCOPE_INTERNAL_COLLAB_VIEW", "COLLABORATION_SCOPE_INTERNAL_COLLAB_EDIT",
+	"COLLABORATION_SCOPE_INTERNAL_LINK_VIEW", "COLLABORATION_SCOPE_INTERNAL_LINK_EDIT",
+	"COLLABORATION_SCOPE_PRIVATE_EDIT", "COLLABORATION_SCOPE_PRIVATE", "COLLABORATION_SCOPE_PUBLIC",
+}
 
-// 	allowedFileTypesWithInspection := []string{
-// 		"BASH_SCRIPTS", "FORM_DATA_POST", "PYTHON", "INCLUDE_FILES", "TABLEAU_FILES", "JAVASCRIPT", "AU3", "DELPHI", "FOR", "TIFF",
-// 		"MS_POWERPOINT", "TLI", "MATLAB_FILES", "NATVIS", "PNG", "SC", "RUBY_FILES", "VISUAL_CPP_FILES", "EML_FILES", "PERL_FILES",
-// 		"APPLE_DOCUMENTS", "CSX", "C_FILES", "JAVA_FILES", "BITMAP", "IFC", "LOG_FILES", "SCZIP", "BORLAND_CPP_FILES", "SQL",
-// 		"MS_RTF", "INF", "ACCDB", "X1B", "XAML", "RPY", "VISUAL_BASIC_FILES", "DSP", "TXT", "F_FILES", "YAML_FILES", "JPEG", "TLH",
-// 		"CSV", "POD", "SCT", "SAS", "RSP", "WINDOWS_SCRIPT_FILES", "SCALA", "MS_EXCEL", "MS_MSG", "MS_MDB", "BASIC_SOURCE_CODE",
-// 		"MSC", "VISUAL_BASIC_SCRIPT", "POWERSHELL", "GO_FILES", "MAKE_FILES", "BCP", "PDF_DOCUMENT", "MS_CPP_FILES", "RES_FILES",
-// 		"SHELL_SCRAP", "JAVA_APPLET", "COBOL", "VSDX", "MS_WORD", "DAT", "ASM", "ALL_OUTBOUND",
-// 		`FTCATEGORY_ACCDB`, `FTCATEGORY_APPLE_DOCUMENTS`, `FTCATEGORY_ASM`, `FTCATEGORY_AU3`, `FTCATEGORY_BASH_SCRIPTS`,
-// 		`FTCATEGORY_BASIC_SOURCE_CODE`, `FTCATEGORY_BCP`, `FTCATEGORY_BITMAP`, `FTCATEGORY_BORLAND_CPP_FILES`, `FTCATEGORY_C_FILES`,
-// 		`FTCATEGORY_COBOL`, `FTCATEGORY_CSV`, `FTCATEGORY_CSX`, `FTCATEGORY_DAT`, `FTCATEGORY_DCM`, `FTCATEGORY_DELPHI`,
-// 		`FTCATEGORY_DSP`, `FTCATEGORY_EML_FILES`, `FTCATEGORY_F_FILES`, `FTCATEGORY_FOR`, `FTCATEGORY_FORM_DATA_POST`,
-// 		`FTCATEGORY_GO_FILES`, `FTCATEGORY_HTTP`, `FTCATEGORY_IFC`, `FTCATEGORY_INCLUDE_FILES`, `FTCATEGORY_INF`,
-// 		`FTCATEGORY_JAVA_FILES`, `FTCATEGORY_JPEG`, `FTCATEGORY_JSON`, `FTCATEGORY_LOG_FILES`, `FTCATEGORY_MAKE_FILES`,
-// 		`FTCATEGORY_MATLAB_FILES`, `FTCATEGORY_MS_CPP_FILES`, `FTCATEGORY_MS_EXCEL`, `FTCATEGORY_MS_MDB`, `FTCATEGORY_MS_MSG`,
-// 		`FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_MS_PUB`, `FTCATEGORY_MS_RTF`, `FTCATEGORY_MS_WORD`, `FTCATEGORY_MSC`, `FTCATEGORY_NATVIS`,
-// 		`FTCATEGORY_OLM`, `FTCATEGORY_OPEN_OFFICE_PRESENTATIONS`, `FTCATEGORY_OPEN_OFFICE_SPREADSHEETS`, `FTCATEGORY_PDF_DOCUMENT`,
-// 		`FTCATEGORY_PERL_FILES`, `FTCATEGORY_PNG`, `FTCATEGORY_POD`, `FTCATEGORY_POWERSHELL`, `FTCATEGORY_PYTHON`, `FTCATEGORY_RES_FILES`,
-// 		`FTCATEGORY_RPY`, `FTCATEGORY_RSP`, `FTCATEGORY_RUBY_FILES`, `FTCATEGORY_SAS`, `FTCATEGORY_SC`, `FTCATEGORY_SCALA`,
-// 		`FTCATEGORY_SCT`, `FTCATEGORY_SHELL_SCRAP`, `FTCATEGORY_SQL`, `FTCATEGORY_TABLEAU_FILES`, `FTCATEGORY_TIFF`, `FTCATEGORY_TLH`,
-// 		`FTCATEGORY_TLI`, `FTCATEGORY_TXT`, `FTCATEGORY_UNK_TXT`, `FTCATEGORY_VISUAL_BASIC_FILES`, `FTCATEGORY_VISUAL_BASIC_SCRIPT`,
-// 		`FTCATEGORY_VISUAL_CPP_FILES`, `FTCATEGORY_VSDX`, `FTCATEGORY_WINDOWS_SCRIPT_FILES`, `FTCATEGORY_X1B`, `FTCATEGORY_XAML`,
-// 		`FTCATEGORY_XML`, `FTCATEGORY_YAML_FILES`, `FTCATEGORY_JAVA_APPLET`, `FTCATEGORY_JAVASCRIPT`,
-// 	}
+func validateCasbRuleCollaborationScope() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for User Agent Types",
+				},
+			}
+		}
 
-// 	// Check if `ALL_OUTBOUND` is selected and `withoutContentInspection` is false
-// 	allOutboundSelected := contains(dlp.FileTypes, "ALL_OUTBOUND")
-// 	if allOutboundSelected && !dlp.WithoutContentInspection {
-// 		return fmt.Errorf("when file_type ALL_OUTBOUND is present, without_content_inspection must be true")
-// 	}
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
 
-// 	// If ALL_OUTBOUND is selected and no other file types are present, allow it
-// 	if allOutboundSelected && len(dlp.FileTypes) > 1 {
-// 		return fmt.Errorf("cannot have other file types when ALL_OUTBOUND is selected")
-// 	}
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedCasbRuleCollaborationScope, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
 
-// 	// Validate file types based on the `withoutContentInspection` flag
-// 	var allowedFileTypes []string
-// 	if dlp.WithoutContentInspection {
-// 		allowedFileTypes = allowedFileTypesWithoutInspection
-// 	} else {
-// 		allowedFileTypes = allowedFileTypesWithInspection
-// 	}
+		return diags
+	}
+}
 
-// 	// Ensure all selected file types are in the allowed list
-// 	for _, fileType := range dlp.FileTypes {
-// 		if !contains(allowedFileTypes, fileType) {
-// 			return fmt.Errorf("the file_type '%s' is not accepted when without_content_inspection is %v", fileType, dlp.WithoutContentInspection)
-// 		}
-// 	}
+var supportedCasbRuleComponents = []string{
+	"ANY", "COMPONENT_EMAIL_BODY", "COMPONENT_EMAIL_ATTACHMENT", "COMPONENT_EMAIL_SUBJECT",
+	"COMPONENT_ITSM_OBJECTS", "COMPONENT_ITSM_ATTACHMENTS", "COMPONENT_CRM_CHATTER_MESSAGES",
+	"COMPONENT_CRM_ATTACHMENTS_IN_OBJECTS", "COMPONENT_COLLAB_MESSAGES", "COMPONENT_COLLAB_ATTACHMENTS",
+	"COMPONENT_CRM_CASES", "COMPONENT_GENAI_MESSAGES", "COMPONENT_GENAI_ATTACHMENTS", "COMPONENT_FILE_ATTACHMENTS",
+}
 
-// 	return nil
-// }
+func validateCasbRuleComponents() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for Casb DLP Rule Components",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedCasbRuleComponents, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
 
 func validateDLPRuleFileTypes(dlp dlp_web_rules.WebDLPRules) error {
 	// Special handling for FTCATEGORY_ALL_OUTBOUND
@@ -2374,6 +2371,106 @@ var supportedAlertSubscriptionSeverity = []string{
 	"MINOR",
 	"INFO",
 	"DEBUG",
+}
+
+func validateRiskProfileCertifications() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for certifications",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedRiskProfileCertifications, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var supportedRiskProfileCertifications = []string{
+	"CSA_STAR", "ISO_27001", "HIPAA", "FISMA", "FEDRAMP", "SOC2", "ISO_27018", "PCI_DSS",
+	"ISO_27017", "SOC1", "SOC3", "GDPR", "CCPA", "FERPA", "COPPA", "HITECH", "EU_US_SWISS_PRIVACY_SHIELD",
+	"EU_US_PRIVACY_SHIELD_FRAMEWORK", "CISP", "AICPA", "FIPS", "SAFE_BIOPHARMA", "ISAE_3000", "SSAE_18",
+	"NIST", "ISO_14001", "SOC", "TRUSTE", "ISO_26262", "ISO_20252", "RGPD", "ISO_20243", "ISO_10002",
+	"JIS_Q_15001_2017", "ISMAP", "GAAP", "JIS_Q_27001",
+}
+
+func validateRiskProfileIndex() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(int)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be int",
+					Detail:   "Type assertion failed: expected int value for risk index",
+				},
+			}
+		}
+
+		for _, supported := range supportedRiskProfileIndex {
+			if value == supported {
+				return nil
+			}
+		}
+
+		return diag.Diagnostics{
+			{
+				Severity: diag.Error,
+				Summary:  "Invalid risk profile index",
+				Detail:   fmt.Sprintf("Value %d is not a supported risk profile index. Supported values are: %v", value, supportedRiskProfileIndex),
+			},
+		}
+	}
+}
+
+var supportedRiskProfileIndex = []int{1, 2, 3, 4, 5}
+
+func validateRiskProfileEncryptionInTransit() schema.SchemaValidateDiagFunc {
+	return func(i interface{}, path cty.Path) diag.Diagnostics {
+		value, ok := i.(string)
+		if !ok {
+			return diag.Diagnostics{
+				{
+					Severity: diag.Error,
+					Summary:  "Expected type to be string",
+					Detail:   "Type assertion failed, expected string type for encrypting data in transit",
+				},
+			}
+		}
+
+		// Convert the cty.Path to a string representation
+		pathStr := fmt.Sprintf("%+v", path)
+
+		// Use StringInSlice from helper/validation package
+		var diags diag.Diagnostics
+		if _, errs := validation.StringInSlice(supportedRiskProfileEncryptionInTransit, false)(value, pathStr); len(errs) > 0 {
+			for _, err := range errs {
+				diags = append(diags, diag.FromErr(err)...)
+			}
+		}
+
+		return diags
+	}
+}
+
+var supportedRiskProfileEncryptionInTransit = []string{
+	"ANY", "UN_KNOWN", "TLSV1_0", "TLSV1_1",
+	"TLSV1_2", "TLSV1_3", "SSLV2", "SSLV3",
 }
 
 func stringIsMultiLine(i interface{}, k cty.Path) diag.Diagnostics {

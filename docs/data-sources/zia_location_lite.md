@@ -3,11 +3,15 @@ subcategory: "Location Management"
 layout: "zscaler"
 page_title: "ZIA: location_lite"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-locations
+  API documentation https://help.zscaler.com/zia/location-management#/locations/lite-get
   Get information about Location Lite.
-
 ---
 
-# Data Source: zia_location_lite
+# zia_location_lite (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-locations)
+* [API documentation](https://help.zscaler.com/zia/location-management#/locations/lite-get)
 
 Use the **zia_location_lite** data source to get information about a location in lite mode option available in the Zscaler Internet Access. This data source can be used to retrieve the Road Warrior location to then associated with one of the following resources: ``zia_url_filtering_rules``, ``zia_firewall_filtering_rule`` and ``zia_dlp_web_rules`
 

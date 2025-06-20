@@ -3,10 +3,15 @@ subcategory: "NAT Control Policy"
 layout: "zscaler"
 page_title: "ZIA: nat_control_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-nat-control
+  API documentation https://help.zscaler.com/zia/nat-control-policy#/dnatRules-get
   Creates and manages ZIA NAT Control Rules.
 ---
 
-# Resource: zia_nat_control_rules
+# zia_nat_control_rules (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-nat-control)
+* [API documentation](https://help.zscaler.com/zia/nat-control-policy#/dnatRules-get)
 
 The **zia_nat_control_rules** resource allows the creation and management of NAT Control rules in the Zscaler Internet Access.
 

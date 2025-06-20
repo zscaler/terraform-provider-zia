@@ -3,11 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_service_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkServiceGroups-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkServiceGroups-get
   Get information about firewall rule network service groups.
-
 ---
 
-# Data Source: zia_firewall_filtering_network_service_groups
+# zia_firewall_filtering_network_service_groups (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkServiceGroups-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkServiceGroups-get)
 
 Use the **zia_firewall_filtering_network_service_groups** data source to get information about a network service groups available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network service rule.
 

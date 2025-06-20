@@ -3,10 +3,15 @@ subcategory: "Admin & Role Management"
 layout: "zscaler"
 page_title: "ZIA: admin_users"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-administrators
+  API documentation https://help.zscaler.com/zia/admin-role-management#/adminUsers-get
   Creates and manages ZIA administrator users.
 ---
 
-# Resource: zia_admin_users
+# zia_admin_users (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-administrators)
+* [API documentation](https://help.zscaler.com/zia/admin-role-management#/adminUsers-get)
 
 The **zia_admin_users** resource allows the creation and management of ZIA admin user account created in the Zscaler Internet Access cloud or via the API.
 

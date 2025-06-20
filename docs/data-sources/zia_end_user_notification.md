@@ -3,10 +3,15 @@ subcategory: "End User Notification"
 layout: "zscaler"
 page_title: "ZIA: end_user_notification"
 description: |-
+  Official documentation https://help.zscaler.com/zia/understanding-browser-based-end-user-notifications
+  API documentation https://help.zscaler.com/zia/end-user-notifications#/eun-get
   Retrieves browser-based end user notification (EUN) configuration details
 ---
 
-# Data Source: zia_end_user_notification
+# zia_end_user_notification (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/understanding-browser-based-end-user-notifications)
+* [API documentation](https://help.zscaler.com/zia/end-user-notifications#/eun-get)
 
 Use the **zia_end_user_notification** data source to get information about browser-based end user notification (EUN) configuration details.
 

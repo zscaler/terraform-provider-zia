@@ -3,10 +3,15 @@ subcategory: "Workload Groups"
 layout: "zscaler"
 page_title: "ZIA: workload_groups"
 description: |-
-  Get information about Workload Groups.
+    Official documentation https://help.zscaler.com/zia/about-workload-groups
+    API documentation https://help.zscaler.com/zia/workload-groups#/workloadGroups-get
+    Get information about Workload Groups.
 ---
 
-# Data Source: zia_workload_groups
+# zia_workload_groups (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-workload-groups)
+* [API documentation](https://help.zscaler.com/zia/workload-groups#/workloadGroups-get)
 
 Use the **zia_workload_groups** data source to get information about Workload Groups in the Zscaler Internet Access cloud or via the API. This data source can then be used as a criterion in ZIA policies such as, Firewall Filtering, URL Filtering, and Data Loss Prevention (DLP) to apply security policies to the workload traffic.
 

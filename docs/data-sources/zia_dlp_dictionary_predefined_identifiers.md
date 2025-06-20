@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zia"
 page_title: "ZIA: dlp_dictionary_predefined_identifiers"
 description: |-
+  Official documentation https://help.zscaler.com/zia/understanding-predefined-dlp-dictionaries
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries/{dictId}/predefinedIdentifiers-get
   Get information about DLP Predefined Identifiers.
 ---
 
-# Data Source: zia_dlp_dictionary_predefined_identifiers
+# zia_dlp_dictionary_predefined_identifiers (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/understanding-predefined-dlp-dictionaries)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries/{dictId}/predefinedIdentifiers-get)
 
 Use the **zia_dlp_dictionary_predefined_identifiers** data source to get information about the list of predefined identifiers that are available for selection in the specified hierarchical DLP dictionary.
 

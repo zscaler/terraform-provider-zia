@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_destination_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-post
+  API documentation https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-post
   Creates and manages ZIA Cloud firewall IP destination groups.
 ---
 
-# Resource: zia_firewall_filtering_destination_groups
+# zia_firewall_filtering_destination_groups (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-post)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/ipDestinationGroups-post)
 
 The **zia_firewall_filtering_destination_groups** resource allows the creation and management of ZIA Cloud Firewall IP destination groups in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule.
 

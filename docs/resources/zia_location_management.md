@@ -3,10 +3,15 @@ subcategory: "Location Management"
 layout: "zscaler"
 page_title: "ZIA: location_management"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-locations
+  API documentation https://help.zscaler.com/zia/location-management#/locations-get
   Creates and manages ZIA locations and sub-locations.
 ---
 
 # zia_location_management (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-locations)
+* [API documentation](https://help.zscaler.com/zia/location-management#/locations-get)
 
 The **zia_location_management** resource allows the creation and management of ZIA locations in the Zscaler Internet Access. This resource can then be associated with a:
 

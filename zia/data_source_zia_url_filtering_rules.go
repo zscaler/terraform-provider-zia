@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/browser_isolation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -661,15 +662,15 @@ func dataSourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]interface{} {
+func flattenCBIProfile(cbiProfile *browser_isolation.CBIProfile) map[string]interface{} {
 	if cbiProfile == nil {
 		return nil
 	}
 
 	return map[string]interface{}{
-		"id":          cbiProfile.ID,
-		"name":        cbiProfile.Name,
-		"url":         cbiProfile.URL,
-		"profile_seq": cbiProfile.ProfileSeq,
+		"id":   cbiProfile.ID,
+		"name": cbiProfile.Name,
+		"url":  cbiProfile.URL,
+		// "profile_seq": cbiProfile.ProfileSeq,
 	}
 }

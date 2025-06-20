@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_vpn_credentials"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-vpn-credentials
+    API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/vpnCredentials-get
     Creates and manages VPN credentials that can be associated to locations.
 ---
 
-# Resource: zia_traffic_forwarding_vpn_credentials
+# zia_traffic_forwarding_vpn_credentials (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-vpn-credentials)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/vpnCredentials-get)
 
 The **zia_traffic_forwarding_vpn_credentials** creates and manages VPN credentials that can be associated to locations. VPN is one way to route traffic from customer locations to the cloud. Site-to-site IPSec VPN credentials can be identified by the cloud through one of the following methods:
 
