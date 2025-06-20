@@ -141,22 +141,6 @@ data "zia_firewall_filtering_time_window" "off_hours" {
 	name = "Off Hours"
 }
 
-data "zia_department_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_department_management" "marketing" {
-	name = "Marketing"
-}
-
-data "zia_group_management" "engineering" {
-	name = "Engineering"
-}
-
-data "zia_group_management" "marketing" {
-	name = "Marketing"
-}
-
 data "zia_location_groups" "sdwan_can" {
 	name = "SDWAN_CAN"
 }
@@ -184,12 +168,6 @@ resource "%s" "%s" {
 	external_auditor_email     = "auditor@acme.com"
 	location_groups {
 		id = [data.zia_location_groups.sdwan_usa.id, data.zia_location_groups.sdwan_can.id]
-	}
-	groups {
-		id = [data.zia_group_management.engineering.id, data.zia_group_management.marketing.id]
-	}
-	departments {
-		id = [data.zia_department_management.engineering.id, data.zia_department_management.marketing.id]
 	}
 	time_windows {
 		id = [data.zia_firewall_filtering_time_window.work_hours.id, data.zia_firewall_filtering_time_window.off_hours.id]
