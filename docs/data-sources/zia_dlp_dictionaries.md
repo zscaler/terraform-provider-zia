@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_dictionaries"
 description: |-
+  Official documentation https://help.zscaler.com/zia/adding-custom-dlp-dictionary
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries-post
   Get information about ZIA DLP Dictionaries.
 ---
 
-# Data Source: zia_dlp_dictionaries
+# zia_dlp_dictionaries (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/adding-custom-dlp-dictionary)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries-post)
 
 Use the **zia_dlp_dictionaries** data source to get information about a DLP dictionary option available in the Zscaler Internet Access.
 

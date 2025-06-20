@@ -3,10 +3,15 @@ subcategory: "NSS Server"
 layout: "zscaler"
 page_title: "ZIA: zia_nss_server"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-nss-servers
+  API documentation https://help.zscaler.com/zia/cloud-nanolog-streaming-service-nss#/nssServers-get
   Creates and manages ZIA NSS Servers.
 ---
 
-# Resource: zia_nss_server
+# zia_nss_server (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-nss-servers)
+* [API documentation](https://help.zscaler.com/zia/cloud-nanolog-streaming-service-nss#/nssServers-get)
 
 The **zia_nss_server** resource allows the creation and management of NSS Server Objects in the Zscaler Internet Access cloud or via the API.
 See [Adding NSS Servers](https://help.zscaler.com/zia/adding-nss-servers) for more details.

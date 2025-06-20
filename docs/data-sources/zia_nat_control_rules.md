@@ -3,10 +3,15 @@ subcategory: "NAT Control Policy"
 layout: "zscaler"
 page_title: "ZIA): nat_control_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-nat-control
+  API documentation https://help.zscaler.com/zia/nat-control-policy#/dnatRules-get
   Retrieves a list of all configured and predefined DNAT Control policies.
-
 ---
-# Data Source: zia_nat_control_rules
+
+# zia_nat_control_rules (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-nat-control)
+* [API documentation](https://help.zscaler.com/zia/nat-control-policy#/dnatRules-get)
 
 Use the **zia_nat_control_rules** data source to get information about a NAT Control rule available in the Zscaler Internet Access.
 

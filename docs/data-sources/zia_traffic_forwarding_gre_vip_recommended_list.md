@@ -3,11 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_gre_vip_recommended_list"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-gre-tunnels
+    API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post
     Gets a list of recommended GRE tunnel virtual IP addresses (VIPs), based on source IP address or latitude/longitude coordinates.
-
 ---
 
-# Data Source: zia_traffic_forwarding_gre_vip_recommended_list
+# zia_traffic_forwarding_gre_vip_recommended_list (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-gre-tunnels)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post)
 
 Use the **zia_traffic_forwarding_gre_vip_recommended_list** data source to get information about a list of recommended GRE tunnel virtual IP addresses (VIPs), based on source IP address or latitude/longitude coordinates.
 

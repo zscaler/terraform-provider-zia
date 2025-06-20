@@ -3,10 +3,15 @@ subcategory: "SSL Inspection Rules"
 layout: "zscaler"
 page_title: "ZIA: ssl_inspection_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-ssl-inspection-policy
+  API documentation https://help.zscaler.com/zia/ssl-inspection-policy#/sslInspectionRules-get
   Retrieves the list of all SSL Inspection rules configured in the ZIA Admin Portal.
-
 ---
-# Data Source: zia_ssl_inspection_rules
+
+# zia_ssl_inspection_rules (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-ssl-inspection-policy)
+* [API documentation](https://help.zscaler.com/zia/ssl-inspection-policy#/sslInspectionRules-get)
 
 Use the **zia_ssl_inspection_rules** data source to get information about a ssl inspection rule in the Zscaler Internet Access.
 

@@ -3,10 +3,15 @@ subcategory: "NSS Server"
 layout: "zscaler"
 page_title: "ZIA: nss_server"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-nss-servers
+  API documentation https://help.zscaler.com/zia/cloud-nanolog-streaming-service-nss#/nssServers-get
   Get information about NSS Server details.
-
 ---
-# Data Source: zia_nss_server
+
+# zia_nss_server (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-nss-servers)
+* [API documentation](https://help.zscaler.com/zia/cloud-nanolog-streaming-service-nss#/nssServers-get)
 
 Use the **zia_nss_server** data source to get information about a nss server resource in the Zscaler Internet Access cloud or via the API.
 See [Adding NSS Servers](https://help.zscaler.com/zia/adding-nss-servers) for more details.

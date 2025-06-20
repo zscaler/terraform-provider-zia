@@ -3,10 +3,15 @@ subcategory: "Sandbox Policy & Settings"
 layout: "zscaler"
 page_title: "ZIA: sandbox_file_submission"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-sandbox
+  API documentation https://help.zscaler.com/zia/sandbox-submission-api#/zscsb/submit-post
   Submits raw or archive files (e.g., ZIP) to Sandbox for analysis.
 ---
 
-# Resource: zia_sandbox_file_submission
+# zia_sandbox_file_submission (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-sandbox)
+* [API documentation](https://help.zscaler.com/zia/sandbox-submission-api#/zscsb/submit-post)
 
 The **zia_sandbox_file_submission** resource submits raw or archive files (e.g., ZIP) to Zscaler's Sandbox for analysis. You can submit up to 100 files per day and it supports all file types that are currently supported by Sandbox. The resource also allows the submissions of raw or archive files to the Zscaler service for out-of-band file inspection to generate real-time verdicts for known and unknown files. It leverages capabilities such as Malware Prevention, Advanced Threat Prevention, Sandbox cloud effect, AI/ML-driven file analysis, and integrated third-party threat intelligence feeds to inspect files and classify them as benign or malicious instantaneously.
 

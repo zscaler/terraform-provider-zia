@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_dns_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-dns-control-policy
+  API documentation https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post
   Creates and manages ZIA Cloud firewall DNS rule.
 ---
 
-# Resource: zia_firewall_dns_rule
+# zia_firewall_dns_rule (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-dns-control-policy)
+* [API documentation](https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post)
 
 The **zia_firewall_dns_rule** resource allows the creation and management of ZIA Cloud Firewall DNS rules in the Zscaler Internet Access.
 

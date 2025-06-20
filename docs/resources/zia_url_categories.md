@@ -3,10 +3,15 @@ subcategory: "URL Categories"
 layout: "zscaler"
 page_title: "ZIA: url_categories"
 description: |-
-      Creates and manages a new custom URL category. If keywords are included within the request, they will be added to the new category.
+    Official documentation https://help.zscaler.com/zia/about-url-categories
+    API documentation https://help.zscaler.com/zia/url-categories#/urlCategories-get
+    Creates and manages a new custom URL category. If keywords are included within the request, they will be added to the new category.
 ---
 
-# Resource: zia_url_categories
+# zia_url_categories (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-categories)
+* [API documentation](https://help.zscaler.com/zia/url-categories#/urlCategories-get)
 
 The **zia_url_categories** resource creates and manages a new custom URL category. If keywords are included within the request, they will be added to the new category.
 

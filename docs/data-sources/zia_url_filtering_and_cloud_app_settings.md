@@ -3,10 +3,15 @@ subcategory: "URL Filtering Rule"
 layout: "zscaler"
 page_title: "ZIA: url_filtering_and_cloud_app_settings"
 description: |-
+    Official documentation https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get
+    API documentation https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get
     Retrieves information about URL and Cloud App Control advanced policy settings.
 ---
 
-# Data Source: zia_url_filtering_and_cloud_app_settings
+# zia_url_filtering_and_cloud_app_settings (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get)
+* [API documentation](https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get)
 
 Use the **zia_url_filtering_and_cloud_app_settings** data source to get information about URL and Cloud App Control advanced policy settings.
 

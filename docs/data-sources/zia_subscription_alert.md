@@ -3,10 +3,15 @@ subcategory: "Subscription Alerts"
 layout: "zscaler"
 page_title: "ZIA: subscription_alert"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-alert-subscriptions
+  API documentation https://help.zscaler.com/zia/alerts#/alertSubscriptions-get
   Get information about subscription alerts details.
-
 ---
-# Data Source: zia_subscription_alert
+
+# zia_subscription_alert (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-alert-subscriptions)
+* [API documentation](https://help.zscaler.com/zia/alerts#/alertSubscriptions-get)
 
 Use the **zia_subscription_alert** data source to get information about a subscription alert resource in the Zscaler Internet Access cloud or via the API.
 

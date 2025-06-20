@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: zia_traffic_forwarding_gre_tunnel"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-gre-tunnels
+  API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post
   Creates and manages GRE tunnel configuration.
 ---
 
-# Resource: zia_traffic_forwarding_gre_tunnel
+# zia_traffic_forwarding_gre_tunnel (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-gre-tunnels)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post)
 
 The **zia_traffic_forwarding_gre_tunnel** resource allows the creation and management of GRE tunnel configuration in the Zscaler Internet Access (ZIA) portal.
 

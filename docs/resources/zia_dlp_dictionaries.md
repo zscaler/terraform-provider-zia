@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_dictionaries"
 description: |-
+  Official documentation https://help.zscaler.com/zia/adding-custom-dlp-dictionary
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries-post
   Creates and manages ZIA DLP dictionaries.
 ---
 
-# Resource: zia_dlp_dictionaries
+# zia_dlp_dictionaries (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/adding-custom-dlp-dictionary)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpDictionaries-post)
 
 The **zia_dlp_dictionaries** resource allows the creation and management of ZIA DLP dictionaries in the Zscaler Internet Access cloud or via the API.
 

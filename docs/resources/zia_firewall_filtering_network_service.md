@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_service"
 description: |-
-      Creates and manages a ZIA Cloud firewall network service.
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkServices-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkServices-get
+  Creates and manages a ZIA Cloud firewall network service.
 ---
 
-# Resource: zia_firewall_filtering_network_service
+# zia_firewall_filtering_network_service (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkServices-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkServices-get)
 
 The **zia_firewall_filtering_network_service** resource allows the creation and management of ZIA Cloud Firewall IP network services in the Zscaler Internet Access. This resource can then be associated with a ZIA cloud firewall filtering rule and network service group resources.
 

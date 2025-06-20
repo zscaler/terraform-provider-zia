@@ -3,10 +3,15 @@ subcategory: "Traffic Forwarding"
 layout: "zscaler"
 page_title: "ZIA: traffic_forwarding_gre_tunnel"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-gre-tunnels
+  API documentation https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post
   Gets provisioned GRE tunnel information.
 ---
 
-# Data Source: zia_traffic_forwarding_gre_tunnel
+# zia_traffic_forwarding_gre_tunnel (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-gre-tunnels)
+* [API documentation](https://help.zscaler.com/zia/traffic-forwarding-0#/greTunnels-post)
 
 The **zia_traffic_forwarding_gre_tunnel** data source to get information about provisioned GRE tunnel information created in the Zscaler Internet Access portal.
 

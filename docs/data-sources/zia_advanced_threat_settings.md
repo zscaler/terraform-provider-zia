@@ -3,10 +3,15 @@ subcategory: "Advanced Threat Protection"
 layout: "zscaler"
 page_title: "ZIA: advanced_threat_settings"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy
+  API documentation https://help.zscaler.com/zia/advanced-threat-protection-policy#/cyberThreatProtection/advancedThreatSettings-put
   Retrieves the advanced threat configuration settings in the ZIA Admin Portal
 ---
 
-# Data Source: zia_advanced_threat_settings
+# zia_advanced_threat_settings (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy)
+* [API documentation](https://help.zscaler.com/zia/advanced-threat-protection-policy#/)
 
 Use the **zia_advanced_threat_settings** data source to retrieve the advanced threat configuration settings in the ZIA Admin Portal. To learn more see [Advanced Threat Protection](https://help.zscaler.com/unified/configuring-security-exceptions-advanced-threat-protection-policy)
 

@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_ips_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/ips-control-policy#/firewallIpsRules-get
+  API documentation https://help.zscaler.com/zia/configuring-ips-control-policy
   Creates and manages ZIA Cloud firewall IPS rule.
 ---
 
-# Resource: zia_firewall_ips_rule
+# zia_firewall_ips_rule (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/ips-control-policy#/firewallIpsRules-get)
+* [API documentation](https://help.zscaler.com/zia/configuring-ips-control-policy)
 
 The **zia_firewall_ips_rule** resource allows the creation and management of ZIA Cloud Firewall IPS rules in the Zscaler Internet Access.
 

@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA): firewall_filtering_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
+  API documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
   Get information about firewall filtering rule.
-
 ---
-# Data Source: zia_firewall_filtering_rule
+
+# zia_firewall_filtering_rule (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post)
 
 Use the **zia_firewall_filtering_rule** data source to get information about a cloud firewall rule available in the Zscaler Internet Access cloud firewall.
 

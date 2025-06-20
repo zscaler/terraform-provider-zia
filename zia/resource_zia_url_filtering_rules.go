@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/browser_isolation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -758,22 +759,22 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
-func expandCBIProfile(d *schema.ResourceData) urlfilteringpolicies.CBIProfile {
+func expandCBIProfile(d *schema.ResourceData) browser_isolation.CBIProfile {
 	if v, ok := d.GetOk("cbi_profile"); ok {
 		cbiProfileList := v.([]interface{})
 		if len(cbiProfileList) > 0 {
 			cbiProfileData := cbiProfileList[0].(map[string]interface{})
-			return urlfilteringpolicies.CBIProfile{
+			return browser_isolation.CBIProfile{
 				ID:   cbiProfileData["id"].(string),
 				Name: cbiProfileData["name"].(string),
 				URL:  cbiProfileData["url"].(string),
 			}
 		}
 	}
-	return urlfilteringpolicies.CBIProfile{}
+	return browser_isolation.CBIProfile{}
 }
 
-func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
+func flattenCBIProfileSimple(cbiProfile *browser_isolation.CBIProfile) []interface{} {
 	if cbiProfile == nil {
 		return []interface{}{}
 	}

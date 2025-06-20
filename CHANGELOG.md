@@ -1,5 +1,45 @@
 # Changelog
 
+## 4.3.0 (June, 19 2025)
+
+### Notes
+
+- Release date: **(June, 19 2025)**
+- Supported Terraform version: **v1.x**
+
+### NEW - RESOURCES, DATA SOURCES
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - The following new resources and data sources have been introduced:
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_browser_control_policy`` - Browser Control Policy
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_dlp_rules`` - SaaS Security API (Casb DLP Rules)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_malware_rules`` - SaaS Security API (Casb Malware Rules)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_cloud_application_instance`` - Cloud Application Instance
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_risk_profiles`` - Risk Profiles
+
+### NEW DATA SOURCES
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_tenant`` - SaaS Security API (Casb Tenant)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_email_label`` - SaaS Security API (Casb Email Label)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_tombstone_template`` - SaaS Security API (Casb Quarantine Tombstone Template)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_casb_tombstone_template`` - SaaS Security API (Casb Quarantine Tombstone Template)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_domain_profiles`` - SaaS Security API (Casb Domain Profiles)
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added the datasource and resource ``zia_tenant_restriction_profile`` - Tenant Restriction Profile
+
+### Enhancements
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - The resource `zia_location_management` now supports the following attributes.
+- `extranet` - The ID of the extranet resource that must be assigned to the location
+- `extranetip_pool` - The ID of the traffic selector specified in the extranet
+- `extranet_dns` - The ID of the DNS server configuration used in the extranet
+- `default_extranet_ts_pool` - A Boolean value indicating that the traffic selector specified in the extranet is the designated default traffic selector
+- `default_extranet_dns` - A Boolean value indicating that the DNS server configuration used in the extranet is the designated default DNS server
+
+### Bug Fixes
+
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added validation to ``zia_dlp_web_rules`` to prevent conflict between attributes: `auditor`, `external_auditor_email` and `notification_template`
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Removed validation function `validateDestAddress` for the attribute `dest_addresses` to support both IPv4 Addresses and Wildcard FQDN.
+
 ## 4.2.0 (June, 11 2025)
 
 ### Notes

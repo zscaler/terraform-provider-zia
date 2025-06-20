@@ -3,11 +3,16 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_application"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkApplications-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkApplications-get
   Get information about ZIA firewall rule network application.
 
 ---
 
-# Data Source zia_firewall_filtering_network_application
+# zia_firewall_filtering_network_application (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplications-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplications-get)
 
 Use the **zia_firewall_filtering_network_application** data source to get information about a network application available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network application rule.
 

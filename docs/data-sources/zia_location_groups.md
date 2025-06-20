@@ -3,11 +3,16 @@ subcategory: "Location Management"
 layout: "zscaler"
 page_title: "ZIA: location_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-locations
+  API documentation https://help.zscaler.com/zia/location-management#/locations-get
   Get information about Location Groups.
 
 ---
 
-# Data Source: zia_location_groups
+# zia_location_groups (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-locations)
+* [API documentation](https://help.zscaler.com/zia/location-management#/locations-get)
 
 Use the **zia_location_groups** data source to get information about a location group option available in the Zscaler Internet Access.
 

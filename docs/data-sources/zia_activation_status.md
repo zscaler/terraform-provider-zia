@@ -3,10 +3,15 @@ subcategory: "Activation"
 layout: "zscaler"
 page_title: "ZIA: activation_status"
 description: |-
-  "Get Activation Status changes".
+  Official documentation https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal
+  API documentation https://help.zscaler.com/zia/activation#/status-get
+  Gets the activation status for the saved configuration changes
 ---
 
-# Data Source: zia_activation_status
+# zia_activation_status (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal)
+* [API documentation](https://help.zscaler.com/zia/activation#/status-get)
 
 The **zia_activation_status** data source allows to get information about the activation status of ZIA configurations.
 

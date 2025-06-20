@@ -56,7 +56,7 @@ func resourceFWIPSourceGroups() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringLenBetween(0, 64),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
 				Type:         schema.TypeString,

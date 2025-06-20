@@ -3,10 +3,15 @@ subcategory: "FTP Control Policy"
 layout: "zscaler"
 page_title: "ZIA: ftp_control_policy"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-ftp-control
+  API documentation https://help.zscaler.com/zia/ftp-control-policy#/ftpSettings-get
   Updates the FTP Control settings.
 ---
 
-# Resource: zia_ftp_control_policy
+# zia_ftp_control_policy (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-ftp-control)
+* [API documentation](https://help.zscaler.com/zia/ftp-control-policy#/ftpSettings-get)
 
 The **zia_ftp_control_policy** resource allows you to update FTP control Policy. To learn more see [Configuring the FTP Control Policy](https://help.zscaler.com/zia/configuring-ftp-control-policy)
 

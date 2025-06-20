@@ -3,10 +3,15 @@ subcategory: "User Management"
 layout: "zscaler"
 page_title: "ZIA: user_management"
 description: |-
-  Creates and manages ZIA local user accounts.
-
+    Official documentation https://help.zscaler.com/zia/about-url-filteringhttps://help.zscaler.com/zia/user-management#/users-get
+    API documentation https://help.zscaler.com/zia/user-management#/users-get
+    Creates and manages ZIA local user accounts.
 ---
+
 # zia_user_management (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-filtering)
+* [API documentation](https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-post)
 
 The **zia_user_management** resource allows the creation and management of local user account in the Zscaler Internet Access cloud. The user account resource can then be associated with several different types of resource within the ZIA tenant.
 

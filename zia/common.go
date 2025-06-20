@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
 )
@@ -91,17 +92,18 @@ func setIDsSchemaTypeCustomSpecial(maxItems *int, desc string) *schema.Schema {
 		},
 	}
 }
+
 func setSingleIDSchemaTypeCustom(desc string) *schema.Schema {
 	return &schema.Schema{
-		Type:        schema.TypeSet,
-		Optional:    true,
-		Computed:    true,
+		Type:     schema.TypeSet,
+		Optional: true,
+		// Computed:    true,
 		Description: desc,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"id": {
 					Type:     schema.TypeInt,
-					Required: true,
+					Optional: true,
 				},
 			},
 		},
@@ -203,17 +205,35 @@ func expandIDNameExtensionsMap(m map[string]interface{}, key string) []common.ID
 	return []common.IDNameExtensions{}
 }
 
+// func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common.IDCustom {
+// 	if v, ok := d.GetOk(key); ok {
+// 		setList := v.(*schema.Set).List()
+// 		if len(setList) > 0 {
+// 			if idMap, ok := setList[0].(map[string]interface{}); ok {
+// 				return &common.IDCustom{
+// 					ID: idMap["id"].(int),
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return nil
+// }
+
 func expandIDNameExtensionsSetSingle(d *schema.ResourceData, key string) *common.IDCustom {
 	if v, ok := d.GetOk(key); ok {
+		log.Printf("[DEBUG] expandIDNameExtensionsSetSingle key=%s raw=%#v", key, v)
+
 		setList := v.(*schema.Set).List()
 		if len(setList) > 0 {
 			if idMap, ok := setList[0].(map[string]interface{}); ok {
+				log.Printf("[DEBUG] expandIDNameExtensionsSetSingle extracted id: %v", idMap["id"])
 				return &common.IDCustom{
 					ID: idMap["id"].(int),
 				}
 			}
 		}
 	}
+	log.Printf("[DEBUG] expandIDNameExtensionsSetSingle key=%s returned nil", key)
 	return nil
 }
 
@@ -236,6 +256,28 @@ func expandIDNameExtensionsSet(d *schema.ResourceData, key string) []common.IDNa
 		return result
 	}
 	return []common.IDNameExtensions{}
+}
+
+// TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
+func expandCloudApplicationInstanceSet(d *schema.ResourceData, key string) []cloudappcontrol.CloudAppInstances {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []cloudappcontrol.CloudAppInstances
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil && itemMap["id"] != nil {
+				set := itemMap["id"].(*schema.Set)
+				for _, id := range set.List() {
+					result = append(result, cloudappcontrol.CloudAppInstances{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []cloudappcontrol.CloudAppInstances{}
 }
 
 func expandUserDepartment(d *schema.ResourceData) *common.UserDepartment {
@@ -358,31 +400,17 @@ func flattenCustomIDSet(customID *common.IDCustom) []interface{} {
 	}
 }
 
-// func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-// 	// Skip if the list is empty
-// 	if len(list) == 0 {
-// 		return nil
-// 	}
-
-// 	ids := []int{}
-// 	for _, item := range list {
-// 		if item.ID == 0 && item.Name == "" {
-// 			continue
-// 		}
-// 		ids = append(ids, item.ID)
-// 	}
-
-// 	// Skip if no valid IDs
-// 	if len(ids) == 0 {
-// 		return nil
-// 	}
-
-// 	return []interface{}{
-// 		map[string]interface{}{
-// 			"id": ids,
-// 		},
-// 	}
-// }
+func flattenCustomIDNameSet(customID *common.IDCustom) []interface{} {
+	if customID == nil || customID.ID == 0 {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id":   customID.ID,
+			"name": customID.Name,
+		},
+	}
+}
 
 func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 	if len(list) == 0 {
@@ -411,23 +439,33 @@ func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
 	}
 }
 
-// func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {
-// 	if len(list) == 0 {
-// 		return nil
-// 	}
-// 	ids := []int{}
-// 	for _, item := range list {
-// 		if item.ID == 0 && item.Name == "" {
-// 			continue
-// 		}
-// 		ids = append(ids, item.ID)
-// 	}
-// 	return []interface{}{
-// 		map[string]interface{}{
-// 			"id": ids,
-// 		},
-// 	}
-// }
+// TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
+func flattenIDCloudAppInstance(list []cloudappcontrol.CloudAppInstances) []interface{} {
+	if len(list) == 0 {
+		// Return an empty slice instead of nil
+		return []interface{}{}
+	}
+
+	ids := []int{}
+	for _, item := range list {
+		if item.ID == 0 && item.Name == "" {
+			continue
+		}
+		ids = append(ids, item.ID)
+	}
+
+	if len(ids) == 0 {
+		// Again return []interface{}{} instead of nil
+		return []interface{}{}
+	}
+
+	// The rest remains the same
+	return []interface{}{
+		map[string]interface{}{
+			"id": ids,
+		},
+	}
+}
 
 // Flattening function used in the Forwarding Control Policy Resource
 func flattenIDNameSet(idName *common.IDName) []interface{} {
@@ -952,6 +990,71 @@ func getAlertSubscriptionSeverity() *schema.Schema {
 			ValidateDiagFunc: validateAlertSubscriptionSeverity(),
 		},
 		Optional: true,
+	}
+}
+
+func getCasbRuleCollaborationScope() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Collaboration scope for the rule",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateCasbRuleCollaborationScope(),
+		},
+	}
+}
+
+func getCasbRuleComponents() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "List of components for which the rule is applied. Zscaler service inspects these components for sensitive data.",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateCasbRuleComponents(),
+		},
+	}
+}
+
+func getRiskProfileCertifications() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "List of certifications to be included or excluded for the profile",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateRiskProfileCertifications(),
+		},
+	}
+}
+
+func getRiskProfileIndex() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "The risk index number of the cloud applications. It represents the risk score assigned to each cloud application based on the risk attribute values.",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeInt,
+			ValidateDiagFunc: validateRiskProfileIndex(),
+		},
+	}
+}
+
+func getRiskProfileEncryptionInTransit() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Description: "Filters applications based on their support for encrypting data in transit",
+		Optional:    true,
+		MinItems:    1,
+		Elem: &schema.Schema{
+			Type:             schema.TypeString,
+			ValidateDiagFunc: validateRiskProfileEncryptionInTransit(),
+		},
 	}
 }
 

@@ -3,10 +3,15 @@ subcategory: "FTP Control Policy"
 layout: "zscaler"
 page_title: "ZIA: ftp_control_policy"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-ftp-control
+  API documentation https://help.zscaler.com/zia/ftp-control-policy#/ftpSettings-get
   Retrieves the FTP Control status and the list of URL categories for which FTP is allowed.
 ---
 
-# Data Source: zia_ftp_control_policy
+# zia_ftp_control_policy (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-ftp-control)
+* [API documentation](https://help.zscaler.com/zia/ftp-control-policy#/ftpSettings-get)
 
 Use the **zia_ftp_control_policy** data source to retrieves the FTP Control Policy configuration. To learn more see [Configuring the FTP Control Policy](https://help.zscaler.com/zia/configuring-ftp-control-policy)
 

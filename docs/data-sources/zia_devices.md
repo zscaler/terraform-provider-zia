@@ -3,10 +3,15 @@ subcategory: "Device Groups"
 layout: "zia"
 page_title: "ZIA: devices"
 description: |-
+  Official documentation https://help.zscaler.com/zia/device-groups#/deviceGroups-get
+  API documentation https://help.zscaler.com/zia/device-groups#/deviceGroups-get
   Get information about ZIA devices.
 ---
 
-# Data Source: zia_devices
+# zia_devices (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/device-groups#/deviceGroups-get)
+* [API documentation](https://help.zscaler.com/zia/device-groups#/deviceGroups-get)
 
 Use the **zia_devices** data source to get information about a device in the Zscaler Internet Access cloud or via the API. This data source can then be associated with resources such as: URL Filtering Rules
 

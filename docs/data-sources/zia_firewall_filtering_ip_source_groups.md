@@ -3,11 +3,16 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_destination_groups"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get
   Get information about IP Source groups.
 ---
 
 
-# Data Source: zia_firewall_filtering_ip_source_groups
+# zia_firewall_filtering_ip_source_groups (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/ipSourceGroups-get)
 
 Use the **zia_firewall_filtering_ip_source_groups** data source to get information about ip source groups available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering rule.
 

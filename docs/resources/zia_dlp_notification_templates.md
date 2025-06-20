@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_notification_templates"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-dlp-notification-templates
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpNotificationTemplates-get
   Creates and manages ZIA DLP Notification Templates.
 ---
 
-# Resource: zia_dlp_notification_templates
+# zia_dlp_notification_templates (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-dlp-notification-templates)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpNotificationTemplates-get)
 
 The **zia_dlp_notification_templates** resource allows the creation and management of ZIA DLP Notification Templates in the Zscaler Internet Access cloud or via the API.
 

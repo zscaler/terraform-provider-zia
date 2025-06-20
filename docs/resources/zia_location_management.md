@@ -3,10 +3,15 @@ subcategory: "Location Management"
 layout: "zscaler"
 page_title: "ZIA: location_management"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-locations
+  API documentation https://help.zscaler.com/zia/location-management#/locations-get
   Creates and manages ZIA locations and sub-locations.
 ---
 
 # zia_location_management (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-locations)
+* [API documentation](https://help.zscaler.com/zia/location-management#/locations-get)
 
 The **zia_location_management** resource allows the creation and management of ZIA locations in the Zscaler Internet Access. This resource can then be associated with a:
 
@@ -221,6 +226,10 @@ The following arguments are supported:
 
 * `ipv6_enabled` - (Boolean) If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.
 
+* `default_extranet_ts_pool` - (Boolean) Indicates that the traffic selector specified in the extranet is the designated default traffic selector
+
+* `default_extranet_dns` - (Boolean) Indicates that the DNS server configuration used in the extranet is the designated default DNS server
+
 * `ipv6_dns_64prefix` - (Optional) Name-ID pair of the NAT64 prefix configured as the DNS64 prefix for the location. If specified, the DNS64 prefix is used for the IP addresses that reside in this location. If not specified, a prefix is selected from the set of supported prefixes. This field is applicable only if ipv6Enabled is set is true.
 
 * `dynamic_location_groups` - (List of Object) Dynamic location groups the location belongs to
@@ -234,6 +243,15 @@ The following arguments are supported:
 * `exclude_from_manual_groups` - (Boolean) Enable to prevent the location from being added to manual groups and to remove it from any manual groups it's already assigned to
 
   **NOTE** The attributes, ``dynamic_location_groups``, and ``static_location_groups`` CANNOT be configured if the attributes `exclude_from_dynamic_groups` and/or `exclude_from_manual_groups` are set to `true`
+
+* `extranet` - (Block, Max: 1) The ID of the extranet resource that must be assigned to the location
+  * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `extranet_ip_pool` - (Block, Max: 1) The ID of the traffic selector specified in the extranet
+  * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `extranet_dns` - (Block, Max: 1) The ID of the DNS server configuration used in the extranet
+  * `id` - (int) The Identifier that uniquely identifies an entity
 
 ## Import
 

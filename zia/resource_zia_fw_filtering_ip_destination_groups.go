@@ -60,7 +60,7 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "Destination IP group name",
-				ValidateFunc: validation.StringLenBetween(0, 64),
+				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
 				Type:         schema.TypeString,

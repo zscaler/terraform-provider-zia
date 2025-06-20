@@ -66,10 +66,9 @@ func resourceNatControlRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Name of the nat control policy rule",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the nat control policy rule",
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -130,8 +129,7 @@ func resourceNatControlRules() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateDestAddress,
+					Type: schema.TypeString,
 				},
 				Description: "Destination addresses. Supports IPv4, FQDNs, or wildcard FQDNs",
 			},

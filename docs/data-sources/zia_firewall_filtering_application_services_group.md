@@ -3,12 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_application_group"
 description: |-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups-post
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups-post
   Get information about firewall rule network application groups.
-
 ---
 
+# zia_firewall_filtering_application_services_group (Data Source)
 
-# Data Source - zia_firewall_filtering_application_services_group
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups-post)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkApplicationGroups-post)
 
 Use the **zia_firewall_filtering_application_services_group** data source to get information about a network application group available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network application rule.
 

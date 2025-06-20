@@ -3,10 +3,15 @@ subcategory: "User Management"
 layout: "zscaler"
 page_title: "ZIA: department_management"
 description: |-
+  Official documentation https://help.zscaler.com/zia/adding-departments
+  API documentation https://help.zscaler.com/zia/user-management#/departments-get
   Gets a list of user departments details.
-
 ---
-# Data Source: zia_department_management
+
+# zia_department_management (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/adding-departments)
+* [API documentation](https://help.zscaler.com/zia/user-management#/departments-get)
 
 Use the **zia_department_management** data source to get information about user department created in the Zscaler Internet Access cloud or via the API. This data source can then be associated with several ZIA resources such as: URL filtering rules, Cloud Firewall rules, and locations.
 

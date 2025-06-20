@@ -3,10 +3,15 @@ subcategory: "Forwarding Control Policy"
 layout: "zscaler"
 page_title: "ZIA): forwarding_control_proxy_gateway"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-gateways-proxies
+  API documentation https://help.zscaler.com/zia/forwarding-control-policy#/proxyGateways-get
   Get information about forwarding control proxy gateway.
-
 ---
-# Data Source: zia_forwarding_control_proxy_gateway
+
+# zia_forwarding_control_proxy_gateway (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-gateways-proxies)
+* [API documentation](https://help.zscaler.com/zia/forwarding-control-policy#/proxyGateways-get)
 
 Use the **zia_forwarding_control_proxy_gateway** data source to retrieve the proxy gateway information. This data source can then be associated with the attribute `proxy_gateway` when creating a Forwarding Control Rule via the resource: `zia_forwarding_control_rule`
 

@@ -127,8 +127,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validateDestAddress,
+					Type: schema.TypeString,
 				},
 				Description: "Destination addresses. Supports IPv4, FQDNs, or wildcard FQDNs",
 			},

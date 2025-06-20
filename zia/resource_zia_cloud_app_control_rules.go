@@ -204,6 +204,7 @@ func resourceCloudAppControlRules() *schema.Resource {
 			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
 			"users":                  setIDsSchemaTypeCustom(intPtr(4), "Name-ID pairs of users for which rule must be applied"),
 			"tenancy_profile_ids":    setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
+			"cloud_app_instances":    setIDsSchemaTypeCustom(intPtr(8), "The cloud application instance ID."),
 			"cloud_app_risk_profile": setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded."),
 			"device_trust_levels":    getDeviceTrustLevels(),
 			"user_risk_score_levels": getUserRiskScoreLevels(),
@@ -380,6 +381,11 @@ func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
+	if err := d.Set("cloud_app_instances", flattenIDCloudAppInstance(resp.CloudAppInstances)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -631,6 +637,7 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
 		TenancyProfileIDs:   expandIDNameExtensionsSet(d, "tenancy_profile_ids"),
+		CloudAppInstances:   expandCloudApplicationInstanceSet(d, "cloud_app_instances"), // TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
 		CloudAppRiskProfile: expandIDNameExtensionsSetSingle(d, "cloud_app_risk_profile"),
 		CBIProfile:          expandCloudAppControlCBIProfile(d),
 	}

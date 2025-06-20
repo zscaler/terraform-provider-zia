@@ -3,10 +3,15 @@ subcategory: "Cloud App Control Policy"
 layout: "zscaler"
 page_title: "ZIA: cloud_app_control_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/adding-rules-cloud-app-control-policy
+  API documentation https://help.zscaler.com/zia/cloud-app-control-policy#/webApplicationRules/{rule_type}-get
   Creates and manages ZIA Cloud Application Control rule.
 ---
 
 # Resource: zia_cloud_app_control_rule
+
+* [Official documentation](https://help.zscaler.com/zia/adding-rules-cloud-app-control-policy)
+* [API documentation](https://help.zscaler.com/zia/cloud-app-control-policy#/webApplicationRules/{rule_type}-get)
 
 The **zia_cloud_app_control_rule** resource allows the creation and management of ZIA Cloud Application Control rules in the Zscaler Internet Access.
 

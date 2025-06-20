@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA): forwarding_control_proxies"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-third-party-proxies
+  API documentation https://help.zscaler.com/zia/forwarding-control-policy#/proxies-get
   Get information about firewall IPS Control policy rule.
-
 ---
-# Data Source: zia_forwarding_control_proxies
+
+# zia_forwarding_control_proxies (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-third-party-proxies)
+* [API documentation](https://help.zscaler.com/zia/forwarding-control-policy#/proxies-get)
 
 Use the **zia_forwarding_control_proxies** data source to get information about a third-party proxy service available in the Zscaler Internet Access.
 

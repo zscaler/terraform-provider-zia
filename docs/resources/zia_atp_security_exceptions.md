@@ -3,10 +3,15 @@ subcategory: "Advanced Threat Protection"
 layout: "zscaler"
 page_title: "ZIA: atp_security_exceptions"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy
+  API documentation https://help.zscaler.com/zia/advanced-threat-protection-policy#/cyberThreatProtection/advancedThreatSettings-put
   Updates security exceptions for the ATP policy.
 ---
 
-# Resource: zia_atp_security_exceptions
+# zia_atp_security_exceptions (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy)
+* [API documentation](https://help.zscaler.com/zia/advanced-threat-protection-policy#/)
 
 The **zia_atp_security_exceptions** resource alows you to updates security exceptions for the ATP policy. To learn more see [Advanced Threat Protection](https://help.zscaler.com/unified/configuring-security-exceptions-advanced-threat-protection-policy)
 

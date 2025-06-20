@@ -3,10 +3,15 @@ subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: dlp_engines"
 description: |-
-  Get information about ZIA DLP Engines.
+  Official documentation https://help.zscaler.com/zia/about-dlp-engines
+  API documentation https://help.zscaler.com/zia/data-loss-prevention#/dlpEngines-get
+  Adds a new custom DLP engine
 ---
 
-# Data Source: zia_dlp_engines
+# zia_dlp_engines (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-dlp-engines)
+* [API documentation](https://help.zscaler.com/zia/data-loss-prevention#/dlpEngines-get)
 
 Use the **zia_dlp_engines** resource allows the creation and management of ZIA DLP Engines in the Zscaler Internet Access cloud or via the API.
 

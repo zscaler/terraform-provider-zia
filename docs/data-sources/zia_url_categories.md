@@ -3,10 +3,15 @@ subcategory: "URL Categories"
 layout: "zscaler"
 page_title: "ZIA: url_categories"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-url-categories
+    API documentation https://help.zscaler.com/zia/url-categories#/urlCategories-get
     Gets information about all or custom URL categories. By default, the response includes keywords.
 ---
 
-# Data Source: zia_url_categories
+# zia_url_categories (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-url-categories)
+* [API documentation](https://help.zscaler.com/zia/url-categories#/urlCategories-get)
 
 Use the **zia_url_categories** data source to get information about all or custom URL categories. By default, the response includes keywords.
 

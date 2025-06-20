@@ -3,10 +3,15 @@ subcategory: "Advanced Settings"
 layout: "zscaler"
 page_title: "ZIA: advanced_threat_settings"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy
+  API documentation https://help.zscaler.com/zia/advanced-threat-protection-policy#/cyberThreatProtection/advancedThreatSettings-put
   Updates the advanced threat configuration settings.
 ---
 
-# Resource: zia_advanced_threat_settings
+# zia_advanced_threat_settings (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy)
+* [API documentation](https://help.zscaler.com/zia/advanced-threat-protection-policy#/)
 
 The **zia_advanced_threat_settings** resource allows you to update the advanced threat configuration settings. To learn more see [Configuring Advanced Settings](https://help.zscaler.com/zia/configuring-advanced-settings)
 

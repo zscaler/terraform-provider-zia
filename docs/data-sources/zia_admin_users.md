@@ -3,10 +3,15 @@ subcategory: "Admin & Role Management"
 layout: "zscaler"
 page_title: "ZIA: admin_users"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-administrators
+  API documentation https://help.zscaler.com/zia/admin-role-management#/adminUsers-get
   Get information about ZIA administrator users.
 ---
 
 # Data Source: zia_admin_users
+
+* [Official documentation](https://help.zscaler.com/zia/about-administrators)
+* [API documentation](https://help.zscaler.com/zia/admin-role-management#/adminUsers-get)
 
 Use the **zia_admin_users** data source to get information about an admin user account created in the Zscaler Internet Access cloud or via the API. This data source can then be associated with a ZIA administrator role.
 

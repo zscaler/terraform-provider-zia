@@ -3,10 +3,15 @@ subcategory: "Advanced Threat Protection"
 layout: "zscaler"
 page_title: "ZIA: atp_malicious_urls"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy
+  API documentation https://help.zscaler.com/zia/advanced-threat-protection-policy#/cyberThreatProtection/advancedThreatSettings-put
   Updates the malicious URLs added to the denylist in ATP policy
 ---
 
-# Resource: zia_atp_malicious_urls
+# zia_atp_malicious_urls (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-advanced-threat-protection-policy)
+* [API documentation](https://help.zscaler.com/zia/advanced-threat-protection-policy#/)
 
 The **zia_atp_malicious_urls** resource alows you to Updates the malicious URLs added to the denylist in ATP policy. To learn more see [Advanced Threat Protection](https://help.zscaler.com/unified/configuring-security-exceptions-advanced-threat-protection-policy)
 

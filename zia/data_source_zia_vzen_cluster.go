@@ -146,10 +146,10 @@ func flattenCommonIDNameExternalID(list []common.IDNameExternalID) []interface{}
 	flattenedList := make([]interface{}, len(list))
 	for i, val := range list {
 		r := map[string]interface{}{
-			"id":          val.ID,
-			"name":        val.Name,
-			"external_id": val.ExternalID,
-			"extensions":  val.Extensions,
+			"id":   val.ID,
+			"name": val.Name,
+			// "external_id": val.ExternalID,
+			// "extensions":  val.Extensions,
 		}
 		flattenedList[i] = r
 	}

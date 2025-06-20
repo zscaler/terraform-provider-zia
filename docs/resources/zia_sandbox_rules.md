@@ -3,10 +3,15 @@ subcategory: "Sandbox Policy & Settings"
 layout: "zscaler"
 page_title: "ZIA: sandbox_rules"
 description: |-
+  Official documentation https://help.zscaler.com/zia/about-sandbox
+  API documentation https://help.zscaler.com/zia/sandbox-policy-settings#/sandboxRules-get
   Creates and manages Sandbox Rules.
 ---
 
-# Resource: zia_sandbox_rules
+# zia_sandbox_rules (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/about-sandbox)
+* [API documentation](https://help.zscaler.com/zia/sandbox-policy-settings#/sandboxRules-get)
 
 The **zia_sandbox_rules** resource allows the creation and management of SAndbox rules in the Zscaler Internet Access.
 

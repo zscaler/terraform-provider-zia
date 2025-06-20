@@ -3,10 +3,15 @@ subcategory: "Cloud Applications"
 layout: "zscaler"
 page_title: "ZIA: cloud_applications"
 description: |-
+  Official documentation https://help.zscaler.com/zia/cloud-applications#/cloudApplications/sslPolicy-get
+  API documentation https://help.zscaler.com/zia/cloud-applications#/cloudApplications/sslPolicy-get
   Retrieves a list of Predefined and User Defined Cloud Applications associated with the DLP rules, Cloud App Control rules, Advanced Settings, Bandwidth Classes, File Type Control and SSL Inspection rules.
 ---
 
-# Data Source: zia_cloud_applications
+# zia_cloud_applications (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/cloud-applications#/cloudApplications/sslPolicy-get)
+* [API documentation](https://help.zscaler.com/zia/cloud-applications#/cloudApplications/sslPolicy-get)
 
 Use the **zia_cloud_applications** data source to Retrieves a list of Predefined and User Defined Cloud Applications associated with the DLP rules, Cloud App Control rules, Advanced Settings, Bandwidth Classes, File Type Control and SSL Inspection rules. The returned information can be associated with the attribute `cloud_applications` on supported rules.
 

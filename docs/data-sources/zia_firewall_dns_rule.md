@@ -3,10 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA): firewall_dns_rule"
 description: |-
+  Official documentation https://help.zscaler.com/zia/configuring-dns-control-policy
+  API documentation https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post
   Get information about firewall DNS Control policy rule.
-
 ---
-# Data Source: zia_firewall_dns_rule
+
+# zia_firewall_dns_rule (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/configuring-dns-control-policy)
+* [API documentation](https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post)
 
 Use the **zia_firewall_dns_rule** data source to get information about a cloud firewall DNS rule available in the Zscaler Internet Access.
 

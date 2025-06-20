@@ -3,11 +3,15 @@ subcategory: "Firewall Policies"
 layout: "zscaler"
 page_title: "ZIA: firewall_filtering_network_service"
 description: |-
-    Get information about firewall rule network services.
-
+  Official documentation https://help.zscaler.com/zia/firewall-policies#/networkServices-get
+  API documentation https://help.zscaler.com/zia/firewall-policies#/networkServices-get
+  Get information about firewall rule network services.
 ---
 
-# Data Source: zia_firewall_filtering_network_service
+# zia_firewall_filtering_network_service (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/firewall-policies#/networkServices-get)
+* [API documentation](https://help.zscaler.com/zia/firewall-policies#/networkServices-get)
 
 The **zia_firewall_filtering_network_service** data source to get information about a network service available in the Zscaler Internet Access cloud firewall. This data source can then be associated with a ZIA firewall filtering network service rule.
 

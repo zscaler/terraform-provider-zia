@@ -6,7 +6,7 @@ description: |-
   Retrieves information about the security exceptions configured for the ATP policy
 ---
 
-# Data Source: zia_atp_security_exceptions
+# zia_atp_security_exceptions (Data Source)
 
 Use the **zia_atp_security_exceptions** data source to retrieve information about the security exceptions configured for the ATP policy. To learn more see [Advanced Threat Protection](https://help.zscaler.com/unified/configuring-security-exceptions-advanced-threat-protection-policy)
 

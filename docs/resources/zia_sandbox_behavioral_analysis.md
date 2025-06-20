@@ -3,10 +3,15 @@ subcategory: "Sandbox Policy & Settings"
 layout: "zscaler"
 page_title: "ZIA: sandbox_behavioral_analysis"
 description: |-
+  Official documentation https://help.zscaler.com/zia/sandbox-policy-settings#/behavioralAnalysisAdvancedSettings-get
+  API documentation https://help.zscaler.com/zia/sandbox-policy-settings#/behavioralAnalysisAdvancedSettings-get
   Updates the custom list of MD5 file hashes that are blocked by Sandbox.
 ---
 
-# Resource: zia_sandbox_behavioral_analysis
+# zia_sandbox_behavioral_analysis (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/sandbox-policy-settings#/behavioralAnalysisAdvancedSettings-get)
+* [API documentation](https://help.zscaler.com/zia/sandbox-policy-settings#/behavioralAnalysisAdvancedSettings-get)
 
 The **zia_sandbox_behavioral_analysis** resource updates the custom list of MD5 file hashes that are blocked by Sandbox. This overwrites a previously generated blocklist. If you need to completely erase the blocklist, submit an empty list.
 

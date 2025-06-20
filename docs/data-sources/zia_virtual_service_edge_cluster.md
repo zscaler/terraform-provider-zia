@@ -3,9 +3,15 @@ subcategory: "Service Edge Cluster"
 layout: "zscaler"
 page_title: "ZIA: virtual_service_edge_cluster"
 description: |-
+    Official documentation https://help.zscaler.com/zia/about-virtual-service-edge-clusters
+    API documentation https://help.zscaler.com/zia/service-edges#/virtualZenClusters-get
    Retrieves a list of ZIA Virtual Service Edge clusters.
 ---
-# Data Source: zia_virtual_service_edge_cluster
+
+# zia_virtual_service_edge_cluster (Data Source)
+
+* [Official documentation](https://help.zscaler.com/zia/about-virtual-service-edge-clusters)
+* [API documentation](https://help.zscaler.com/zia/service-edges#/virtualZenClusters-get)
 
 Use the **zia_virtual_service_edge_cluster** data source to get information about a Virtual Service Edge Cluster information for the specified `Name` or `ID`
 

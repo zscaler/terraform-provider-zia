@@ -3,10 +3,15 @@ subcategory: "Activation"
 layout: "zscaler"
 page_title: "ZIA: activation_status"
 description: |-
-  "Activates configuration changes".
+  Official documentation https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal
+  API documentation https://help.zscaler.com/zia/activation#/status-get
+  Activates configuration changes
 ---
 
-# Resource: zia_activation_status
+# zia_activation_status (Resource)
+
+* [Official documentation](https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal)
+* [API documentation](https://help.zscaler.com/zia/activation#/status-get)
 
 The **zia_activation_status** resource allows the activation of ZIA pending configurations. This resource must always be executed after the resource creation for successfully policy/configuration activation to occur.
 
