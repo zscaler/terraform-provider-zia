@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
-	"regexp"
 	"sort"
 	"strings"
 
@@ -2208,6 +2206,7 @@ func validatePredefinedIdentifier(val interface{}, key string) (warns []string, 
 	return
 }
 
+/*
 func validateDestAddress(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -2265,6 +2264,7 @@ func validateDestAddress(v interface{}, k string) (ws []string, errors []error) 
 	errors = append(errors, fmt.Errorf("invalid address: %s. Must be a valid IPv4 address, IPv4 CIDR, IPv4 range, FQDN, or wildcard FQDN", value))
 	return
 }
+*/
 
 func validateSSLInspectionPlatforms() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {

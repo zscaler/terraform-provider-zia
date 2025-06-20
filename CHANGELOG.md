@@ -29,6 +29,7 @@
 ### Bug Fixes
 
 - [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Added validation to ``zia_dlp_web_rules`` to prevent conflict between attributes: `auditor`, `external_auditor_email` and `notification_template`
+- [PR #444](https://github.com/zscaler/terraform-provider-zia/pull/444) - Removed validation function `validateDestAddress` for the attribute `dest_addresses` to support both IPv4 Addresses and Wildcard FQDN.
 
 ## 4.2.0 (June, 11 2025)
 
