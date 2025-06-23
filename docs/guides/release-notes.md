@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.3.0``
+``Last updated: v4.3.1``
 
 ---
+
+## 4.3.1 (June, 23 2025)
+
+### Notes
+
+- Release date: **(June, 19 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #446](https://github.com/zscaler/terraform-provider-zia/pull/446) - Upgraded to [Zscaler-SDK-GO v3.5.1](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.5.1) to fix api error message parsing issues via legacy client.
 
 ## 4.3.0 (June, 19 2025)
 
