@@ -18,23 +18,23 @@ func dataSourceSubscriptionAlerts() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Optional:    true,
-				Description: "The unique identifier for the nss server",
+				Description: "System-generated identifier for the alert subscription",
 			},
 			"email": {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Optional:    true,
-				Description: "The NSS server name",
+				Description: "The email address of the alert recipient",
 			},
 			"description": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "Enables or disables the status of the NSS server",
+				Description: "Additional comments or information about the alert subscription",
 			},
 			"deleted": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "The health of the NSS server",
+				Description: "Deletes an existing alert subscription",
 			},
 			"pt0_severities": {
 				Type:        schema.TypeSet,
@@ -77,7 +77,7 @@ func dataSourceSubscriptionAlertsRead(ctx context.Context, d *schema.ResourceDat
 	var resp *alerts.AlertSubscriptions
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting data for NSS Server id: %d\n", id)
+		log.Printf("[INFO] Getting data for Subscription Alert id: %d\n", id)
 		res, err := alerts.Get(ctx, service, id)
 		if err != nil {
 			return diag.FromErr(err)
@@ -87,7 +87,7 @@ func dataSourceSubscriptionAlertsRead(ctx context.Context, d *schema.ResourceDat
 
 	email, _ := d.Get("email").(string)
 	if resp == nil && email != "" {
-		log.Printf("[INFO] Getting data for NSS Server with email: %s\n", email)
+		log.Printf("[INFO] Getting data for Subscription Alert with email: %s\n", email)
 		alertList, err := alerts.GetAll(ctx, service)
 		if err != nil {
 			return diag.FromErr(err)
@@ -111,7 +111,7 @@ func dataSourceSubscriptionAlertsRead(ctx context.Context, d *schema.ResourceDat
 		_ = d.Set("comply_severities", resp.ComplySeverities)
 		_ = d.Set("system_severities", resp.SystemSeverities)
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any NSS Server with email '%s' or id '%d'", email, id))
+		return diag.FromErr(fmt.Errorf("couldn't find any Subscription Alert with email '%s' or id '%d'", email, id))
 	}
 
 	return nil
