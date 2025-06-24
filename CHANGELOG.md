@@ -1,10 +1,21 @@
 # Changelog
 
+## 4.3.2 (June, 23 2025)
+
+### Notes
+
+- Release date: **(June, 23 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #446](https://github.com/zscaler/terraform-provider-zia/pull/446) - Fixed `zia_dlp_web_rules` customizeDiff validation for attributes `external_auditor_email`, `auditor` and `notification_template`. Resoruce now allows for rule configuration when these attributes not not set.
+
 ## 4.3.1 (June, 23 2025)
 
 ### Notes
 
-- Release date: **(June, 19 2025)**
+- Release date: **(June, 23 2025)**
 - Supported Terraform version: **v1.x**
 
 ### Bug Fixes

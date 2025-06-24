@@ -33,51 +33,33 @@ func resourceDlpWebRules() *schema.Resource {
 			auditorRaw, auditorSet := d.GetOk("auditor")
 			nt, ntSet := d.GetOk("notification_template")
 
-			isAuditorSet := auditorSet && auditorRaw != ""
 			isExternalSet := emailSet && externalEmail != ""
+			isAuditorSet := auditorSet && auditorRaw != ""
 			isNTSet := ntSet && nt != ""
 
-			// Rule 1
-			if isExternalSet && !isNTSet {
-				return fmt.Errorf("when setting 'external_auditor_email', 'notification_template' must also be set")
-			}
-
-			// Rule 2
-			if !isExternalSet && (!isAuditorSet || !isNTSet) {
-				return fmt.Errorf("when 'external_auditor_email' is not set, both 'auditor' and 'notification_template' must be set")
-			}
-
-			// Rule 3
+			// Rule 3: Mutually exclusive
 			if isExternalSet && isAuditorSet {
-				return fmt.Errorf("'external_auditor_email' and 'auditor' cannot be set at the same time")
+				return fmt.Errorf("'external_auditor_email' and 'auditor' cannot both be set")
 			}
 
+			// Rule 1: If external_auditor_email is set, notification_template must be set
+			if isExternalSet {
+				if !isNTSet {
+					return fmt.Errorf("when setting 'external_auditor_email', 'notification_template' must also be set")
+				}
+				return nil // valid as long as no conflict and notification_template is present
+			}
+
+			// Rule 2: If external_auditor_email is not set, both auditor and notification_template must be set (or neither)
+			if isAuditorSet || isNTSet {
+				if !isAuditorSet || !isNTSet {
+					return fmt.Errorf("when 'external_auditor_email' is not set, both 'auditor' and 'notification_template' must be set")
+				}
+			}
+
+			// Rule 4: If none are set, it's valid
 			return nil
 		},
-
-		// CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		// 	externalEmail, emailSet := d.GetOk("external_auditor_email")
-		// 	auditor, auditorSet := d.GetOk("auditor")
-		// 	nt, ntSet := d.GetOk("notification_template")
-		// 	isNTSet := ntSet && nt != ""
-
-		// 	// Rule 1: If external_auditor_email is set, notification_template is required
-		// 	if emailSet && externalEmail != "" && !isNTSet {
-		// 		return fmt.Errorf("when setting 'external_auditor_email', 'notification_template' must also be set")
-		// 	}
-
-		// 	// Rule 2: If external_auditor_email is not set, both auditor and notification_template must be set
-		// 	if (!emailSet || externalEmail == "") && (!auditorSet || auditor == "" || !isNTSet) {
-		// 		return fmt.Errorf("when 'external_auditor_email' is not set, both 'auditor' and 'notification_template' must be set")
-		// 	}
-
-		// 	// Rule 3: external_auditor_email and auditor cannot be set together
-		// 	if emailSet && externalEmail != "" && auditorSet && auditor != "" {
-		// 		return fmt.Errorf("'external_auditor_email' and 'auditor' cannot be set at the same time")
-		// 	}
-
-		// 	return nil
-		// },
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
