@@ -285,8 +285,10 @@ func isSingleDigitDay(timeStr string) bool {
 	return len(day) == 1
 }
 
-// Global semaphore for controlling concurrent API requests
-var apiSemaphore = make(chan struct{}, 1) // Default to 1, meaning only 1 API request at a time
+// Global semaphore for controlling concurrent API requests. The size of this
+// semaphore is configured during provider setup based on the `parallelism`
+// configuration option.
+var apiSemaphore chan struct{}
 
 // Helper function to process countries
 func processCountries(countries []string) []string {

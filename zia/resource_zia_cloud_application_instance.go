@@ -149,7 +149,7 @@ func resourceCloudApplicationInstanceRead(ctx context.Context, d *schema.Resourc
 	log.Printf("[INFO] Getting zia cloud application instances:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.InstanceID))
-	_ = d.Set("instance_name", resp.InstanceName)
+	_ = d.Set("name", resp.InstanceName)
 	_ = d.Set("instance_type", resp.InstanceType)
 
 	if err := d.Set("instance_identifiers", flattenInstanceIdentifiersSimple(resp.InstanceIdentifiers)); err != nil {
