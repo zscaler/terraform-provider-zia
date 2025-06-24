@@ -214,14 +214,14 @@ func contains(slice []string, element string) bool {
 }
 
 // Helper function to trigger configuration activation
-func triggerActivation(zClient *Client) error {
+func triggerActivation(ctx context.Context, zClient *Client) error {
 	service := zClient.Service
 
 	// Assuming the activation request doesn't need specific details from the rule labels
 	req := activation.Activation{Status: "ACTIVE"}
 	log.Printf("[INFO] Triggering configuration activation\n%+v\n", req)
 
-	_, err := activation.CreateActivation(context.Background(), service, req)
+	_, err := activation.CreateActivation(ctx, service, req)
 	if err != nil {
 		return err
 	}

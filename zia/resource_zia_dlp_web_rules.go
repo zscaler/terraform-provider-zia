@@ -243,27 +243,27 @@ func resourceDlpWebRules() *schema.Resource {
 			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule.",
+				Description: "Indicates whether a Zscaler Incident Receiver is associated to the DLP policy rule",
 			},
-			"locations":                setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of locations to which the DLP policy rule must be applied."),
-			"location_groups":          setIDsSchemaTypeCustom(intPtr(32), "The Name-ID pairs of locations groups to which the DLP policy rule must be applied."),
-			"users":                    setIDsSchemaTypeCustom(intPtr(4), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"groups":                   setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of groups to which the DLP policy rule must be applied."),
-			"departments":              setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of departments to which the DLP policy rule must be applied."),
-			"excluded_departments":     setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"excluded_users":           setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"excluded_groups":          setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"included_domain_profiles": setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
-			"excluded_domain_profiles": setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users to which the DLP policy rule must be applied."),
+			"locations":                setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of locations to which the DLP policy rule must be applied"),
+			"location_groups":          setIDsSchemaTypeCustom(intPtr(32), "The Name-ID pairs of locations groups to which the DLP policy rule must be applied"),
+			"users":                    setIDsSchemaTypeCustom(intPtr(4), "The Name-ID pairs of users to which the DLP policy rule must be applied"),
+			"groups":                   setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of groups to which the DLP policy rule must be applied"),
+			"departments":              setIDsSchemaTypeCustom(intPtr(8), "The Name-ID pairs of departments to which the DLP policy rule must be applied"),
+			"excluded_departments":     setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of departments which the DLP policy rule must exclude"),
+			"excluded_users":           setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of users which the DLP policy rule must exclude"),
+			"excluded_groups":          setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of groups which the DLP policy rule must exclude"),
+			"included_domain_profiles": setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of domain profiiles which the DLP policy rule must include"),
+			"excluded_domain_profiles": setIDsSchemaTypeCustom(intPtr(256), "The Name-ID pairs of domain profiles to which the DLP policy rule must exclude"),
 			"workload_groups":          setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
-			"dlp_engines":              setIDsSchemaTypeCustom(intPtr(4), "The list of DLP engines to which the DLP policy rule must be applied."),
-			"time_windows":             setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced."),
-			"labels":                   setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"dlp_engines":              setIDsSchemaTypeCustom(intPtr(4), "The list of DLP engines to which the DLP policy rule must be applied"),
+			"time_windows":             setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced"),
+			"labels":                   setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule"),
 			"source_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			"url_categories":           setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied."),
-			"auditor":                  setSingleIDSchemaTypeCustom("The auditor to which the DLP policy rule must be applied."),
-			"notification_template":    setSingleIDSchemaTypeCustom("The template used for DLP notification emails."),
-			"icap_server":              setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded."),
+			"url_categories":           setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied"),
+			"auditor":                  setSingleIDSchemaTypeCustom("The auditor to which the DLP policy rule must be applied"),
+			"notification_template":    setSingleIDSchemaTypeCustom("The template used for DLP notification emails"),
+			"icap_server":              setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded"),
 		},
 	}
 }
@@ -407,7 +407,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 	time.Sleep(2 * time.Second)
 
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -661,7 +661,7 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -716,9 +716,9 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		DLPEngines:               expandIDNameExtensionsSet(d, "dlp_engines"),
 		TimeWindows:              expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:                   expandIDNameExtensionsSet(d, "labels"),
-		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_groups"),
-		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_departments"),
-		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_users"),
+		ExcludedUsers:            expandIDNameExtensionsSet(d, "excluded_users"),
+		ExcludedGroups:           expandIDNameExtensionsSet(d, "excluded_groups"),
+		ExcludedDepartments:      expandIDNameExtensionsSet(d, "excluded_departments"),
 		SourceIpGroups:           expandIDNameExtensionsSet(d, "source_ip_groups"),
 		IncludedDomainProfiles:   expandIDNameExtensionsSet(d, "included_domain_profiles"),
 		ExcludedDomainProfiles:   expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
