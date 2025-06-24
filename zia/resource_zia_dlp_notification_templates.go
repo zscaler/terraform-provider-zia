@@ -112,11 +112,10 @@ func resourceDLPNotificationTemplatesCreate(ctx context.Context, d *schema.Resou
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("template_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -180,11 +179,10 @@ func resourceDLPNotificationTemplatesUpdate(ctx context.Context, d *schema.Resou
 	if _, _, err := dlp_notification_templates.Update(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -210,11 +208,10 @@ func resourceDLPNotificationTemplatesDelete(ctx context.Context, d *schema.Resou
 	}
 	d.SetId("")
 	log.Printf("[INFO] dlp notification template deleted")
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}

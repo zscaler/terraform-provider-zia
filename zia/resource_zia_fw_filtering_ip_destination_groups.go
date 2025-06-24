@@ -119,11 +119,10 @@ func resourceFWIPDestinationGroupsCreate(ctx context.Context, d *schema.Resource
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("group_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -198,11 +197,10 @@ func resourceFWIPDestinationGroupsUpdate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -223,6 +221,7 @@ func resourceFWIPDestinationGroupsDelete(ctx context.Context, d *schema.Resource
 	}
 	log.Printf("[INFO] Deleting zia ip destination groups ID: %v\n", (d.Id()))
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"DestIpGroups",
@@ -241,11 +240,10 @@ func resourceFWIPDestinationGroupsDelete(ctx context.Context, d *schema.Resource
 	}
 	d.SetId("")
 	log.Printf("[INFO] zia ip destination groups deleted")
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}

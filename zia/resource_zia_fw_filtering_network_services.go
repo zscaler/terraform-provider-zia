@@ -101,11 +101,10 @@ func resourceNetworkServicesCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("network_service_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -182,11 +181,10 @@ func resourceNetworkServicesUpdate(ctx context.Context, d *schema.ResourceData, 
 	if _, _, err := networkservices.Update(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -207,6 +205,7 @@ func resourceNetworkServicesDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 	log.Printf("[INFO] Deleting network service ID: %v\n", (d.Id()))
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"NwServices",
@@ -226,11 +225,10 @@ func resourceNetworkServicesDelete(ctx context.Context, d *schema.ResourceData, 
 	d.SetId("")
 	log.Printf("[INFO] network service deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}

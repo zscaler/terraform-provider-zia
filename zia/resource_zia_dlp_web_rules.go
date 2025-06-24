@@ -656,11 +656,10 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId("")
 	log.Printf("[INFO] web dlp rule deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}

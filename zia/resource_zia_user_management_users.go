@@ -291,6 +291,7 @@ func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting user ID: %v\n", id)
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"Users",

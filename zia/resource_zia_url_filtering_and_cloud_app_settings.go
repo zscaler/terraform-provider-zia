@@ -164,11 +164,10 @@ func resourceURLFilteringCloludAppSettingsCreate(ctx context.Context, d *schema.
 	}
 	d.SetId("app_setting")
 
-	// Sleep for 1 seconds before potentially triggering the activation
-	time.Sleep(1 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
+		// Sleep for 1 seconds before potentially triggering the activation
+		time.Sleep(1 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
