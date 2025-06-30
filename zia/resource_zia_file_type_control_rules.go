@@ -521,6 +521,7 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		DeviceTrustLevels: SetToStringList(d, "device_trust_levels"),
 		Protocols:         SetToStringList(d, "protocols"),
 		FileTypes:         SetToStringList(d, "file_types"),
+		URLCategories:     SetToStringList(d, "url_categories"),
 		CloudApplications: SetToStringList(d, "cloud_applications"),
 		DeviceGroups:      expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:           expandIDNameExtensionsSet(d, "devices"),
