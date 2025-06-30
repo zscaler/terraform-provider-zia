@@ -15,9 +15,6 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
-// TODO: NEEDS FIXING BY ENGINEERING: "{"code":"RBA_LIMITED","message":"Functional scope restriction requires PROXY_GATEWAY"}"
-// ONEAPI-915 - ZIA API Tests – Results (RBA_LIMITED) and Other Errors
-
 func TestAccResourceForwardingControlRule_Basic(t *testing.T) {
 	var rules forwarding_rules.ForwardingRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ForwardingControlRule)

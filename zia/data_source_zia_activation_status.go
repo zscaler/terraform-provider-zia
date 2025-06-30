@@ -27,7 +27,7 @@ func dataSourceActivationStatusRead(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := activation.GetActivationStatus(ctx, service)
 	if err != nil {
-		return nil
+		return diag.FromErr(err)
 	}
 
 	if resp != nil {

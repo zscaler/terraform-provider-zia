@@ -175,7 +175,7 @@ func resourceTrafficForwardingGRETunnelCreate(ctx context.Context, d *schema.Res
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.Errorf("error triggering activation: %v", activationErr)
 		}
 	} else {
@@ -301,12 +301,11 @@ func resourceTrafficForwardingGRETunnelUpdate(ctx context.Context, d *schema.Res
 	if _, _, err := gretunnels.UpdateGreTunnels(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -331,12 +330,11 @@ func resourceTrafficForwardingGRETunnelDelete(ctx context.Context, d *schema.Res
 	}
 	d.SetId("")
 	log.Printf("[INFO] gre tunnel deleted")
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

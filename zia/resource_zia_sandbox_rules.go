@@ -237,12 +237,11 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -394,12 +393,11 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -425,12 +423,11 @@ func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, met
 	d.SetId("")
 	log.Printf("[INFO] sandbox rules deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

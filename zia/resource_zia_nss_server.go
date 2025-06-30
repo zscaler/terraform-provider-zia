@@ -105,7 +105,7 @@ func resourceNSSServerCreate(ctx context.Context, d *schema.ResourceData, meta i
 	time.Sleep(2 * time.Second)
 
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -169,7 +169,7 @@ func resourceNSSServerUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	time.Sleep(2 * time.Second)
 
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -198,7 +198,7 @@ func resourceNSSServerDelete(ctx context.Context, d *schema.ResourceData, meta i
 	time.Sleep(2 * time.Second)
 
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

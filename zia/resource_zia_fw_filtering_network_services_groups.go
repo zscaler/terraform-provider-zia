@@ -99,12 +99,11 @@ func resourceFWNetworkServiceGroupsCreate(ctx context.Context, d *schema.Resourc
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("group_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -178,12 +177,11 @@ func resourceFWNetworkServiceGroupsUpdate(ctx context.Context, d *schema.Resourc
 	if _, _, err := networkservicegroups.UpdateNetworkServiceGroups(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -203,6 +201,7 @@ func resourceFWNetworkServiceGroupsDelete(ctx context.Context, d *schema.Resourc
 	}
 	log.Printf("[INFO] Deleting network service groups ID: %v\n", (d.Id()))
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"NwApplicationGroups",
@@ -222,12 +221,11 @@ func resourceFWNetworkServiceGroupsDelete(ctx context.Context, d *schema.Resourc
 	d.SetId("")
 	log.Printf("[INFO] network service groups deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

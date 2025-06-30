@@ -370,12 +370,11 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -582,12 +581,11 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -617,12 +615,11 @@ func resourceCasbDlpRulesDelete(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId("")
 	log.Printf("[INFO] cloud application control rule deleted")
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

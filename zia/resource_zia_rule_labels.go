@@ -86,12 +86,11 @@ func resourceRuleLabelsCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("rule_label_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -150,12 +149,11 @@ func resourceRuleLabelsUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -175,6 +173,7 @@ func resourceRuleLabelsDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	log.Printf("[INFO] Deleting zia rule label ID: %v\n", (d.Id()))
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"Labels",
@@ -194,12 +193,11 @@ func resourceRuleLabelsDelete(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId("")
 	log.Printf("[INFO] zia rule label deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

@@ -304,6 +304,13 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		return nil, diag.Errorf("failed to configure Zscaler client: %v", err)
 	}
 
+	// Initialize the global semaphore based on the configured parallelism
+	if config.parallelism > 0 {
+		apiSemaphore = make(chan struct{}, config.parallelism)
+	} else {
+		apiSemaphore = make(chan struct{}, 1)
+	}
+
 	return client, nil
 }
 

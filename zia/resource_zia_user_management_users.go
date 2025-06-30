@@ -149,8 +149,12 @@ func resourceUserManagementCreate(ctx context.Context, d *schema.ResourceData, m
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return diag.FromErr(activationErr)
+	if shouldActivate() {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	log.Printf("[INFO] Created zia user request. ID: %v\n", resp)
@@ -170,8 +174,12 @@ func resourceUserManagementCreate(ctx context.Context, d *schema.ResourceData, m
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return diag.FromErr(activationErr)
+	if shouldActivate() {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 	return resourceUserManagementRead(ctx, d, meta)
 }
@@ -238,8 +246,12 @@ func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, m
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return diag.FromErr(activationErr)
+	if shouldActivate() {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	authMethods := SetToStringList(d, "auth_methods")
@@ -257,8 +269,12 @@ func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, m
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return diag.FromErr(activationErr)
+	if shouldActivate() {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return resourceUserManagementRead(ctx, d, meta)
@@ -275,6 +291,7 @@ func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting user ID: %v\n", id)
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"Users",
@@ -299,8 +316,12 @@ func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, m
 	time.Sleep(5 * time.Second)
 
 	// Trigger activation after creating the rule label
-	if activationErr := triggerActivation(zClient); activationErr != nil {
-		return diag.FromErr(activationErr)
+	if shouldActivate() {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
 	return nil

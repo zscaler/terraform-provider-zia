@@ -308,12 +308,11 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -539,7 +538,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	time.Sleep(2 * time.Second)
 
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -577,12 +576,11 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 	d.SetId("")
 	log.Printf("[INFO] firewall filtering rule deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

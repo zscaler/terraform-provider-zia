@@ -90,11 +90,11 @@ func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool
 }
 
 // avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
-func DetachRuleIDNameExtensions(client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
+func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
 	service := client.Service
 
 	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
-	rules, err := filteringrules.GetAll(context.Background(), service)
+	rules, err := filteringrules.GetAll(ctx, service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -113,9 +113,9 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = filteringrules.Get(context.Background(), service, rule.ID)
+			_, err = filteringrules.Get(ctx, service, rule.ID)
 			if err == nil {
-				_, err = filteringrules.Update(context.Background(), service, rule.ID, &rule)
+				_, err = filteringrules.Update(ctx, service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -125,11 +125,11 @@ func DetachRuleIDNameExtensions(client *Client, id int, resource string, getReso
 	return nil
 }
 
-func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
+func DetachDLPEngineIDNameExtensions(ctx context.Context, client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
 	service := client.Service
 
 	log.Printf("[INFO] Detaching dlp engine from %s: %d\n", resource, id)
-	rules, err := dlp_web_rules.GetAll(context.Background(), service)
+	rules, err := dlp_web_rules.GetAll(ctx, service)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err
@@ -148,9 +148,9 @@ func DetachDLPEngineIDNameExtensions(client *Client, id int, resource string, ge
 		if shouldUpdate {
 			setResources(&rule, ids)
 			time.Sleep(time.Second * 5)
-			_, err = dlp_web_rules.Get(context.Background(), service, rule.ID)
+			_, err = dlp_web_rules.Get(ctx, service, rule.ID)
 			if err == nil {
-				_, err = dlp_web_rules.Update(context.Background(), service, rule.ID, &rule)
+				_, err = dlp_web_rules.Update(ctx, service, rule.ID, &rule)
 				if err != nil {
 					return err
 				}
@@ -214,14 +214,14 @@ func contains(slice []string, element string) bool {
 }
 
 // Helper function to trigger configuration activation
-func triggerActivation(zClient *Client) error {
+func triggerActivation(ctx context.Context, zClient *Client) error {
 	service := zClient.Service
 
 	// Assuming the activation request doesn't need specific details from the rule labels
 	req := activation.Activation{Status: "ACTIVE"}
 	log.Printf("[INFO] Triggering configuration activation\n%+v\n", req)
 
-	_, err := activation.CreateActivation(context.Background(), service, req)
+	_, err := activation.CreateActivation(ctx, service, req)
 	if err != nil {
 		return err
 	}
@@ -285,29 +285,10 @@ func isSingleDigitDay(timeStr string) bool {
 	return len(day) == 1
 }
 
-// Global semaphore for controlling concurrent API requests
-var apiSemaphore = make(chan struct{}, 1) // Default to 1, meaning only 1 API request at a time
-
-// SetSemaphoreSize allows adjusting the size of the semaphore globally
-func SetSemaphoreSize(size int) {
-	apiSemaphore = make(chan struct{}, size)
-}
-
-// WithSemaphore handles acquiring and releasing a semaphore around an API call.
-func WithSemaphore(apiCall func() error) error {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
-	// Execute the actual API call
-	err := apiCall()
-	if err != nil {
-		log.Printf("[ERROR] API call failed: %v", err)
-		return err
-	}
-
-	return nil
-}
+// Global semaphore for controlling concurrent API requests. The size of this
+// semaphore is configured during provider setup based on the `parallelism`
+// configuration option.
+var apiSemaphore chan struct{}
 
 // Helper function to process countries
 func processCountries(countries []string) []string {

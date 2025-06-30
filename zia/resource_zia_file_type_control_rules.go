@@ -289,12 +289,11 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -340,7 +339,11 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
-	_ = d.Set("url_categories", resp.URLCategories)
+	if len(resp.URLCategories) == 0 {
+		_ = d.Set("url_categories", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories", resp.URLCategories)
+	}
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("max_size", resp.MaxSize)
 	_ = d.Set("min_size", resp.MinSize)
@@ -451,12 +454,11 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		break
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -482,12 +484,11 @@ func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceD
 	d.SetId("")
 	log.Printf("[INFO] file type control rule deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -524,6 +525,7 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		DeviceTrustLevels: SetToStringList(d, "device_trust_levels"),
 		Protocols:         SetToStringList(d, "protocols"),
 		FileTypes:         SetToStringList(d, "file_types"),
+		URLCategories:     SetToStringList(d, "url_categories"),
 		CloudApplications: SetToStringList(d, "cloud_applications"),
 		DeviceGroups:      expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:           expandIDNameExtensionsSet(d, "devices"),

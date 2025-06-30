@@ -113,12 +113,11 @@ func resourceCloudApplicationInstanceCreate(ctx context.Context, d *schema.Resou
 	d.SetId(strconv.Itoa(resp.InstanceID))
 	_ = d.Set("instance_id", resp.InstanceID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -150,7 +149,7 @@ func resourceCloudApplicationInstanceRead(ctx context.Context, d *schema.Resourc
 	log.Printf("[INFO] Getting zia cloud application instances:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.InstanceID))
-	_ = d.Set("instance_name", resp.InstanceName)
+	_ = d.Set("name", resp.InstanceName)
 	_ = d.Set("instance_type", resp.InstanceType)
 
 	if err := d.Set("instance_identifiers", flattenInstanceIdentifiersSimple(resp.InstanceIdentifiers)); err != nil {
@@ -180,12 +179,11 @@ func resourceCloudApplicationInstanceUpdate(ctx context.Context, d *schema.Resou
 		return diag.FromErr(err)
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -211,12 +209,11 @@ func resourceCloudApplicationInstanceDelete(ctx context.Context, d *schema.Resou
 	d.SetId("")
 	log.Printf("[INFO] zia cloud application instance deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {

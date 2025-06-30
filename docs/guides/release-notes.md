@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.3.2``
+``Last updated: v4.3.3``
 
 ---
+
+## 4.3.3 (June, 30 2025)
+
+### Notes
+
+- Release date: **(June, 30 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #449](https://github.com/zscaler/terraform-provider-zia/pull/449) - Fixed attribute `url_categories` in `zia_file_type_control_rules` expanding function.
 
 ## 4.3.2 (June, 23 2025)
 

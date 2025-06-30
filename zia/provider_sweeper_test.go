@@ -77,7 +77,7 @@ func TestRunForcedSweeper(t *testing.T) {
 
 	provider := ZIAProvider()
 	c := terraform.NewResourceConfigRaw(nil)
-	diag := provider.Configure(context.TODO(), c)
+	diag := provider.Configure(context.Background(), c)
 	if diag.HasError() {
 		t.Skipf("sweeper's provider configuration failed: %v", diag)
 		return

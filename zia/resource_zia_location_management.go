@@ -408,12 +408,11 @@ func resourceLocationManagementCreate(ctx context.Context, d *schema.ResourceDat
 	d.SetId(strconv.Itoa(resp.ID))
 	_ = d.Set("location_id", resp.ID)
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -578,12 +577,11 @@ func resourceLocationManagementUpdate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
@@ -603,6 +601,7 @@ func resourceLocationManagementDelete(ctx context.Context, d *schema.ResourceDat
 	}
 	log.Printf("[INFO] Deleting location management ID: %v\n", (d.Id()))
 	err := DetachRuleIDNameExtensions(
+		ctx,
 		zClient,
 		id,
 		"Users",
@@ -622,12 +621,11 @@ func resourceLocationManagementDelete(ctx context.Context, d *schema.ResourceDat
 	d.SetId("")
 	log.Printf("[INFO] location deleted")
 
-	// Sleep for 2 seconds before potentially triggering the activation
-	time.Sleep(2 * time.Second)
-
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
-		if activationErr := triggerActivation(zClient); activationErr != nil {
+		// Sleep for 2 seconds before potentially triggering the activation
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
 	} else {
