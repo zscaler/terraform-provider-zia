@@ -172,7 +172,22 @@ func resourceCloudAppControlRules() *schema.Resource {
 			"cascading_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "nforce the URL Filtering policy on a transaction, even after it is explicitly allowed by the Cloud App Control policy.",
+				Description: "Enforce the URL Filtering policy on a transaction, even after it is explicitly allowed by the Cloud App Control policy.",
+			},
+			"eun_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "",
+			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "",
+			},
+			"browser_eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "",
 			},
 			"cbi_profile": {
 				Type:     schema.TypeList,
@@ -340,6 +355,9 @@ func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("type", resp.Type)
 	_ = d.Set("cascading_enabled", resp.CascadingEnabled)
+	_ = d.Set("eun_enabled", resp.EunEnabled)
+	_ = d.Set("eun_template_id", resp.EunTemplateID)
+	_ = d.Set("browser_eun_template_id", resp.BrowserEunTemplateID)
 	_ = d.Set("applications", resp.Applications)
 	_ = d.Set("validity_time_zone_id", resp.ValidityTimeZoneID)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
@@ -426,7 +444,7 @@ func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_windows", flattenIDs(resp.TimeWindows)); err != nil {
+	if err := d.Set("time_windows", flattenIDExtensionsListIDs(resp.TimeWindows)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -605,38 +623,41 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 	}
 
 	result := cloudappcontrol.WebApplicationRules{
-		ID:                  id,
-		Name:                d.Get("name").(string),
-		Description:         d.Get("description").(string),
-		Type:                d.Get("type").(string),
-		Order:               order,
-		State:               d.Get("state").(string),
-		Rank:                d.Get("rank").(int),
-		TimeQuota:           d.Get("time_quota").(int),
-		SizeQuota:           sizeQuotaKB,
-		ValidityStartTime:   validityStartTime,
-		ValidityEndTime:     validityEndTime,
-		ValidityTimeZoneID:  d.Get("validity_time_zone_id").(string),
-		EnforceTimeValidity: d.Get("enforce_time_validity").(bool),
-		CascadingEnabled:    d.Get("cascading_enabled").(bool),
-		Actions:             SetToStringList(d, "actions"),
-		Applications:        SetToStringList(d, "applications"),
-		UserRiskScoreLevels: SetToStringList(d, "user_risk_score_levels"),
-		DeviceTrustLevels:   SetToStringList(d, "device_trust_levels"),
-		UserAgentTypes:      SetToStringList(d, "user_agent_types"),
-		Locations:           expandIDNameExtensionsSet(d, "locations"),
-		Groups:              expandIDNameExtensionsSet(d, "groups"),
-		Departments:         expandIDNameExtensionsSet(d, "departments"),
-		Users:               expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:         expandIDNameExtensionsSet(d, "time_windows"),
-		LocationGroups:      expandIDNameExtensionsSet(d, "location_groups"),
-		Labels:              expandIDNameExtensionsSet(d, "labels"),
-		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:             expandIDNameExtensionsSet(d, "devices"),
-		TenancyProfileIDs:   expandIDNameExtensionsSet(d, "tenancy_profile_ids"),
-		CloudAppInstances:   expandCloudApplicationInstanceSet(d, "cloud_app_instances"), // TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
-		CloudAppRiskProfile: expandIDNameExtensionsSetSingle(d, "cloud_app_risk_profile"),
-		CBIProfile:          expandCloudAppControlCBIProfile(d),
+		ID:                   id,
+		Name:                 d.Get("name").(string),
+		Description:          d.Get("description").(string),
+		Type:                 d.Get("type").(string),
+		Order:                order,
+		State:                d.Get("state").(string),
+		Rank:                 d.Get("rank").(int),
+		TimeQuota:            d.Get("time_quota").(int),
+		SizeQuota:            sizeQuotaKB,
+		ValidityStartTime:    validityStartTime,
+		ValidityEndTime:      validityEndTime,
+		ValidityTimeZoneID:   d.Get("validity_time_zone_id").(string),
+		EnforceTimeValidity:  d.Get("enforce_time_validity").(bool),
+		CascadingEnabled:     d.Get("cascading_enabled").(bool),
+		EunEnabled:           d.Get("eun_enabled").(bool),
+		EunTemplateID:        d.Get("eun_template_id").(int),
+		BrowserEunTemplateID: d.Get("browser_eun_template_id").(int),
+		Actions:              SetToStringList(d, "actions"),
+		Applications:         SetToStringList(d, "applications"),
+		UserRiskScoreLevels:  SetToStringList(d, "user_risk_score_levels"),
+		DeviceTrustLevels:    SetToStringList(d, "device_trust_levels"),
+		UserAgentTypes:       SetToStringList(d, "user_agent_types"),
+		Locations:            expandIDNameExtensionsSet(d, "locations"),
+		Groups:               expandIDNameExtensionsSet(d, "groups"),
+		Departments:          expandIDNameExtensionsSet(d, "departments"),
+		Users:                expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:          expandIDNameExtensionsSet(d, "time_windows"),
+		LocationGroups:       expandIDNameExtensionsSet(d, "location_groups"),
+		Labels:               expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:         expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:              expandIDNameExtensionsSet(d, "devices"),
+		TenancyProfileIDs:    expandIDNameExtensionsSet(d, "tenancy_profile_ids"),
+		CloudAppInstances:    expandCloudApplicationInstanceSet(d, "cloud_app_instances"), // TEMPORARY FUNCTION UNTIL NEXT GO SDK RELEASE
+		CloudAppRiskProfile:  expandIDNameExtensionsSetSingle(d, "cloud_app_risk_profile"),
+		CBIProfile:           expandCloudAppControlCBIProfile(d),
 	}
 
 	return result

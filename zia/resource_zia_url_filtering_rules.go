@@ -141,7 +141,12 @@ func resourceURLFilteringRules() *schema.Resource {
 					return errors.New("validity_time_zone_id can only be set when enforce_time_validity is true")
 				}
 			}
-
+			// Validate browser_eun_template_id usage
+			if eunID, eunSet := d.GetOk("browser_eun_template_id"); eunSet && eunID != "" {
+				if action != "BLOCK" && action != "CAUTION" {
+					return fmt.Errorf("browser_eun_template_id can only be set when action is BLOCK or CAUTION")
+				}
+			}
 			return nil
 		},
 		Timeouts: &schema.ResourceTimeout{
@@ -270,6 +275,11 @@ func resourceURLFilteringRules() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "If set to true, the CIPA Compliance rule is enabled",
+			},
+			"browser_eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "",
 			},
 			"cbi_profile": {
 				Type:     schema.TypeList,
@@ -468,6 +478,7 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
 	_ = d.Set("end_user_notification_url", resp.EndUserNotificationURL)
 	_ = d.Set("block_override", resp.BlockOverride)
+	_ = d.Set("browser_eun_template_id", resp.BrowserEunTemplateID)
 	_ = d.Set("time_quota", resp.TimeQuota)
 
 	// Convert size_quota from KB back to MB
@@ -730,6 +741,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		EndUserNotificationURL: d.Get("end_user_notification_url").(string),
 		BlockOverride:          d.Get("block_override").(bool),
 		TimeQuota:              d.Get("time_quota").(int),
+		BrowserEunTemplateID:   d.Get("browser_eun_template_id").(int),
 		SizeQuota:              sizeQuotaKB,
 		ValidityStartTime:      validityStartTime,
 		ValidityEndTime:        validityEndTime,
