@@ -10,9 +10,9 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/bandwidth_control/bandwidth_classes"
 )
 
-func dataBandwdithClasses() *schema.Resource {
+func dataSourceBandwdithClasses() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataBandwdithClassesRead,
+		ReadContext: dataSourceBandwdithClassesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
@@ -25,6 +25,16 @@ func dataBandwdithClasses() *schema.Resource {
 				Computed:    true,
 				Optional:    true,
 				Description: "Name of the bandwidth class",
+			},
+			"file_size": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The file size for a bandwidth class",
+			},
+			"type": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The application type for which the bandwidth class is configured",
 			},
 			"urls": {
 				Type:        schema.TypeSet,
@@ -77,7 +87,7 @@ func dataBandwdithClasses() *schema.Resource {
 	}
 }
 
-func dataBandwdithClassesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceBandwdithClassesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -104,7 +114,6 @@ func dataBandwdithClassesRead(ctx context.Context, d *schema.ResourceData, meta 
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
-		_ = d.Set("getfile_size", resp.GetfileSize)
 		_ = d.Set("file_size", resp.FileSize)
 		_ = d.Set("type", resp.Type)
 		_ = d.Set("urls", resp.Urls)

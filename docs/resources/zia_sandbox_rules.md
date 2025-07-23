@@ -95,8 +95,12 @@ In addition to all arguments above, the following attributes are supported:
 * `by_threat_score` - (Integer)
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud IPS Rule or not
 
-* `url_categories` - (List of Strings) The list of URL categories to which the DLP policy rule must be applied.
+* `url_categories` - (List of Strings) The list of URL categories to which the Sandbox rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
+
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
+See the [File Type Control API](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-get).
+
+* `urls` - (List of Strings) Domains or URLs included for the FTP Control settings
 
 `Who, Where and When` supports the following attributes:
 

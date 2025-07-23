@@ -55,7 +55,7 @@ resource "zia_url_categories" "example" {
 The following arguments are supported:
 
 * `configured_name` - (Required) Name of the URL category. This is only required for custom URL categories.
-* `super_category` - (Required)
+* `super_category` - (Required) Super Category of the URL category. This field is required when creating custom URL categories. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available super categories
 
 ### Optional
 

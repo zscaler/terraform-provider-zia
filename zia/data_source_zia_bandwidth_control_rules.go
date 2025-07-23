@@ -10,7 +10,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/bandwidth_control/bandwidth_control_rules"
 )
 
-func dataBandwdithControlRules() *schema.Resource {
+func dataSourceBandwdithControlRules() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataBandwdithControlRulesRead,
 		Schema: map[string]*schema.Schema{
@@ -24,7 +24,7 @@ func dataBandwdithControlRules() *schema.Resource {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Optional:    true,
-				Description: "The bandwidth classname.",
+				Description: "The bandwidth control rule name",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -49,7 +49,7 @@ func dataBandwdithControlRules() *schema.Resource {
 			"access_control": {
 				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The access privilege for this DLP policy rule based on the admin's state.",
+				Description: "Access privilege of this rule based on the admin's Role Based Authorization (RBA) state",
 			},
 			"protocols": {
 				Type:        schema.TypeList,
@@ -101,7 +101,7 @@ func dataBandwdithControlRules() *schema.Resource {
 			"labels": {
 				Type:        schema.TypeList,
 				Computed:    true,
-				Description: "The Name-ID pairs of rule labels associated to the DLP policy rule.",
+				Description: "Labels that are applicable to the rule",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {

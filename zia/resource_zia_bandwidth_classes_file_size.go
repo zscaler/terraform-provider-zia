@@ -20,40 +20,6 @@ func resourceBandwdithClassesFileSize() *schema.Resource {
 		CreateContext: resourceBandwdithClassesFileSizeCreate,
 		UpdateContext: resourceBandwdithClassesFileSizeUpdate,
 		DeleteContext: resourceFuncNoOp,
-		// CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-		// 	classType := d.Get("type").(string)
-		// 	apps := d.Get("applications").(*schema.Set).List()
-
-		// 	var validApps map[string]struct{}
-
-		// 	switch classType {
-		// 	case "BANDWIDTH_CAT_WEBCONF":
-		// 		validApps = map[string]struct{}{
-		// 			"WEBEX":       {},
-		// 			"GOTOMEETING": {},
-		// 			"LIVEMEETING": {},
-		// 			"INTERCALL":   {},
-		// 			"CONNECT":     {},
-		// 		}
-		// 	case "BANDWIDTH_CAT_VOIP":
-		// 		validApps = map[string]struct{}{
-		// 			"SKYPE": {},
-		// 			"":      {},
-		// 		}
-		// 	default:
-		// 		// If type isn't one of those two, no validation needed
-		// 		return nil
-		// 	}
-
-		// 	for _, a := range apps {
-		// 		app := a.(string)
-		// 		if _, ok := validApps[app]; !ok {
-		// 			return fmt.Errorf("application %q is not valid for type %q", app, classType)
-		// 		}
-		// 	}
-
-		// 	return nil
-		// },
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -92,14 +58,13 @@ func resourceBandwdithClassesFileSize() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Name of the bandwidth class",
+				Default:     "BANDWIDTH_CAT_LARGE_FILE",
 			},
 			"type": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "BANDWIDTH_CAT_LARGE_FILE",
 				Description: "The application type for which the bandwidth class is configured",
-				ValidateFunc: validation.StringInSlice([]string{
-					"BANDWIDTH_CAT_LARGE_FILE",
-				}, false),
 			},
 			"file_size": {
 				Type:        schema.TypeString,

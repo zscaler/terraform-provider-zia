@@ -255,3 +255,8 @@ const (
 	NSSStatus = "ENABLED"
 	NSSType   = "NSS_FOR_FIREWALL"
 )
+
+const (
+	BandwdithControlRuleDescription = "tf-acc-test-cloud-app-control"
+	BandwdithControlRulestate       = "ENABLED"
+)

@@ -53,22 +53,7 @@ func resourceBandwdithClasses() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The bandwidth classname.",
-			},
-			"type": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The bandwidth classname.",
-			},
-			"is_name_l10n_tag": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "The bandwidth classname.",
-			},
-			"file_size": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The bandwidth classname.",
+				Description: "Name of the bandwidth class",
 			},
 			"urls": {
 				Type:     schema.TypeSet,
@@ -81,11 +66,6 @@ func resourceBandwdithClasses() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"web_applications": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"applications": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -150,13 +130,9 @@ func resourceBandwdithClassesRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("class_id", resp.ID)
 	_ = d.Set("name", resp.Name)
-	_ = d.Set("type", resp.Type)
-	_ = d.Set("file_size", resp.FileSize)
 	_ = d.Set("urls", resp.Urls)
 	_ = d.Set("url_categories", resp.UrlCategories)
 	_ = d.Set("web_applications", resp.WebApplications)
-	_ = d.Set("applications", resp.Applications)
-	_ = d.Set("is_name_l10n_tag", resp.IsNameL10nTag)
 
 	return nil
 }
@@ -227,12 +203,8 @@ func expandBandwidthClasses(d *schema.ResourceData) bandwidth_classes.BandwidthC
 	result := bandwidth_classes.BandwidthClasses{
 		ID:              id,
 		Name:            d.Get("name").(string),
-		Type:            d.Get("type").(string),
-		FileSize:        d.Get("file_size").(string),
-		IsNameL10nTag:   d.Get("is_name_l10n_tag").(bool),
 		Urls:            SetToStringList(d, "urls"),
 		UrlCategories:   SetToStringList(d, "url_categories"),
-		Applications:    SetToStringList(d, "applications"),
 		WebApplications: SetToStringList(d, "web_applications"),
 	}
 	return result

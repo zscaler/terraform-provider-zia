@@ -76,14 +76,19 @@ The following arguments are supported:
 * `active_content` - (Boolean) Flag to check whether a file has active content.
     **NOTE** The attribute can only be set when the `file_types` list contain the following values: `FTCATEGORY_MS_WORD`, `FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_PDF_DOCUMENT`, `FTCATEGORY_MS_EXCEL`.
 * `unscannable` - (Boolean) Flag to check whether a file is scannable.
+
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
+See the [File Type Control API](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-get).
+
 * `min_size` - (Integer) Minimum file size (in KB) used for evaluation of the rule. Values between: `0` and `409600`
 * `max_size` - (Integer) Maximum file size (in KB) used for evaluation of the rule. Values between: `0` and `409600`
 * `protocols` - (List of Strings) Protocol for the given rule. Supported Values are: `ANY_RULE`, `SMRULEF_CASCADING_ALLOWED`, `FOHTTP_RULE`, `FTP_RULE`, `HTTPS_RULE`, `HTTP_RULE`
-* `cloud_applications` - (List of Strings) The list of cloud applications to which the File Type Control policy rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
-* `device_trust_levels` - (List of Strings) List of device trust levels for which the rule must be applied. While the High Trust, Medium Trust, or Low Trust evaluation is applicable only to Zscaler Client Connector traffic, Unknown evaluation applies to all traffic. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
-* `url_categories` - (Set of Strings) The list of URL categories to which the DLP policy rule must be applied.
+* `cloud_applications` - (List of Strings) The list of cloud applications to which the File Type Control policy rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
+
+* `url_categories` - (List of Strings) The list of URL categories to which the File Type control rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
+
+* `device_trust_levels` - (List of Strings) List of device trust levels for which the rule must be applied. While the High Trust, Medium Trust, or Low Trust evaluation is applicable only to Zscaler Client Connector traffic, Unknown evaluation applies to all traffic. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
 * `locations` - (Optional) You can manually select up to `8` locations. When not used it implies `Any` to apply the rule to all groups.
       - `id` - (String) Identifier that uniquely identifies an entity

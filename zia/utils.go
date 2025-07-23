@@ -246,9 +246,23 @@ func shouldActivate() bool {
 
 func validateTimeZone(v interface{}, k string) (ws []string, errors []error) {
 	tzStr := v.(string)
+
+	// Try IANA timezone validation
 	_, err := time.LoadLocation(tzStr)
 	if err != nil {
-		errors = append(errors, fmt.Errorf("%q is not a valid timezone. Visit https://nodatime.org/TimeZones for the valid IANA list", tzStr))
+		// Check if it's a common timezone that should work
+		commonTimezones := []string{"UTC", "GMT", "US/Pacific", "US/Eastern", "US/Central", "US/Mountain", "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Vilnius", "Asia/Tokyo", "Asia/Shanghai"}
+
+		for _, common := range commonTimezones {
+			if tzStr == common {
+				// This is a known valid timezone, but system might not have it
+				errors = append(errors, fmt.Errorf("%q is a valid IANA timezone but your system's timezone database may be incomplete. Please ensure your system has the IANA timezone database installed. Alternatively, you can use Zscaler-specific timezone format like 'LITHUANIA_EUROPE_VILNIUS' for Lithuania", tzStr))
+				return
+			}
+		}
+
+		// For other timezones, provide a more helpful error message
+		errors = append(errors, fmt.Errorf("%q is not a valid IANA timezone. Please use IANA format (e.g., 'Europe/Vilnius', 'US/Pacific', 'UTC', 'GMT'). Visit https://nodatime.org/TimeZones for the complete IANA timezone list. If you need to use Zscaler-specific timezone format, please use the 'LITHUANIA_EUROPE_VILNIUS' format instead", tzStr))
 	}
 
 	return

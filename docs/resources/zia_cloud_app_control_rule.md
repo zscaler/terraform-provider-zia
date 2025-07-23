@@ -71,6 +71,12 @@ resource "zia_cloud_app_control_rule" "this" {
 **NOTE** Tenant profile is supported only for specific applications depending on the type
 
 ```hcl
+
+data "zia_cloud_app_control_rule_actions" "dropbox_actions" {
+  type        = "WEBMAIL"
+  cloud_apps  = ["SLACK"]
+}
+
 resource "zia_cloud_app_control_rule" "this" {
     name                         = "Example_WebMail_Rule"
     description                  = "Example_WebMail_Rule"
@@ -192,8 +198,7 @@ The following arguments are supported:
 
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
 
-* `applications` - (List of Numbers) List of cloud applications for which rule will be applied.
-  * `val` - (Number) Identifier that uniquely identifies an entity
+* `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
 * `tenancy_profile_ids` - (List of Numbers) This is an immutable reference to an entity. which mainly consists of id and name.
   * `id` - (Number) Identifier that uniquely identifies an entity

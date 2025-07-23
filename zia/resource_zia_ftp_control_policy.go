@@ -44,7 +44,14 @@ func resourceFTPControlPolicy() *schema.Resource {
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Domains or URLs included for the FTP Control settings",
 			},
-			"url_categories": getURLCategories(),
+			"url_categories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `List of URL categories that allow FTP traffic.
+				See the URL Categories API for the list of available categories:
+				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
+			},
 		},
 	}
 }

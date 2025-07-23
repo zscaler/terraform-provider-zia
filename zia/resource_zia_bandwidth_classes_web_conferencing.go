@@ -89,12 +89,16 @@ func resourceBandwdithClassesWebConferencing() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The bandwidth classname.",
+				Description: "The bandwidth class name.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"BANDWIDTH_CAT_WEBCONF",
+					"BANDWIDTH_CAT_VOIP",
+				}, false),
 			},
 			"type": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The bandwidth classname.",
+				Description: "The bandwidth class type.",
 				ValidateFunc: validation.StringInSlice([]string{
 					"BANDWIDTH_CAT_WEBCONF",
 					"BANDWIDTH_CAT_VOIP",

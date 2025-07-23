@@ -131,10 +131,13 @@ func resourceCloudAppControlRules() *schema.Resource {
 				Description: "Actions allowed for the specified type.",
 			},
 			"applications": {
-				Type:        schema.TypeSet,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Optional:    true,
-				Description: "List of cloud applications for which rule will be applied",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of cloud applications to which the cloud app control rule must be applied
+				Use the data source zia_cloud_applications to get the list of available cloud applications:
+				https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications
+				`,
 			},
 			"time_quota": {
 				Type:         schema.TypeInt,
