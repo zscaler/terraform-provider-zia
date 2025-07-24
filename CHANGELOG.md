@@ -1,16 +1,17 @@
 # Changelog
 
-## 4.4.0 (July, 18 2025)
+## 4.4.0 (July, 24 2025)
 
 ### Notes
 
-- Release date: **(July, 18 2025)**
+- Release date: **(July, 24 2025)**
 - Supported Terraform version: **v1.x**
 
 ### NEW - RESOURCES
 
 The following new resources have been introduced:
 
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource``zia_cloud_nss_feed`` - Adds a new cloud NSS feed
 - [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added the resource ``zia_bandwidth_classes`` - Bandwidth Classes
 - [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource ``zia_bandwidth_control_rule`` - Bandwidth Control Rules
 - [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource ``zia_bandwidth_classes_file_size`` - Bandwidth Classes File Size
@@ -20,8 +21,9 @@ The following new resources have been introduced:
 
 The following new data sources have been introduced:
 
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and datasource``zia_cloud_nss_feed`` - Retrieves the cloud NSS feeds configured in the ZIA Admin Portal
 - [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added the datasource ``zia_bandwidth_control_rule`` - Bandwidth Control Rules
-- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource ``zia_cloud_app_control_rule_actions`` - Retrieve all available actions for Cloud App Control Rules. This data source can be used to set the corresponding actions when configuring the resource `zia_cloud_app_control_rule`
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and datasource ``zia_cloud_app_control_rule_actions`` - Retrieve all available actions for Cloud App Control Rules. This data source can be used to set the corresponding actions when configuring the resource `zia_cloud_app_control_rule`
 
 ### Enhancement
 

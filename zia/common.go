@@ -490,6 +490,21 @@ func flattenIDNameExternalSet(idName *common.IDNameExternalID) []interface{} {
 	return idNameSet
 }
 
+func flattenCommonNSS(list []common.CommonNSS) []interface{} {
+	flattenedList := make([]interface{}, len(list))
+	for i, val := range list {
+		flattenedList[i] = map[string]interface{}{
+			"id":          val.ID,
+			"pid":         val.PID,
+			"name":        val.Name,
+			"description": val.Description,
+			"deleted":     val.Deleted,
+			"getl_id":     val.GetlID,
+		}
+	}
+	return flattenedList
+}
+
 // expandIDNameSet takes a Terraform set as input and returns a pointer to a common.IDName struct.
 func expandIDNameSet(d *schema.ResourceData, key string) *common.IDName {
 	idNameList, ok := d.Get(key).(*schema.Set)

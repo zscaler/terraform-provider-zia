@@ -310,14 +310,14 @@ func resourceURLFilteringRules() *schema.Resource {
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
-			// "url_categories2": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// 	Description: `The list of URL Categories to which the SSL inspection rule must be applied.
-			// 	See the URL Categories API for the list of available categories:
-			// 	https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
-			// },
+			"url_categories2": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of URL Categories to which the SSL inspection rule must be applied.
+				See the URL Categories API for the list of available categories:
+				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
+			},
 			"locations":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
 			"groups":                 setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
 			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
@@ -488,11 +488,11 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		_ = d.Set("url_categories", resp.URLCategories)
 	}
-	// if len(resp.URLCategories2) == 0 {
-	// 	_ = d.Set("url_categories2", []string{"ANY"})
-	// } else {
-	// 	_ = d.Set("url_categories2", resp.URLCategories2)
-	// }
+	if len(resp.URLCategories2) == 0 {
+		_ = d.Set("url_categories2", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories2", resp.URLCategories2)
+	}
 	_ = d.Set("state", resp.State)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
@@ -748,13 +748,13 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	}
 
 	result := urlfilteringpolicies.URLFilteringRule{
-		ID:            id,
-		Name:          d.Get("name").(string),
-		Description:   d.Get("description").(string),
-		Order:         order,
-		Protocols:     SetToStringList(d, "protocols"),
-		URLCategories: SetToStringList(d, "url_categories"),
-		// URLCategories2:         SetToStringList(d, "url_categories2"),
+		ID:                     id,
+		Name:                   d.Get("name").(string),
+		Description:            d.Get("description").(string),
+		Order:                  order,
+		Protocols:              SetToStringList(d, "protocols"),
+		URLCategories:          SetToStringList(d, "url_categories"),
+		URLCategories2:         SetToStringList(d, "url_categories2"),
 		UserRiskScoreLevels:    SetToStringList(d, "user_risk_score_levels"),
 		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
 		RequestMethods:         SetToStringList(d, "request_methods"),
