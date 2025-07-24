@@ -66,10 +66,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "Name of the Firewall Filtering policy rule",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "Name of the Firewall Filtering policy rule",
+				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
 				Type:         schema.TypeString,

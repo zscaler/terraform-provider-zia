@@ -65,10 +65,10 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The name of the IPS Control rule",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the IPS Control rule",
+				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -168,6 +168,16 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
+			"applications": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `User-defined network service applications on which the rule is applied.
+				If not set, the rule is not restricted to a specific network service application
+				Use the data source zia_cloud_applications to get the list of available cloud applications:
+				https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications
+				`,
+			},
 			"locations":              setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
 			"location_groups":        setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
 			"users":                  setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
@@ -188,8 +198,8 @@ func resourceFirewallDNSRules() *schema.Resource {
 			"dest_countries":         getISOCountryCodes(),
 			"source_countries":       getISOCountryCodes(),
 			"dns_rule_request_types": getDnsRuleRequestTypes(),
-			"applications":           getCloudApplications(),
-			"protocols":              getDNSRuleProtocols(),
+			// "applications":           getCloudApplications(),
+			"protocols": getDNSRuleProtocols(),
 		},
 	}
 }

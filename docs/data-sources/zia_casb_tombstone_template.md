@@ -1,7 +1,7 @@
 ---
 subcategory: "SaaS Security API"
 layout: "zscaler"
-page_title: "ZIA): casb_tombstone_template"
+page_title: "ZIA: casb_tombstone_template"
 description: |-
   Official documentation https://help.zscaler.com/zia/about-quarantine-tombstone-file-templates
   API documentation https://help.zscaler.com/zia/saas-security-api#/quarantineTombstoneTemplate/lite-get

@@ -35,7 +35,7 @@ The following arguments are supported:
 * `ftp_over_http_enabled` - (Boolean) Indicates whether to enable FTP over HTTP. By default, the Zscaler service doesn't allow users from a location to upload or download files from FTP sites that use FTP over HTTP. Select this to enable browsers to connect to FTP over HTTP sites and download files. If a remote user uses a dedicated port, then the service supports FTP over HTTP for them.
 * `ftp_enabled` - (Boolean) Indicates whether to enable native FTP. When enabled, users can connect to native FTP sites and download files.
 
-* `url_categories` - (List of Strings) List of URL categories that allow FTP traffic
+* `url_categories` - (List of Strings) List of URL categories that allow FTP traffic. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 * `urls` - (List of Strings) Domains or URLs included for the FTP Control settings
 
 ## Import

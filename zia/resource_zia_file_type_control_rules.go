@@ -157,13 +157,6 @@ func resourceFileTypeControlRules() *schema.Resource {
 					"UPLOAD_DOWNLOAD",
 				}, false),
 			},
-			"cloud_applications": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The list of cloud applications to which the File Type Control rule must be applied.",
-			},
 			"min_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -196,6 +189,28 @@ func resourceFileTypeControlRules() *schema.Resource {
 				Computed:    true,
 				Description: "Flag to check whether a file has active content or not",
 			},
+			"browser_eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "",
+			},
+			"cloud_applications": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of cloud applications to which the File Type Control rule must be applied
+				Use the data source zia_cloud_applications to get the list of available cloud applications:
+				https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications
+				`,
+			},
+			"url_categories": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of URL Categories to which the SSL inspection rule must be applied.
+				See the URL Categories API for the list of available categories:
+				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
+			},
 			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for the which policy must be applied. If not set, policy is applied for all locations."),
@@ -207,9 +222,9 @@ func resourceFileTypeControlRules() *schema.Resource {
 			"labels":              setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
 			"device_trust_levels": getDeviceTrustLevels(),
-			"url_categories":      getURLCategories(),
-			"file_types":          getFileTypes(),
-			"protocols":           getFileTypeProtocols(),
+			// "url_categories":      getURLCategories(),
+			"file_types": getFileTypes(),
+			"protocols":  getFileTypeProtocols(),
 		},
 	}
 }
@@ -335,6 +350,7 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("operation", resp.Operation)
 	_ = d.Set("active_content", resp.ActiveContent)
 	_ = d.Set("unscannable", resp.Unscannable)
+	_ = d.Set("browser_eun_template_id", resp.BrowserEunTemplateID)
 	_ = d.Set("capture_pcap", resp.CapturePCAP)
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
@@ -509,34 +525,35 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 	}
 
 	result := filetypecontrol.FileTypeRules{
-		ID:                id,
-		Name:              d.Get("name").(string),
-		Description:       d.Get("description").(string),
-		Order:             order,
-		Rank:              d.Get("rank").(int),
-		State:             d.Get("state").(string),
-		FilteringAction:   d.Get("filtering_action").(string),
-		Operation:         d.Get("operation").(string),
-		ActiveContent:     d.Get("active_content").(bool),
-		Unscannable:       d.Get("unscannable").(bool),
-		CapturePCAP:       d.Get("capture_pcap").(bool),
-		MinSize:           d.Get("min_size").(int),
-		MaxSize:           d.Get("max_size").(int),
-		DeviceTrustLevels: SetToStringList(d, "device_trust_levels"),
-		Protocols:         SetToStringList(d, "protocols"),
-		FileTypes:         SetToStringList(d, "file_types"),
-		URLCategories:     SetToStringList(d, "url_categories"),
-		CloudApplications: SetToStringList(d, "cloud_applications"),
-		DeviceGroups:      expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:           expandIDNameExtensionsSet(d, "devices"),
-		Locations:         expandIDNameExtensionsSet(d, "locations"),
-		LocationGroups:    expandIDNameExtensionsSet(d, "location_groups"),
-		Groups:            expandIDNameExtensionsSet(d, "groups"),
-		Departments:       expandIDNameExtensionsSet(d, "departments"),
-		Users:             expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:       expandIDNameExtensionsSet(d, "time_windows"),
-		Labels:            expandIDNameExtensionsSet(d, "labels"),
-		ZPAAppSegments:    expandZPAAppSegmentSet(d, "zpa_app_segments"),
+		ID:                   id,
+		Name:                 d.Get("name").(string),
+		Description:          d.Get("description").(string),
+		Order:                order,
+		Rank:                 d.Get("rank").(int),
+		State:                d.Get("state").(string),
+		FilteringAction:      d.Get("filtering_action").(string),
+		Operation:            d.Get("operation").(string),
+		ActiveContent:        d.Get("active_content").(bool),
+		Unscannable:          d.Get("unscannable").(bool),
+		BrowserEunTemplateID: d.Get("browser_eun_template_id").(int),
+		CapturePCAP:          d.Get("capture_pcap").(bool),
+		MinSize:              d.Get("min_size").(int),
+		MaxSize:              d.Get("max_size").(int),
+		DeviceTrustLevels:    SetToStringList(d, "device_trust_levels"),
+		Protocols:            SetToStringList(d, "protocols"),
+		FileTypes:            SetToStringList(d, "file_types"),
+		URLCategories:        SetToStringList(d, "url_categories"),
+		CloudApplications:    SetToStringList(d, "cloud_applications"),
+		DeviceGroups:         expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:              expandIDNameExtensionsSet(d, "devices"),
+		Locations:            expandIDNameExtensionsSet(d, "locations"),
+		LocationGroups:       expandIDNameExtensionsSet(d, "location_groups"),
+		Groups:               expandIDNameExtensionsSet(d, "groups"),
+		Departments:          expandIDNameExtensionsSet(d, "departments"),
+		Users:                expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:          expandIDNameExtensionsSet(d, "time_windows"),
+		Labels:               expandIDNameExtensionsSet(d, "labels"),
+		ZPAAppSegments:       expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result
 }

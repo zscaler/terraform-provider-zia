@@ -64,10 +64,10 @@ func resourceFirewallIPSRules() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "The name of the IPS Control rule",
-				ValidateFunc: validation.StringLenBetween(0, 31),
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "The name of the IPS Control rule",
+				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
 				Type:         schema.TypeString,

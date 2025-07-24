@@ -489,6 +489,7 @@ func validateAppControlType() schema.SchemaValidateDiagFunc {
 	}
 }
 
+/*
 var validActionsForType = map[string][]string{
 	"AI_ML": {"DENY_AI_ML_WEB_USE", "ALLOW_AI_ML_WEB_USE", "ISOLATE_AI_ML_WEB_USE", "CAUTION_AI_ML_WEB_USE", "DENY_AI_ML_UPLOAD",
 		"ALLOW_AI_ML_UPLOAD", "DENY_AI_ML_SHARE", "ALLOW_AI_ML_SHARE", "DENY_AI_ML_DOWNLOAD", "ALLOW_AI_ML_DOWNLOAD", "DENY_AI_ML_DELETE",
@@ -556,6 +557,7 @@ var validActionsForType = map[string][]string{
 	"WEBMAIL": {"BLOCK_WEBMAIL_VIEW", "ALLOW_WEBMAIL_VIEW", "CAUTION_WEBMAIL_VIEW", "BLOCK_WEBMAIL_ATTACHMENT_SEND",
 		"ALLOW_WEBMAIL_ATTACHMENT_SEND", "CAUTION_WEBMAIL_ATTACHMENT_SEND", "ALLOW_WEBMAIL_SEND", "BLOCK_WEBMAIL_SEND", "ISOLATE_WEBMAIL_VIEW"},
 }
+*/
 
 func validateDnsRuleRequestTypes() schema.SchemaValidateDiagFunc {
 	return func(i interface{}, path cty.Path) diag.Diagnostics {
@@ -636,42 +638,27 @@ var validAppsForTypeWithTenancy = map[string][]string{
 */
 
 func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	ruleType := diff.Get("type").(string)
 	actions := diff.Get("actions").(*schema.Set).List()
 
-	validActions, typeExists := validActionsForType[ruleType]
-	if !typeExists {
-		return fmt.Errorf("invalid type: %s", ruleType)
-	}
-
-	validActionsMap := make(map[string]struct{}, len(validActions))
-	for _, action := range validActions {
-		validActionsMap[action] = struct{}{}
-	}
-
-	var invalidActions []string
-	var containsIsolate bool
-	var containsDenyOrBlock bool
-	for _, action := range actions {
-		actionStr, ok := action.(string)
-		if !ok {
-			return fmt.Errorf("expected action to be a string, got: %T", action)
-		}
-		if _, valid := validActionsMap[actionStr]; !valid {
-			invalidActions = append(invalidActions, actionStr)
-		}
-		if strings.Contains(actionStr, "ISOLATE_") {
-			containsIsolate = true
-		}
-		if strings.Contains(actionStr, "DENY_") || strings.Contains(actionStr, "BLOCK_") {
-			containsDenyOrBlock = true
+	// Rule 1: If any action contains ISOLATE_, no other actions can be present
+	var isolateCount, nonIsolateCount int
+	for _, a := range actions {
+		actionStr := a.(string)
+		if strings.HasPrefix(actionStr, "ISOLATE_") {
+			isolateCount++
+		} else {
+			nonIsolateCount++
 		}
 	}
+	if isolateCount > 0 && nonIsolateCount > 0 {
+		return fmt.Errorf("ISOLATE_ actions cannot be mixed with other actions such as ALLOW_, BLOCK_, CAUTION_, or ESC_")
+	}
 
-	if len(invalidActions) > 0 {
-		return fmt.Errorf(
-			"invalid actions %v for type %s. Valid actions are: %v. Please adjust the type or actions accordingly",
-			invalidActions, ruleType, validActions)
+	// Rule 2: If ISOLATE_ action is present, browser_eun_template_id must NOT be set
+	if isolateCount > 0 {
+		if eunID, eunSet := diff.GetOk("browser_eun_template_id"); eunSet && eunID != "" {
+			return fmt.Errorf("browser_eun_template_id cannot be set when ISOLATE_ actions are configured")
+		}
 	}
 
 	// Additional validation logic for enforce_time_validity, validity_start_time, and validity_end_time
@@ -708,39 +695,18 @@ func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff
 		}
 	}
 
-	// Validation 1: When the "actions" value contains the string "ISOLATE_", the attribute cbi_profile must be set.
-	if containsIsolate {
-		if _, ok := diff.GetOk("cbi_profile"); !ok {
-			return fmt.Errorf("cbi_profile attribute must be set when actions contain ISOLATE_")
-		}
-		cbiProfileList := diff.Get("cbi_profile").([]interface{})
-		if len(cbiProfileList) == 0 || cbiProfileList[0] == nil {
-			return fmt.Errorf("cbi_profile attribute must be set when actions contain ISOLATE_")
-		}
-		cbiProfile := cbiProfileList[0].(map[string]interface{})
-		if cbiProfile["id"] == "" && cbiProfile["name"] == "" && cbiProfile["url"] == "" {
-			return fmt.Errorf("cbi_profile attribute must be properly set when actions contain ISOLATE_")
-		}
-	}
-
-	// Validation 2: The attribute cascading_enabled can only be set when the actions value contain the string "DENY_" or "BLOCK_".
-	if cascadingEnabled, ok := diff.GetOk("cascading_enabled"); ok && cascadingEnabled.(bool) && !containsDenyOrBlock {
-		return fmt.Errorf("cascading_enabled can only be set when actions contain DENY_ or BLOCK_")
-	}
-
-	// Validation 3: When the "actions" value contains the string "ISOLATE_", the attribute user_agent_types must be set.
-	if containsIsolate {
-		if _, ok := diff.GetOk("user_agent_types"); !ok {
-			return fmt.Errorf("user_agent_types attribute must be set when actions contain ISOLATE_")
-		}
-		userAgentTypes := diff.Get("user_agent_types").(*schema.Set).List()
-		if len(userAgentTypes) == 0 {
-			return fmt.Errorf("user_agent_types attribute must be set when actions contain ISOLATE_")
-		}
-		for _, userAgent := range userAgentTypes {
-			if userAgent == "OTHER" {
-				return fmt.Errorf("user_agent_types should not contain 'OTHER' when actions contain ISOLATE_. Valid options are: CHROME, FIREFOX, MSIE, MSEDGE, MSCHREDGE, OPERA, SAFARI")
+	// Validation 4: browser_eun_template_id can only be set when actions contain BLOCK_ or CAUTION_
+	if eunID, eunSet := diff.GetOk("browser_eun_template_id"); eunSet && eunID != "" {
+		var allowed bool
+		for _, a := range actions {
+			actionStr := a.(string)
+			if strings.Contains(actionStr, "BLOCK_") || strings.Contains(actionStr, "CAUTION_") {
+				allowed = true
+				break
 			}
+		}
+		if !allowed {
+			return fmt.Errorf("browser_eun_template_id can only be set when actions contain BLOCK_ or CAUTION_")
 		}
 	}
 

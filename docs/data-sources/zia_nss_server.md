@@ -1,5 +1,5 @@
 ---
-subcategory: "NSS Server"
+subcategory: "Cloud Nanolog Streaming Service (NSS)"
 layout: "zscaler"
 page_title: "ZIA: nss_server"
 description: |-

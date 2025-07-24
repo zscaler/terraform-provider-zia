@@ -2,6 +2,8 @@ package resourcetype
 
 // ZIA Resource names, defined in place, used throughout the provider and tests
 const (
+	BandwdithClasses                = "zia_bandwidth_classes"
+	BandwdithControlRules           = "zia_bandwidth_control_rule"
 	URLCategories                   = "zia_url_categories"
 	URLFilteringRules               = "zia_url_filtering_rules"
 	FirewallFilteringRules          = "zia_firewall_filtering_rule"

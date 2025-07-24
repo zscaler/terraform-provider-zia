@@ -162,18 +162,22 @@ func resourceDlpWebRules() *schema.Resource {
 				Description: "",
 			},
 			"cloud_applications": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The list of cloud applications to which the DLP policy rule must be applied.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of cloud applications to which the DLP policy rule must be applied
+				Use the data source zia_cloud_applications to get the list of available cloud applications:
+				https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications
+				`,
 			},
 			"file_types": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Computed:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "The list of file types for which the DLP policy rule must be applied.",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `The list of file types for which the DLP policy rule must be applied,
+				See the Web DLP Rules API for the list of available File types:
+				https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-get`,
 			},
 			"min_size": {
 				Type:         schema.TypeInt,

@@ -1,5 +1,35 @@
 # Changelog
 
+## 4.4.0 (July, 24 2025)
+
+### Notes
+
+- Release date: **(July, 24 2025)**
+- Supported Terraform version: **v1.x**
+
+### NEW - RESOURCES
+
+The following new resources have been introduced:
+
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource``zia_cloud_nss_feed`` - Adds a new cloud NSS feed
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added the resource ``zia_bandwidth_classes`` - Bandwidth Classes
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource ``zia_bandwidth_control_rule`` - Bandwidth Control Rules
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource ``zia_bandwidth_classes_file_size`` - Bandwidth Classes File Size
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and resource``zia_bandwidth_classes_web_conferencing`` - Bandwidth Classes Web Conferencing
+
+### NEW - DATA SOURCES
+
+The following new data sources have been introduced:
+
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and datasource``zia_cloud_nss_feed`` - Retrieves the cloud NSS feeds configured in the ZIA Admin Portal
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added the datasource ``zia_bandwidth_control_rule`` - Bandwidth Control Rules
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added and datasource ``zia_cloud_app_control_rule_actions`` - Retrieve all available actions for Cloud App Control Rules. This data source can be used to set the corresponding actions when configuring the resource `zia_cloud_app_control_rule`
+
+### Enhancement
+
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Added support to attribute `browser_eun_template_id` in the following resources `zia_cloud_app_control_rule`, `zia_url_filtering_rules` and `zia_file_type_control_rules`. The attribute allow for the configuration of [Browser End User Notification Templates](https://help.zscaler.com/zia/about-browser-eun-template)
+- [PR #452](https://github.com/zscaler/terraform-provider-zia/pull/452) - Removed local validation for the attributes `url_categories`, `cloud_applications`, `applications`, `validity_time_zone_id`. See respective documentations for each resource for further instructions.
+
 ## 4.3.3 (June, 30 2025)
 
 ### Notes

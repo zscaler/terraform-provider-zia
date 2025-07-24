@@ -193,7 +193,15 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"super_category": getSuperCategories(),
+			"super_category": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Description: `Super Category of the URL category.
+				This field is required when creating custom URL categories..
+				See the URL Categories API for the list of available super categories:
+				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
+			},
+			// "super_category": getSuperCategories(),
 		},
 	}
 }

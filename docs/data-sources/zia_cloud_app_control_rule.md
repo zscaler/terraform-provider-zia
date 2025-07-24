@@ -5,7 +5,7 @@ page_title: "ZIA: cloud_app_control_rule"
 description: |-
   Official documentation https://help.zscaler.com/zia/adding-rules-cloud-app-control-policy
   API documentation https://help.zscaler.com/zia/cloud-app-control-policy#/webApplicationRules/{rule_type}-get
-  Get information about ZIA DLP Web Rules.
+  Get information about ZIA Cloud App Control Rules.
 ---
 
 # zia_cloud_app_control_rule (Data Source)

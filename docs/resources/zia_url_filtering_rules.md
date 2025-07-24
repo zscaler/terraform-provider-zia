@@ -152,7 +152,6 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `validity_time_zone_id` - (Optional) If `enforce_time_validity` is set to true, the URL Filtering rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
 
-* `last_modified_time` - (Optional) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
 * `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
 
@@ -173,7 +172,8 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
   * `url` - (Optional) The browser isolation profile URL
 
 * `cipa_rule` - (Optional) If set to true, the CIPA Compliance rule is enabled
-* `url_categories` - (Optional) List of URL categories for which rule must be applied
+
+* `url_categories` - (List of Strings) The list of URL categories to which the URL Filtering rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 
 * `locations` - (List of Object) The locations to which the Firewall Filtering policy rule applies
   * `id` - (Optional) Identifier that uniquely identifies an entity
