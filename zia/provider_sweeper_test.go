@@ -907,7 +907,7 @@ func sweepTestURLCategories(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	rule, err := urlcategories.GetAll(context.Background(), service)
+	rule, err := urlcategories.GetAll(context.Background(), service, true, false)
 	if err != nil {
 		return err
 	}

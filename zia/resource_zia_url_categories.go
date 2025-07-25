@@ -196,6 +196,7 @@ func resourceURLCategories() *schema.Resource {
 			"super_category": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				Description: `Super Category of the URL category.
 				This field is required when creating custom URL categories..
 				See the URL Categories API for the list of available super categories:
