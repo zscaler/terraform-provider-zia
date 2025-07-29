@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.1``
+``Last updated: v4.4.2``
 
 ---
+
+## 4.4.2 (July, 29 2025)
+
+### Notes
+
+- Release date: **(July, 29 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #455](https://github.com/zscaler/terraform-provider-zia/pull/455) - Fixed action validation in `zia_cloud_app_control_rule`.
 
 ## 4.4.1 (July, 24 2025)
 
