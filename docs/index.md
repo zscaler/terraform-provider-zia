@@ -247,7 +247,7 @@ Before starting with this Terraform provider you must create an API Client in th
 
 * `private_key` - (Optional) This is the private key for obtaining the API token (can be represented by a filepath, or the key itself). It can also be sourced from the `ZSCALER_PRIVATE_KEY` environment variable. `private_key` conflicts with `client_secret`. The format of the PK is PKCS#1 unencrypted (header starts with `-----BEGIN RSA PRIVATE KEY-----` or PKCS#8 unencrypted (header starts with `-----BEGIN PRIVATE KEY-----`).
 
-* `vanity_domain` - (Optional) This refers to the domain name used by your organization.. It can also be sourced from the `ZSCALER_VANITY_DOMAIN`.
+* `vanity_domain` - (Optional) This refers to the domain name used by your organization. It can also be sourced from the `ZSCALER_VANITY_DOMAIN`.
 
 * `zscaler_cloud` - (Optional) This refers to Zscaler cloud name where API calls will be directed to i.e `beta`. It can also be sourced from the `ZSCALER_CLOUD`.
 
