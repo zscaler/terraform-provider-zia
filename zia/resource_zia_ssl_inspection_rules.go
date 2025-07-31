@@ -154,9 +154,11 @@ func resourceSSLInspectionRules() *schema.Resource {
 				Description: "The name of the SSL Inspection rule",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about the SSL Inspection rule",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional information about the SSL Inspection rule",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"state": {
 				Type:        schema.TypeString,
@@ -464,7 +466,11 @@ func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("platforms", resp.Platforms)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
 	_ = d.Set("road_warrior_for_kerberos", resp.RoadWarriorForKerberos)
-	_ = d.Set("url_categories", resp.URLCategories)
+	if len(resp.URLCategories) == 0 {
+		_ = d.Set("url_categories", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories", resp.URLCategories)
+	}
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 

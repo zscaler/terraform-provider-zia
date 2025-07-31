@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,25 +28,30 @@ func resourceURLCategories() *schema.Resource {
 				zClient := meta.(*Client)
 				service := zClient.Service
 
-				id := d.Id()
-				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
-				if parseIDErr == nil {
-					_ = d.Set("category_id", idInt)
-				} else {
-					resp, err := urlcategories.Get(ctx, service, id)
-					if err == nil {
-						d.SetId(resp.ID)
-						_ = d.Set("category_id", resp.ID)
-					} else {
-						// Input is assumed to be a custom name, use the GetCustomURLCategories method
-						resp, err := urlcategories.GetCustomURLCategories(ctx, service, id, true, true)
-						if err != nil {
-							return nil, fmt.Errorf("error fetching URL category by custom name: %s", err)
-						}
-						d.SetId(resp.ID)
-						_ = d.Set("category_id", resp.ID)
+				identifier := d.Id()
+
+				// Use the new slice-returning helper
+				categories, err := urlcategories.GetAllCustomURLCategories(ctx, service)
+				if err != nil {
+					return nil, fmt.Errorf("failed retrieving custom URL categories: %w", err)
+				}
+
+				var matched *urlcategories.URLCategory
+				for i := range categories {
+					cat := categories[i]
+					if strings.EqualFold(cat.ID, identifier) || strings.EqualFold(cat.ConfiguredName, identifier) {
+						matched = &cat
+						break
 					}
 				}
+
+				if matched == nil {
+					return nil, fmt.Errorf("no custom URL category found with ID or configuredName: %q", identifier)
+				}
+
+				d.SetId(matched.ID)
+				_ = d.Set("category_id", matched.ID)
+
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -65,9 +70,11 @@ func resourceURLCategories() *schema.Resource {
 				Optional: true,
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringLenBetween(0, 256),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"urls": {
 				Type:     schema.TypeSet,

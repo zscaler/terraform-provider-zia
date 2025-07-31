@@ -59,9 +59,11 @@ func resourceForwardingControlProxies() *schema.Resource {
 				Description: "The name of the Proxy gateway",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional details about the Proxy gateway",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional details about the Proxy gateway",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"type": {
 				Type:        schema.TypeString,

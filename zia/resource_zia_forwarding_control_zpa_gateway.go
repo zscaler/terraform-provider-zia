@@ -57,9 +57,11 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 				Description: "The name of the ZPA gateway",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional details about the ZPA gateway",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional details about the ZPA gateway",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"type": {
 				Type:        schema.TypeString,

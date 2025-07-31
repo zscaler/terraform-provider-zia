@@ -56,10 +56,12 @@ func resourceDLPDictionaries() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "The desciption of the DLP dictionary",
-				ValidateFunc: validation.StringLenBetween(0, 255),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "The desciption of the DLP dictionary",
+				ValidateFunc:     validation.StringLenBetween(0, 255),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"custom": {
 				Type:        schema.TypeBool,

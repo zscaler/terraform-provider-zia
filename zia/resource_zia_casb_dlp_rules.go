@@ -110,9 +110,11 @@ func resourceCasbDlpRules() *schema.Resource {
 				Description: "Rule name",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "An admin editable text-based description of the rule",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "An admin editable text-based description of the rule",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"type": {
 				Type:        schema.TypeString,

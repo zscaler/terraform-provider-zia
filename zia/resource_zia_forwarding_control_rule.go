@@ -122,9 +122,11 @@ func resourceForwardingControlRule() *schema.Resource {
 				Description: "The name of the forwarding rule",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "Additional information about the forwarding rule",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional information about the forwarding rule",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"type": {
 				Type:        schema.TypeString,

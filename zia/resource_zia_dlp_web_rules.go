@@ -102,10 +102,12 @@ func resourceDlpWebRules() *schema.Resource {
 				Description: "The DLP policy rule name.",
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
-				Description:  "The description of the DLP policy rule.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				Description:      "The description of the DLP policy rule.",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"protocols": {
 				Type:        schema.TypeSet,

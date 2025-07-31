@@ -107,10 +107,12 @@ func resourceFileTypeControlRules() *schema.Resource {
 				Description: "The File Type Control policy rule name.",
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
-				Description:  "The description of the File Type Control rule.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				Description:      "The description of the File Type Control rule.",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"state": {
 				Type:        schema.TypeString,

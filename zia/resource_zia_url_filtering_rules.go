@@ -192,10 +192,12 @@ func resourceURLFilteringRules() *schema.Resource {
 				Description: "Rule Name",
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
-				Description:  "Additional information about the URL Filtering rule",
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				Description:      "Additional information about the URL Filtering rule",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
 				Type:         schema.TypeInt,
