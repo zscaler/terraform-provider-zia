@@ -65,9 +65,11 @@ func resourceBandwdithControlRules() *schema.Resource {
 				Description: "The bandwidth control rule name",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The description of the bandwidth control rule",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "The description of the bandwidth control rule",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"state": {
 				Type:     schema.TypeString,

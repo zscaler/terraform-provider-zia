@@ -56,9 +56,11 @@ func resourceDLPEngines() *schema.Resource {
 				Description: "The DLP engine name as configured by the admin.",
 			},
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "The DLP engine's description.",
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "The DLP engine's description.",
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"engine_expression": {
 				Type:        schema.TypeString,

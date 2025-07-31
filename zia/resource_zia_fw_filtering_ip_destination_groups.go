@@ -63,10 +63,12 @@ func resourceFWIPDestinationGroups() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional information about the destination IP group",
-				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional information about the destination IP group",
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"type": {
 				Type:        schema.TypeString,

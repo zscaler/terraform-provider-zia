@@ -61,10 +61,12 @@ func resourceLocationManagement() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
-				ValidateFunc: validation.StringLenBetween(0, 1024),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.",
+				ValidateFunc:     validation.StringLenBetween(0, 1024),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"parent_id": {
 				Type:        schema.TypeInt,

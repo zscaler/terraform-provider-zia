@@ -59,9 +59,11 @@ func resourceFWNetworkServiceGroups() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 255),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"services": {
 				Type:        schema.TypeSet,

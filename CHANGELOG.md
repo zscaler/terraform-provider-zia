@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.4.3 (July, 31 2025)
+
+### Notes
+
+- Release date: **(July, 31 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #456](https://github.com/zscaler/terraform-provider-zia/pull/456) - Removed validation for attribute `nw_applications` from the resource `zia_firewall_filtering_rule`. See respective documentations for each resource for further instructions.
+- [PR #456](https://github.com/zscaler/terraform-provider-zia/pull/456) - Applied heredoc formatting to support non-standard multi-line text on `description` attribute across supported resources.
+
 ## 4.4.2 (July, 29 2025)
 
 ### Notes

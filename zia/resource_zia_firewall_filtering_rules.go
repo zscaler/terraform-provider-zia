@@ -136,6 +136,11 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"nw_applications": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"default_rule": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -166,8 +171,8 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"dest_countries":        getISOCountryCodes(),
 			"source_countries":      getISOCountryCodes(),
-			"nw_applications":       getCloudApplications(),
-			"device_trust_levels":   getDeviceTrustLevels(),
+			// "nw_applications":       getCloudApplications(),
+			"device_trust_levels": getDeviceTrustLevels(),
 		},
 	}
 }
