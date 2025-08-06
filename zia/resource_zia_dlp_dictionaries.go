@@ -160,6 +160,7 @@ func resourceDLPDictionaries() *schema.Resource {
 					"PATTERNS_AND_PHRASES",
 					"EXACT_DATA_MATCH",
 					"INDEXED_DATA_MATCH",
+					"MIP_TAG",
 				}, false),
 			},
 			"hierarchical_identifiers": {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.4.4 (August, 6 2025)
+
+### Notes
+
+- Release date: **(August, 6 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #457](https://github.com/zscaler/terraform-provider-zia/pull/457) - Added new `dictionary_type` value `MIP_TAG` to resource `zia_dlp_dictionaries`
+
 ## 4.4.3 (July, 31 2025)
 
 ### Notes
