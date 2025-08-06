@@ -64,6 +64,8 @@ The following arguments are supported:
   * `PATTERNS_AND_PHRASES`
   * `EXACT_DATA_MATCH`
   * `INDEXED_DATA_MATCH`
+  * `MIP_TAG`
+
 * `custom_phrase_match_type` - (Required) The DLP custom phrase match type. Supported values are:
   * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
   * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`

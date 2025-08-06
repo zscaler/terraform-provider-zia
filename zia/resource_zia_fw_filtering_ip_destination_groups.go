@@ -257,25 +257,18 @@ func resourceFWIPDestinationGroupsDelete(ctx context.Context, d *schema.Resource
 }
 
 func expandIPDestinationGroups(d *schema.ResourceData) ipdestinationgroups.IPDestinationGroups {
-	name := d.Get("name").(string)
-	groupType := d.Get("type").(string)
-	description := d.Get("description").(string)
-	addresses := SetToStringList(d, "addresses")
-	ipCategories := SetToStringList(d, "ip_categories")
+	id, _ := getIntFromResourceData(d, "group_id")
 
-	// Process countries to prepend "COUNTRY_"
-	rawCountries := SetToStringList(d, "countries")
-	countries := make([]string, len(rawCountries))
-	for i, code := range rawCountries {
-		countries[i] = "COUNTRY_" + code
-	}
+	processedCountries := processCountries(SetToStringList(d, "countries"))
 
-	return ipdestinationgroups.IPDestinationGroups{
-		Name:         name,
-		Type:         groupType,
-		Description:  description,
-		Addresses:    addresses,
-		IPCategories: ipCategories,
-		Countries:    countries,
+	result := ipdestinationgroups.IPDestinationGroups{
+		ID:           id,
+		Name:         d.Get("name").(string),
+		Description:  d.Get("description").(string),
+		Type:         d.Get("type").(string),
+		Addresses:    SetToStringList(d, "addresses"),
+		IPCategories: SetToStringList(d, "ip_categories"),
+		Countries:    processedCountries,
 	}
+	return result
 }
