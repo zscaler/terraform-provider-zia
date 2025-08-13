@@ -21,7 +21,7 @@ func resourceDLPDictionaries() *schema.Resource {
 		ReadContext:   resourceDLPDictionariesRead,
 		UpdateContext: resourceDLPDictionariesUpdate,
 		DeleteContext: resourceDLPDictionariesDelete,
-		CustomizeDiff: validateDLPHierarchicalIdentifiersDiff,
+		// CustomizeDiff: validateDLPHierarchicalIdentifiersDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				zClient := meta.(*Client)
@@ -349,7 +349,7 @@ func resourceDLPDictionariesRead(ctx context.Context, d *schema.ResourceData, me
 	_ = d.Set("confidence_level_for_predefined_dict", resp.ConfidenceLevelForPredefinedDict)
 	_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
 	_ = d.Set("dictionary_type", resp.DictionaryType)
-	_ = d.Set("hierarchical_identifiers", d.Get("hierarchical_identifiers")) // Keep the user input for hierarchical_identifiers
+	_ = d.Set("hierarchical_identifiers", resp.HierarchicalIdentifiers) // Keep the user input for hierarchical_identifiers
 	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
 	_ = d.Set("include_bin_numbers", resp.IncludeBinNumbers)
 	_ = d.Set("bin_numbers", resp.BinNumbers)
@@ -442,7 +442,7 @@ func resourceDLPDictionariesDelete(ctx context.Context, d *schema.ResourceData, 
 
 func expandDLPDictionaries(d *schema.ResourceData, isCreate bool) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
-	hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
+	//hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
 
 	result := dlpdictionaries.DlpDictionary{
 		ID:                               id,
@@ -457,7 +457,8 @@ func expandDLPDictionaries(d *schema.ResourceData, isCreate bool) dlpdictionarie
 		IncludeBinNumbers:                d.Get("include_bin_numbers").(bool),
 		DictTemplateId:                   d.Get("dict_template_id").(int),
 		Proximity:                        d.Get("proximity").(int),
-		HierarchicalIdentifiers:          hierarchicalIdentifiers,
+		HierarchicalIdentifiers:          SetToStringList(d, "hierarchical_identifiers"),
+		// HierarchicalIdentifiers:          hierarchicalIdentifiers,
 	}
 	binNumbers := []int{}
 	for _, i := range d.Get("bin_numbers").([]interface{}) {
