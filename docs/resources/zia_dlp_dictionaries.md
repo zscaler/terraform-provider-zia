@@ -34,14 +34,22 @@ resource "zia_dlp_dictionaries" "example"{
 }
 ```
 
-## Example Usage - With Hierarchical Identifiers
+## Example Usage - With Hierarchical Identifiers (Clone Predefined Dictionary)
 
 ```hcl
+data "zia_dlp_dictionary_predefined_identifiers" "this" {
+  name = "EUIBAN_LEAKAGE"
+}
+
+data "zia_dlp_dictionaries" "this" {
+  name = "EUIBAN_LEAKAGE"
+}
+
 resource "zia_dlp_dictionaries" "example"{
     name                     = "Example Dictionary Clone"
     description              = "Example Dictionary Clone"
     confidence_level_for_predefined_dict = "CONFIDENCE_LEVEL_MEDIUM"
-    hierarchical_identifiers = ["CRED_LEAKAGE"]
+    hierarchical_identifiers = [data.zia_dlp_dictionary_predefined_identifiers.this.predefined_identifiers]
     confidence_threshold     = "CONFIDENCE_LEVEL_HIGH"
     dict_template_id         = data.zia_dlp_dictionaries.this.id
     phrases {

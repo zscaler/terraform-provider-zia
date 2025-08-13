@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.4.5 (August, 13 2025)
+
+### Notes
+
+- Release date: **(August, 6 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #458](https://github.com/zscaler/terraform-provider-zia/pull/458) - Fixed drift in `zia_dlp_dictionaries` on attribute `hierarchical_identifiers` and updated examples
+
 ## 4.4.4 (August, 6 2025)
 
 ### Notes
