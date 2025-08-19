@@ -174,13 +174,13 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.",
 			},
-			"other_sublocation": {
+			"other_sub_location": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
 				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.",
 			},
-			"other6_sublocation": {
+			"other6_sub_location": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Computed:    true,
@@ -490,8 +490,8 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
 	_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
 	_ = d.Set("iot_enforce_policy_set", resp.IOTEnforcePolicySet)
-	_ = d.Set("other_sublocation", resp.OtherSubLocation)
-	_ = d.Set("other6_sublocation", resp.Other6SubLocation)
+	_ = d.Set("other_sub_location", resp.OtherSubLocation)
+	_ = d.Set("other6_sub_location", resp.Other6SubLocation)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
 	_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 	_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
@@ -686,8 +686,8 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		AUPForceSSLInspection:               d.Get("aup_force_ssl_inspection").(bool),
 		IPv6Enabled:                         d.Get("ipv6_enabled").(bool),
 		IPv6Dns64Prefix:                     d.Get("ipv6_dns_64prefix").(bool),
-		OtherSubLocation:                    d.Get("other_sublocation").(bool),
-		Other6SubLocation:                   d.Get("other6_sublocation").(bool),
+		OtherSubLocation:                    d.Get("other_sub_location").(bool),
+		Other6SubLocation:                   d.Get("other6_sub_location").(bool),
 		ExcludeFromDynamicGroups:            d.Get("exclude_from_dynamic_groups").(bool),
 		ExcludeFromManualGroups:             d.Get("exclude_from_manual_groups").(bool),
 		DefaultExtranetTsPool:               d.Get("default_extranet_ts_pool").(bool),
