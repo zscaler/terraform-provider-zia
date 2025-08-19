@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.5``
+``Last updated: v4.4.6``
 
 ---
+
+## 4.4.6 (August, 19 2025)
+
+### Notes
+
+- Release date: **(August, 19 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #463](https://github.com/zscaler/terraform-provider-zia/pull/463) - Fixed import in the resource `zia_url_filtering_rules` to ensure correct `cbi_profile` import due to API limitation.
+- [PR #463](https://github.com/zscaler/terraform-provider-zia/pull/463) - Set attribute `state` to Computed in `zia_location_management` to handle odd API behavior.
 
 ## 4.4.5 (August, 13 2025)
 

@@ -84,9 +84,9 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Description: "Indicates whether a non-RFC 1918 IP address is publicly routable. This attribute is ignored if there is no ZIA Private Service Edge associated to the organization.",
 			},
 			"comment": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Computed:    true,
+				Type:     schema.TypeString,
+				Optional: true,
+				// Computed:    true,
 				Description: "Additional information about this static IP address",
 			},
 		},
