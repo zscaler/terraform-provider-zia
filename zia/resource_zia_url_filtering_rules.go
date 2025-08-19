@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/browser_isolation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -287,6 +286,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"cbi_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
@@ -312,14 +312,6 @@ func resourceURLFilteringRules() *schema.Resource {
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
-			// "url_categories2": {
-			// 	Type:     schema.TypeSet,
-			// 	Optional: true,
-			// 	Elem:     &schema.Schema{Type: schema.TypeString},
-			// 	Description: `The list of URL Categories to which the SSL inspection rule must be applied.
-			// 	See the URL Categories API for the list of available categories:
-			// 	https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
-			// },
 			"locations":              setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for which rule must be applied"),
 			"groups":                 setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of groups for which rule must be applied"),
 			"departments":            setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of departments for which rule must be applied"),
@@ -489,11 +481,6 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		_ = d.Set("url_categories", resp.URLCategories)
 	}
-	// if len(resp.URLCategories2) == 0 {
-	// 	_ = d.Set("url_categories2", []string{"ANY"})
-	// } else {
-	// 	_ = d.Set("url_categories2", resp.URLCategories2)
-	// }
 	_ = d.Set("state", resp.State)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("rank", resp.Rank)
@@ -529,10 +516,16 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	_ = d.Set("ciparule", resp.Ciparule)
 
 	// Update the cbi_profile block in the state
-	if resp.CBIProfile.ID != "" {
-		if err := d.Set("cbi_profile", flattenCBIProfileSimple(&resp.CBIProfile)); err != nil {
-			return diag.FromErr(err)
-		}
+	// if resp.CBIProfile.ID != "" {
+	// 	if err := d.Set("cbi_profile", flattenCBIProfileSimple(&resp.CBIProfile)); err != nil {
+	// 		return diag.FromErr(err)
+	// 	}
+	// }
+	log.Printf("[DEBUG] Full API rule: %+v", resp)
+	log.Printf("[DEBUG] API cbi_profile: %+v", resp.CBIProfile)
+
+	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
@@ -749,13 +742,12 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	}
 
 	result := urlfilteringpolicies.URLFilteringRule{
-		ID:            id,
-		Name:          d.Get("name").(string),
-		Description:   d.Get("description").(string),
-		Order:         order,
-		Protocols:     SetToStringList(d, "protocols"),
-		URLCategories: SetToStringList(d, "url_categories"),
-		// URLCategories2:         SetToStringList(d, "url_categories2"),
+		ID:                     id,
+		Name:                   d.Get("name").(string),
+		Description:            d.Get("description").(string),
+		Order:                  order,
+		Protocols:              SetToStringList(d, "protocols"),
+		URLCategories:          SetToStringList(d, "url_categories"),
 		UserRiskScoreLevels:    SetToStringList(d, "user_risk_score_levels"),
 		DeviceTrustLevels:      SetToStringList(d, "device_trust_levels"),
 		RequestMethods:         SetToStringList(d, "request_methods"),
@@ -792,23 +784,34 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
-func expandCBIProfile(d *schema.ResourceData) browser_isolation.CBIProfile {
+func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
 	if v, ok := d.GetOk("cbi_profile"); ok {
 		cbiProfileList := v.([]interface{})
 		if len(cbiProfileList) > 0 {
 			cbiProfileData := cbiProfileList[0].(map[string]interface{})
-			return browser_isolation.CBIProfile{
+
+			// optional: skip empty block
+			if cbiProfileData["id"] == "" && cbiProfileData["name"] == "" && cbiProfileData["url"] == "" {
+				return nil
+			}
+
+			return &urlfilteringpolicies.CBIProfile{
 				ID:   cbiProfileData["id"].(string),
 				Name: cbiProfileData["name"].(string),
 				URL:  cbiProfileData["url"].(string),
 			}
 		}
 	}
-	return browser_isolation.CBIProfile{}
+	return nil
 }
 
-func flattenCBIProfileSimple(cbiProfile *browser_isolation.CBIProfile) []interface{} {
+func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
 	if cbiProfile == nil {
+		log.Printf("[DEBUG] flattenCBIProfileSimple: received nil pointer")
+		return []interface{}{}
+	}
+	if cbiProfile.ID == "" && cbiProfile.Name == "" && cbiProfile.URL == "" {
+		log.Printf("[DEBUG] flattenCBIProfileSimple: empty profile data: %+v", cbiProfile)
 		return []interface{}{}
 	}
 	return []interface{}{

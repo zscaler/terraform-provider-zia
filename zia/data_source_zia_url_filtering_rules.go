@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/browser_isolation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -410,6 +409,11 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Computed:    true,
 							Description: "The browser isolation profile URL",
 						},
+						"profile_seq": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The browser isolation profile URL",
+						},
 					},
 				},
 			},
@@ -647,10 +651,8 @@ func dataSourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData
 		if err := d.Set("devices", flattenIDNameExtensions(resp.Devices)); err != nil {
 			return diag.FromErr(err)
 		}
-		if resp.CBIProfile.ID != "" {
-			if err := d.Set("cbi_profile", flattenCBIProfile(&resp.CBIProfile)); err != nil {
-				return diag.FromErr(err)
-			}
+		if err := d.Set("cbi_profile", flattenCBIProfile(resp.CBIProfile)); err != nil {
+			return diag.FromErr(err)
 		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
@@ -662,15 +664,15 @@ func dataSourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenCBIProfile(cbiProfile *browser_isolation.CBIProfile) map[string]interface{} {
+func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]interface{} {
 	if cbiProfile == nil {
 		return nil
 	}
 
 	return map[string]interface{}{
-		"id":   cbiProfile.ID,
-		"name": cbiProfile.Name,
-		"url":  cbiProfile.URL,
-		// "profile_seq": cbiProfile.ProfileSeq,
+		"id":          cbiProfile.ID,
+		"name":        cbiProfile.Name,
+		"url":         cbiProfile.URL,
+		"profile_seq": cbiProfile.ProfileSeq,
 	}
 }
