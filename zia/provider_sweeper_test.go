@@ -62,8 +62,10 @@ type testClient struct {
 	sdkV3Client *zscaler.Client
 }
 
-var testResourcePrefix = "tf-acc-test-"
-var updateResourcePrefix = "tf-updated-"
+var (
+	testResourcePrefix   = "tf-acc-test-"
+	updateResourcePrefix = "tf-updated-"
+)
 
 func TestRunForcedSweeper(t *testing.T) {
 	if os.Getenv("ZIA_VCR_TF_ACC") != "" {

@@ -393,7 +393,6 @@ func resourceEndUserNotificationUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func expandEndUserNotification(d *schema.ResourceData) end_user_notification.UserNotificationSettings {
-
 	result := end_user_notification.UserNotificationSettings{
 		AUPFrequency:                        d.Get("aup_frequency").(string),
 		AUPCustomFrequency:                  d.Get("aup_custom_frequency").(int),

@@ -245,7 +245,6 @@ func resourceURLFilteringCloludAppSettingsUpdate(ctx context.Context, d *schema.
 }
 
 func expandURLFilteringCloudAppSettings(d *schema.ResourceData) urlfilteringpolicies.URLAdvancedPolicySettings {
-
 	result := urlfilteringpolicies.URLAdvancedPolicySettings{
 		EnableDynamicContentCat:           d.Get("enable_dynamic_content_cat").(bool),
 		ConsiderEmbeddedSites:             d.Get("consider_embedded_sites").(bool),

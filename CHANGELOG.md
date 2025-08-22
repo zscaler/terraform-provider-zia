@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.4.7 (August, 22 2025)
+
+### Notes
+
+- Release date: **(August, 22 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #465](https://github.com/zscaler/terraform-provider-zia/pull/465) - Fixed ZPA Gateway app segments drift issue caused by API bug where individual gateway retrieval returns all possible app segments instead of only associated ones. Updated resource and data source to use GetAll() endpoint with local filtering to ensure correct app segments are returned, preventing Terraform drift during plan operations.
+
 ## 4.4.6 (August, 19 2025)
 
 ### Notes

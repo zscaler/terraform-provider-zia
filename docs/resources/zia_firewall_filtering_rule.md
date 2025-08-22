@@ -29,7 +29,7 @@ The most common default and predefined rules:
 |  `Block All IPv6`                       |      `Predefined`,       |           `Yes`          |
 |  `Block malicious IPs and domains`      |      `Predefined`,       |           `Yes`          |
 |  `Default Firewall Filtering Rule`      |      `Default`,          |           `Yes`          |
-|-----------------------|-----------------------------|
+|-----------------------|-----------------------------|-----------------------------|
 
 **NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
 

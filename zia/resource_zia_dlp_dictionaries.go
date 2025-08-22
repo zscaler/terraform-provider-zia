@@ -442,7 +442,7 @@ func resourceDLPDictionariesDelete(ctx context.Context, d *schema.ResourceData, 
 
 func expandDLPDictionaries(d *schema.ResourceData, isCreate bool) dlpdictionaries.DlpDictionary {
 	id, _ := getIntFromResourceData(d, "dictionary_id")
-	//hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
+	// hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
 
 	result := dlpdictionaries.DlpDictionary{
 		ID:                               id,

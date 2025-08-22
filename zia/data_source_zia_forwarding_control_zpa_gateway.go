@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -118,20 +119,42 @@ func dataForwardingControlZPAGatewayRead(ctx context.Context, d *schema.Resource
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for zpa gateway id: %d\n", id)
-		res, err := zpa_gateways.Get(ctx, service, id)
+		// Use GetAll to avoid API bug where Get by ID returns incorrect app segments
+		allGateways, err := zpa_gateways.GetAll(ctx, service)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		resp = res
+
+		for _, gateway := range allGateways {
+			if gateway.ID == id {
+				resp = &gateway
+				break
+			}
+		}
+
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("no zpa gateway found with id: %d", id))
+		}
 	}
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for zpa gateway name: %s\n", name)
-		res, err := zpa_gateways.GetByName(ctx, service, name)
+		// Use GetAll to avoid API bug where GetByName returns incorrect app segments
+		allGateways, err := zpa_gateways.GetAll(ctx, service)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		resp = res
+
+		for _, gateway := range allGateways {
+			if strings.EqualFold(gateway.Name, name) {
+				resp = &gateway
+				break
+			}
+		}
+
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("no zpa gateway found with name: %s", name))
+		}
 	}
 
 	if resp != nil {

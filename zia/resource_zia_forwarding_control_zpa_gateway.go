@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -31,12 +32,25 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("gateway_id", idInt)
 				} else {
-					resp, err := zpa_gateways.GetByName(ctx, service, id)
-					if err == nil {
-						d.SetId(strconv.Itoa(resp.ID))
-						_ = d.Set("gateway_id", resp.ID)
-					} else {
+					// Use GetAll to avoid API bug where GetByName returns incorrect app segments
+					allGateways, err := zpa_gateways.GetAll(ctx, service)
+					if err != nil {
 						return []*schema.ResourceData{d}, err
+					}
+
+					var foundGateway *zpa_gateways.ZPAGateways
+					for _, gateway := range allGateways {
+						if strings.EqualFold(gateway.Name, id) {
+							foundGateway = &gateway
+							break
+						}
+					}
+
+					if foundGateway != nil {
+						d.SetId(strconv.Itoa(foundGateway.ID))
+						_ = d.Set("gateway_id", foundGateway.ID)
+					} else {
+						return []*schema.ResourceData{d}, fmt.Errorf("no zpa gateway found with name: %s", id)
 					}
 				}
 				return []*schema.ResourceData{d}, nil
@@ -94,8 +108,8 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 			},
 			"zpa_app_segments": {
 				Type:        schema.TypeSet,
-				Required:    true,
-				Description: "All the Application Segments that are associated with the selected ZPA Server Group for which Source IP Anchoring is enabled",
+				Optional:    true,
+				Description: "The Application Segments to associate with this ZPA Gateway",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -110,10 +124,6 @@ func resourceForwardingControlZPAGateway() *schema.Resource {
 						},
 					},
 				},
-				// Set: func(v interface{}) int {
-				// 	m := v.(map[string]interface{})
-				// 	return schema.HashString(fmt.Sprintf("%s:%s", m["name"], m["external_id"]))
-				// },
 			},
 		},
 	}
@@ -171,15 +181,24 @@ func resourceForwardingControlZPAGatewayRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(fmt.Errorf("no forwarding control zpa gateway id is set"))
 	}
 
-	resp, err := zpa_gateways.Get(ctx, service, id)
+	// Use GetAll to avoid API bug where Get by ID returns incorrect app segments
+	allGateways, err := zpa_gateways.GetAll(ctx, service)
 	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing forwarding control zpa gateway %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
-
 		return diag.FromErr(err)
+	}
+
+	var resp *zpa_gateways.ZPAGateways
+	for _, gateway := range allGateways {
+		if gateway.ID == id {
+			resp = &gateway
+			break
+		}
+	}
+
+	if resp == nil {
+		log.Printf("[WARN] Removing forwarding control zpa gateway %s from state because it no longer exists in ZIA", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[INFO] Getting forwarding control zpa gateway:\n%+v\n", resp)
@@ -198,6 +217,8 @@ func resourceForwardingControlZPAGatewayRead(ctx context.Context, d *schema.Reso
 	if err := d.Set("zpa_server_group", flattenZPAServerGroupSimple(resp.ZPAServerGroup)); err != nil {
 		return diag.FromErr(err)
 	}
+
+	// Set zpa_app_segments with the correct data from the API
 	if err := d.Set("zpa_app_segments", flattenZPAGWAppSegments(resp.ZPAAppSegments)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -292,13 +313,17 @@ func expandForwardingControlZPAGateway(d *schema.ResourceData) zpa_gateways.ZPAG
 	if !exists {
 		gatewayType = "ZPA"
 	}
+
+	// Only use explicitly configured segments
+	appSegments := expandZPAGWAppSegment(d, "zpa_app_segments")
+
 	result := zpa_gateways.ZPAGateways{
 		ID:             id,
 		Name:           d.Get("name").(string),
 		Description:    d.Get("description").(string),
 		Type:           gatewayType.(string),
 		ZPAServerGroup: expandZPAServerGroup(d, "zpa_server_group"),
-		ZPAAppSegments: expandZPAGWAppSegment(d, "zpa_app_segments"),
+		ZPAAppSegments: appSegments,
 	}
 	return result
 }
