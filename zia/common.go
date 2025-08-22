@@ -831,6 +831,7 @@ func getDNSRuleProtocols() *schema.Schema {
 		},
 	}
 }
+
 func getUserRiskScoreLevels() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,

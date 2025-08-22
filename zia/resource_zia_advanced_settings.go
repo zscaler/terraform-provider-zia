@@ -349,23 +349,23 @@ func resourceAdvancedSettings() *schema.Resource {
 			// "ecs_object": {
 			// 	Type:     schema.TypeList,
 			// 	Optional:    true,
-			//Computed: true,
+			// Computed: true,
 			// 	Elem: &schema.Resource{
 			// 		Schema: map[string]*schema.Schema{
 			// 			"id": {
 			// 				Type:     schema.TypeString,
 			// 				Optional:    true,
-			//Computed: true,
+			// Computed: true,
 			// 			},
 			// 			"name": {
 			// 				Type:     schema.TypeString,
 			// 				Optional:    true,
-			//Computed: true,
+			// Computed: true,
 			// 			},
 			// 			"external_id": {
 			// 				Type:     schema.TypeString,
 			// 				Optional:    true,
-			//Computed: true,
+			// Computed: true,
 			// 			},
 			// 		},
 			// 	},
@@ -501,7 +501,6 @@ func resourceAdvancedSettingsUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func expandAdvancedSettingsUpdate(d *schema.ResourceData) advanced_settings.AdvancedSettings {
-
 	result := advanced_settings.AdvancedSettings{
 		EnableDnsResolutionOnTransparentProxy:                  d.Get("enable_dns_resolution_on_transparent_proxy").(bool),
 		EnableIPv6DnsResolutionOnTransparentProxy:              d.Get("enable_ipv6_dns_resolution_on_transparent_proxy").(bool),
@@ -552,7 +551,7 @@ func expandAdvancedSettingsUpdate(d *schema.ResourceData) advanced_settings.Adva
 		HttpRangeHeaderRemoveUrlCategories:                     SetToStringList(d, "http_range_header_remove_url_categories"),
 		DigestAuthBypassUrlCategories:                          SetToStringList(d, "digest_auth_bypass_url_categories"),
 		SniDnsOptimizationBypassUrlCategories:                  SetToStringList(d, "sni_dns_optimization_bypass_url_categories"),
-		//EcsObject:    										d.Get("potential_malicious_requests_blocked").(bool),
+		// EcsObject:    										d.Get("potential_malicious_requests_blocked").(bool),
 	}
 	return result
 }

@@ -695,7 +695,7 @@ func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff
 		}
 	}
 
-	//Validation 4: browser_eun_template_id can only be set when actions contain BLOCK_ or CAUTION_
+	// Validation 4: browser_eun_template_id can only be set when actions contain BLOCK_ or CAUTION_
 	if eunID, eunSet := diff.GetOk("browser_eun_template_id"); eunSet && eunID != "" {
 		var allowed bool
 		for _, a := range actions {
