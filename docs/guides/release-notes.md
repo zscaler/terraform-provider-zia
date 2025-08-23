@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.7``
+``Last updated: v4.4.8``
 
 ---
+
+## 4.4.8 (August, 22 2025)
+
+### Notes
+
+- Release date: **(August, 22 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #466](https://github.com/zscaler/terraform-provider-zia/pull/466) - Enhanced `zia_device_groups` data source to support retrieving all device groups when no name is specified, in addition to existing single device group lookup by name. Added a new list field to return all device groups for bulk operations while maintaining backward compatibility.
 
 ## 4.4.7 (August, 22 2025)
 
