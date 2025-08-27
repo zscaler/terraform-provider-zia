@@ -182,12 +182,6 @@ In addition to all arguments above, the following attributes are exported:
 * `labels` (list) Labels that are applicable to the rule.
       - `id` - (int) Identifier that uniquely identifies an entity
 
-* `devices` (list) Name-ID pairs of devices for which the rule must be applied. Specifies devices that are managed using Zscaler Client Connector. If no value is set, this field is ignored during the policy evaluation.
-      - `id` - (int) Identifier that uniquely identifies an entity
-
-* `device_groups` (list) Name-ID pairs of device groups for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. If no value is set, this field is ignored during the policy evaluation.
-      - `id` - (int) Identifier that uniquely identifies an entity
-
 * `zpa_gateway` (set) The ZPA Gateway for which this rule is applicable. This field is applicable only for the `ZPA` forwarding method.
       - `id` - (int) Identifier that uniquely identifies an entity
       - `name` - (string) The configured name of the entity

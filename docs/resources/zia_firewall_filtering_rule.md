@@ -35,10 +35,18 @@ The most common default and predefined rules:
 
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
+* `order` - (Optional) Rule order number. Predefined rules can be reordered to change their position in the rule set.
 * `labels` (list) - Labels that are applicable to the rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 
-**NOTE 3** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
+**NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
+
+* `name` - Predefined rule names are fixed and cannot be changed
+* `action` - The action of predefined rules cannot be modified
+* `rank` - The admin rank of predefined rules cannot be changed
+* Most other attributes that define the rule's behavior
+
+**NOTE 4** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
 
 ## Example Usage
 
@@ -104,8 +112,16 @@ The most common default rules are:
 
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
+* `order` - (Optional) Rule order number. Predefined rules can be reordered to change their position in the rule set.
 * `labels` (list) - Labels that are applicable to the rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
+
+**NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
+
+* `name` - Predefined rule names are fixed and cannot be changed
+* `action` - The action of predefined rules cannot be modified
+* `rank` - The admin rank of predefined rules cannot be changed
+* Most other attributes that define the rule's behavior
 
 ### Optional
 

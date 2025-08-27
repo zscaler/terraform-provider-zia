@@ -132,6 +132,34 @@ The following arguments are supported:
 * `idp_proxy_notification_text` (String) - Message displayed in the IdP Proxy notification.
 * `quarantine_custom_notification_text` (String) - Message displayed in the quarantine notification.
 
+## Important Notes
+
+**Text Attributes and CSS Styling**: When setting attributes such as `custom_text`, `url_cat_review_text`, `security_review_text`, `web_dlp_review_text`, `caution_custom_text`, `idp_proxy_notification_text`, and `quarantine_custom_notification_text`, we recommend using heredocs (EOT) especially when including CSS stylesheets. This ensures proper formatting and readability of complex text content.
+
+**JavaScript Limitation**: The ZIA API currently does not accept JavaScript tags in notification text attributes. Using JavaScript tags will result in an HTTP 406 Rejected error. For more information on customizing EUN CSS styles, see the [Zscaler documentation](https://help.zscaler.com/zia/customizing-euns-css-styles).
+
+### Example with Heredoc for CSS Styling
+
+```hcl
+resource "zia_end_user_notification" "this" {
+  notification_type = "CUSTOM"
+  custom_text = <<EOT
+    <div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px;">
+      <h2 style="color: #333;">Access Blocked</h2>
+      <p style="color: #666;">This website has been blocked for security reasons.</p>
+    </div>
+  EOT
+  
+  url_cat_review_text = <<EOT
+    <div style="text-align: center; margin: 10px 0;">
+      <button style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px;">
+        Request Review
+      </button>
+    </div>
+  EOT
+}
+```
+
 ## Import
 
 Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.

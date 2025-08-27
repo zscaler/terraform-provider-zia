@@ -44,9 +44,18 @@ resource "zia_dlp_web_rules" "this" {
 ```
 
 ```hcl
-// Retrieve a custom URL Category by Name
-data "zia_url_categories" "this"{
+// Example 1: Using data source to reference existing URL category
+data "zia_url_categories" "existing_category" {
     configured_name = "Example"
+}
+
+// Example 2: Creating new URL category and referencing it
+resource "zia_url_categories" "new_category" {
+  configured_name = "Custom_Category"
+  description     = "Custom category for DLP rules"
+  custom_category = true
+  super_category  = "USER_DEFINED"
+  type            = "URL_CATEGORY"
 }
 
 // Retrieve an ICAP Server by Name
@@ -65,7 +74,25 @@ resource "zia_dlp_web_rules" "this" {
   zscaler_incident_receiver = true
   without_content_inspection = false
   url_categories {
-    id = [ data.zia_url_categories.this.val ]
+    id = [ data.zia_url_categories.existing_category.val ]
+  }
+  icap_server {
+    id = data.zia_dlp_icap_servers.this.id
+  }
+}
+
+resource "zia_dlp_web_rules" "with_new_category" {
+  name                      = "Terraform_Test_New_Category"
+  description               = "Terraform_Test with new category"
+  action                    = "BLOCK"
+  order                     = 2
+  protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  rank                      = 7
+  state                     = "ENABLED"
+  zscaler_incident_receiver = true
+  without_content_inspection = false
+  url_categories {
+    id = [ zia_url_categories.new_category.val ]
   }
   icap_server {
     id = data.zia_dlp_icap_servers.this.id
@@ -211,7 +238,7 @@ The following arguments are supported:
 
 * `url_categories` - (Optional) The list of URL categories to which the DLP policy rule must be applied.
   * `id` - (Optional) Identifier that uniquely identifies an entity
-  ~> **NOTE** When associating a URL category, you can use the `zia_url_categories` resource or data source; however, you must export the attribute `val`
+  ~> **NOTE** When associating a URL category, you can use the `zia_url_categories` resource or data source; however, you must export the attribute `val`. The `val` attribute is available on both the resource and data source, making it consistent for referencing URL categories in DLP web rules.
 
 * `dlp_engines` - (Optional) The list of DLP engines to which the DLP policy rule must be applied.
   * `id` - (Optional) Identifier that uniquely identifies an entity. Maximum of up to `4` dlp engines. When not used it implies `Any` to apply the rule to all locations.

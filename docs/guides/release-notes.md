@@ -12,9 +12,25 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.8``
+``Last updated: v4.4.9``
 
 ---
+
+## 4.4.9 (August, 26 2025)
+
+### Notes
+
+- Release date: **(August, 26 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added `val` attribute to `zia_url_categories` resource to enable consistent referencing of URL categories in DLP web rules and other resources
+
+### Documentation
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Updated documentation for `zia_url_categories` resource to include new `val` attribute
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Updated documentation for `zia_forwarding_control_rule` to remove unsupported attributes `devices` and `device_groups`
 
 ## 4.4.8 (August, 22 2025)
 
