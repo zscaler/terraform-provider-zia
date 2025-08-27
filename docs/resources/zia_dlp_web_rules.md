@@ -205,7 +205,7 @@ resource "zia_dlp_web_rules" "with_receiver" {
 ```hcl
 # Retrieve Cloud-to-Cloud Incident Receiver (C2CIR) information
 data "zia_dlp_cloud_to_cloud_ir" "this" {
-  name = "SecurityGeekIO"
+  name = "AzureTenant01"
 }
 
 # Output the retrieved C2CIR information for reference
@@ -228,7 +228,7 @@ resource "zia_dlp_web_rules" "this" {
         "HTTP_RULE"
     ]
   severity = "RULE_SEVERITY_HIGH"
-  
+
   # Configure receiver using values from the C2CIR data source
   receiver {
     id   = tostring(data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].tenant_authorization_info[0].smir_bucket_config[0].id)
@@ -243,11 +243,12 @@ resource "zia_dlp_web_rules" "this" {
 ```
 
 **Note:** The receiver configuration uses values from the C2CIR data source:
-- `id`: Uses the SMIR bucket configuration ID (converted to string)
-- `name`: Uses the SMIR bucket configuration name
-- `type`: Uses the onboardable entity type (e.g., "C2CIR")
-- `tenant.id`: Uses the C2CIR tenant ID (converted to string)
-- `tenant.name`: Uses the C2CIR tenant name
+
+* `id`: Uses the SMIR bucket configuration ID (converted to string)
+* `name`: Uses the SMIR bucket configuration name
+* `type`: Uses the onboardable entity type (e.g., "C2CIR")
+* `tenant.id`: Uses the C2CIR tenant ID (converted to string)
+* `tenant.name`: Uses the C2CIR tenant name
 
 ## Argument Reference
 

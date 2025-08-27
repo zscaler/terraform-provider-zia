@@ -80,6 +80,92 @@ resource "zia_casb_dlp_rules" "this" {
 }
 ```
 
+## Example Usage - Configure Cloud to Cloud Forwarding
+
+```hcl
+data "zia_casb_tenant" "this" {
+  tenant_name = "Jira_Tenant01"
+}
+
+data "zia_dlp_incident_receiver_servers" "this" {
+  name = "ZS_Incident_Receiver"
+}
+
+data "zia_rule_labels" "this" {
+    name = "RuleLabel01
+}
+
+data "zia_dlp_engines" "this" {
+    name = "PCI"
+}
+
+data "zia_admin_users" "this" {
+    username = auditor01
+}
+
+# Retrieve Cloud-to-Cloud Incident Receiver (C2CIR) information
+data "zia_dlp_cloud_to_cloud_ir" "this" {
+  name = "AzureTenant01"
+}
+
+# Output the retrieved C2CIR information for reference
+output "zia_dlp_cloud_to_cloud_ir" {
+  value = data.zia_dlp_cloud_to_cloud_ir.this
+}
+
+resource "zia_casb_dlp_rules" "this" {
+  name = "SaaS_ITSM_App_Rule"
+  description = "SaaS_ITSM_App_Rule"
+  order = 1
+  rank = 7
+  type = "OFLCASB_DLP_ITSM"
+  action = "OFLCASB_DLP_REPORT_INCIDENT"
+  severity = "RULE_SEVERITY_HIGH"
+  without_content_inspection = false
+  external_auditor_email = "jdoe@acme.com"
+  file_types = [
+        "FTCATEGORY_APPX",
+        "FTCATEGORY_SQL",
+  ]
+  collaboration_scope = [
+        "ANY",
+  ]
+  components = [
+        "COMPONENT_ITSM_OBJECTS",
+        "COMPONENT_ITSM_ATTACHMENTS",
+  ]
+ cloud_app_tenants {
+    id = [data.zia_casb_tenant.this.tenant_id]
+  }
+ dlp_engines {
+    id = [data.zia_dlp_engines.this.id]
+  }
+  object_types {
+    id = [32, 33, 34]
+  }
+ labels {
+    id = [data.zia_rule_labels.this.id]
+  }
+  zscaler_incident_receiver {
+    id = data.zia_dlp_incident_receiver_servers.this.id
+  }
+  auditor_notification {
+    id = data.zia_admin_users.this.id
+  }
+
+  # Configure receiver using values from the C2CIR data source
+  receiver {
+    id   = tostring(data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].tenant_authorization_info[0].smir_bucket_config[0].id)
+    name = data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].tenant_authorization_info[0].smir_bucket_config[0].config_name
+    type = data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].type
+    tenant {
+      id   = tostring(data.zia_dlp_cloud_to_cloud_ir.this.id)
+      name = data.zia_dlp_cloud_to_cloud_ir.this.name
+    }
+  }
+}
+```
+
 ## Schema
 
 ### Required
