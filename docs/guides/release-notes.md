@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.9``
+``Last updated: v4.4.10``
 
 ---
+
+## 4.4.10 (August, 27 2025)
+
+### Notes
+
+- Release date: **(August, 27 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #470](https://github.com/zscaler/terraform-provider-zia/pull/470) - Fixed resource attribute `zpa_gateway` in `zia_forwarding_control_rule` due to missing `name` attribute
 
 ## 4.4.9 (August, 26 2025)
 
