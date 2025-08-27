@@ -228,6 +228,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_dlp_incident_receiver_servers":                 dataSourceDLPIncidentReceiverServers(),
 			"zia_dlp_notification_templates":                    dataSourceDLPNotificationTemplates(),
 			"zia_dlp_web_rules":                                 dataSourceDlpWebRules(),
+			"zia_dlp_cloud_to_cloud_ir":                         dataSourceDLPCloudToCloudIR(),
 			"zia_domain_profiles":                               dataSourceDomainProfiles(),
 			"zia_casb_email_label":                              dataSourceCasbEmailLabel(),
 			"zia_casb_dlp_rules":                                dataSourceCasbDlpRules(),

@@ -7,6 +7,12 @@
 - Release date: **(August, 26 2025)**
 - Supported Terraform version: **v1.x**
 
+### Enhancements
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added data source `zia_cloud_to_cloud_ir` - Retrieves the Cloud-to-Cloud Incident Receiver (C2CIR) information configured in the ZIA Admin Portal. This data source can be used to set the corresponding receiver when configuring the resource `zia_dlp_web_rules` or `zia_casb_dlp_rules`
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added attribute `receiver` to `zia_dlp_web_rules` and `zia_casb_dlp_rules` resources to allow configuration of Cloud-to-Cloud Incident Receivers.
+
 ### Bug Fixes
 
 - [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added `val` attribute to `zia_url_categories` resource to enable consistent referencing of URL categories in DLP web rules and other resources

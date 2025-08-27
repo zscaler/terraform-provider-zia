@@ -501,6 +501,60 @@ func dataSourceDlpWebRules() *schema.Resource {
 					},
 				},
 			},
+			"receiver": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The receiver information for the DLP policy rule",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Unique identifier for the receiver",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Name of the receiver",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Type of the receiver",
+						},
+						"tenant": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Description: "Tenant information for the receiver",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:        schema.TypeInt,
+										Computed:    true,
+										Description: "Unique identifier for the tenant",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "Name of the tenant",
+									},
+									"external_id": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Description: "External identifier for the tenant",
+									},
+									"extensions": {
+										Type:        schema.TypeMap,
+										Computed:    true,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+										Description: "Additional properties for the tenant",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"workload_groups": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -670,9 +724,32 @@ func dataSourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
+
+		if err := d.Set("receiver", flattenReceiver(resp.Receiver)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting receiver: %s", err))
+		}
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't find any web dlp rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil
+}
+
+func flattenReceiver(receiver *dlp_web_rules.Receiver) []map[string]interface{} {
+	if receiver == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"id":   receiver.ID,
+		"name": receiver.Name,
+		"type": receiver.Type,
+	}
+
+	// Set tenant if it exists
+	if receiver.Tenant != nil {
+		result["tenant"] = flattenIDExtensionsList(receiver.Tenant)
+	}
+
+	return []map[string]interface{}{result}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/saas_security_api/casb_dlp_rules"
 )
 
@@ -289,6 +290,51 @@ func resourceCasbDlpRules() *schema.Resource {
 			"collaboration_scope":       getCasbRuleCollaborationScope(),
 			"file_types":                getFileTypes(),
 			"components":                getCasbRuleComponents(),
+			"receiver": {
+				Type:        schema.TypeSet,
+				Optional:    true,
+				MaxItems:    1,
+				Description: "The receiver information for the DLP policy rule",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Unique identifier for the receiver",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Name of the receiver",
+						},
+						"type": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "Type of the receiver",
+						},
+						"tenant": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							MaxItems:    1,
+							Description: "Tenant information for the receiver",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"id": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Unique identifier for the tenant",
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: "Name of the tenant",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -501,6 +547,11 @@ func resourceCasbDlpRulesRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("zscaler_incident_receiver", flattenCustomIDSet(resp.ZscalerIncidentReceiver)); err != nil {
 		return diag.FromErr(err)
 	}
+
+	if err := d.Set("receiver", flattenReceiverCASBResource(resp.Receiver)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting receiver: %s", err))
+	}
+
 	if err := d.Set("auditor_notification", flattenCustomIDSet(resp.AuditorNotification)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -685,7 +736,77 @@ func expandCasbDlpRules(d *schema.ResourceData) casb_dlp_rules.CasbDLPRules {
 		CasbEmailLabel:               expandIDNameExtensionsSetSingle(d, "casb_email_label"),
 		CasbTombstoneTemplate:        expandIDNameExtensionsSetSingle(d, "casb_tombstone_template"),
 		Tag:                          expandIDNameExtensionsSetSingle(d, "tag"),
+		Receiver:                     expandCASBReceiver(d, "receiver"),
 	}
 
 	return result
+}
+
+func expandCASBReceiver(d *schema.ResourceData, key string) *casb_dlp_rules.Receiver {
+	receiverSet, ok := d.Get(key).(*schema.Set)
+	if !ok || receiverSet.Len() == 0 {
+		return nil
+	}
+
+	// Since receiver is a single item set, get the first (and only) item
+	receiverList := receiverSet.List()
+	if len(receiverList) == 0 {
+		return nil
+	}
+
+	item := receiverList[0].(map[string]interface{})
+
+	// Convert string ID to int for the SDK struct
+	idStr := item["id"].(string)
+	idInt, err := strconv.Atoi(idStr)
+	if err != nil {
+		// If conversion fails, use 0 as default
+		idInt = 0
+	}
+
+	receiver := &casb_dlp_rules.Receiver{
+		ID:   idInt,
+		Name: item["name"].(string),
+		Type: item["type"].(string),
+	}
+
+	// Handle tenant if present
+	if tenantList, ok := item["tenant"].([]interface{}); ok && len(tenantList) > 0 {
+		if tenantMap, ok := tenantList[0].(map[string]interface{}); ok {
+			tenantIDStr := tenantMap["id"].(string)
+			tenantIDInt, err := strconv.Atoi(tenantIDStr)
+			if err != nil {
+				tenantIDInt = 0
+			}
+			receiver.Tenant = &common.IDNameExtensions{
+				ID:   tenantIDInt,
+				Name: tenantMap["name"].(string),
+			}
+		}
+	}
+
+	return receiver
+}
+
+func flattenReceiverCASBResource(receiver *casb_dlp_rules.Receiver) []interface{} {
+	if receiver == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"id":   strconv.Itoa(receiver.ID),
+		"name": receiver.Name,
+		"type": receiver.Type,
+	}
+
+	// Handle tenant if present
+	if receiver.Tenant != nil {
+		tenant := map[string]interface{}{
+			"id":   strconv.Itoa(receiver.Tenant.ID),
+			"name": receiver.Tenant.Name,
+		}
+		result["tenant"] = []interface{}{tenant}
+	}
+
+	return []interface{}{result}
 }
