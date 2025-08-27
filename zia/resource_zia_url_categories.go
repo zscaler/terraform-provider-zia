@@ -214,7 +214,6 @@ func resourceURLCategories() *schema.Resource {
 				Computed:    true,
 				Description: "The unique ID for the URL category.",
 			},
-			// "super_category": getSuperCategories(),
 		},
 	}
 }
@@ -395,6 +394,7 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 	id, _ := getStringFromResourceData(d, "category_id")
 	result := urlcategories.URLCategory{
 		ID:                                   id,
+		Val:                                  d.Get("val").(int),
 		ConfiguredName:                       d.Get("configured_name").(string),
 		Keywords:                             SetToStringList(d, "keywords"),
 		KeywordsRetainingParentCategory:      SetToStringList(d, "keywords_retaining_parent_category"),

@@ -793,6 +793,10 @@ func flattenReceiverCASBResource(receiver *casb_dlp_rules.Receiver) []interface{
 		return nil
 	}
 
+	if receiver.ID == 0 && receiver.Name == "" && receiver.Type == "" && receiver.Tenant == nil {
+		return nil
+	}
+
 	result := map[string]interface{}{
 		"id":   strconv.Itoa(receiver.ID),
 		"name": receiver.Name,

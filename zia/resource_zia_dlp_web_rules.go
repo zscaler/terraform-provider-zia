@@ -845,6 +845,11 @@ func flattenReceiverResource(receiver *dlp_web_rules.Receiver) []interface{} {
 		return nil
 	}
 
+	// Check if the receiver is actually empty (no meaningful data)
+	if receiver.ID == 0 && receiver.Name == "" && receiver.Type == "" && receiver.Tenant == nil {
+		return nil
+	}
+
 	result := map[string]interface{}{
 		"id":   strconv.Itoa(receiver.ID),
 		"name": receiver.Name,
