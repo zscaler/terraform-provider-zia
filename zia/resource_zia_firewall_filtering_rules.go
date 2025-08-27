@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 )
@@ -177,7 +175,6 @@ func resourceFirewallFilteringRules() *schema.Resource {
 	}
 }
 
-/*
 func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
 		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
@@ -189,33 +186,6 @@ func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
 		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
 	}
 	return nil
-}
-*/
-
-func beforeReorderFirewallFilteringRules(ctx context.Context, service *zscaler.Service) func() {
-	return func() {
-		log.Printf("[INFO] beforeReorderFirewallFilteringRules")
-		// get all predefined rules and set their order to come first
-		rules, err := filteringrules.GetAll(ctx, service)
-		if err != nil {
-			log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
-		}
-		// first order predefined rules by their order
-		sort.Slice(rules, func(i, j int) bool {
-			return rules[i].Order < rules[j].Order
-		})
-		order := 1
-		for _, r := range rules {
-			if r.Predefined {
-				r.Order = order
-				_, err = filteringrules.Update(ctx, service, r.ID, &r)
-				if err != nil {
-					log.Printf("[ERROR] beforeReorderFirewallFilteringRules: %v", err)
-				}
-				order++
-			}
-		}
-	}
 }
 
 func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -287,16 +257,12 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 				if err != nil {
 					return err
 				}
-				if rule.Predefined {
-					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
-					return nil
-				}
 
 				rule.Order = order
 				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
 			},
-			beforeReorderFirewallFilteringRules(ctx, service),
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -347,11 +313,6 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	// if resp.Predefined {
-	// 	log.Printf("[INFO] Rule ID %d is predefined — ignoring from Terraform state", resp.ID)
-	// 	d.SetId("") // clear from Terraform state
-	// 	return nil
-	// }
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
@@ -511,11 +472,6 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 				if err != nil {
 					return err
 				}
-				if rule.Predefined {
-					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
-					return nil
-				}
-
 				// Optional: avoid unnecessary updates if the current order is already correct
 				if rule.Order == order {
 					return nil
@@ -525,7 +481,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
 			},
-			beforeReorderFirewallFilteringRules(ctx, service),
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
 		)
 
 		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
@@ -568,8 +524,12 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err))
 	}
 
-	// Validate if the rule can be deleted
-	// Prevent deletion if the rule is predefined
+	// Validate if the rule can be deleted using the validateFirewallRule function
+	if err := validateFirewallRule(*rule); err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Additional check for any predefined rule (backup validation)
 	if rule.Predefined {
 		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}

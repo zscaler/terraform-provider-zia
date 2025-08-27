@@ -209,7 +209,11 @@ func resourceURLCategories() *schema.Resource {
 				See the URL Categories API for the list of available super categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
-			// "super_category": getSuperCategories(),
+			"val": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The unique ID for the URL category.",
+			},
 		},
 	}
 }
@@ -288,6 +292,7 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	_ = d.Set("ip_ranges_retaining_parent_category", resp.IPRangesRetainingParentCategory)
 	_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
 	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
+	_ = d.Set("val", resp.Val)
 
 	if err := d.Set("scopes", flattenScopesLite(resp)); err != nil {
 		return diag.FromErr(err)
@@ -389,6 +394,7 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 	id, _ := getStringFromResourceData(d, "category_id")
 	result := urlcategories.URLCategory{
 		ID:                                   id,
+		Val:                                  d.Get("val").(int),
 		ConfiguredName:                       d.Get("configured_name").(string),
 		Keywords:                             SetToStringList(d, "keywords"),
 		KeywordsRetainingParentCategory:      SetToStringList(d, "keywords_retaining_parent_category"),

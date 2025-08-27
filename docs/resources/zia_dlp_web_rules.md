@@ -44,9 +44,18 @@ resource "zia_dlp_web_rules" "this" {
 ```
 
 ```hcl
-// Retrieve a custom URL Category by Name
-data "zia_url_categories" "this"{
+// Example 1: Using data source to reference existing URL category
+data "zia_url_categories" "existing_category" {
     configured_name = "Example"
+}
+
+// Example 2: Creating new URL category and referencing it
+resource "zia_url_categories" "new_category" {
+  configured_name = "Custom_Category"
+  description     = "Custom category for DLP rules"
+  custom_category = true
+  super_category  = "USER_DEFINED"
+  type            = "URL_CATEGORY"
 }
 
 // Retrieve an ICAP Server by Name
@@ -65,7 +74,25 @@ resource "zia_dlp_web_rules" "this" {
   zscaler_incident_receiver = true
   without_content_inspection = false
   url_categories {
-    id = [ data.zia_url_categories.this.val ]
+    id = [ data.zia_url_categories.existing_category.val ]
+  }
+  icap_server {
+    id = data.zia_dlp_icap_servers.this.id
+  }
+}
+
+resource "zia_dlp_web_rules" "with_new_category" {
+  name                      = "Terraform_Test_New_Category"
+  description               = "Terraform_Test with new category"
+  action                    = "BLOCK"
+  order                     = 2
+  protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  rank                      = 7
+  state                     = "ENABLED"
+  zscaler_incident_receiver = true
+  without_content_inspection = false
+  url_categories {
+    id = [ zia_url_categories.new_category.val ]
   }
   icap_server {
     id = data.zia_dlp_icap_servers.this.id
@@ -147,6 +174,82 @@ resource "zia_dlp_web_rules" "subrule1" {
 }
 ```
 
+## Example Usage - "Configuring Receiver for DLP Policy Rule"
+
+```hcl
+resource "zia_dlp_web_rules" "with_receiver" {
+  name                       = "Terraform_Test_with_Receiver"
+  description                = "DLP rule with receiver configuration"
+  action                     = "ALLOW"
+  state                      = "ENABLED"
+  order                      = 1
+  rank                       = 0
+  protocols                  = [
+    "WEBSOCKETSSL_RULE",
+    "WEBSOCKET_RULE",
+    "FTP_RULE",
+    "HTTPS_RULE",
+    "HTTP_RULE"
+  ]
+  severity = "RULE_SEVERITY_HIGH"
+
+  # Basic receiver configuration with just ID
+  receiver {
+    id = "23136553"
+  }
+}
+```
+
+## Example Usage - Configure Cloud to Cloud Forwarding
+
+```hcl
+# Retrieve Cloud-to-Cloud Incident Receiver (C2CIR) information
+data "zia_dlp_cloud_to_cloud_ir" "this" {
+  name = "AzureTenant01"
+}
+
+# Output the retrieved C2CIR information for reference
+output "zia_dlp_cloud_to_cloud_ir" {
+  value = data.zia_dlp_cloud_to_cloud_ir.this
+}
+
+resource "zia_dlp_web_rules" "this" {
+  name                       = "Terraform_Test_policy_prod_tf"
+  description                = "Terraform_Test_policy_prod_tf"
+  action                     = "ALLOW"
+  state                      = "ENABLED"
+  order                      = 1
+  rank                       = 0
+  protocols                  = [
+        "WEBSOCKETSSL_RULE",
+        "WEBSOCKET_RULE",
+        "FTP_RULE",
+        "HTTPS_RULE",
+        "HTTP_RULE"
+    ]
+  severity = "RULE_SEVERITY_HIGH"
+
+  # Configure receiver using values from the C2CIR data source
+  receiver {
+    id   = tostring(data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].tenant_authorization_info[0].smir_bucket_config[0].id)
+    name = data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].tenant_authorization_info[0].smir_bucket_config[0].config_name
+    type = data.zia_dlp_cloud_to_cloud_ir.this.onboardable_entity[0].type
+    tenant {
+      id   = tostring(data.zia_dlp_cloud_to_cloud_ir.this.id)
+      name = data.zia_dlp_cloud_to_cloud_ir.this.name
+    }
+  }
+}
+```
+
+**Note:** The receiver configuration uses values from the C2CIR data source:
+
+* `id`: Uses the SMIR bucket configuration ID (converted to string)
+* `name`: Uses the SMIR bucket configuration name
+* `type`: Uses the onboardable entity type (e.g., "C2CIR")
+* `tenant.id`: Uses the C2CIR tenant ID (converted to string)
+* `tenant.name`: Uses the C2CIR tenant name
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -211,7 +314,7 @@ The following arguments are supported:
 
 * `url_categories` - (Optional) The list of URL categories to which the DLP policy rule must be applied.
   * `id` - (Optional) Identifier that uniquely identifies an entity
-  ~> **NOTE** When associating a URL category, you can use the `zia_url_categories` resource or data source; however, you must export the attribute `val`
+  ~> **NOTE** When associating a URL category, you can use the `zia_url_categories` resource or data source; however, you must export the attribute `val`. The `val` attribute is available on both the resource and data source, making it consistent for referencing URL categories in DLP web rules.
 
 * `dlp_engines` - (Optional) The list of DLP engines to which the DLP policy rule must be applied.
   * `id` - (Optional) Identifier that uniquely identifies an entity. Maximum of up to `4` dlp engines. When not used it implies `Any` to apply the rule to all locations.
@@ -251,6 +354,14 @@ The following arguments are supported:
 
 * `icap_server` The DLP server, using ICAP, to which the transaction content is forwarded.
   * `id` - (Optional) Identifier that uniquely identifies an entity
+
+* `receiver` - (Optional) The receiver information for the DLP policy rule.
+  * `id` - (Required) Unique identifier for the receiver
+  * `name` - (Optional) Name of the receiver
+  * `type` - (Optional) Type of the receiver
+  * `tenant` - (Optional) Tenant information for the receiver
+    * `id` - (Optional) Unique identifier for the tenant
+    * `name` - (Optional) Name of the tenant
 
 * `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group

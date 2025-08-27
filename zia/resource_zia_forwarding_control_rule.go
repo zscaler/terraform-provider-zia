@@ -210,6 +210,7 @@ func resourceForwardingControlRule() *schema.Resource {
 			"departments":                    setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
 			"groups":                         setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
 			"users":                          setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
+			"device_groups":                  setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"src_ip_groups":                  setIDsSchemaTypeCustom(nil, "Source IP address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address group"),
 			"src_ipv6_groups":                setIDsSchemaTypeCustom(nil, "Source IPv6 address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IPv6 address group"),
 			"dest_ip_groups":                 setIDsSchemaTypeCustom(nil, "User-defined destination IP address groups to which the rule is applied. If not set, the rule is not restricted to a specific destination IP address group"),
@@ -401,6 +402,10 @@ func resourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("device_groups", flattenIDExtensionsListIDs(resp.DeviceGroups)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -569,6 +574,7 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		ProxyGateway:        expandIDNameSet(d, "proxy_gateway"),
 		ZPAGateway:          expandIDNameSet(d, "zpa_gateway"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
+		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 	}
 
 	return result

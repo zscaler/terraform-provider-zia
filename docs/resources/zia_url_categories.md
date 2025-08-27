@@ -71,6 +71,7 @@ The following arguments are supported:
 * `ip_ranges_retaining_parent_category_count` - (Optional) The number of custom IP address ranges associated to the URL category, that also need to be retained under the original parent category.
 * `custom_ip_ranges_count` - (Optional) The number of custom IP address ranges associated to the URL category.
 * `editable` - (Boolean) Value is set to false for custom URL category when due to scope user does not have edit permission
+* `val` - (Number) The unique ID for the URL category. This attribute is particularly useful when referencing the URL category in other resources like DLP web rules.
 * `type` - (Optional) Type of the custom categories. `URL_CATEGORY`, `TLD_CATEGORY`, `ALL`
 * `urls` - (Optional) Custom URLs to add to a URL category. Up to 25,000 custom URLs can be added per organization across all categories (including bandwidth classes).
 * `urls_retaining_parent_category_count` - (Optional) The number of custom IP address ranges associated to the URL category, that also need to be retained under the original parent category.

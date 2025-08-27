@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0
-	github.com/zscaler/zscaler-sdk-go/v3 v3.6.1
+	github.com/zscaler/zscaler-sdk-go/v3 v3.6.4
 )
 
 require (
@@ -69,3 +69,5 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// replace github.com/zscaler/zscaler-sdk-go/v3 => /Users/wguilherme/go/src/github.com/zscaler/zscaler-sdk-go

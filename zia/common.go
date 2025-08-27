@@ -124,11 +124,11 @@ func setIdNameSchemaCustom(maxItems int, description string) *schema.Schema {
 					Required:    true,
 					Description: "The unique identifier for the resource.",
 				},
-				"name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: "The name of the resource.",
-				},
+				// "name": {
+				// 	Type:        schema.TypeString,
+				// 	Optional:    true,
+				// 	Description: "The name of the resource.",
+				// },
 			},
 		},
 	}

@@ -129,3 +129,13 @@ rules.
 * `workload_groups` (List) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Number) A unique identifier assigned to the workload group
   * `name` - (String) The name of the workload group
+
+* `receiver` - (Optional) The receiver information for the DLP policy rule.
+  * `id` - (Number) Unique identifier for the receiver
+  * `name` - (String) Name of the receiver
+  * `type` - (String) Type of the receiver
+  * `tenant` - (Optional) Tenant information for the receiver
+    * `id` - (Number) Unique identifier for the tenant
+    * `name` - (String) Name of the tenant
+    * `external_id` - (String) External identifier for the tenant
+    * `extensions` - (Map) Additional properties for the tenant

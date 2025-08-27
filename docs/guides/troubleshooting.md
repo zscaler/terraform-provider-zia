@@ -157,3 +157,13 @@ This error is commonly returned when attempting to create a `zia_dlp_dictionarie
 ```sh
 │ Error: no dictionary found with name: Social Security Numbers (US)
 ```
+
+### │ Error: deletion of the predefined rule i.e 'Office 365 One Click Rule' is not allowed
+
+This error occurs when attempting to delete a predefined firewall filtering rule. Predefined rules such as "Office 365 One Click Rule", "UCaaS One Click Rule", "Block All IPv6", "Block malicious IPs and domains", and "Default Firewall Filtering Rule" cannot be deleted as they are system-managed rules.
+
+**Solution**: Remove the rule from your Terraform configuration and run `terraform apply` instead of `terraform destroy`. The rule will remain in the ZIA system but will no longer be managed by Terraform.
+
+```sh
+│ Error: deletion of the predefined rule 'Office 365 One Click Rule' is not allowed
+```

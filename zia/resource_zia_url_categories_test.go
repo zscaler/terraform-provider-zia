@@ -35,6 +35,7 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", initialName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
+					resource.TestCheckResourceAttrSet(resourceTypeAndName, "val"),
 				),
 			},
 
@@ -47,6 +48,7 @@ func TestAccResourceURLCategoriesBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", updatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "custom_category", strconv.FormatBool(variable.CustomCategory)),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "type", "URL_CATEGORY"),
+					resource.TestCheckResourceAttrSet(resourceTypeAndName, "val"),
 				),
 			},
 			// Import test

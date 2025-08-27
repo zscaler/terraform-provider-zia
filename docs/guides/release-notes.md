@@ -12,9 +12,32 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.8``
+``Last updated: v4.4.9``
 
 ---
+
+## 4.4.9 (August, 26 2025)
+
+### Notes
+
+- Release date: **(August, 26 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added data source `zia_cloud_to_cloud_ir` - Retrieves the Cloud-to-Cloud Incident Receiver (C2CIR) information configured in the ZIA Admin Portal. This data source can be used to set the corresponding receiver when configuring the resource `zia_dlp_web_rules` or `zia_casb_dlp_rules`
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added attribute `receiver` to `zia_dlp_web_rules` and `zia_casb_dlp_rules` resources to allow configuration of Cloud-to-Cloud Incident Receivers.
+
+### Bug Fixes
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Added `val` attribute to `zia_url_categories` resource to enable consistent referencing of URL categories in DLP web rules and other resources
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Fixed performance issue in firewall filtering rules reordering by removing unnecessary predefined rule processing that was causing excessive wait times
+
+### Documentation
+
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Updated documentation for `zia_url_categories` resource to include new `val` attribute
+- [PR #468](https://github.com/zscaler/terraform-provider-zia/pull/468) - Updated documentation for `zia_forwarding_control_rule` to remove unsupported attributes `devices` and `device_groups`
 
 ## 4.4.8 (August, 22 2025)
 
