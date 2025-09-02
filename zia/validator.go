@@ -12,7 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/filetypecontrol"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -96,6 +99,186 @@ var supportedURLCategories = []string{
 	"CUSTOM_236", "CUSTOM_237", "CUSTOM_238", "CUSTOM_239", "CUSTOM_240", "CUSTOM_241", "CUSTOM_242", "CUSTOM_243",
 	"CUSTOM_244", "CUSTOM_245", "CUSTOM_246", "CUSTOM_247", "CUSTOM_248", "CUSTOM_249", "CUSTOM_250", "CUSTOM_251",
 	"CUSTOM_252", "CUSTOM_253", "CUSTOM_254", "CUSTOM_255", "CUSTOM_256",
+}
+
+// ValidateRankAndOrder validates that a rule with the given rank can be placed at the specified order
+// This function is used across all rule-based resources (firewall, URL filtering, file type control, etc.)
+func ValidateRankAndOrder(ctx context.Context, service *zscaler.Service, rank, order int, resourceType string) error {
+	// For ranks 0-6, validate against existing ranked rules
+	if rank <= 6 {
+		validOrder, err := getValidOrderForRankedRule(ctx, service, rank, resourceType)
+		if err != nil {
+			return fmt.Errorf("failed to determine valid order for rank %d: %v", rank, err)
+		}
+		if order != validOrder {
+			return fmt.Errorf("rank %d rules must be placed at order %d (next available order), but order %d was specified", rank, validOrder, order)
+		}
+		return nil
+	}
+
+	// For rank 7, validate that it's placed after all existing ranked rules (0-6)
+	if rank == 7 {
+		validOrder, err := getValidOrderForRank7Rule(ctx, service, resourceType)
+		if err != nil {
+			return fmt.Errorf("failed to determine valid order for rank 7: %v", err)
+		}
+		if order < validOrder {
+			return fmt.Errorf("rank 7 rules must be placed at order %d or higher (after all ranked rules 0-6), but order %d was specified", validOrder, order)
+		}
+		return nil
+	}
+
+	return fmt.Errorf("invalid rank %d (must be between 0 and 7)", rank)
+}
+
+// getValidOrderForRankedRule determines the next available order for a ranked rule (0-6)
+func getValidOrderForRankedRule(ctx context.Context, service *zscaler.Service, rank int, resourceType string) (int, error) {
+	// Get existing rules based on resource type
+	switch resourceType {
+	case "firewall_filtering_rules":
+		rules, err := filteringrules.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing firewall rules: %v", err)
+		}
+		return calculateNextOrderForRankedRule(rules, rank, resourceType)
+	case "url_filtering_rules":
+		rules, err := urlfilteringpolicies.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing URL filtering rules: %v", err)
+		}
+		return calculateNextOrderForRankedRule(rules, rank, resourceType)
+	case "file_type_control_rules":
+		rules, err := filetypecontrol.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing file type control rules: %v", err)
+		}
+		return calculateNextOrderForRankedRule(rules, rank, resourceType)
+	default:
+		return 0, fmt.Errorf("unsupported resource type: %s", resourceType)
+	}
+}
+
+// calculateNextOrderForRankedRule calculates the next available order for a ranked rule
+func calculateNextOrderForRankedRule(rules interface{}, rank int, resourceType string) (int, error) {
+	nextOrder := 1
+
+	switch resourceType {
+	case "firewall_filtering_rules":
+		firewallRules := rules.([]filteringrules.FirewallFilteringRules)
+		for _, rule := range firewallRules {
+			if rule.Rank <= 6 {
+				if rank < rule.Rank {
+					// Our rank is higher, we can displace this rule
+					nextOrder = rule.Order
+				} else if rank == rule.Rank {
+					// Same rank, we need to go after this rule
+					nextOrder = rule.Order + 1
+				} else {
+					// Our rank is lower, we need to go after this rule
+					nextOrder = rule.Order + 1
+				}
+			}
+		}
+	case "url_filtering_rules":
+		urlRules := rules.([]urlfilteringpolicies.URLFilteringRule)
+		for _, rule := range urlRules {
+			if rule.Rank <= 6 {
+				if rank < rule.Rank {
+					// Our rank is higher, we can displace this rule
+					nextOrder = rule.Order
+				} else if rank == rule.Rank {
+					// Same rank, we need to go after this rule
+					nextOrder = rule.Order + 1
+				} else {
+					// Our rank is lower, we need to go after this rule
+					nextOrder = rule.Order + 1
+				}
+			}
+		}
+	case "file_type_control_rules":
+		fileRules := rules.([]filetypecontrol.FileTypeRules)
+		for _, rule := range fileRules {
+			if rule.Rank <= 6 {
+				if rank < rule.Rank {
+					// Our rank is higher, we can displace this rule
+					nextOrder = rule.Order
+				} else if rank == rule.Rank {
+					// Same rank, we need to go after this rule
+					nextOrder = rule.Order + 1
+				} else {
+					// Our rank is lower, we need to go after this rule
+					nextOrder = rule.Order + 1
+				}
+			}
+		}
+	}
+
+	return nextOrder, nil
+}
+
+// getValidOrderForRank7Rule determines the minimum valid order for a rank 7 rule
+// Rank 7 rules must be placed after all existing ranked rules (0-6)
+func getValidOrderForRank7Rule(ctx context.Context, service *zscaler.Service, resourceType string) (int, error) {
+	// Get existing rules based on resource type
+	switch resourceType {
+	case "firewall_filtering_rules":
+		rules, err := filteringrules.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing firewall rules: %v", err)
+		}
+		return calculateMinOrderForRank7(rules, resourceType)
+	case "url_filtering_rules":
+		rules, err := urlfilteringpolicies.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing URL filtering rules: %v", err)
+		}
+		return calculateMinOrderForRank7(rules, resourceType)
+	case "file_type_control_rules":
+		rules, err := filetypecontrol.GetAll(ctx, service)
+		if err != nil {
+			return 0, fmt.Errorf("failed to get existing file type control rules: %v", err)
+		}
+		return calculateMinOrderForRank7(rules, resourceType)
+	default:
+		return 0, fmt.Errorf("unsupported resource type: %s", resourceType)
+	}
+}
+
+// calculateMinOrderForRank7 calculates the minimum valid order for a rank 7 rule
+func calculateMinOrderForRank7(rules interface{}, resourceType string) (int, error) {
+	maxRankedOrder := 0
+
+	switch resourceType {
+	case "firewall_filtering_rules":
+		firewallRules := rules.([]filteringrules.FirewallFilteringRules)
+		for _, rule := range firewallRules {
+			if rule.Rank <= 6 && rule.Order > maxRankedOrder {
+				maxRankedOrder = rule.Order
+			}
+		}
+	case "url_filtering_rules":
+		urlRules := rules.([]urlfilteringpolicies.URLFilteringRule)
+		for _, rule := range urlRules {
+			if rule.Rank <= 6 && rule.Order > maxRankedOrder {
+				maxRankedOrder = rule.Order
+			}
+		}
+	case "file_type_control_rules":
+		fileRules := rules.([]filetypecontrol.FileTypeRules)
+		for _, rule := range fileRules {
+			if rule.Rank <= 6 && rule.Order > maxRankedOrder {
+				maxRankedOrder = rule.Order
+			}
+		}
+	}
+
+	// Rank 7 rules must be placed after all ranked rules (0-6)
+	// If no ranked rules exist, rank 7 can start at order 1
+	if maxRankedOrder == 0 {
+		return 1, nil
+	}
+
+	return maxRankedOrder + 1, nil
 }
 
 func validateURLFilteringCategories() schema.SchemaValidateDiagFunc {

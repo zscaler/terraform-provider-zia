@@ -70,10 +70,12 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional information about the rule",
-				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional information about the rule",
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
 				Type:         schema.TypeInt,
@@ -216,8 +218,42 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		firewallFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
 
-		order := req.Order
-		req.Order = firewallFilteringStartingOrder
+		// Store the intended order from HCL
+		intendedOrder := req.Order
+
+		// For rank 7 rules, find the next available order after all existing ranked rules (1-6)
+		if req.Rank == 7 {
+			// Get all existing rules to find the highest order of ranked rules (1-6)
+			existingRules, err := filteringrules.GetAll(ctx, service)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("failed to get existing rules for rank 7 placement: %v", err))
+			}
+
+			// Find the highest order among existing ranked rules (1-6)
+			highestRankedOrder := 0
+			for _, rule := range existingRules {
+				if rule.Rank >= 1 && rule.Rank <= 6 && rule.Order > highestRankedOrder {
+					highestRankedOrder = rule.Order
+				}
+			}
+
+			// Start rank 7 rules at the next available order after all ranked rules
+			req.Order = highestRankedOrder + 1
+			if req.Order < 1 {
+				req.Order = 1
+			}
+
+			log.Printf("[INFO] Rank 7 rule %s will be created at order %d (after all ranked rules)", req.Name, req.Order)
+		} else {
+			// Validate the order for ranks 1-6 before making API call
+			if intendedOrder != 0 {
+				if err := ValidateRankAndOrder(ctx, service, req.Rank, intendedOrder, "firewall_filtering_rules"); err != nil {
+					return diag.FromErr(fmt.Errorf("validation failed for rule %s: %v", req.Name, err))
+				}
+			}
+			// For ranks 1-6, use the intended order directly
+			req.Order = intendedOrder
+		}
 
 		resp, err := filteringrules.Create(ctx, service, &req)
 
@@ -230,7 +266,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -242,7 +278,13 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		}
 
 		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorderWithBeforeReorder(order, resp.ID, "firewall_filtering_rules",
+		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+		resourceType := "firewall_filtering_rules"
+		if req.Rank == 7 {
+			resourceType = "firewall_filtering_rules_rank7"
+		}
+
+		reorderWithBeforeReorder(intendedOrder, resp.ID, resourceType,
 			func() (int, error) {
 				allRules, err := filteringrules.GetAll(ctx, service)
 				if err != nil {
@@ -275,7 +317,13 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			}
 			return diags
 		}
-		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
+		markOrderRuleAsDone(resp.ID, resourceType)
+
+		// For rank 7 rules, use the reorderAll logic to wait for all rules to be created before reordering
+		if req.Rank == 7 {
+			log.Printf("[INFO] Rank 7 rule created, will be reordered after all rules are created")
+		}
+
 		break
 	}
 

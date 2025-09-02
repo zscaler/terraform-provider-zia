@@ -383,8 +383,42 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		urlFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
 
-		order := req.Order
-		req.Order = urlFilteringStartingOrder
+		// Store the intended order from HCL
+		intendedOrder := req.Order
+
+		// For rank 7 rules, find the next available order after all existing ranked rules (1-6)
+		if req.Rank == 7 {
+			// Get all existing rules to find the highest order of ranked rules (1-6)
+			existingRules, err := urlfilteringpolicies.GetAll(ctx, service)
+			if err != nil {
+				return diag.FromErr(fmt.Errorf("failed to get existing rules for rank 7 placement: %v", err))
+			}
+
+			// Find the highest order among existing ranked rules (1-6)
+			highestRankedOrder := 0
+			for _, rule := range existingRules {
+				if rule.Rank >= 1 && rule.Rank <= 6 && rule.Order > highestRankedOrder {
+					highestRankedOrder = rule.Order
+				}
+			}
+
+			// Start rank 7 rules at the next available order after all ranked rules
+			req.Order = highestRankedOrder + 1
+			if req.Order < 1 {
+				req.Order = 1
+			}
+
+			log.Printf("[INFO] Rank 7 rule %s will be created at order %d (after all ranked rules)", req.Name, req.Order)
+		} else {
+			// Validate the order for ranks 1-6 before making API call
+			if intendedOrder != 0 {
+				if err := ValidateRankAndOrder(ctx, service, req.Rank, intendedOrder, "url_filtering_rules"); err != nil {
+					return diag.FromErr(fmt.Errorf("validation failed for rule %s: %v", req.Name, err))
+				}
+			}
+			// For ranks 1-6, use the intended order directly
+			req.Order = intendedOrder
+		}
 		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
@@ -395,7 +429,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
-				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 			}
 
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -409,7 +443,13 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
+		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+		resourceType := "url_filtering_rules"
+		if req.Rank == 7 {
+			resourceType = "url_filtering_rules_rank7"
+		}
+
+		reorder(intendedOrder, resp.ID, resourceType, func() (int, error) {
 			list, err := urlfilteringpolicies.GetAll(ctx, service)
 			return len(list), err
 		}, func(id, order int) error {
@@ -432,7 +472,13 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			}
 			return diags
 		}
-		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
+		markOrderRuleAsDone(resp.ID, resourceType)
+
+		// For rank 7 rules, use the reorderAll logic to wait for all rules to be created before reordering
+		if req.Rank == 7 {
+			log.Printf("[INFO] Rank 7 rule created, will be reordered after all rules are created")
+		}
+
 		break
 	}
 
