@@ -70,10 +70,12 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "Additional information about the rule",
-				ValidateFunc: validation.StringLenBetween(0, 10240),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Description:      "Additional information about the rule",
+				ValidateFunc:     validation.StringLenBetween(0, 10240),
+				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
+				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
 				Type:         schema.TypeInt,
