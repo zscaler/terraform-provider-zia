@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.4.11 (September, 2 2025)
+
+### Notes
+
+- Release date: **(September, 2 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #471](https://github.com/zscaler/terraform-provider-zia/pull/471) - Fixed Firewall Rules Description Heredoc handling
+
 ## 4.4.10 (August, 27 2025)
 
 ### Notes

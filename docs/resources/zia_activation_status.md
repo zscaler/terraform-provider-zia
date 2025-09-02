@@ -19,6 +19,10 @@ The **zia_activation_status** resource allows the activation of ZIA pending conf
 
 ~> **NOTE** As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the activation is performed as part of the `terraform apply` during the creation or update of a resource or during the `terraform destroy` during the deletion of a resource. With this improvement the objective is to deprecate the dedicated `zia_activation_status` resource.
 
+## Out of Band Activation
+
+If you prefer to use the outband method for activation, please refer to the [ZIA CActivator Configuration](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/zia_activator) guide.
+
 ## Example Usage
 
 ```hcl
@@ -45,3 +49,4 @@ N/A
 ## Import
 
 Activation is not an importable resource.
+
