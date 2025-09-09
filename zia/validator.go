@@ -317,7 +317,7 @@ func validateFileTypeControlProtocols() schema.SchemaValidateDiagFunc {
 }
 
 var supportedFileTypeProtocols = []string{
-	"FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE",
+	"ANY_RULE", "SMRULEF_CASCADING_ALLOWED", "FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE",
 }
 
 func validateSandboxRuleProtocols() schema.SchemaValidateDiagFunc {
