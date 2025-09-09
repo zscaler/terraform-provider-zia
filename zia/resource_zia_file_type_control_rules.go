@@ -279,18 +279,26 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[INFO] Created zia file type control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "file_type_control_rules", func() (int, error) {
-			list, err := filetypecontrol.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"file_type_control_rules",
+			func() (int, error) {
+				list, err := filetypecontrol.GetAll(ctx, service)
+				return len(list), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := filetypecontrol.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = filetypecontrol.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil,
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -448,18 +456,26 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "file_type_control_rules", func() (int, error) {
-			list, err := filetypecontrol.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"file_type_control_rules",
+			func() (int, error) {
+				list, err := filetypecontrol.GetAll(ctx, service)
+				return len(list), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := filetypecontrol.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = filetypecontrol.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil,
+		)
 
 		if diags := resourceFileTypeControlRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

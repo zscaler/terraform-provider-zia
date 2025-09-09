@@ -387,22 +387,30 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		log.Printf("[INFO] Created zia casb dlp rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "casb_dlp_rules", func() (int, error) {
-			rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
-			return len(rules), err
-		}, func(id, order int) error {
-			rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
-			if err != nil {
-				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-			}
-			rule.Order = order
-			_, err = casb_dlp_rules.Update(ctx, service, id, rule)
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"casb_dlp_rules",
+			func() (int, error) {
+				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+				return len(rules), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
+				if err != nil {
+					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
 
-			if err != nil {
-				return fmt.Errorf("failed to update rule order: %v", err)
-			}
-			return nil
-		})
+				if err != nil {
+					return fmt.Errorf("failed to update rule order: %v", err)
+				}
+				return nil
+			},
+			nil,
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -606,22 +614,30 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error updating resource: %v", err)
 		}
 
-		reorder(req.Order, req.ID, "casb_dlp_rules", func() (int, error) {
-			rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
-			return len(rules), err
-		}, func(id, order int) error {
-			rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
-			if err != nil {
-				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-			}
-			rule.Order = order
-			_, err = casb_dlp_rules.Update(ctx, service, id, rule)
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"casb_dlp_rules",
+			func() (int, error) {
+				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+				return len(rules), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
+				if err != nil {
+					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
 
-			if err != nil {
-				return fmt.Errorf("failed to update rule order: %v", err)
-			}
-			return nil
-		})
+				if err != nil {
+					return fmt.Errorf("failed to update rule order: %v", err)
+				}
+				return nil
+			},
+			nil,
+		)
 
 		if diags := resourceCasbDlpRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

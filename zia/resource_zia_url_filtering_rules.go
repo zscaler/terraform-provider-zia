@@ -409,18 +409,26 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "url_filtering_rules", func() (int, error) {
-			list, err := urlfilteringpolicies.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := urlfilteringpolicies.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"url_filtering_rules",
+			func() (int, error) {
+				list, err := urlfilteringpolicies.GetAll(ctx, service)
+				return len(list), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := urlfilteringpolicies.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil,
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -624,18 +632,26 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "url_filtering_rules", func() (int, error) {
-			list, err := urlfilteringpolicies.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := urlfilteringpolicies.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"url_filtering_rules",
+			func() (int, error) {
+				list, err := urlfilteringpolicies.GetAll(ctx, service)
+				return len(list), err
+			},
+			func(id int, order OrderRule) error {
+				rule, err := urlfilteringpolicies.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil,
+		)
 
 		if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

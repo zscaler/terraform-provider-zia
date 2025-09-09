@@ -407,7 +407,10 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 			resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
 		}
 
-		reorder(order, resp.ID, resourceType,
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			resourceType,
 			func() (int, error) {
 				if isSubRule {
 					parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
@@ -419,18 +422,19 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 				list, err := dlp_web_rules.GetAll(ctx, service)
 				return len(list), err
 			},
-			func(id, order int) error {
+			func(id int, order OrderRule) error {
 				rule, err := dlp_web_rules.Get(ctx, service, id)
 				if err != nil {
 					return err
 				}
 
-				rule.Order = order
+				rule.Order = order.Order
+				rule.Rank = order.Rank
 
 				if rule.ParentRule != 0 {
-					log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order)
+					log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
 				} else {
-					log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order)
+					log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
 				}
 
 				_, err = dlp_web_rules.Update(ctx, service, id, rule)
@@ -439,6 +443,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 				}
 				return err
 			},
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -651,7 +656,10 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
 	}
 
-	reorder(req.Order, id, resourceType,
+	reorderWithBeforeReorder(
+		OrderRule{Order: req.Order, Rank: req.Rank},
+		id,
+		resourceType,
 		func() (int, error) {
 			if isSubRule {
 				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
@@ -663,20 +671,21 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 			list, err := dlp_web_rules.GetAll(ctx, service)
 			return len(list), err
 		},
-		func(id, order int) error {
+		func(id int, order OrderRule) error {
 			rule, err := dlp_web_rules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 
-			// Update the order
-			rule.Order = order
+			// Update the order and rank
+			rule.Order = order.Order
+			rule.Rank = order.Rank
 
 			// Log and ensure ParentRule is set for sub-rules
 			if rule.ParentRule != 0 {
-				log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order)
+				log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
 			} else {
-				log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order)
+				log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
 			}
 
 			_, err = dlp_web_rules.Update(ctx, service, id, rule)
@@ -685,6 +694,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 			return err
 		},
+		nil,
 	)
 
 	markOrderRuleAsDone(id, resourceType)

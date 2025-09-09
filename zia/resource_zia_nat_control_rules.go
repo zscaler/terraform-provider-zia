@@ -256,7 +256,10 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		log.Printf("[INFO] Created zia nat control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorderWithBeforeReorder(order, resp.ID, "nat_control_rules",
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"nat_control_rules",
 			func() (int, error) {
 				allRules, err := nat_control_policies.GetAll(ctx, service)
 				if err != nil {
@@ -265,7 +268,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 				// Count all rules including predefined ones for proper ordering
 				return len(allRules), nil
 			},
-			func(id, order int) error {
+			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
 				rule, err := nat_control_policies.Get(ctx, service, id)
 				if err != nil {
@@ -276,7 +279,8 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 					return nil
 				}
 
-				rule.Order = order
+				rule.Order = order.Order
+				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)
 				return err
 			},
@@ -461,7 +465,10 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorderWithBeforeReorder(req.Order, req.ID, "nat_control_rules",
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"nat_control_rules",
 			func() (int, error) {
 				allRules, err := nat_control_policies.GetAll(ctx, service)
 				if err != nil {
@@ -470,7 +477,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				// Count all rules including predefined ones for proper ordering
 				return len(allRules), nil
 			},
-			func(id, order int) error {
+			func(id int, order OrderRule) error {
 				rule, err := nat_control_policies.Get(ctx, service, id)
 				if err != nil {
 					return err
@@ -481,11 +488,12 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				}
 
 				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order {
+				if rule.Order == order.Order && rule.Rank == order.Rank {
 					return nil
 				}
 
-				rule.Order = order
+				rule.Order = order.Order
+				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)
 				return err
 			},

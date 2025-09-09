@@ -70,12 +70,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Description:      "Additional information about the rule",
-				ValidateFunc:     validation.StringLenBetween(0, 10240),
-				StateFunc:        normalizeMultiLineString, // Ensures correct format before storing in Terraform state
-				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
+				Type:         schema.TypeString,
+				Optional:     true,
+				Description:  "Additional information about the rule",
+				ValidateFunc: validation.StringLenBetween(0, 10240),
 			},
 			"order": {
 				Type:         schema.TypeInt,
@@ -197,89 +195,85 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	req := expandFirewallFilteringRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
-	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
-	for {
-		firewallFilteringLock.Lock()
+	firewallFilteringLock.Lock()
+	if firewallFilteringStartingOrder == 0 {
+		list, _ := filteringrules.GetAll(ctx, service)
+		for _, r := range list {
+			if r.Order > firewallFilteringStartingOrder {
+				firewallFilteringStartingOrder = r.Order
+			}
+		}
 		if firewallFilteringStartingOrder == 0 {
-			list, _ := filteringrules.GetAll(ctx, service)
-			for _, r := range list {
-				if r.Order > firewallFilteringStartingOrder {
-					firewallFilteringStartingOrder = r.Order
-				}
-			}
-			if firewallFilteringStartingOrder == 0 {
-				firewallFilteringStartingOrder = 1
-			} else {
-				firewallFilteringStartingOrder++
-			}
+			firewallFilteringStartingOrder = 1
+		} else {
+			firewallFilteringStartingOrder++
 		}
-		firewallFilteringLock.Unlock()
-		startWithoutLocking := time.Now()
-
-		order := req.Order
-		req.Order = firewallFilteringStartingOrder
-
-		resp, err := filteringrules.Create(ctx, service, &req)
-
-		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := failFastOnErrorCodes(err); customErr != nil {
-			return diag.Errorf("%v", customErr)
-		}
-
-		if err != nil {
-			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
-				}
-				if time.Since(start) < timeout {
-					log.Printf("[INFO] Creating firewall filtering rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
-					time.Sleep(10 * time.Second) // Wait before retrying
-					continue
-				}
-			}
-			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
-		}
-
-		log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorderWithBeforeReorder(order, resp.ID, "firewall_filtering_rules",
-			func() (int, error) {
-				allRules, err := filteringrules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id, order int) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := filteringrules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-
-				rule.Order = order
-				_, err = filteringrules.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
-		)
-
-		d.SetId(strconv.Itoa(resp.ID))
-		_ = d.Set("rule_id", resp.ID)
-
-		if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
-		markOrderRuleAsDone(resp.ID, "firewall_filtering_rules")
-		break
 	}
+	firewallFilteringLock.Unlock()
+	startWithoutLocking := time.Now()
+
+	// Store the intended order from HCL
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+	if intendedRank < 7 {
+		// always start rank 7 rules at the next available order after all ranked rules
+		req.Rank = 7
+	}
+	req.Order = firewallFilteringStartingOrder
+	resp, err := filteringrules.Create(ctx, service, &req)
+
+	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+	if customErr := failFastOnErrorCodes(err); customErr != nil {
+		return diag.Errorf("%v", customErr)
+	}
+
+	if err != nil {
+		reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			if reg.MatchString(err.Error()) {
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+			}
+		}
+		return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
+	}
+
+	log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+	resourceType := "firewall_filtering_rules"
+
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		resp.ID,
+		resourceType,
+		func() (int, error) {
+			allRules, err := filteringrules.GetAll(ctx, service)
+			if err != nil {
+				return 0, err
+			}
+			// Count all rules including predefined ones for proper ordering
+			return len(allRules), nil
+		},
+		func(id int, order OrderRule) error {
+			// Custom updateOrder that handles predefined rules
+			rule, err := filteringrules.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+
+			rule.Order = order.Order
+			rule.Rank = order.Rank
+			_, err = filteringrules.Update(ctx, service, id, rule)
+			return err
+		},
+		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	)
+
+	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("rule_id", resp.ID)
+
+	markOrderRuleAsDone(resp.ID, resourceType)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
@@ -292,7 +286,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceFirewallFilteringRulesRead(ctx, d, meta)
 }
 
 func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -460,7 +454,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorderWithBeforeReorder(req.Order, req.ID, "firewall_filtering_rules",
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "firewall_filtering_rules",
 			func() (int, error) {
 				allRules, err := filteringrules.GetAll(ctx, service)
 				if err != nil {
@@ -469,17 +463,18 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 				// Count all rules including predefined ones for proper ordering
 				return len(allRules), nil
 			},
-			func(id, order int) error {
+			func(id int, order OrderRule) error {
 				rule, err := filteringrules.Get(ctx, service, id)
 				if err != nil {
 					return err
 				}
 				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order {
+				if rule.Order == order.Order && rule.Rank == order.Rank {
 					return nil
 				}
 
-				rule.Order = order
+				rule.Order = order.Order
+				rule.Rank = order.Rank
 				_, err = filteringrules.Update(ctx, service, id, rule)
 				return err
 			},
