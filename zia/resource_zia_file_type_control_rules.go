@@ -213,6 +213,17 @@ func resourceFileTypeControlRules() *schema.Resource {
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
+			"file_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: `File type categories for which the policy is applied. If not set, the rule is applied across all file types
+				See the available file types API in:
+				https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-get`,
+			},
 			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
 			"locations":           setIDsSchemaTypeCustom(intPtr(8), "Name-ID pairs of locations for the which policy must be applied. If not set, policy is applied for all locations."),
@@ -224,9 +235,9 @@ func resourceFileTypeControlRules() *schema.Resource {
 			"labels":              setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
 			"device_trust_levels": getDeviceTrustLevels(),
+			"protocols":           getFileTypeProtocols(),
 			// "url_categories":      getURLCategories(),
-			"file_types": getFileTypes(),
-			"protocols":  getFileTypeProtocols(),
+			// "file_types": getFileTypes(),
 		},
 	}
 }

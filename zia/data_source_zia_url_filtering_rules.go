@@ -410,7 +410,7 @@ func dataSourceURLFilteringRules() *schema.Resource {
 							Description: "The browser isolation profile URL",
 						},
 						"profile_seq": {
-							Type:        schema.TypeString,
+							Type:        schema.TypeInt,
 							Computed:    true,
 							Description: "The browser isolation profile URL",
 						},
@@ -664,15 +664,17 @@ func dataSourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) map[string]interface{} {
+func flattenCBIProfile(cbiProfile *urlfilteringpolicies.CBIProfile) []map[string]interface{} {
 	if cbiProfile == nil {
 		return nil
 	}
 
-	return map[string]interface{}{
-		"id":          cbiProfile.ID,
-		"name":        cbiProfile.Name,
-		"url":         cbiProfile.URL,
-		"profile_seq": cbiProfile.ProfileSeq,
+	return []map[string]interface{}{
+		{
+			"id":          cbiProfile.ID,
+			"name":        cbiProfile.Name,
+			"url":         cbiProfile.URL,
+			"profile_seq": cbiProfile.ProfileSeq,
+		},
 	}
 }

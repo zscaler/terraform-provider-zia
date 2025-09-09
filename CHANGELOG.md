@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.4.12 (September, 9 2025)
+
+### Notes
+
+- Release date: **(September, 9 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #477](https://github.com/zscaler/terraform-provider-zia/pull/477) - Fixed panic in `zia_url_filtering_rules` data source when processing `cbi_profile` attribute by correcting the flattening function to return a slice instead of a single map, and updated `profile_seq` field type from string to integer to match API response format.
+
+- [PR #477](https://github.com/zscaler/terraform-provider-zia/pull/477) - Removed local validation for the attributes `file_types`, in the resource `zia_file_type_control_rules`. See respective documentations for the supported [file types values](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-get)
+
 ## 4.4.11 (September, 2 2025)
 
 ### Notes
