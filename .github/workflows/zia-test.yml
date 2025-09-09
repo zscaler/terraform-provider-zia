@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.23.1"]
+        goVersion: ["1.21"]
         environment:
           - ZIA_ZS3
     environment: ${{ matrix.environment }}
@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.goVersion }}
 
