@@ -1112,12 +1112,30 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 	if p[i].Order == p[j].Order {
 		return p[i].ID < p[j].ID
 	}
-	return p[i].Order.Rank < p[j].Order.Rank || p[i].Order.Rank == p[j].Order.Rank && p[i].Order.Order < p[j].Order.Order
+
+	// Handle rank constraints: rank 0-6 rules must be at order 1
+	// Only rank 7 rules can be at orders > 1
+	if p[i].Order.Rank < 7 && p[j].Order.Rank < 7 {
+		// Both are ranked rules (0-6), sort by rank first, then by intended order
+		if p[i].Order.Rank != p[j].Order.Rank {
+			return p[i].Order.Rank < p[j].Order.Rank
+		}
+		return p[i].Order.Order < p[j].Order.Order
+	} else if p[i].Order.Rank < 7 {
+		// i is ranked rule (0-6), j is rank 7 - ranked rules come first
+		return true
+	} else if p[j].Order.Rank < 7 {
+		// j is ranked rule (0-6), i is rank 7 - ranked rules come first
+		return false
+	} else {
+		// Both are rank 7, sort by intended order
+		return p[i].Order.Order < p[j].Order.Order
+	}
 }
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
-	ticker := time.NewTicker(time.Second * 30) // create a ticker that ticks every 30 seconds
+	ticker := time.NewTicker(time.Second * 60) // create a ticker that ticks every 60 seconds
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -1130,6 +1148,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			for _, v := range rules.orders[resourceType] {
 				if !v.done {
 					done = false
+					log.Printf("[DEBUG] Rule with order %v is not marked as done yet", v.order)
 				}
 			}
 			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
@@ -1142,10 +1161,29 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 				if beforeReorder != nil {
 					beforeReorder()
 				}
+
+				// Process rules in order, respecting rank constraints
 				for _, v := range sorted {
-					if v.Order.Order <= count {
-						if err := updateOrder(v.ID, v.Order); err != nil {
+					// Use the intended order from the rule configuration
+					targetOrder := v.Order.Order
+
+					// Create the target order rule
+					targetOrderRule := OrderRule{Order: targetOrder, Rank: v.Order.Rank}
+
+					log.Printf("[INFO] Attempting to reorder rule ID %d to order %d with rank %d", v.ID, targetOrder, v.Order.Rank)
+
+					if targetOrder <= count {
+						// Add a small delay between reordering attempts to avoid API rate limits
+						time.Sleep(2 * time.Second)
+
+						if err := updateOrder(v.ID, targetOrderRule); err != nil {
 							log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
+							// If reordering fails, mark the rule as done anyway to prevent infinite retries
+							markOrderRuleAsDone(v.ID, resourceType)
+						} else {
+							log.Printf("[INFO] Successfully reordered rule ID %d to order %d with rank %d", v.ID, targetOrder, v.Order.Rank)
+							// Mark as done after successful reordering
+							markOrderRuleAsDone(v.ID, resourceType)
 						}
 					}
 				}
@@ -1154,16 +1192,20 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 30)
 		}
 	}
 }
 
 func markOrderRuleAsDone(id int, resourceType string) {
 	rules.Lock()
-	r := rules.orders[resourceType][id]
-	r.done = true
-	rules.orders[resourceType][id] = r
+	if r, exists := rules.orders[resourceType][id]; exists {
+		r.done = true
+		rules.orders[resourceType][id] = r
+		log.Printf("[DEBUG] Marked rule ID %d as done for resource type %s", id, resourceType)
+	} else {
+		log.Printf("[WARN] Attempted to mark rule ID %d as done, but it doesn't exist in resource type %s", id, resourceType)
+	}
 	rules.Unlock()
 }
 
