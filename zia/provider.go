@@ -177,6 +177,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_ftp_control_policy":                            resourceFTPControlPolicy(),
 			"zia_mobile_malware_protection_policy":              resourceMobileMalwareProtectionPolicy(),
 			"zia_virtual_service_edge_cluster":                  resourceVZENCluster(),
+			"zia_virtual_service_edge_node":                     resourceVZENNode(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -269,6 +270,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_ftp_control_policy":                            dataSourceFTPControlPolicy(),
 			"zia_mobile_malware_protection_policy":              dataSourceMobileMalwareProtectionPolicy(),
 			"zia_virtual_service_edge_cluster":                  dataSourceVZENCluster(),
+			"zia_virtual_service_edge_node":                     dataSourceVZENNode(),
 		},
 	}
 

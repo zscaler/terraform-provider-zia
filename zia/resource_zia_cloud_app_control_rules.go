@@ -282,21 +282,34 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[INFO] Created zia cloud app control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "cloud_app_control_rules", func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-			return len(rules), err
-		}, func(id, order int) error {
-			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
-			if err != nil {
-				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-			}
-			rule.Order = order
-			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-			if err != nil {
-				return fmt.Errorf("failed to update rule order: %v", err)
-			}
-			return nil
-		})
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"cloud_app_control_rules",
+			func() (int, error) {
+				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+				if err != nil {
+					return 0, err
+				}
+				return len(rules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
+				if err != nil {
+					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order {
+					return nil
+				}
+				rule.Order = order.Order
+				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+				if err != nil {
+					return fmt.Errorf("failed to update rule order: %v", err)
+				}
+				return nil
+			},
+			nil)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -503,21 +516,31 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.Errorf("error updating resource: %v", err)
 		}
 
-		reorder(req.Order, req.ID, "cloud_app_control_rules", func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-			return len(rules), err
-		}, func(id, order int) error {
-			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
-			if err != nil {
-				return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-			}
-			rule.Order = order
-			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-			if err != nil {
-				return fmt.Errorf("failed to update rule order: %v", err)
-			}
-			return nil
-		})
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "cloud_app_control_rules",
+			func() (int, error) {
+				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+				if err != nil {
+					return 0, err
+				}
+				return len(rules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
+				if err != nil {
+					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order {
+					return nil
+				}
+				rule.Order = order.Order
+				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+				if err != nil {
+					return fmt.Errorf("failed to update rule order: %v", err)
+				}
+				return nil
+			},
+			nil)
 
 		if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

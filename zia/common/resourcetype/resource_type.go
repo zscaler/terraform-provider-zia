@@ -39,5 +39,6 @@ const (
 	ForwardingControlProxies        = "zia_forwarding_control_proxies"
 	NatControlRules                 = "zia_nat_control_rules"
 	ServiceEdgeCluster              = "zia_virtual_service_edge_cluster"
+	ServiceEdgeNode                 = "zia_virtual_service_edge_node"
 	NSSServer                       = "zia_nss_server"
 )

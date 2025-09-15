@@ -61,6 +61,29 @@ resource "zia_dlp_dictionaries" "example"{
 }
 ```
 
+## Example Usage - With Exact Data Match (EDM)
+
+```hcl
+data "zia_dlp_edm_schema" "this"{
+    project_name = "EDM_TEMPLATE01"
+}
+
+resource "zia_dlp_dictionaries" "dlp_dictionaries" {
+  name        = "edm_dic_tf"
+  description = "edm dictionary"
+  dictionary_type = "EXACT_DATA_MATCH"
+  custom = true
+
+  exact_data_match_details {
+    schema_id = data.zia_dlp_edm_schema.this.schema_id
+    primary_fields             = [3]
+    secondary_fields          = [1,2]
+    secondary_field_match_on  = "MATCHON_ALL"
+
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -74,51 +97,44 @@ The following arguments are supported:
   * `INDEXED_DATA_MATCH`
   * `MIP_TAG`
 
-* `custom_phrase_match_type` - (Required) The DLP custom phrase match type. Supported values are:
-  * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
-  * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`
-  Note: This attribute should only be set when the dictionary_type is set to ``PATTERNS_AND_PHRASES``
+### Optional
 
-* `phrases` - (Required) List containing the phrases used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Required when `dictionary_type` is `PATTERNS_AND_PHRASES`
-  * `action` - (Required) The action applied to a DLP dictionary using patterns. The following values are supported:
-    * `PATTERN_COUNT_TYPE_ALL`
-    * `PATTERN_COUNT_TYPE_UNIQUE`
-  * `phrase` - (Required) DLP dictionary phrase
-
-* `patterns` - (Required) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Required when `dictionary_type` is `PATTERNS_AND_PHRASES`
-  * `action` - (Required) The action applied to a DLP dictionary using patterns. The following values are supported:
-    * `PATTERN_COUNT_TYPE_ALL`
-    * `PATTERN_COUNT_TYPE_UNIQUE`
-  * `pattern` - (Required) DLP dictionary pattern
+* `description` - (Optional) The description of the DLP dictionary
+* `custom` - (Optional) The DLP dictionary proximity length
+* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
+  * `CONFIDENCE_LEVEL_LOW`
+  * `CONFIDENCE_LEVEL_MEDIUM`
+  * `CONFIDENCE_LEVEL_HIGH`
 
 * `confidence_threshold` - (Optional) The DLP confidence threshold. The following values are supported:
   * `CONFIDENCE_LEVEL_LOW`
   * `CONFIDENCE_LEVEL_MEDIUM`
   * `CONFIDENCE_LEVEL_HIGH`
 
-### Optional
+* `phrases` - (Optional) List containing the phrases used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 256 items.
+  * `action` - (Optional) The action applied to a DLP dictionary using phrases. The following values are supported:
+    * `PHRASE_COUNT_TYPE_UNIQUE`
+    * `PHRASE_COUNT_TYPE_ALL`
+  * `phrase` - (Optional) DLP dictionary phrase (0-128 characters)
 
-* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
-  * `CONFIDENCE_LEVEL_LOW`
-  * `CONFIDENCE_LEVEL_MEDIUM`
-  * `CONFIDENCE_LEVEL_HIGH`
+* `custom_phrase_match_type` - (Optional) The DLP custom phrase match type. Supported values are:
+  * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
+  * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`
+  Note: This attribute should only be set when the dictionary_type is set to `PATTERNS_AND_PHRASES`
 
-* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary. Supported only for the following Identifiers: `ASPP_LEAKAGE`, `CRED_LEAKAGE`, `EUIBAN_LEAKAGE`, `PPEU_LEAKAGE`, `USDL_LEAKAGE`.
+* `patterns` - (Optional) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 8 items.
+  * `action` - (Optional) The action applied to a DLP dictionary using patterns. The following values are supported:
+    * `PATTERN_COUNT_TYPE_ALL`
+    * `PATTERN_COUNT_TYPE_UNIQUE`
+  * `pattern` - (Optional) DLP dictionary pattern (0-256 characters)
 
-* `threshold_type` - (Optional) The DLP threshold type. The following values are supported:
-  * `VIOLATION_COUNT_ONLY`
-  * `CONFIDENCE_SCORE_ONLY`
-  * `VIOLATION_AND_CONFIDENCE`
-
-* `threshold_type` - (Optional) The DLP threshold type. The following values are supported:
-  * `VIOLATION_COUNT_ONLY`
-  * `CONFIDENCE_SCORE_ONLY`
-  * `VIOLATION_AND_CONFIDENCE`
+* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary.
 
 * `exact_data_match_details` - (Optional) Exact Data Match (EDM) related information for custom DLP dictionaries.
   * `dictionary_edm_mapping_id` - (Optional) The unique identifier for the EDM mapping.
-  * `schema_id` - (Optional) The unique identifier for the EDM template (or schema).
-  * `primary_field` - (Optional) The EDM template's primary field.
+  * `schema_id` - (Optional) The unique identifier for the EDM template (or schema). To retrieve the EDM (Exact Data Match) information, use the data source: `zia_dlp_edm_schema`
+
+  * `primary_fields` - (Optional) The EDM template's primary fields (list of integers).
   * `secondary_fields` - (Optional) The EDM template's secondary fields.
   * `secondary_field_match_on` - (Optional) The EDM secondary field to match on.
         - `"MATCHON_NONE"`
@@ -138,13 +154,16 @@ The following arguments are supported:
         - `"MATCHON_ANY_14"`
         - `"MATCHON_ANY_15"`
         - `"MATCHON_ALL"`
+        - `"MATCHON_ATLEAST_1"`
 
 * `idm_profile_match_accuracy` - (Optional) List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.
   * `adp_idm_profile` - (Optional) The IDM template reference.
-  * `match_accuracy` - (Optional) The IDM template match accuracy.
-        - `"LOW"`
-        - `"MEDIUM"`
-        - `"HEAVY"`
+    * `id` - (Optional) Identifier that uniquely identifies an entity
+    * `extensions` - (Optional) Extensions map
+  * `match_accuracy` - (Optional) The IDM template match accuracy. The following values are supported:
+    * `"LOW"`
+    * `"MEDIUM"`
+    * `"HEAVY"`
 
 * `proximity` - (Optional) The DLP dictionary proximity length.
 * `ignore_exact_match_idm_dict` - (Optional) Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.

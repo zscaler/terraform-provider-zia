@@ -45,6 +45,10 @@ func resourceDLPDictionaries() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dictionary_id": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -118,7 +122,6 @@ func resourceDLPDictionaries() *schema.Resource {
 			"custom_phrase_match_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY",
 					"MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY",
@@ -187,9 +190,11 @@ func resourceDLPDictionaries() *schema.Resource {
 							Optional:    true,
 							Description: "The unique identifier for the EDM template (or schema).",
 						},
-						"primary_field": {
-							Type:        schema.TypeInt,
+						"primary_fields": {
+							Type:        schema.TypeList,
+							Computed:    true,
 							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeInt},
 							Description: "The EDM template's primary field.",
 						},
 						"secondary_fields": {
@@ -208,7 +213,7 @@ func resourceDLPDictionaries() *schema.Resource {
 								"MATCHON_ANY_6", "MATCHON_ANY_7", "MATCHON_ANY_8",
 								"MATCHON_ANY_9", "MATCHON_ANY_10", "MATCHON_ANY_11",
 								"MATCHON_ANY_12", "MATCHON_ANY_13", "MATCHON_ANY_14",
-								"MATCHON_ANY_15", "MATCHON_ALL",
+								"MATCHON_ANY_15", "MATCHON_ALL", "MATCHON_ATLEAST_1",
 							}, false),
 						},
 					},
@@ -294,10 +299,10 @@ func resourceDLPDictionariesCreate(ctx context.Context, d *schema.ResourceData, 
 
 	req := expandDLPDictionaries(d, true)
 	log.Printf("[INFO] Creating zia dlp dictionaries\n%+v\n", req)
-	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
-		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
-		return diag.FromErr(fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'"))
-	}
+	// if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+	// 	log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+	// 	return diag.FromErr(fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'"))
+	// }
 	resp, _, err := dlpdictionaries.Create(ctx, service, &req)
 	if err != nil {
 		return diag.FromErr(err)
@@ -327,6 +332,7 @@ func resourceDLPDictionariesRead(ctx context.Context, d *schema.ResourceData, me
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no DLP dictionary id is set"))
 	}
+
 	resp, err := dlpdictionaries.Get(ctx, service, id)
 	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -347,7 +353,9 @@ func resourceDLPDictionariesRead(ctx context.Context, d *schema.ResourceData, me
 	_ = d.Set("custom", resp.Custom)
 	_ = d.Set("confidence_threshold", resp.ConfidenceThreshold)
 	_ = d.Set("confidence_level_for_predefined_dict", resp.ConfidenceLevelForPredefinedDict)
-	_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
+	if resp.CustomPhraseMatchType != "" {
+		_ = d.Set("custom_phrase_match_type", resp.CustomPhraseMatchType)
+	}
 	_ = d.Set("dictionary_type", resp.DictionaryType)
 	_ = d.Set("hierarchical_identifiers", resp.HierarchicalIdentifiers) // Keep the user input for hierarchical_identifiers
 	_ = d.Set("ignore_exact_match_idm_dict", resp.IgnoreExactMatchIdmDict)
@@ -390,10 +398,10 @@ func resourceDLPDictionariesUpdate(ctx context.Context, d *schema.ResourceData, 
 			return nil
 		}
 	}
-	if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
-		log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
-		return diag.FromErr(fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'"))
-	}
+	// if req.DictionaryType != "PATTERNS_AND_PHRASES" && req.CustomPhraseMatchType != "" {
+	// 	log.Printf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'")
+	// 	return diag.FromErr(fmt.Errorf("[ERROR] custom_phrase_match_type should not be set when dictionary_type is not set to 'PATTERNS_AND_PHRASES'"))
+	// }
 	if _, _, err := dlpdictionaries.Update(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
@@ -564,6 +572,14 @@ func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails 
 		if !ok {
 			return dlpEdmDetails
 		}
+		firstFields := []int{}
+		for _, i := range dlpEdmItem["primary_fields"].([]interface{}) {
+			value, ok := i.(int)
+			if !ok {
+				continue
+			}
+			firstFields = append(firstFields, value)
+		}
 		secFields := []int{}
 		for _, i := range dlpEdmItem["secondary_fields"].([]interface{}) {
 			value, ok := i.(int)
@@ -575,7 +591,7 @@ func expandEDMDetails(d *schema.ResourceData) []dlpdictionaries.EDMMatchDetails 
 		dlpEdmDetails = append(dlpEdmDetails, dlpdictionaries.EDMMatchDetails{
 			DictionaryEdmMappingID: dlpEdmItem["dictionary_edm_mapping_id"].(int),
 			SchemaID:               dlpEdmItem["schema_id"].(int),
-			PrimaryField:           dlpEdmItem["primary_field"].(int),
+			PrimaryFields:          firstFields,
 			SecondaryFields:        secFields,
 			SecondaryFieldMatchOn:  dlpEdmItem["secondary_field_match_on"].(string),
 		})

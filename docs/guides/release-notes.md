@@ -12,9 +12,35 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.4.12``
+``Last updated: v4.5.0``
 
 ---
+
+## 4.5.0 (September, xx 2025)
+
+### Notes
+
+- Release date: **(September, xx 2025)**
+- Supported Terraform version: **v1.x**
+
+### NEW - DATA SOURCE AND RESOURCES
+
+The following new resources have been introduced:
+
+- [PR #479](https://github.com/zscaler/terraform-provider-zia/pull/479) - Added new datasource resource `zia_virtual_service_edge_node` - Retrieves the Virtual Service Edge Nodes (VZEN) configured in the ZIA Admin Portal. This data source can be used to set the corresponding node when configuring the resource `zia_virtual_service_edge_cluster`.
+
+### Enhancements
+
+- [PR #479](https://github.com/zscaler/terraform-provider-zia/pull/479) - Added new `MATCHON_ATLEAST_1` option for `secondary_field_match_on` attribute in `exact_data_match_details` block for the resource `zia_dlp_dictionaries`.
+
+- [PR #479](https://github.com/zscaler/terraform-provider-zia/pull/479) - Enhanced: Standardized reorder logic across all rule-based resources to use consistent OrderRule struct pattern with proper Order and Rank handling.
+  - Updated 12 rule-based resources to use reorderWithBeforeReorder function with OrderRule{Order, Rank} struct
+  - Added optimization checks to avoid unnecessary updates when order is already correct
+  - Improved error handling in reorder functions across all resources
+  - Maintained backward compatibility while ensuring consistent reordering behavior
+  - Special handling for resources without rank support (CASB malware rules) using Rank: 0
+
+Resources updated: `zia_url_filtering_rules`, `zia_nat_control_rules`, `zia_ssl_inspection_rules`, `zia_dlp_web_rules`, `zia_file_type_control_rules`, `zia_firewall_dns_rules`, `zia_firewall_ips_rules`, `zia_bandwidth_control_rules`, `zia_casb_dlp_rules`, `zia_cloud_app_control_rules`, `zia_sandbox_rules`, `zia_casb_malware_rules`.
 
 ## 4.4.12 (September, 9 2025)
 

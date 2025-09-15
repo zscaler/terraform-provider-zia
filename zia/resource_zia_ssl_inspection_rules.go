@@ -394,18 +394,32 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		log.Printf("[INFO] Created zia ssl inspection rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "ssl_inspection_rules", func() (int, error) {
-			list, err := sslinspection.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := sslinspection.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"ssl_inspection_rules",
+			func() (int, error) {
+				allRules, err := sslinspection.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := sslinspection.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = sslinspection.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sslinspection.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -574,18 +588,32 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "ssl_inspection_rules", func() (int, error) {
-			list, err := sslinspection.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := sslinspection.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "ssl_inspection_rules",
+			func() (int, error) {
+				allRules, err := sslinspection.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := sslinspection.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order && rule.Rank == order.Rank {
+					return nil
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = sslinspection.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sslinspection.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		if diags := resourceSSLInspectionRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {
