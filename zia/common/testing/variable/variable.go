@@ -274,3 +274,14 @@ const (
 	BandwdithControlRuleDescription = "tf-acc-test-cloud-app-control"
 	BandwdithControlRulestate       = "ENABLED"
 )
+
+const (
+	UrlCatReviewEnabled                  = true
+	EunUrlCatReviewSubmitToSecurityCloud = false
+	EunSecurityReviewEnabled             = true
+	EunWebDlpReviewEnabled               = true
+	EunWebDlpReviewSubmitToSecurityCloud = false
+	DisplayCompReason                    = true
+	DisplayCompName                      = true
+	DisplayCompLogo                      = true
+)

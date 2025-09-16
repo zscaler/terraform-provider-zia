@@ -164,7 +164,7 @@ data "zia_firewall_filtering_time_window" "work_hours" {
 }
 
 data "zia_bandwidth_classes" "this" {
-    name = "WEBCONF"
+    name = "BANDWIDTH_CAT_WEBCONF"
 }
 resource "%s" "%s" {
     name 					= "tf-acc-test-%s"

@@ -62,8 +62,8 @@ resource "zia_end_user_notification" "this" {
   aup_message       = "Please review and accept the terms."
   notification_type = "CUSTOM"
   display_reason    = true
-  display_comp_name = true
-  display_comp_logo = true
+  display_company_name = true
+  display_company_logo = true
   custom_text       = "Website blocked"
 
   url_cat_review_enabled                  = true
@@ -107,8 +107,8 @@ The following arguments are supported:
 * `aup_message` (String) - The acceptable use statement that appears in the AUP.
 * `notification_type` (String) - The type of EUN, either DEFAULT or CUSTOM.
 * `display_reason` (Boolean) - Indicates whether the reason for blocking access is displayed in the EUN.
-* `display_comp_name` (Boolean) - Indicates whether the organization's name is displayed in the EUN.
-* `display_comp_logo` (Boolean) - Indicates whether the organization's logo is displayed in the EUN.
+* `display_company_name` (Boolean) - Indicates whether the organization's name is displayed in the EUN.
+* `display_company_logo` (Boolean) - Indicates whether the organization's logo is displayed in the EUN.
 * `custom_text` (String) - Custom text displayed in the EUN.
 * `url_cat_review_enabled` (Boolean) - Indicates whether URL Categorization notifications are enabled.
 * `url_cat_review_submit_to_security_cloud` (Boolean) - Indicates whether review requests are submitted to Zscaler Security Cloud.
@@ -149,7 +149,7 @@ resource "zia_end_user_notification" "this" {
       <p style="color: #666;">This website has been blocked for security reasons.</p>
     </div>
   EOT
-  
+
   url_cat_review_text = <<EOT
     <div style="text-align: center; margin: 10px 0;">
       <button style="background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px;">
