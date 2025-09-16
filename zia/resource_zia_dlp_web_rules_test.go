@@ -125,7 +125,7 @@ func testAccCheckDlpWebRulesConfigure(resourceTypeAndName, name, description, ac
 
 	return fmt.Sprintf(`
 
-	data "zia_url_categories" "corporate_marketing"{
+data "zia_url_categories" "corporate_marketing"{
 	id = "CORPORATE_MARKETING"
 }
 
@@ -162,7 +162,7 @@ resource "%s" "%s" {
 	rank 						= 0
 	protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
 	without_content_inspection 	= false
-	zscaler_incident_receiver = true
+	zscaler_incident_receiver = false
 	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 	severity = "RULE_SEVERITY_HIGH"
 	external_auditor_email     = "auditor@acme.com"
