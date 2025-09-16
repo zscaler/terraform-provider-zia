@@ -15,7 +15,7 @@ description: |-
 
 The **zia_firewall_dns_rule** resource allows the creation and management of ZIA Cloud Firewall DNS rules in the Zscaler Internet Access.
 
-**NOTE 1** Zscaler Cloud Firewall DNS Rules contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted and NOT all attributes are suppported. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules and intend to manage those rules via Terraform, you must first import those rules into the state and start the ordering accordingly. However, if DO NOT intend to manage predefined rules via Terraform, the provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API is responsible for moving these rules to their respective positions as API calls are made.
 
 The most common default and predefined rules:
 
@@ -135,10 +135,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `description` - (String) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
-* `state` - (String) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
+
+* `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule. Supported Values: `ENABLED`, `DISABLED`
+
 * `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK`, `REDIR_REQ`, `REDIR_RES`, `REDIR_ZPA`, `REDIR_REQ_DOH`, `REDIR_REQ_KEEP_SENDER`, `REDIR_REQ_TCP`, `REDIR_REQ_UDP`, `BLOCK_WITH_RESPONSE`
-* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank. The default value is `7`.
-* `access_control` - (String) The admin’s access privilege to this rule based on the assigned role
+
+* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank in UI first. The default value is `7`. Visit to learn more [About Admin Rank](https://help.zscaler.com/zia/about-admin-rank)
+
 * `redirect_ip` - (String) The IP address to which the traffic will be redirected to when the DNAT rule is triggered. If not set, no redirection is done to specific IP addresses. Only supported when the `action` is `REDIR_REQ`
 
 * `dns_rule_request_types` - (Set of Strings) DNS request types to which the rule applies. Supportedn values are:
@@ -150,7 +153,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `protocols` - (Set of Strings) The protocols to which the rules applies. Supported Values: `ANY_RULE`, `SMRULEF_CASCADING_ALLOWED`, `TCP_RULE`, `UDP_RULE`, `DOHTTPS_RULE`
 
-* `applications` - (Set of Strings) DNS tunnels and network applications to which the rule applies. To retrieve the available list of DNS tunnels applications use the data source: `zia_cloud_applications` with the `app_class` value `DNS_OVER_HTTPS`. See example:
+* `applications` - (Set of Strings) DNS tunnels and network applications to which the rule applies. To retrieve the available list of DNS tunnels applications use the data source: `zia_cloud_applications` with the `app_class` value `DNS_OVER_HTTPS`. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post). To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
+
+See example:
 
 ```hcl
 data "zia_cloud_applications" "this" {

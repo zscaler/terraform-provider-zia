@@ -15,9 +15,7 @@ description: |-
 
 The **zia_firewall_filtering_rule** resource allows the creation and management of ZIA Cloud Firewall filtering rules in the Zscaler Internet Access.
 
-**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
-
-The most common default rules are:
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted and NOT all attributes are suppported. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules and intend to manage those rules via Terraform, you must first import those rules into the state and start the ordering accordingly. However, if DO NOT intend to manage predefined rules via Terraform, the provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API is responsible for moving these rules to their respective positions as API calls are made.
 
 The most common default and predefined rules:
 
@@ -35,15 +33,18 @@ The most common default and predefined rules:
 
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
-* `order` - (Optional) Rule order number. Predefined rules can be reordered to change their position in the rule set.
+* `order` - (Optional) Rule order number of the Firewall Filtering policy rule
+
 * `labels` (list) - Labels that are applicable to the rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 
 **NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
 
-* `name` - Predefined rule names are fixed and cannot be changed
-* `action` - The action of predefined rules cannot be modified
-* `rank` - The admin rank of predefined rules cannot be changed
+* `name` - Name of the Firewall Filtering policy rule
+* `action` - The action the Firewall Filtering policy rule takes when packets match the rule. Supported Values: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BLOCK_ICMP`, `EVAL_NWAPP`
+
+* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank in UI first. The default value is `7`. Visit to learn more [About Admin Rank](https://help.zscaler.com/zia/about-admin-rank)
+
 * Most other attributes that define the rule's behavior
 
 **NOTE 4** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
@@ -111,16 +112,19 @@ The most common default rules are:
 **NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
 
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
-* `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
-* `order` - (Optional) Rule order number. Predefined rules can be reordered to change their position in the rule set.
+* `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule. Supported Values: `ENABLED`, `DISABLED`
+
+* `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
+
 * `labels` (list) - Labels that are applicable to the rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 
 **NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
 
 * `name` - Predefined rule names are fixed and cannot be changed
-* `action` - The action of predefined rules cannot be modified
-* `rank` - The admin rank of predefined rules cannot be changed
+
+* `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BYPASS_IPS`
+
 * Most other attributes that define the rule's behavior
 
 ### Optional
@@ -128,7 +132,8 @@ The most common default rules are:
 * `description` - (String) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (String) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
 * `action` - (String) Choose the action of the service when packets match the rule. The following actions are accepted: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BLOCK_ICMP`, `EVAL_NWAPP`
-* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank. The default value is `7`.
+
+* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank in UI first. The default value is `7`. Visit to learn more [About Admin Rank](https://help.zscaler.com/zia/about-admin-rank)
 
 `Who, Where and When` supports the following attributes:
 

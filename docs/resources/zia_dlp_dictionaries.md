@@ -90,8 +90,8 @@ The following arguments are supported:
 
 ### Required
 
-* `name` - (Required) The DLP dictionary's name
-* `dictionary_type` - (Required) The DLP dictionary type. The following values are supported:
+* `name` - (Required, String) The DLP dictionary's name
+* `dictionary_type` - (Required, String) The DLP dictionary type. The following values are supported:
   * `PATTERNS_AND_PHRASES`
   * `EXACT_DATA_MATCH`
   * `INDEXED_DATA_MATCH`
@@ -99,44 +99,44 @@ The following arguments are supported:
 
 ### Optional
 
-* `description` - (Optional) The description of the DLP dictionary
-* `custom` - (Optional) The DLP dictionary proximity length
-* `confidence_level_for_predefined_dict` - (Optional) The DLP confidence threshold for predefined dictionaries. The following values are supported:
+* `description` - (Optional, String) The description of the DLP dictionary
+* `custom` - (Optional, Boolean) Indicates whether the DLP dictionary is custom. Defaults to true.
+* `confidence_level_for_predefined_dict` - (Optional, String) The DLP confidence threshold for predefined dictionaries. The following values are supported:
   * `CONFIDENCE_LEVEL_LOW`
   * `CONFIDENCE_LEVEL_MEDIUM`
   * `CONFIDENCE_LEVEL_HIGH`
 
-* `confidence_threshold` - (Optional) The DLP confidence threshold. The following values are supported:
+* `confidence_threshold` - (Optional, String) The DLP confidence threshold. The following values are supported:
   * `CONFIDENCE_LEVEL_LOW`
   * `CONFIDENCE_LEVEL_MEDIUM`
   * `CONFIDENCE_LEVEL_HIGH`
 
-* `phrases` - (Optional) List containing the phrases used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 256 items.
-  * `action` - (Optional) The action applied to a DLP dictionary using phrases. The following values are supported:
+* `phrases` - (Optional, Set) List containing the phrases used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 256 items.
+  * `action` - (Optional, String) The action applied to a DLP dictionary using phrases. The following values are supported:
     * `PHRASE_COUNT_TYPE_UNIQUE`
     * `PHRASE_COUNT_TYPE_ALL`
-  * `phrase` - (Optional) DLP dictionary phrase (0-128 characters)
+  * `phrase` - (Optional, String) DLP dictionary phrase (0-128 characters)
 
-* `custom_phrase_match_type` - (Optional) The DLP custom phrase match type. Supported values are:
+* `custom_phrase_match_type` - (Optional, String) The DLP custom phrase match type. Supported values are:
   * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
   * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`
   Note: This attribute should only be set when the dictionary_type is set to `PATTERNS_AND_PHRASES`
 
-* `patterns` - (Optional) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 8 items.
-  * `action` - (Optional) The action applied to a DLP dictionary using patterns. The following values are supported:
+* `patterns` - (Optional, Set) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 8 items.
+  * `action` - (Optional, String) The action applied to a DLP dictionary using patterns. The following values are supported:
     * `PATTERN_COUNT_TYPE_ALL`
     * `PATTERN_COUNT_TYPE_UNIQUE`
-  * `pattern` - (Optional) DLP dictionary pattern (0-256 characters)
+  * `pattern` - (Optional, String) DLP dictionary pattern (0-256 characters)
 
-* `hierarchical_identifiers` - (Optional) List of hierarchical identifiers for the DLP dictionary.
+* `hierarchical_identifiers` - (Optional, Set of Strings) List of hierarchical identifiers for the DLP dictionary.
 
-* `exact_data_match_details` - (Optional) Exact Data Match (EDM) related information for custom DLP dictionaries.
-  * `dictionary_edm_mapping_id` - (Optional) The unique identifier for the EDM mapping.
-  * `schema_id` - (Optional) The unique identifier for the EDM template (or schema). To retrieve the EDM (Exact Data Match) information, use the data source: `zia_dlp_edm_schema`
+* `exact_data_match_details` - (Optional, Set) Exact Data Match (EDM) related information for custom DLP dictionaries.
+  * `dictionary_edm_mapping_id` - (Optional, Integer) The unique identifier for the EDM mapping.
+  * `schema_id` - (Optional, Integer) The unique identifier for the EDM template (or schema). To retrieve the EDM (Exact Data Match) information, use the data source: `zia_dlp_edm_schema`
 
-  * `primary_fields` - (Optional) The EDM template's primary fields (list of integers).
-  * `secondary_fields` - (Optional) The EDM template's secondary fields.
-  * `secondary_field_match_on` - (Optional) The EDM secondary field to match on.
+  * `primary_fields` - (Optional, List of Integers) The EDM template's primary fields.
+  * `secondary_fields` - (Optional, List of Integers) The EDM template's secondary fields.
+  * `secondary_field_match_on` - (Optional, String) The EDM secondary field to match on. The following values are supported:
         - `"MATCHON_NONE"`
         - `"MATCHON_ANY_1"`
         - `"MATCHON_ANY_2"`
@@ -156,20 +156,20 @@ The following arguments are supported:
         - `"MATCHON_ALL"`
         - `"MATCHON_ATLEAST_1"`
 
-* `idm_profile_match_accuracy` - (Optional) List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.
-  * `adp_idm_profile` - (Optional) The IDM template reference.
-    * `id` - (Optional) Identifier that uniquely identifies an entity
-    * `extensions` - (Optional) Extensions map
-  * `match_accuracy` - (Optional) The IDM template match accuracy. The following values are supported:
+* `idm_profile_match_accuracy` - (Optional, Set) List of Indexed Document Match (IDM) profiles and their corresponding match accuracy for custom DLP dictionaries.
+  * `adp_idm_profile` - (Optional, Set) The IDM template reference. To retrieve the IDM (Index Data Match) information, use the data source: `zia_dlp_idm_profiles`
+    * `id` - (Optional, Integer) Identifier that uniquely identifies an entity
+    * `extensions` - (Optional, Map of Strings) Extensions map
+  * `match_accuracy` - (Optional, String) The IDM template match accuracy. The following values are supported:
     * `"LOW"`
     * `"MEDIUM"`
     * `"HEAVY"`
 
-* `proximity` - (Optional) The DLP dictionary proximity length.
-* `ignore_exact_match_idm_dict` - (Optional) Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.
-* `include_bin_numbers` - (Optional) A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
-* `bin_numbers` - (Optional) The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
-* `dict_template_id` - (Optional) ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.
+* `proximity` - (Optional, Integer) The DLP dictionary proximity length.
+* `ignore_exact_match_idm_dict` - (Optional, Boolean) Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.
+* `include_bin_numbers` - (Optional, Boolean) A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
+* `bin_numbers` - (Optional, List of Integers) The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
+* `dict_template_id` - (Optional, Integer) ID of the predefined dictionary (original source dictionary) that is used for cloning. This field is applicable only to cloned dictionaries. Only a limited set of identification-based predefined dictionaries (e.g., Credit Cards, Social Security Numbers, National Identification Numbers, etc.) can be cloned. Up to 4 clones can be created from a predefined dictionary.
 
 ## Import
 
