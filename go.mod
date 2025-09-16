@@ -1,6 +1,8 @@
 module github.com/zscaler/terraform-provider-zia/v4
 
-go 1.25
+go 1.24.0
+
+toolchain go1.24.7
 
 require (
 	github.com/fabiotavarespr/iso3166 v0.0.3

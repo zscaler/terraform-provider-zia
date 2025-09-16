@@ -269,12 +269,12 @@ lint:
 
 tools:
 	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.5.0
-	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
 	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
 tools-update:
 	@go install mvdan.cc/gofumpt@v0.5.0
-	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@v0.29.0
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
 	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
 
 ziaActivator: GOOS=$(shell go env GOOS)
