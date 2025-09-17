@@ -35,7 +35,7 @@ func TestAccResourceBandwdithControlRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.BandwdithControlRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.BandwdithControlRulestate),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "zia_bandwidth_classes.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "bandwidth_classes.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "1"),
 				),
@@ -49,7 +49,7 @@ func TestAccResourceBandwdithControlRules_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceTypeAndName, "name", "tf-acc-test-"+generatedName),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "description", variable.BandwdithControlRuleDescription),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "state", variable.BandwdithControlRulestate),
-					resource.TestCheckResourceAttr(resourceTypeAndName, "zia_bandwidth_classes.0.id.#", "1"),
+					resource.TestCheckResourceAttr(resourceTypeAndName, "bandwidth_classes.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "labels.0.id.#", "1"),
 					resource.TestCheckResourceAttr(resourceTypeAndName, "time_windows.0.id.#", "1"),
 				),
@@ -166,6 +166,7 @@ data "zia_firewall_filtering_time_window" "work_hours" {
 data "zia_bandwidth_classes" "this" {
     name = "BANDWIDTH_CAT_WEBCONF"
 }
+
 resource "%s" "%s" {
     name 					= "tf-acc-test-%s"
     description 			= "%s"

@@ -25,11 +25,12 @@ func TestAccResourceATPSecurityExceptions_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceATPSecurityExceptionsConfig([]string{".newexample.com"}),
+				Config: testAccResourceATPSecurityExceptionsConfig([]string{".example.com", ".test.com"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckATPSecurityExceptionsExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bypass_urls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "bypass_urls.0", ".newexample.com"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_urls.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_urls.0", ".example.com"),
+					resource.TestCheckResourceAttr(resourceName, "bypass_urls.1", ".test.com"),
 				),
 			},
 			{

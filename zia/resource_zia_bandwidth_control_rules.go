@@ -34,6 +34,15 @@ func resourceBandwdithControlRules() *schema.Resource {
 				service := zClient.Service
 
 				id := d.Id()
+
+				// Handle format "type:id" by extracting just the ID part
+				if strings.Contains(id, ":") {
+					parts := strings.Split(id, ":")
+					if len(parts) == 2 {
+						id = parts[1] // Use the ID part after the colon
+					}
+				}
+
 				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)

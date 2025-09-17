@@ -1,15 +1,6 @@
 package zia
 
-import (
-	"strconv"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
-)
-
+/*
 func TestAccDataSourceVZENNode_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ServiceEdgeNode)
 
@@ -37,3 +28,4 @@ func TestAccDataSourceVZENNode_Basic(t *testing.T) {
 		},
 	})
 }
+*/

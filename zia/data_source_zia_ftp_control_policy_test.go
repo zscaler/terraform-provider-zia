@@ -24,14 +24,14 @@ data "zia_ftp_control_policy" "this" {}
 
 					// Set element counts
 					resource.TestCheckResourceAttr(resourceName, "url_categories.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "urls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "urls.#", "2"),
 
 					// Set element values (unordered)
 					resource.TestCheckTypeSetElemAttr(resourceName, "url_categories.*", "PROFESSIONAL_SERVICES"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "url_categories.*", "AI_ML_APPS"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "url_categories.*", "GENERAL_AI_ML"),
 
-					resource.TestCheckTypeSetElemAttr(resourceName, "urls.*", "test1.acme.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "urls.*", "test10.acme.com"),
 				),
 			},
 		},

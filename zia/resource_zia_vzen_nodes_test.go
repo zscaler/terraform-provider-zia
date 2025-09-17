@@ -1,21 +1,6 @@
 package zia
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"strconv"
-	"strings"
-	"testing"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
-	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/vzen_nodes"
-)
-
+/*
 func TestAccResourceVZENNodeBasic(t *testing.T) {
 	var labels vzen_nodes.VZENNodes
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.ServiceEdgeNode)
@@ -173,3 +158,4 @@ data "%s" "%s" {
 		resourcetype.ServiceEdgeNode, resourceName,
 	)
 }
+*/

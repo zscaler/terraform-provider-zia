@@ -179,7 +179,7 @@ resource "%s" "%s" {
 	name = "tf-acc-test-%s"
 	description = "%s"
 	state = "%s"
-	order = 1
+	order = 3
     redirect_port="5000"
     redirect_ip="192.168.100.150"
     src_ips=["192.168.100.0/24", "192.168.200.1"]

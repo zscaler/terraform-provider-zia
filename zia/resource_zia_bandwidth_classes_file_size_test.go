@@ -18,10 +18,10 @@ func TestAccResourceBandwdithClassesFileSize_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Step 1: Create the resource with an initial file size
 			{
-				Config: testAccResourceBandwdithClassesFileSizeConfig("FILE_100MB"),
+				Config: testAccResourceBandwdithClassesFileSizeConfig("FILE_250MB"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "file_size", "FILE_100MB"),
-					resource.TestCheckResourceAttr(resourceName, "name", "BANDWIDTH_CAT_LARGE_FILE"),
+					resource.TestCheckResourceAttr(resourceName, "file_size", "FILE_250MB"),
+					resource.TestCheckResourceAttr(resourceName, "name", "LARGE_FILE"),
 					resource.TestCheckResourceAttr(resourceName, "type", "BANDWIDTH_CAT_LARGE_FILE"),
 				),
 			},

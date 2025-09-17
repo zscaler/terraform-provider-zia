@@ -236,8 +236,6 @@ func resourceFileTypeControlRules() *schema.Resource {
 			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
 			"device_trust_levels": getDeviceTrustLevels(),
 			"protocols":           getFileTypeProtocols(),
-			// "url_categories":      getURLCategories(),
-			// "file_types": getFileTypes(),
 		},
 	}
 }
@@ -382,11 +380,12 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
-	if len(resp.URLCategories) == 0 {
-		_ = d.Set("url_categories", []string{"ANY"})
-	} else {
-		_ = d.Set("url_categories", resp.URLCategories)
-	}
+	_ = d.Set("url_categories", resp.URLCategories)
+	// if len(resp.URLCategories) == 0 {
+	// 	_ = d.Set("url_categories", []string{"ANY"})
+	// } else {
+	// 	_ = d.Set("url_categories", resp.URLCategories)
+	// }
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("max_size", resp.MaxSize)
 	_ = d.Set("min_size", resp.MinSize)

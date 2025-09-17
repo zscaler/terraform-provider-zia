@@ -42,6 +42,18 @@ func SetToStringList(d *schema.ResourceData, key string) []string {
 	return SetToStringSlice(set)
 }
 
+func ListToStringList(d *schema.ResourceData, key string) []string {
+	listObj, ok := d.GetOk(key)
+	if !ok {
+		return []string{}
+	}
+	list, ok := listObj.([]interface{})
+	if !ok {
+		return []string{}
+	}
+	return ListToStringSlice(list)
+}
+
 func SetToIntList(d *schema.ResourceData, key string) []int {
 	setObj, ok := d.GetOk(key)
 	if !ok {
