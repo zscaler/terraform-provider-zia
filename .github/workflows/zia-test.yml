@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goVersion: ["1.21"]
+        goVersion: ["1.24"]
         environment:
           - ZIA_ZS3
     environment: ${{ matrix.environment }}

@@ -1086,7 +1086,7 @@ func sortOrders(ruleOrderMap map[int]orderWithState) RuleIDOrderPairList {
 }
 
 type orderWithState struct {
-	order int
+	order OrderRule
 	done  bool
 }
 
@@ -1102,7 +1102,7 @@ var rules = listrules{
 
 type RuleIDOrderPair struct {
 	ID    int
-	Order int
+	Order OrderRule
 }
 
 type RuleIDOrderPairList []RuleIDOrderPair
@@ -1112,12 +1112,12 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 	if p[i].Order == p[j].Order {
 		return p[i].ID < p[j].ID
 	}
-	return p[i].Order < p[j].Order
+	return p[i].Order.Rank < p[j].Order.Rank || p[i].Order.Rank == p[j].Order.Rank && p[i].Order.Order < p[j].Order.Order
 }
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
-func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id, order int) error, beforeReorder func()) {
-	ticker := time.NewTicker(time.Second * 10) // create a ticker that ticks every half minute
+func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
+	ticker := time.NewTicker(time.Second * 30) // create a ticker that ticks every 30 seconds
 	defer ticker.Stop()                        // stop the ticker when the loop ends
 	numResources := []int{0, 0, 0}
 	for {
@@ -1143,7 +1143,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 					beforeReorder()
 				}
 				for _, v := range sorted {
-					if v.Order <= count {
+					if v.Order.Order <= count {
 						if err := updateOrder(v.ID, v.Order); err != nil {
 							log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
 						}
@@ -1154,7 +1154,7 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 15)
 		}
 	}
 }
@@ -1167,7 +1167,12 @@ func markOrderRuleAsDone(id int, resourceType string) {
 	rules.Unlock()
 }
 
-func reorderWithBeforeReorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error, beforeReorder func()) {
+type OrderRule struct {
+	Order int
+	Rank  int
+}
+
+func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
 	rules.Lock()
 	shouldCallReorder := false
 	if len(rules.orders) == 0 {
@@ -1192,6 +1197,6 @@ func reorderWithBeforeReorder(order, id int, resourceType string, getCount func(
 	}
 }
 
-func reorder(order, id int, resourceType string, getCount func() (int, error), updateOrder func(id, order int) error) {
+func reorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error) {
 	reorderWithBeforeReorder(order, id, resourceType, getCount, updateOrder, nil)
 }

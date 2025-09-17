@@ -138,21 +138,31 @@ func resourceLocationManagement() *schema.Resource {
 							Computed: true,
 						},
 						"ip_address": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IsIPAddress,
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: func(i interface{}, k string) (warnings []string, errors []error) {
+								v, ok := i.(string)
+								if !ok {
+									errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+									return warnings, errors
+								}
+								// Allow empty string or valid IP address
+								if v == "" {
+									return warnings, errors
+								}
+								return validation.IsIPAddress(i, k)
+							},
 						},
 						"pre_shared_key": {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
 						},
-						"comments": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
+						// "comments": {
+						// 	Type:     schema.TypeString,
+						// 	Optional: true,
+						// 	Computed: true,
+						// },
 					},
 				},
 			},
@@ -549,7 +559,7 @@ func flattenLocationVPNCredentialsSimple(vpnCredential []locationmanagement.VPNC
 			"fqdn":           vpnCredential.FQDN,
 			"ip_address":     vpnCredential.IPAddress,
 			"pre_shared_key": vpnCredential.PreSharedKey,
-			"comments":       vpnCredential.Comments,
+			// "comments":       vpnCredential.Comments,
 		}
 	}
 
@@ -722,7 +732,7 @@ func expandLocationManagementVPNCredentials(d *schema.ResourceData) []locationma
 				FQDN:         vpnItem["fqdn"].(string),
 				IPAddress:    vpnItem["ip_address"].(string),
 				PreSharedKey: vpnItem["pre_shared_key"].(string),
-				Comments:     vpnItem["comments"].(string),
+				// Comments:     vpnItem["comments"].(string),
 			}
 		}
 	}

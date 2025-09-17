@@ -236,8 +236,6 @@ func resourceFileTypeControlRules() *schema.Resource {
 			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
 			"device_trust_levels": getDeviceTrustLevels(),
 			"protocols":           getFileTypeProtocols(),
-			// "url_categories":      getURLCategories(),
-			// "file_types": getFileTypes(),
 		},
 	}
 }
@@ -290,18 +288,32 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[INFO] Created zia file type control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "file_type_control_rules", func() (int, error) {
-			list, err := filetypecontrol.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"file_type_control_rules",
+			func() (int, error) {
+				allRules, err := filetypecontrol.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := filetypecontrol.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = filetypecontrol.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -368,11 +380,12 @@ func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("protocols", resp.Protocols)
 	_ = d.Set("file_types", resp.FileTypes)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
-	if len(resp.URLCategories) == 0 {
-		_ = d.Set("url_categories", []string{"ANY"})
-	} else {
-		_ = d.Set("url_categories", resp.URLCategories)
-	}
+	_ = d.Set("url_categories", resp.URLCategories)
+	// if len(resp.URLCategories) == 0 {
+	// 	_ = d.Set("url_categories", []string{"ANY"})
+	// } else {
+	// 	_ = d.Set("url_categories", resp.URLCategories)
+	// }
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("max_size", resp.MaxSize)
 	_ = d.Set("min_size", resp.MinSize)
@@ -459,18 +472,32 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "file_type_control_rules", func() (int, error) {
-			list, err := filetypecontrol.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "file_type_control_rules",
+			func() (int, error) {
+				allRules, err := filetypecontrol.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := filetypecontrol.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order && rule.Rank == order.Rank {
+					return nil
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = filetypecontrol.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		if diags := resourceFileTypeControlRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

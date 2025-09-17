@@ -58,7 +58,7 @@ func resourceBandwdithClassesFileSize() *schema.Resource {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Description: "Name of the bandwidth class",
-				Default:     "BANDWIDTH_CAT_LARGE_FILE",
+				Default:     "LARGE_FILE",
 			},
 			"type": {
 				Type:        schema.TypeString,

@@ -165,7 +165,7 @@ resource "%s" "%s" {
 	description = "%s"
 	action = "%s"
 	state = "%s"
-	order = 1
+	order = 15
 	redirect_ip = "1.2.3.4"
 	dest_countries = ["CA", "US"]
 	source_countries = ["CA", "US"]

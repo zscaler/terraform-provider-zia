@@ -250,6 +250,20 @@ const (
 	VzenIpSecEnabled   = true
 )
 
+// Service Edge Node
+const (
+	VzenNodeType              = "VZEN"
+	VzenNodeStatus            = "ENABLED"
+	VzenNodeIPAddress         = "10.0.0.10"
+	VzenNodeSubnetMask        = "255.255.255.0"
+	VzenNodeDefaultGateway    = "10.0.0.20"
+	VzenNodeLoadBalancer      = "10.0.0.30"
+	VzenNodeDeploymentMode    = "STANDALONE"
+	VZenSKUType               = "LARGE"
+	VzenNodeInProduction      = true
+	VzenOnDemandSupportTunnel = true
+)
+
 // Rule Labels
 const (
 	NSSStatus = "ENABLED"
@@ -259,4 +273,15 @@ const (
 const (
 	BandwdithControlRuleDescription = "tf-acc-test-cloud-app-control"
 	BandwdithControlRulestate       = "ENABLED"
+)
+
+const (
+	UrlCatReviewEnabled                  = true
+	EunUrlCatReviewSubmitToSecurityCloud = false
+	EunSecurityReviewEnabled             = true
+	EunWebDlpReviewEnabled               = true
+	EunWebDlpReviewSubmitToSecurityCloud = false
+	DisplayCompReason                    = true
+	DisplayCompName                      = true
+	DisplayCompLogo                      = true
 )

@@ -219,19 +219,32 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		log.Printf("[INFO] Created zia sandbox rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "sandbox_rules", func() (int, error) {
-			list, err := sandbox_rules.GetAll(ctx, service)
-			filteredList := filterOutDefaultRule(list)
-			return len(filteredList), err
-		}, func(id, order int) error {
-			rule, err := sandbox_rules.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"sandbox_rules",
+			func() (int, error) {
+				list, err := sandbox_rules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				filteredList := filterOutDefaultRule(list)
+				return len(filteredList), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := sandbox_rules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order {
+					return nil
+				}
+				rule.Order = order.Order
+				_, err = sandbox_rules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sandbox_rules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -378,19 +391,29 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "sandbox_rules", func() (int, error) {
-			list, err := sandbox_rules.GetAll(ctx, service)
-			filteredList := filterOutDefaultRule(list)
-			return len(filteredList), err
-		}, func(id, order int) error {
-			rule, err := sandbox_rules.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "sandbox_rules",
+			func() (int, error) {
+				list, err := sandbox_rules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				filteredList := filterOutDefaultRule(list)
+				return len(filteredList), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := sandbox_rules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order {
+					return nil
+				}
+				rule.Order = order.Order
+				_, err = sandbox_rules.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sandbox_rules.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil)
 
 		if diags := resourceSandboxRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

@@ -19,41 +19,41 @@ func resourceEndUserNotification() *schema.Resource {
 		UpdateContext: resourceEndUserNotificationUpdate,
 		DeleteContext: resourceFuncNoOp,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			notificationType := d.Get("notification_type").(string)
+			//notificationType := d.Get("notification_type").(string)
 
 			// Validation for notification_type = "DEFAULT"
-			if notificationType == "DEFAULT" {
-				forbiddenFields := []string{"redirect_url", "security_review_custom_location", "url_cat_review_custom_location"}
-				for _, field := range forbiddenFields {
-					if d.HasChange(field) && d.Get(field) != "" {
-						return fmt.Errorf("attribute '%s' cannot be set when 'notification_type' is 'DEFAULT'", field)
-					}
-				}
-			}
+			// if notificationType == "DEFAULT" {
+			// 	forbiddenFields := []string{"redirect_url", "security_review_custom_location", "url_cat_review_custom_location"}
+			// 	for _, field := range forbiddenFields {
+			// 		if d.HasChange(field) && d.Get(field) != "" {
+			// 			return fmt.Errorf("attribute '%s' cannot be set when 'notification_type' is 'DEFAULT'", field)
+			// 		}
+			// 	}
+			// }
 
 			// Validation for notification_type = "CUSTOM"
-			if notificationType == "CUSTOM" {
-				forbiddenFields := []string{"display_reason", "display_comp_name", "display_comp_logo"}
-				for _, field := range forbiddenFields {
-					if d.HasChange(field) && d.Get(field) != "" {
-						return fmt.Errorf("attribute '%s' cannot be set when 'notification_type' is 'CUSTOM'", field)
-					}
-				}
-			}
+			// if notificationType == "CUSTOM" {
+			// 	forbiddenFields := []string{"display_reason", "display_comp_name", "display_company_logo"}
+			// 	for _, field := range forbiddenFields {
+			// 		if d.HasChange(field) && d.Get(field) != "" {
+			// 			return fmt.Errorf("attribute '%s' cannot be set when 'notification_type' is 'CUSTOM'", field)
+			// 		}
+			// 	}
+			// }
 
 			// Validation for url_cat_review_submit_to_security_cloud
-			if d.Get("url_cat_review_submit_to_security_cloud").(bool) {
-				if d.HasChange("url_cat_review_custom_location") && d.Get("url_cat_review_custom_location") != "" {
-					return fmt.Errorf("attribute 'url_cat_review_custom_location' cannot be set when 'url_cat_review_submit_to_security_cloud' is true")
-				}
-			}
+			// if d.Get("url_cat_review_submit_to_security_cloud").(bool) {
+			// 	if d.HasChange("url_cat_review_custom_location") && d.Get("url_cat_review_custom_location") != "" {
+			// 		return fmt.Errorf("attribute 'url_cat_review_custom_location' cannot be set when 'url_cat_review_submit_to_security_cloud' is true")
+			// 	}
+			// }
 
 			// Validation for security_review_submit_to_security_cloud
-			if d.Get("security_review_submit_to_security_cloud").(bool) {
-				if d.HasChange("security_review_custom_location") && d.Get("security_review_custom_location") != "" {
-					return fmt.Errorf("attribute 'security_review_custom_location' cannot be set when 'security_review_submit_to_security_cloud' is true")
-				}
-			}
+			// if d.Get("security_review_submit_to_security_cloud").(bool) {
+			// 	if d.HasChange("security_review_custom_location") && d.Get("security_review_custom_location") != "" {
+			// 		return fmt.Errorf("attribute 'security_review_custom_location' cannot be set when 'security_review_submit_to_security_cloud' is true")
+			// 	}
+			// }
 
 			// Validation for aup_frequency
 			aupFrequency := d.Get("aup_frequency").(string)
@@ -139,13 +139,13 @@ func resourceEndUserNotification() *schema.Resource {
 				Optional:    true,
 				Description: "A Boolean value indicating whether or not the reason for cautioning or blocking access to a site, file, or application is shown when the respective notification is triggered",
 			},
-			"display_comp_name": {
+			"display_company_name": {
 				Type: schema.TypeBool,
 				// Computed:    true,
 				Optional:    true,
 				Description: "A Boolean value indicating whether the organization's name appears in the EUN or not",
 			},
-			"display_comp_logo": {
+			"display_company_logo": {
 				Type: schema.TypeBool,
 				// Computed:    true,
 				Optional:    true,
@@ -353,8 +353,8 @@ func resourceEndUserNotificationRead(ctx context.Context, d *schema.ResourceData
 	_ = d.Set("aup_message", res.AUPMessage)
 	_ = d.Set("notification_type", res.NotificationType)
 	_ = d.Set("display_reason", res.DisplayReason)
-	_ = d.Set("display_comp_name", res.DisplayCompName)
-	_ = d.Set("display_comp_logo", res.DisplayCompLogo)
+	_ = d.Set("display_company_name", res.DisplayCompName)
+	_ = d.Set("display_company_logo", res.DisplayCompLogo)
 	_ = d.Set("custom_text", res.CustomText)
 	_ = d.Set("url_cat_review_enabled", res.URLCatReviewEnabled)
 	_ = d.Set("url_cat_review_submit_to_security_cloud", res.URLCatReviewSubmitToSecurityCloud)
@@ -418,8 +418,8 @@ func expandEndUserNotification(d *schema.ResourceData) end_user_notification.Use
 		AUPMessage:                          d.Get("aup_message").(string),
 		NotificationType:                    d.Get("notification_type").(string),
 		DisplayReason:                       d.Get("display_reason").(bool),
-		DisplayCompName:                     d.Get("display_comp_name").(bool),
-		DisplayCompLogo:                     d.Get("display_comp_logo").(bool),
+		DisplayCompName:                     d.Get("display_company_name").(bool),
+		DisplayCompLogo:                     d.Get("display_company_logo").(bool),
 		CustomText:                          d.Get("custom_text").(string),
 		URLCatReviewEnabled:                 d.Get("url_cat_review_enabled").(bool),
 		URLCatReviewSubmitToSecurityCloud:   d.Get("url_cat_review_submit_to_security_cloud").(bool),

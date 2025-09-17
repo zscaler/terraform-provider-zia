@@ -232,18 +232,32 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[INFO] Created zia firewall ips rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "firewall_ips_rule", func() (int, error) {
-			list, err := firewallipscontrolpolicies.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"firewall_ips_rule",
+			func() (int, error) {
+				allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -435,18 +449,32 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "firewall_ips_rule", func() (int, error) {
-			list, err := firewallipscontrolpolicies.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "firewall_ips_rule",
+			func() (int, error) {
+				allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order && rule.Rank == order.Rank {
+					return nil
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		if diags := resourceFirewallIPSRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

@@ -297,7 +297,7 @@ func flattenEDMDetails(edm *dlpdictionaries.DlpDictionary) []interface{} {
 		edmDetails[i] = map[string]interface{}{
 			"dictionary_edm_mapping_id": val.DictionaryEdmMappingID,
 			"schema_id":                 val.SchemaID,
-			"primary_field":             val.PrimaryField,
+			"primary_fields":            val.PrimaryFields,
 			"secondary_fields":          val.SecondaryFields,
 			"secondary_field_match_on":  val.SecondaryFieldMatchOn,
 		}

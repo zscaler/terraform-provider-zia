@@ -324,21 +324,20 @@ func resourceSSLInspectionRules() *schema.Resource {
 					},
 				},
 			},
-			"locations":        setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
-			"location_groups":  setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
-			"users":            setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
-			"groups":           setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
-			"departments":      setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
-			"time_windows":     setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
-			"labels":           setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
-			"device_groups":    setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":          setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
-			"source_ip_groups": setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			"dest_ip_groups":   setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
-			"workload_groups":  setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
-			"proxy_gateways":   setIDsSchemaTypeCustom(nil, "The proxy chaining gateway for which this rule is applicable. Ignore if the forwarding method is not Proxy Chaining."),
-			"zpa_app_segments": setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
-			// "url_categories":      getURLCategories(),
+			"locations":           setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
+			"location_groups":     setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
+			"users":               setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
+			"groups":              setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
+			"departments":         setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
+			"time_windows":        setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
+			"labels":              setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"device_groups":       setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":             setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"source_ip_groups":    setIDsSchemaTypeCustom(nil, "list of source ip groups"),
+			"dest_ip_groups":      setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"workload_groups":     setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
+			"proxy_gateways":      setIDsSchemaTypeCustom(nil, "The proxy chaining gateway for which this rule is applicable. Ignore if the forwarding method is not Proxy Chaining."),
+			"zpa_app_segments":    setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"user_agent_types":    getUserAgentTypes(),
 			"device_trust_levels": getDeviceTrustLevels(),
 			"platforms":           getSSLInspectionPlatforms(),
@@ -394,18 +393,32 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		log.Printf("[INFO] Created zia ssl inspection rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		reorder(order, resp.ID, "ssl_inspection_rules", func() (int, error) {
-			list, err := sslinspection.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := sslinspection.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(
+			OrderRule{Order: order, Rank: req.Rank},
+			resp.ID,
+			"ssl_inspection_rules",
+			func() (int, error) {
+				allRules, err := sslinspection.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := sslinspection.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = sslinspection.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sslinspection.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -466,11 +479,12 @@ func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("platforms", resp.Platforms)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
 	_ = d.Set("road_warrior_for_kerberos", resp.RoadWarriorForKerberos)
-	if len(resp.URLCategories) == 0 {
-		_ = d.Set("url_categories", []string{"ANY"})
-	} else {
-		_ = d.Set("url_categories", resp.URLCategories)
-	}
+	_ = d.Set("url_categories", resp.URLCategories)
+	// if len(resp.URLCategories) == 0 {
+	// 	_ = d.Set("url_categories", []string{"ANY"})
+	// } else {
+	// 	_ = d.Set("url_categories", resp.URLCategories)
+	// }
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 
@@ -574,18 +588,32 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorder(req.Order, req.ID, "ssl_inspection_rules", func() (int, error) {
-			list, err := sslinspection.GetAll(ctx, service)
-			return len(list), err
-		}, func(id, order int) error {
-			rule, err := sslinspection.Get(ctx, service, id)
-			if err != nil {
+		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "ssl_inspection_rules",
+			func() (int, error) {
+				allRules, err := sslinspection.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				rule, err := sslinspection.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+				// Optional: avoid unnecessary updates if the current order is already correct
+				if rule.Order == order.Order && rule.Rank == order.Rank {
+					return nil
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = sslinspection.Update(ctx, service, id, rule)
 				return err
-			}
-			rule.Order = order
-			_, err = sslinspection.Update(ctx, service, id, rule)
-			return err
-		})
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		if diags := resourceSSLInspectionRulesRead(ctx, d, meta); diags.HasError() {
 			if time.Since(start) < timeout {

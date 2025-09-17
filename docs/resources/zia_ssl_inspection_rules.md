@@ -200,7 +200,7 @@ In addition to all arguments above, the following attributes are supported:
 * `road_warrior_for_kerberos` (Boolean) - Indicates whether this rule is applied to remote users that use PAC with Kerberos authentication.
 * `platforms` (Set of String) -  Zscaler Client Connector device platforms for which this rule is applied. Supported Values: `SCAN_IOS`, `SCAN_ANDROID`, `SCAN_MACOS`, `SCAN_WINDOWS`, `NO_CLIENT_CONNECTOR`, `SCAN_LINUX`
 
-* `cloud_applications` - (List of Strings) The list of cloud applications to which the File Type Control policy rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
+* `cloud_applications` - (List of Strings) The list of cloud applications to which the File Type Control policy rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post). To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
 * `url_categories` - (List of Strings) The list of URL categories to which the SSL Inspection rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 

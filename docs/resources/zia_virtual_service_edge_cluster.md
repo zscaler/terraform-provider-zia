@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Edge Cluster"
+subcategory: "Virtual Service Edges"
 layout: "zscaler"
 page_title: "ZIA: virtual_service_edge_cluster"
 description: |-
@@ -36,28 +36,14 @@ resource "zia_virtual_service_edge_cluster" "this" {
 
 The following arguments are supported:
 
-* `email` - (Required) The email address of the alert recipient
-
-## Attribute Reference
-
-In addition to all arguments above, the following attributes are supported:
-
-* `status` - (Number) Specifies the status of the Virtual Service Edge cluster. The status is set to `ENABLED` by default.
-
-* `ip_sec_enabled` - (String) A Boolean value that specifies whether to terminate IPSec traffic from the client at selected Virtual Service Edge instances for the Virtual Service Edge cluster
-* `ip_address` - (String) The Virtual Service Edge cluster IP address. In a Virtual Service Edge cluster, the cluster IP address provides fault tolerance and is used to listen for user traffic. This interface doesn't explicitly get an IP address. The cluster IP address must be in the same VLAN as the proxy and load balancer IP addresses.
-* `subnet_mask` - (String) The Virtual Service Edge cluster subnet mask
-* `default_gateway` - (String) The IP address of the default gateway to the internet
-* `last_modified_time` - (Number) When the cluster was last modified
-
-* `virtual_zen_nodes` - (List of Object) The Virtual Service Edge instances you want to include in the cluster. A Virtual Service Edge cluster must contain at least two Virtual Service Edge instances.
-  * `id` - (Number) Identifier that uniquely identifies an entity
-
-* `type` - (String) The Virtual Service Edge cluster type
-`ANY`, `NONE`, `SME`, `SMSM`, `SMCA`, `SMUI`, `SMCDS`, `SMDNSD`, `SMAA`, `SMTP`,`SMQTN`,`VIP`,
-`UIZ`, `UIAE`, `SITEREVIEW`, `PAC`, `S_RELAY`, `M_RELAY`, `H_MON`, `SMIKE`, `NSS`, `SMEZA`, `SMLB`,
-`SMFCCLT`, `SMBA`, `SMBAC`, `SMESXI`, `SMBAUI`, `VZEN`, `ZSCMCLT`, `SMDLP`, `ZSQUERY`, `ADP`, `SMCDSDLP`,
-`SMSCIM`, `ZSAPI`, `ZSCMCDSSCLT`, `LOCAL_MTS`, `SVPN`, `SMCASB`, `SMFALCONUI`, `MOBILEAPP_REG`, `SMRESTSVR`, `FALCONCA`, `MOBILEAPP_NF`, `ZIRSVR`, `SMEDGEUI`, `ALERTEVAL`, `ALERTNOTIF`, `SMPARTNERUI`, `CQM`, `DATAKEEPER`,`SMBAM`, `ZWACLT`
+* `name` - (Optional) Name of the Virtual Service Edge cluster
+* `status` - (Optional) Specifies the status of the Virtual Service Edge cluster. The status is set to ENABLED by default
+* `type` - (Optional) The Virtual Service Edge cluster type. Supported values: `ANY`, `NONE`, `SME`, `SMSM`, `SMCA`, `SMUI`, `SMCDS`, `SMDNSD`, `SMAA`, `SMTP`, `SMQTN`, `VIP`, `UIZ`, `UIAE`, `SITEREVIEW`, `PAC`, `S_RELAY`, `M_RELAY`, `H_MON`, `SMIKE`, `NSS`, `SMEZA`, `SMLB`, `SMFCCLT`, `SMBA`, `SMBAC`, `SMESXI`, `SMBAUI`, `VZEN`, `ZSCMCLT`, `SMDLP`, `ZSQUERY`, `ADP`, `SMCDSDLP`, `SMSCIM`, `ZSAPI`, `ZSCMCDSSCLT`, `LOCAL_MTS`, `SVPN`, `SMCASB`, `SMFALCONUI`, `MOBILEAPP_REG`, `SMRESTSVR`, `FALCONCA`, `MOBILEAPP_NF`, `ZIRSVR`, `SMEDGEUI`, `ALERTEVAL`, `ALERTNOTIF`, `SMPARTNERUI`, `CQM`, `DATAKEEPER`, `SMBAM`, `ZWACLT`
+* `ip_sec_enabled` - (Optional) A Boolean value that specifies whether to terminate IPSec traffic from the client at selected Virtual Service Edge instances for the Virtual Service Edge cluster
+* `ip_address` - (Optional) The Virtual Service Edge cluster IP address
+* `subnet_mask` - (Optional) The Virtual Service Edge cluster subnet mask
+* `default_gateway` - (Optional) The IP address of the default gateway to the internet
+* `virtual_zen_nodes` - (Optional) List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ECZPA forwarding method (used for Zscaler Cloud Connector)
 
 ## Import
 

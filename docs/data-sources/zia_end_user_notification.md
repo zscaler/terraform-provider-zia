@@ -31,8 +31,8 @@ data "zia_end_user_notification" "example"{}
 * `aup_message` (String) - The acceptable use statement that appears in the AUP.
 * `notification_type` (String) - The type of EUN, either DEFAULT or CUSTOM.
 * `display_reason` (Boolean) - Indicates whether the reason for blocking access is displayed in the EUN.
-* `display_comp_name` (Boolean) - Indicates whether the organization's name is displayed in the EUN.
-* `display_comp_logo` (Boolean) - Indicates whether the organization's logo is displayed in the EUN.
+* `display_company_name` (Boolean) - Indicates whether the organization's name is displayed in the EUN.
+* `display_company_logo` (Boolean) - Indicates whether the organization's logo is displayed in the EUN.
 * `custom_text` (String) - Custom text displayed in the EUN.
 * `url_cat_review_enabled` (Boolean) - Indicates whether URL Categorization notifications are enabled.
 * `url_cat_review_submit_to_security_cloud` (Boolean) - Indicates whether review requests are submitted to Zscaler Security Cloud.

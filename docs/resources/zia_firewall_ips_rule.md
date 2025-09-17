@@ -15,6 +15,8 @@ description: |-
 
 The **zia_firewall_ips_rule** resource allows the creation and management of ZIA Cloud Firewall IPS rules in the Zscaler Internet Access.
 
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted and NOT all attributes are suppported. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules and intend to manage those rules via Terraform, you must first import those rules into the state and start the ordering accordingly. However, if DO NOT intend to manage predefined rules via Terraform, the provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API is responsible for moving these rules to their respective positions as API calls are made.
+
 ## Example Usage
 
 ```hcl
@@ -76,9 +78,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `description` - (String) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
-* `state` - (String) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule.
+
+* `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule. Supported Values: `ENABLED`, `DISABLED`
+
 * `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BYPASS_IPS`
-* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank. The default value is `7`.
+
+* `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank in UI first. The default value is `7`. Visit to learn more [About Admin Rank](https://help.zscaler.com/zia/about-admin-rank)
+
 * `enable_full_logging` - (Integer) A Boolean value that indicates whether full logging is enabled. A true value indicates that full logging is enabled, whereas a false value indicates that aggregate logging is enabled.
 * `capture_pcap` - (Boolean) Value that indicates whether packet capture (PCAP) is enabled or not
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
