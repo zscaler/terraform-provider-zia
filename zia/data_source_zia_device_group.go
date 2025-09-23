@@ -16,7 +16,7 @@ func dataSourceDeviceGroups() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"id": {
 				Type:        schema.TypeInt,
-				Computed:    true,
+				Optional:    true,
 				Description: "The unique identifer for the device group.",
 			},
 			"name": {
@@ -111,16 +111,43 @@ func dataSourceDeviceGroupsRead(ctx context.Context, d *schema.ResourceData, met
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	name, hasName := d.Get("name").(string)
+	var resp *devicegroups.DeviceGroups
+	var searchCriteria string
 
-	if hasName && name != "" {
-		// Get specific device group by name
-		log.Printf("[INFO] Getting data for device group name: %s\n", name)
-		resp, err := devicegroups.GetDeviceGroupByName(ctx, service, name)
+	// Check if searching by ID
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
+		log.Printf("[INFO] Getting device group by id: %d\n", id)
+		searchCriteria = fmt.Sprintf("id=%d", id)
+
+		// Get all device groups and find the one with matching ID
+		allDeviceGroups, err := devicegroups.GetAllDevicesGroups(ctx, service)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
+		for _, dg := range allDeviceGroups {
+			if dg.ID == id {
+				resp = &dg
+				break
+			}
+		}
+	}
+
+	// Check if searching by name (only if ID search didn't find anything)
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting device group by name: %s\n", name)
+		searchCriteria = fmt.Sprintf("name=%s", name)
+
+		res, err := devicegroups.GetDeviceGroupByName(ctx, service, name)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		resp = res
+	}
+
+	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("group_type", resp.GroupType)
@@ -129,7 +156,9 @@ func dataSourceDeviceGroupsRead(ctx context.Context, d *schema.ResourceData, met
 		_ = d.Set("predefined", resp.Predefined)
 		_ = d.Set("device_names", resp.DeviceNames)
 		_ = d.Set("device_count", resp.DeviceCount)
-
+	} else if searchCriteria != "" {
+		// If we were searching for a specific device group but didn't find it
+		return diag.FromErr(fmt.Errorf("couldn't find any device group with %s", searchCriteria))
 	} else {
 		// Get all device groups
 		log.Printf("[INFO] Getting all device groups\n")

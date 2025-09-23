@@ -115,19 +115,41 @@ func dataSourceForwardingControlProxyGatewayRead(ctx context.Context, d *schema.
 	service := zClient.Service
 
 	var resp *proxy_gateways.ProxyGateways
+	var searchCriteria string
 
-	// Search by Name
+	// Check if searching by ID
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
+		log.Printf("[INFO] Getting proxy gateway by id: %d\n", id)
+		searchCriteria = fmt.Sprintf("id=%d", id)
+
+		// Get all proxy gateways and find the one with matching ID
+		allProxyGateways, err := proxy_gateways.GetAll(ctx, service)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		for _, tw := range allProxyGateways {
+			if tw.ID == id {
+				resp = &tw
+				break
+			}
+		}
+	}
+
+	// Check if searching by name (only if ID search didn't find anything)
 	name, _ := d.Get("name").(string)
-	if name != "" {
-		log.Printf("[INFO] Searching for proxy gateway with name: %s\n", name)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting proxy gateway by name: %s\n", name)
+		searchCriteria = fmt.Sprintf("name=%s", name)
+
 		res, err := proxy_gateways.GetByName(ctx, service, name)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("failed to retrieve proxy gateway by name: %w", err))
+			return diag.FromErr(err)
 		}
 		resp = res
 	}
 
-	// Handle response
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
@@ -146,7 +168,7 @@ func dataSourceForwardingControlProxyGatewayRead(ctx context.Context, d *schema.
 			return diag.FromErr(err)
 		}
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any proxy gateway with name '%s'", name))
+		return diag.FromErr(fmt.Errorf("couldn't find any proxy gateway with %s", searchCriteria))
 	}
 
 	return nil

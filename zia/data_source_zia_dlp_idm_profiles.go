@@ -17,6 +17,7 @@ func dataSourceDLPIDMProfiles() *schema.Resource {
 			"profile_id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "The identifier (1-64) for the IDM template (i.e., IDM profile) that is unique within the organization.",
 			},
 			"profile_name": {

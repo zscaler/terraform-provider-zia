@@ -17,6 +17,7 @@ func dataSourceWorkloadGroup() *schema.Resource {
 			"id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "A unique identifier assigned to the workload group",
 			},
 			"name": {
@@ -126,25 +127,41 @@ func dataSourceWorkloadGroupRead(ctx context.Context, d *schema.ResourceData, me
 	service := zClient.Service
 
 	var resp *workloadgroups.WorkloadGroup
+	var searchCriteria string
+
+	// Check if searching by ID
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting workload group id: %d\n", id)
-		res, err := workloadgroups.Get(ctx, service, id)
+		log.Printf("[INFO] Getting time window by id: %d\n", id)
+		searchCriteria = fmt.Sprintf("id=%d", id)
+
+		// Get all time windows and find the one with matching ID
+		allTimeWindows, err := workloadgroups.GetAll(ctx, service)
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		resp = res
+
+		for _, tw := range allTimeWindows {
+			if tw.ID == id {
+				resp = &tw
+				break
+			}
+		}
 	}
 
+	// Check if searching by name (only if ID search didn't find anything)
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting Getting workload group : %s\n", name)
+		log.Printf("[INFO] Getting time window by name: %s\n", name)
+		searchCriteria = fmt.Sprintf("name=%s", name)
+
 		res, err := workloadgroups.GetByName(ctx, service, name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		resp = res
 	}
+
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
@@ -161,7 +178,7 @@ func dataSourceWorkloadGroupRead(ctx context.Context, d *schema.ResourceData, me
 		}
 
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any workload group with name '%s' or id '%d'", name, id))
+		return diag.FromErr(fmt.Errorf("couldn't find any workload groups with %s", searchCriteria))
 	}
 
 	return nil

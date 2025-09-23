@@ -22,6 +22,7 @@ func dataSourceDLPDictionaryPredefinedIdentifiers() *schema.Resource {
 			"id": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"predefined_identifiers": {
 				Type:     schema.TypeList,

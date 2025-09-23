@@ -197,7 +197,7 @@ The following arguments are supported:
 * `aup_timeout_in_days` - (Number) Custom AUP Frequency. Refresh time (in days) to re-validate the AUP.
 * `cookies_and_proxy` - (Boolean) Enable Cookies and proxy feature
 * `digest_auth_enabled` - (Boolean) Enable Digest Auth feature
-* `kerberos_auth_enabled` - (Boolean) Enable Kerberos Auth feature
+* `kerberos_auth` - (Boolean) Enable Kerberos Auth feature
 * `auth_required` - (Boolean) Enforce Authentication. Required when ports are enabled, IP Surrogate is enabled, or Kerberos Authentication is enabled.
 * `caution_enabled` - (Boolean) Enable Caution. When set to true, a caution notifcation is enabled for the location.
 * `display_time_unit` - (String) Display Time Unit. The time unit to display for IP Surrogate idle time to disassociation.

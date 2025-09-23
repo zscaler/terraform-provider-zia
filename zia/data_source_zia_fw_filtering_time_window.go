@@ -17,6 +17,7 @@ func dataSourceFWTimeWindow() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -44,9 +45,34 @@ func dataSourceFWTimeWindowRead(ctx context.Context, d *schema.ResourceData, met
 	service := zClient.Service
 
 	var resp *timewindow.TimeWindow
-	name, ok := d.Get("name").(string)
-	if ok && name != "" {
-		log.Printf("[INFO] Getting time window : %s\n", name)
+	var searchCriteria string
+
+	// Check if searching by ID
+	id, ok := getIntFromResourceData(d, "id")
+	if ok {
+		log.Printf("[INFO] Getting time window by id: %d\n", id)
+		searchCriteria = fmt.Sprintf("id=%d", id)
+
+		// Get all time windows and find the one with matching ID
+		allTimeWindows, err := timewindow.GetAll(ctx, service)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		for _, tw := range allTimeWindows {
+			if tw.ID == id {
+				resp = &tw
+				break
+			}
+		}
+	}
+
+	// Check if searching by name (only if ID search didn't find anything)
+	name, _ := d.Get("name").(string)
+	if resp == nil && name != "" {
+		log.Printf("[INFO] Getting time window by name: %s\n", name)
+		searchCriteria = fmt.Sprintf("name=%s", name)
+
 		res, err := timewindow.GetTimeWindowByName(ctx, service, name)
 		if err != nil {
 			return diag.FromErr(err)
@@ -60,9 +86,8 @@ func dataSourceFWTimeWindowRead(ctx context.Context, d *schema.ResourceData, met
 		_ = d.Set("start_time", resp.StartTime)
 		_ = d.Set("end_time", resp.EndTime)
 		_ = d.Set("day_of_week", resp.DayOfWeek)
-
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any time window with name '%s'", name))
+		return diag.FromErr(fmt.Errorf("couldn't find any time window with %s", searchCriteria))
 	}
 
 	return nil

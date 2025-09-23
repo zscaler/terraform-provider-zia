@@ -479,12 +479,12 @@ func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("platforms", resp.Platforms)
 	_ = d.Set("cloud_applications", resp.CloudApplications)
 	_ = d.Set("road_warrior_for_kerberos", resp.RoadWarriorForKerberos)
-	_ = d.Set("url_categories", resp.URLCategories)
-	// if len(resp.URLCategories) == 0 {
-	// 	_ = d.Set("url_categories", []string{"ANY"})
-	// } else {
-	// 	_ = d.Set("url_categories", resp.URLCategories)
-	// }
+	// _ = d.Set("url_categories", resp.URLCategories)
+	if len(resp.URLCategories) == 0 {
+		_ = d.Set("url_categories", []string{"ANY"})
+	} else {
+		_ = d.Set("url_categories", resp.URLCategories)
+	}
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 
@@ -706,7 +706,7 @@ func expandSSLInspectionRules(d *schema.ResourceData) sslinspection.SSLInspectio
 		Labels:                 expandIDNameExtensionsSet(d, "labels"),
 		ProxyGateways:          expandIDNameExtensionsSet(d, "proxy_gateways"),
 		ZPAAppSegments:         expandZPAAppSegmentSet(d, "zpa_app_segments"),
-		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
+		WorkloadGroups:         expandWorkloadGroupsIDName(d, "workload_groups"),
 	}
 
 	// ADD THIS:
