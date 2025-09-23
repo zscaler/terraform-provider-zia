@@ -330,6 +330,7 @@ func resourceURLFilteringRules() *schema.Resource {
 			"request_methods":        getURLRequestMethods(),
 			"protocols":              getURLProtocols(),
 			"user_agent_types":       getUserAgentTypes(),
+			"source_countries":       getISOCountryCodes(),
 		},
 	}
 }
@@ -483,6 +484,11 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
+	processedSrcCountries := make([]string, len(resp.SourceCountries))
+	for i, country := range resp.SourceCountries {
+		processedSrcCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
+	}
+
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
@@ -490,6 +496,7 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	_ = d.Set("description", resp.Description)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("protocols", resp.Protocols)
+	_ = d.Set("source_countries", processedSrcCountries)
 	if len(resp.URLCategories) == 0 {
 		_ = d.Set("url_categories", []string{"ANY"})
 	} else {
@@ -769,6 +776,8 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		log.Printf("[ERROR] Invalid size_quota: %v", err)
 	}
 
+	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
+
 	result := urlfilteringpolicies.URLFilteringRule{
 		ID:                     id,
 		Name:                   d.Get("name").(string),
@@ -789,6 +798,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		SizeQuota:              sizeQuotaKB,
 		ValidityStartTime:      validityStartTime,
 		ValidityEndTime:        validityEndTime,
+		SourceCountries:        processedSourceCountries,
 		ValidityTimeZoneID:     d.Get("validity_time_zone_id").(string),
 		EnforceTimeValidity:    d.Get("enforce_time_validity").(bool),
 		Action:                 d.Get("action").(string),
@@ -805,7 +815,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:                expandIDNameExtensionsSet(d, "devices"),
 		SourceIPGroups:         expandIDNameExtensionsSet(d, "source_ip_groups"),
-		WorkloadGroups:         expandWorkloadGroups(d, "workload_groups"),
+		WorkloadGroups:         expandWorkloadGroupsIDName(d, "workload_groups"),
 		CBIProfile:             expandCBIProfile(d),
 	}
 

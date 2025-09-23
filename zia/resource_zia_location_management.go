@@ -214,10 +214,9 @@ func resourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Enable Digest Authentication at the location",
 			},
-			"kerberos_auth_enabled": {
+			"kerberos_auth": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
 				Description: "Enable Kerberos Authentication at the location",
 			},
 			"iot_discovery_enabled": {
@@ -497,7 +496,7 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("auth_required", resp.AuthRequired)
 	_ = d.Set("basic_auth_enabled", resp.BasicAuthEnabled)
 	_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
-	_ = d.Set("kerberos_auth_enabled", resp.KerberosAuth)
+	_ = d.Set("kerberos_auth", resp.KerberosAuth)
 	_ = d.Set("iot_discovery_enabled", resp.IOTDiscoveryEnabled)
 	_ = d.Set("iot_enforce_policy_set", resp.IOTEnforcePolicySet)
 	_ = d.Set("other_sub_location", resp.OtherSubLocation)
@@ -676,7 +675,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		AuthRequired:                        d.Get("auth_required").(bool),
 		BasicAuthEnabled:                    d.Get("basic_auth_enabled").(bool),
 		DigestAuthEnabled:                   d.Get("digest_auth_enabled").(bool),
-		KerberosAuth:                        d.Get("kerberos_auth_enabled").(bool),
+		KerberosAuth:                        d.Get("kerberos_auth").(bool),
 		IOTDiscoveryEnabled:                 d.Get("iot_discovery_enabled").(bool),
 		IOTEnforcePolicySet:                 d.Get("iot_enforce_policy_set").(bool),
 		SSLScanEnabled:                      d.Get("ssl_scan_enabled").(bool),

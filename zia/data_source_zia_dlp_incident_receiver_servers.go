@@ -17,6 +17,7 @@ func dataSourceDLPIncidentReceiverServers() *schema.Resource {
 			"id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "The unique identifier for a DLP server.",
 			},
 			"name": {

@@ -20,18 +20,31 @@ Use the **zia_bandwidth_control_rule** resource allows the creation and manageme
 ## Example Usage - By Name
 
 ```hcl
-
-data "zia_bandwidth_control_rule" "this" {
-    name = "Streaming Media Bandwidth"
+data "zia_bandwidth_classes_web_conferencing" "this" {
+    name = "BANDWIDTH_CAT_WEBCONF"
 }
-```
 
-## Example Usage - By ID
-
-```hcl
-
-data "zia_bandwidth_control_rule" "this" {
-  id = 154658
+resource "zia_bandwidth_control_rule" "this" {
+    name = "Streaming Media Bandwidth"
+    description = "Streaming Media Bandwidth"
+    state = "ENABLED"
+    order = 1
+    rank = 7
+    min_bandwidth = 5
+    max_bandwidth = 100
+    protocols = ["ANY_RULE"]
+    bandwidth_classes  {
+        id = [data.zia_bandwidth_classes_web_conferencing.this.id]
+    }
+    labels  {
+        id = [1503197]
+    }
+    location_groups {
+        id = [8061255]
+    }
+    time_windows {
+        id = [483]
+    }
 }
 ```
 

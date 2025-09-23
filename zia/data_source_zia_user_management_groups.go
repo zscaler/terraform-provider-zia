@@ -17,6 +17,7 @@ func dataSourceGroupManagement() *schema.Resource {
 			"id": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				Optional: true,
 			},
 			"name": {
 				Type:     schema.TypeString,

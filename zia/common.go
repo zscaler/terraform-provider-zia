@@ -543,7 +543,7 @@ func flattenWorkloadGroups(workloadGroups []common.IDName) []interface{} {
 }
 
 // Common expand function to support Workload Groups across other resources
-func expandWorkloadGroups(d *schema.ResourceData, key string) []common.IDName {
+func expandWorkloadGroupsIDName(d *schema.ResourceData, key string) []common.IDName {
 	// Retrieve the set from the resource data
 	if v, ok := d.GetOk(key); ok {
 		workloadGroupsSet := v.(*schema.Set)

@@ -101,6 +101,15 @@ func getStringFromResourceData(d *schema.ResourceData, key string) (string, bool
 	return val, isSet && isStr && val != ""
 }
 
+func getBoolFromResourceData(d *schema.ResourceData, key string) bool {
+	obj, isSet := d.GetOk(key)
+	if !isSet {
+		return false
+	}
+	val, isBool := obj.(bool)
+	return isBool && val
+}
+
 // avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
 func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
 	service := client.Service

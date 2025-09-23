@@ -20,7 +20,7 @@ See [About Cloud Application Risk Profile](https://help.zscaler.com/zia/about-cl
 
 ```hcl
 resource "zia_risk_profiles" "this" {
-    name = "RiskProfile_12346"
+    profile_name = "RiskProfile_12346"
     status="SANCTIONED"
     risk_index=[1, 2, 3, 4, 5]
     certifications=["AICPA", "CCPA", "CISP"]
@@ -63,7 +63,7 @@ resource "zia_risk_profiles" "this" {
 
 The following arguments are supported:
 
-* `name` - (Required, String) Cloud application risk profile name.
+* `profile_name` - (Required, String) Cloud application risk profile name.
 
 ## Attribute Reference
 

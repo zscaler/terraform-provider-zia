@@ -606,7 +606,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
-		WorkloadGroups:      expandWorkloadGroups(d, "workload_groups"),
+		WorkloadGroups:      expandWorkloadGroupsIDName(d, "workload_groups"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result

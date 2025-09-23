@@ -53,7 +53,7 @@ func resourceRiskProfiles() *schema.Resource {
 				Computed:    true,
 				Description: "Unique identifier for the risk profile.",
 			},
-			"name": {
+			"profile_name": {
 				Type:        schema.TypeString,
 				Required:    true,
 				Description: "Cloud application risk profile name",
@@ -418,7 +418,7 @@ func resourceRiskProfilesRead(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[INFO] Getting zia risk profiles:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
-	_ = d.Set("name", resp.ProfileName)
+	_ = d.Set("profile_name", resp.ProfileName)
 	_ = d.Set("profile_type", resp.ProfileType)
 	_ = d.Set("status", resp.Status)
 	_ = d.Set("exclude_certificates", resp.ExcludeCertificates)
@@ -447,8 +447,6 @@ func resourceRiskProfilesRead(ctx context.Context, d *schema.ResourceData, meta 
 	_ = d.Set("sender_policy_framework", resp.SenderPolicyFramework)
 	_ = d.Set("domain_keys_identified_mail", resp.DomainKeysIdentifiedMail)
 	_ = d.Set("domain_based_message_auth", resp.DomainBasedMessageAuth)
-	_ = d.Set("last_mod_time", resp.LastModTime)
-	_ = d.Set("create_time", resp.CreateTime)
 	_ = d.Set("certifications", resp.Certifications)
 	_ = d.Set("data_encryption_in_transit", resp.DataEncryptionInTransit)
 	_ = d.Set("risk_index", resp.RiskIndex)
@@ -529,7 +527,7 @@ func expandRiskProfiles(d *schema.ResourceData) risk_profiles.RiskProfiles {
 	result := risk_profiles.RiskProfiles{
 		ID: id,
 
-		ProfileName:               d.Get("name").(string),
+		ProfileName:               d.Get("profile_name").(string),
 		ProfileType:               d.Get("profile_type").(string),
 		Status:                    d.Get("status").(string),
 		PoorItemsOfService:        d.Get("poor_items_of_service").(string),

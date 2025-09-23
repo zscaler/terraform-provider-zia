@@ -175,6 +175,8 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `url_categories` - (List of Strings) The list of URL categories to which the URL Filtering rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 
+* `source_countries`** - (List of String) Identify destinations based on the location of a server. Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
+
 * `locations` - (List of Object) The locations to which the Firewall Filtering policy rule applies
   * `id` - (Optional) Identifier that uniquely identifies an entity
 

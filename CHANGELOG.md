@@ -1,10 +1,23 @@
 # Changelog
 
-## 4.5.0 (September, xx 2025)
+## 4.5.1 (September, 22 2025)
 
 ### Notes
 
-- Release date: **(September, xx 2025)**
+- Release date: **(September, 22 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #482](https://github.com/zscaler/terraform-provider-zia/pull/482) - Added new resource `zia_workload_groups`.
+- [PR #482](https://github.com/zscaler/terraform-provider-zia/pull/482) - Added new attribute `source_countries` to resource `zia_url_filtering_rules`. The attribute identifies destinations based on the location of a server. Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
+- [PR #482](https://github.com/zscaler/terraform-provider-zia/pull/482) - Fixed and updated several documentation fields across multiple resources and data sources.
+
+## 4.5.0 (September, 17 2025)
+
+### Notes
+
+- Release date: **(September, 17 2025)**
 - Supported Terraform version: **v1.x**
 
 ### NEW - DATA SOURCE AND RESOURCES

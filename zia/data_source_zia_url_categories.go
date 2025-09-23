@@ -150,6 +150,7 @@ func dataSourceURLCategories() *schema.Resource {
 			"val": {
 				Type:     schema.TypeInt,
 				Computed: true,
+				Optional: true,
 			},
 			"custom_urls_count": {
 				Type:     schema.TypeInt,

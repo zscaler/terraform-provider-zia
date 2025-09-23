@@ -178,6 +178,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_mobile_malware_protection_policy":              resourceMobileMalwareProtectionPolicy(),
 			"zia_virtual_service_edge_cluster":                  resourceVZENCluster(),
 			"zia_virtual_service_edge_node":                     resourceVZENNode(),
+			"zia_workload_groups":                               resourceWorkloadGroups(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{

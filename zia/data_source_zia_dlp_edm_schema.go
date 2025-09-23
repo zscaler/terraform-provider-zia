@@ -17,6 +17,7 @@ func dataSourceDLPEDMSchema() *schema.Resource {
 			"schema_id": {
 				Type:        schema.TypeInt,
 				Computed:    true,
+				Optional:    true,
 				Description: "The identifier (1-65519) for the EDM schema (i.e., EDM template) that is unique within the organization.",
 			},
 			"project_name": {
