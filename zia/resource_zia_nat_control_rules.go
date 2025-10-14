@@ -79,11 +79,9 @@ func resourceNatControlRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,

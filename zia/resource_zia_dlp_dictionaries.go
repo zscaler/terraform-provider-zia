@@ -125,6 +125,7 @@ func resourceDLPDictionaries() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					"MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY",
 					"MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY",
+					"MATCH_CUSTOM_ANY_PATTERN_WITH_ANY_PHRASE",
 				}, false),
 			},
 			"patterns": {
@@ -263,9 +264,15 @@ func resourceDLPDictionaries() *schema.Resource {
 				},
 			},
 			"proximity": {
-				Type:        schema.TypeInt,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Description:  "The DLP dictionary proximity length that defines how close a high confidence phrase must be to an instance of the pattern (that the dictionary detects) to count as a match.",
+				ValidateFunc: validation.IntBetween(0, 10000),
+			},
+			"proximity_enabled_for_custom_dictionary": {
+				Type:        schema.TypeBool,
 				Optional:    true,
-				Description: "The DLP dictionary proximity length.",
+				Description: "A Boolean constant that indicates if proximity length is enabled or disabled for a custom DLP dictionary.",
 			},
 			"ignore_exact_match_idm_dict": {
 				Type:        schema.TypeBool,
@@ -363,6 +370,8 @@ func resourceDLPDictionariesRead(ctx context.Context, d *schema.ResourceData, me
 	_ = d.Set("bin_numbers", resp.BinNumbers)
 	_ = d.Set("dict_template_id", resp.DictTemplateId)
 	_ = d.Set("proximity", resp.Proximity)
+	_ = d.Set("proximity_enabled_for_custom_dictionary", resp.ProximityEnabledForCustomDictionary)
+
 	if err := d.Set("phrases", flattenPhrases(resp)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -453,19 +462,20 @@ func expandDLPDictionaries(d *schema.ResourceData, isCreate bool) dlpdictionarie
 	// hierarchicalIdentifiers := expandHierarchicalIdentifiers(d.Get("hierarchical_identifiers").(*schema.Set).List())
 
 	result := dlpdictionaries.DlpDictionary{
-		ID:                               id,
-		Name:                             d.Get("name").(string),
-		Description:                      d.Get("description").(string),
-		ConfidenceThreshold:              d.Get("confidence_threshold").(string),
-		CustomPhraseMatchType:            d.Get("custom_phrase_match_type").(string),
-		ConfidenceLevelForPredefinedDict: d.Get("confidence_level_for_predefined_dict").(string),
-		DictionaryType:                   d.Get("dictionary_type").(string),
-		Custom:                           d.Get("custom").(bool),
-		IgnoreExactMatchIdmDict:          d.Get("ignore_exact_match_idm_dict").(bool),
-		IncludeBinNumbers:                d.Get("include_bin_numbers").(bool),
-		DictTemplateId:                   d.Get("dict_template_id").(int),
-		Proximity:                        d.Get("proximity").(int),
-		HierarchicalIdentifiers:          SetToStringList(d, "hierarchical_identifiers"),
+		ID:                                  id,
+		Name:                                d.Get("name").(string),
+		Description:                         d.Get("description").(string),
+		ConfidenceThreshold:                 d.Get("confidence_threshold").(string),
+		CustomPhraseMatchType:               d.Get("custom_phrase_match_type").(string),
+		ConfidenceLevelForPredefinedDict:    d.Get("confidence_level_for_predefined_dict").(string),
+		DictionaryType:                      d.Get("dictionary_type").(string),
+		Custom:                              d.Get("custom").(bool),
+		IgnoreExactMatchIdmDict:             d.Get("ignore_exact_match_idm_dict").(bool),
+		IncludeBinNumbers:                   d.Get("include_bin_numbers").(bool),
+		DictTemplateId:                      d.Get("dict_template_id").(int),
+		Proximity:                           d.Get("proximity").(int),
+		ProximityEnabledForCustomDictionary: d.Get("proximity_enabled_for_custom_dictionary").(bool),
+		HierarchicalIdentifiers:             SetToStringList(d, "hierarchical_identifiers"),
 		// HierarchicalIdentifiers:          hierarchicalIdentifiers,
 	}
 	binNumbers := []int{}

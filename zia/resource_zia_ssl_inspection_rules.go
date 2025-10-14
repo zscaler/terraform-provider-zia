@@ -171,10 +171,9 @@ func resourceSSLInspectionRules() *schema.Resource {
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "The rule order of execution for the  SSL Inspection rules with respect to other rules.",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "The rule order of execution for the  SSL Inspection rules with respect to other rules.",
 			},
 			"road_warrior_for_kerberos": {
 				Type:        schema.TypeBool,

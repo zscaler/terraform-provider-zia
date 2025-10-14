@@ -107,10 +107,9 @@ func resourceCloudAppControlRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "The order of execution for the forwarding rule order",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "The order of execution for the forwarding rule order",
 			},
 			"state": {
 				Type:        schema.TypeString,

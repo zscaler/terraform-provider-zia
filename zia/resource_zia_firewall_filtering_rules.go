@@ -79,11 +79,9 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -236,7 +234,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 			if reg.MatchString(err.Error()) {
-				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentFirewallOrderVsRankWording(ctx, zClient), err))
 			}
 		}
 		return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
@@ -608,6 +606,24 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
 		WorkloadGroups:      expandWorkloadGroupsIDName(d, "workload_groups"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
+	}
+	return result
+}
+
+func currentFirewallOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := filteringrules.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
 	}
 	return result
 }
