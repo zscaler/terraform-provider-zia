@@ -22,7 +22,6 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipsourcegroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkapplicationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservicegroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
@@ -95,7 +94,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	}
 
 	sweepTestRuleLabels(testClient)
-	sweepTestSourceIPGroup(testClient)
+	// sweepTestSourceIPGroup(testClient)
 	sweepTestDestinationIPGroup(testClient)
 	sweepTestNetworkServices(testClient)
 	sweepTestNetworkServicesGroup(testClient)
@@ -170,6 +169,7 @@ func sweepTestRuleLabels(client *testClient) error {
 	return condenseError(errorList)
 }
 
+/*
 func sweepTestSourceIPGroup(client *testClient) error {
 	var errorList []error
 
@@ -202,6 +202,7 @@ func sweepTestSourceIPGroup(client *testClient) error {
 	}
 	return condenseError(errorList)
 }
+*/
 
 func sweepTestDestinationIPGroup(client *testClient) error {
 	var errorList []error

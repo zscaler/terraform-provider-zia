@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.FirewallIPSRules, sweepTestFirewallIPSRule)
 		setupSweeper(resourcetype.FirewallDNSRules, sweepTestFirewallDNSRule)
 		setupSweeper(resourcetype.SandboxRules, sweepTestSandboxRule)
-		setupSweeper(resourcetype.FWFilteringSourceGroup, sweepTestSourceIPGroup)
+		// setupSweeper(resourcetype.FWFilteringSourceGroup, sweepTestSourceIPGroup)
 		setupSweeper(resourcetype.FWFilteringDestinationGroup, sweepTestDestinationIPGroup)
 		setupSweeper(resourcetype.FWFilteringNetworkServices, sweepTestNetworkServices)
 		setupSweeper(resourcetype.FWFilteringNetworkServiceGroups, sweepTestNetworkServicesGroup)
