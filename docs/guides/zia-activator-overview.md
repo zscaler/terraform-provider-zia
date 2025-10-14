@@ -32,6 +32,5 @@ is not recommended.
 
 1. CLI arguments
 2. Environment variables
-3. JSON authentication credential file
 
 Refer to the ZIA provider argument reference documentation for more information on the JSON config file and the environment variables that are used.

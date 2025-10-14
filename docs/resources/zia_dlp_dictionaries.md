@@ -120,6 +120,7 @@ The following arguments are supported:
 * `custom_phrase_match_type` - (Optional, String) The DLP custom phrase match type. Supported values are:
   * `MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY`
   * `MATCH_ANY_CUSTOM_PHRASE_PATTERN_DICTIONARY`
+  * `MATCH_CUSTOM_ANY_PATTERN_WITH_ANY_PHRASE`
   Note: This attribute should only be set when the dictionary_type is set to `PATTERNS_AND_PHRASES`
 
 * `patterns` - (Optional, Set) List containing the patterns used within a custom DLP dictionary. This attribute is not applicable to predefined DLP dictionaries. Maximum 8 items.
@@ -165,7 +166,8 @@ The following arguments are supported:
     * `"MEDIUM"`
     * `"HEAVY"`
 
-* `proximity` - (Optional, Integer) The DLP dictionary proximity length.
+* `proximity` - (Optional, Integer) The DLP dictionary proximity length that defines how close a high confidence phrase must be to an instance of the pattern (that the dictionary detects) to count as a match. Supported values between `0` and `10000`
+* `proximity_enabled_for_custom_dictionary` - (Optional, Boolean) A Boolean constant that indicates if proximity length is enabled or disabled for a custom DLP dictionary.
 * `ignore_exact_match_idm_dict` - (Optional, Boolean) Indicates whether to exclude documents that are a 100% match to already-indexed documents from triggering an Indexed Document Match (IDM) Dictionary.
 * `include_bin_numbers` - (Optional, Boolean) A true value denotes that the specified Bank Identification Number (BIN) values are included in the Credit Cards dictionary. A false value denotes that the specified BIN values are excluded from the Credit Cards dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.
 * `bin_numbers` - (Optional, List of Integers) The list of Bank Identification Number (BIN) values that are included or excluded from the Credit Cards dictionary. BIN values can be specified only for Diners Club, Mastercard, RuPay, and Visa cards. Up to 512 BIN values can be configured in a dictionary. Note: This field is applicable only to the predefined Credit Cards dictionary and its clones.

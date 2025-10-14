@@ -71,7 +71,7 @@ jobs:
       - name: Run tests with retry on Ubuntu
         uses: nick-fields/retry@v3
         with:
-          max_attempts: 3
+          max_attempts: 2
           timeout_minutes: 120
           command: |
             make sweep

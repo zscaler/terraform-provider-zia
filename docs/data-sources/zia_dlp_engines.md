@@ -15,26 +15,32 @@ description: |-
 
 Use the **zia_dlp_engines** data source to get information about a ZIA DLP Engines in the Zscaler Internet Access cloud or via the API.
 
-## Example Usage
+## Example Usage - Retrieve Custom DLP Engine by name
 
 ```hcl
-# Retrieve a DLP Engine by name
+#
 data "zia_dlp_engines" "this"{
     name = "Example"
 }
 ```
 
+## Example Usage - Retrieve Custom DLP Engine by ID
+
 ```hcl
-# Retrieve a DLP Engine by ID
 data "zia_dlp_engines" "this"{
     id = 1234567890
 }
 ```
 
+## Example Usage - Retrieve Predefined DLP Engine by Name
+
 ```hcl
-# Retrieve a Predefined DLP Engine
 data "zia_dlp_engines" "this"{
-    predefined = "EXTERNAL"
+    predefined_engine_name = "PCI"
+}
+
+data "zia_dlp_engines" "this"{
+    predefined_engine_name = "EXTERNAL"
 }
 ```
 
@@ -45,6 +51,8 @@ The following arguments are supported:
 ### Required
 
 * `name` - (Required) The DLP engine name as configured by the admin. This attribute is required in POST and PUT requests for custom DLP engines.
+
+* `predefined_engine_name` - (String) To search for predefined DLP Engines use this attribute.
 
 ### Optional
 

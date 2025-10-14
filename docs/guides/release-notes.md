@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.5.1``
+``Last updated: v4.5.2``
 
 ---
+
+## 4.5.2 (October, 14 2025)
+
+### Notes
+
+- Release date: **(October, 14 2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #486](https://github.com/zscaler/terraform-provider-zia/pull/486) - Fixed `zia_dlp_dictionary` attribute `custom_phrase_match_type` by including support to new value: `MATCH_CUSTOM_ANY_PATTERN_WITH_ANY_PHRASE`
 
 ## 4.5.1 (September, 22 2025)
 

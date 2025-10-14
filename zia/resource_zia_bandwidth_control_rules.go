@@ -90,7 +90,7 @@ func resourceBandwdithControlRules() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Optional:    true,
+				Required:    true,
 				Description: "The order of the bandwidth control rule",
 			},
 			"rank": {

@@ -94,10 +94,9 @@ func resourceSandboxRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-				Description:  "The rule order of execution for the  sandbox rules with respect to other rules.",
+				Type:        schema.TypeInt,
+				Required:    true,
+				Description: "The rule order of execution for the  sandbox rules with respect to other rules.",
 			},
 			"ba_rule_action": {
 				Type:        schema.TypeString,

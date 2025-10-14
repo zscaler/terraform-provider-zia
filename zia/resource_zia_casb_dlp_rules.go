@@ -134,7 +134,7 @@ func resourceCasbDlpRules() *schema.Resource {
 			},
 			"order": {
 				Type:        schema.TypeInt,
-				Optional:    true,
+				Required:    true,
 				Description: "Order of rule execution with respect to other SaaS Security Data at Rest Scanning DLP rules",
 			},
 			"rank": {

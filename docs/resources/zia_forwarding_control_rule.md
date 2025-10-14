@@ -5,7 +5,7 @@ page_title: "ZIA): forwarding_control_rule"
 description: |-
   Official documentation https://help.zscaler.com/zia/configuring-forwarding-policy
   API documentation https://help.zscaler.com/zia/forwarding-control-policy#/forwardingRules-get
-  Get information about forwarding control rule.
+  Creates and manages forwarding control rule.
 ---
 
 # zia_forwarding_control_rule (Resource)
@@ -22,7 +22,7 @@ The **zia_forwarding_control_rule** resource allows the creation and management 
 ## Example Usage - DIRECT Forwarding Method
 
 ```hcl
-esource "zia_forwarding_control_rule" "this" {
+resource "zia_forwarding_control_rule" "this" {
   name               = "FC_DIRECT_RULE"
   description        = "FC_DIRECT_RULE"
   order              = 1
