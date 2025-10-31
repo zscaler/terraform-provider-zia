@@ -299,17 +299,27 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("no zia firewall filtering rule id is set"))
 	}
 
-	resp, err := filteringrules.Get(ctx, service, id)
+	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
+	allRules, err := filteringrules.GetAll(ctx, service)
 	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
-
 		return diag.FromErr(err)
 	}
 
+	// Find the specific rule by ID
+	var resp *filteringrules.FirewallFilteringRules
+	for i := range allRules {
+		if allRules[i].ID == id {
+			resp = &allRules[i]
+			break
+		}
+	}
+
+	// Rule not found
+	if resp == nil {
+		log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
+		d.SetId("")
+		return nil
+	}
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
 		processedDestCountries[i] = strings.TrimPrefix(country, "COUNTRY_")

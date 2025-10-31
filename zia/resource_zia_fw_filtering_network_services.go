@@ -32,7 +32,7 @@ func resourceFWNetworkServices() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("network_service_id", idInt)
 				} else {
-					resp, err := networkservices.GetByName(ctx, service, id)
+					resp, err := networkservices.GetByName(ctx, service, id, nil, nil)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("network_service_id", resp.ID)

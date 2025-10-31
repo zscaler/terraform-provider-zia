@@ -195,7 +195,7 @@ func resourceFWIPDestinationGroupsUpdate(ctx context.Context, d *schema.Resource
 	log.Printf("[INFO] Updating ZIA IP destination groups ID: %v", id)
 	req := expandIPDestinationGroups(d)
 
-	_, _, err := ipdestinationgroups.Update(ctx, service, id, &req)
+	_, _, err := ipdestinationgroups.Update(ctx, service, id, &req, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}

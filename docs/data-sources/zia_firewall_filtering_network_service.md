@@ -18,9 +18,23 @@ The **zia_firewall_filtering_network_service** data source to get information ab
 ## Example Usage
 
 ```hcl
-# ZIA Network Service
-data "zia_firewall_filtering_network_service" "example" {
-  name = "ICMP_ANY"
+data "zia_firewall_filtering_network_service" "example_protocol" {
+  protocol = "TCP"
+}
+
+# Test locale only
+data "zia_firewall_filtering_network_service" "example_locale" {
+  locale = "en-US"
+}
+
+# Test protocol + locale
+data "zia_firewall_filtering_network_service" "example_both" {
+  protocol = "TCP"
+  locale   = "en-US"
+}
+
+data "zia_firewall_filtering_network_service" "dns" {
+  name = "DNS"
 }
 ```
 
@@ -35,7 +49,9 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `description` - (String) (Optional) Enter additional notes or information. The description cannot exceed 10240 characters.
+* `description` - (String) Enter additional notes or information. The description cannot exceed 10240 characters.
+* `protocol` - (String) Filter based on the network service protocol. Supported values are: `TCP`, `UDP`, `ICMP`, `GRE`, `ESP`, `OTHER`
+* `locale` - (String) When set to one of the supported locales (i.e., `en-US`, `de-DE`, `es-ES`, `fr-FR`, `ja-JP`,`fr-FR`, `ja-JP`, `zh-CN`), the network service's description is localized into the requested language.
 * `type` - (String) - Supported values are: `STANDARD`, `PREDEFINED` and `CUSTOM`
 * `is_name_l10n_tag` - (Bool) - Default: false
 * `src_tcp_ports` - (Optional) The TCP source port number (example: 50) or port number range (example: 1000-1050), if any, that is used by the network service

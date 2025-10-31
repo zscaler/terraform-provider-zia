@@ -42,19 +42,24 @@ func resourceURLFilteringCloludAppSettings() *schema.Resource {
 			},
 			"enforce_safe_search": {
 				Type:        schema.TypeBool,
-				Computed:    true,
 				Optional:    true,
 				Description: "A Boolean value that indicates whether only safe content must be returned for web, image, and video search.",
 			},
+			"safe_search_apps": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Description: `A list of applications for which the SafeSearch enforcement applies. You cannot modify this field when the enforceSafeSearch field is disabled.
+				See the URL & Cloud App Control Policy Settings for the list of available apps:
+				https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get`,
+			},
 			"enable_office365": {
 				Type:        schema.TypeBool,
-				Computed:    true,
 				Optional:    true,
 				Description: "A Boolean value that enables or disables Microsoft Office 365 configuration.",
 			},
 			"enable_msft_o365": {
 				Type:        schema.TypeBool,
-				Computed:    true,
 				Optional:    true,
 				Description: "A Boolean value indicating if the Zscaler service is allowed to permit secure local breakout for Office 365 traffic automatically without any manual configuration needed.",
 			},
@@ -192,6 +197,7 @@ func resourceURLFilteringCloludAppSettingsRead(ctx context.Context, d *schema.Re
 		_ = d.Set("enable_dynamic_content_cat", resp.EnableDynamicContentCat)
 		_ = d.Set("consider_embedded_sites", resp.ConsiderEmbeddedSites)
 		_ = d.Set("enforce_safe_search", resp.EnforceSafeSearch)
+		_ = d.Set("safe_search_apps", resp.SafeSearchApps)
 		_ = d.Set("enable_office365", resp.EnableOffice365)
 		_ = d.Set("enable_msft_o365", resp.EnableMsftO365)
 		_ = d.Set("enable_ucaas_zoom", resp.EnableUcaasZoom)
@@ -249,6 +255,7 @@ func expandURLFilteringCloudAppSettings(d *schema.ResourceData) urlfilteringpoli
 		EnableDynamicContentCat:           d.Get("enable_dynamic_content_cat").(bool),
 		ConsiderEmbeddedSites:             d.Get("consider_embedded_sites").(bool),
 		EnforceSafeSearch:                 d.Get("enforce_safe_search").(bool),
+		SafeSearchApps:                    SetToStringList(d, "safe_search_apps"),
 		EnableOffice365:                   d.Get("enable_office365").(bool),
 		EnableMsftO365:                    d.Get("enable_msft_o365").(bool),
 		EnableUcaasZoom:                   d.Get("enable_ucaas_zoom").(bool),

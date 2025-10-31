@@ -51,6 +51,9 @@ The following arguments are supported:
 * `enable_dynamic_content_cat` - (Boolean) A Boolean value that indicates if dynamic categorization of URLs by analyzing content of uncategorized websites using AI/ML tools is enabled or not.
 * `consider_embedded_sites` - (Boolean) Indicates if URL filtering rules must be applied to sites that are translated using translation services.
 * `enforce_safe_search` - (Boolean) Indicates whether only safe content must be returned for web, image, and video search.
+
+* `safe_search_apps` - (List of String) A list of applications for which the SafeSearch enforcement applies. You cannot modify this field when the enforce_safe_search field is disabled. [See the URL & Cloud App Control Policy](https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get) for the list of available apps
+
 * `enable_office365` - (Boolean) Enables or disables Microsoft Office 365 configuration.
 * `enable_msft_o365` - (Boolean) Enables or disables Microsoft-recommended Office 365 one-click configuration.
 * `enable_ucaas_zoom` - (Boolean) Indicates if the Zscaler service is allowed to automatically permit secure local breakout for Zoom traffic.
