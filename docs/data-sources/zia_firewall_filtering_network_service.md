@@ -43,6 +43,8 @@ data "zia_firewall_filtering_network_service" "dns" {
 The following arguments are supported:
 
 * `name` - (Required) Name of the application layer service that you want to control. It can include any character and spaces.
+See the [Network Services API](https://help.zscaler.com/zia/firewall-policies#/networkServices-get) for the list of available services. Check the attribute `tag` in the API documentation for the updated list.
+
 * `id` - (Optional) The ID of the application layer service to be exported.
 
 ## Attribute Reference
@@ -66,3 +68,4 @@ In addition to all arguments above, the following attributes are exported:
 * `dest_udp_ports` - The UDP source port number (example: 50) or port number range (example: 1000-1050), if any, that is used by the network service.
   * `start` - (Number)
   * `end` - (Number)
+* `tag` - (string) - Supported network services names returned by the API. See the [Network Services API](https://help.zscaler.com/zia/firewall-policies#/networkServices-get) for the list of available services. Check the attribute `tag` in the API documentation for the updated list.
