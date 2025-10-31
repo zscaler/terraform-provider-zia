@@ -245,7 +245,7 @@ func sweepTestNetworkServices(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	services, err := networkservices.GetAllNetworkServices(context.Background(), service)
+	services, err := networkservices.GetAllNetworkServices(context.Background(), service, nil, nil)
 	if err != nil {
 		return err
 	}

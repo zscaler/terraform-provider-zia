@@ -265,13 +265,13 @@ func resourceDlpWebRules() *schema.Resource {
 			"workload_groups":          setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"dlp_engines":              setIDsSchemaTypeCustom(intPtr(4), "The list of DLP engines to which the DLP policy rule must be applied"),
 			"time_windows":             setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			//setIDsSchemaTypeCustom(intPtr(2), "list of time interval during which rule must be enforced"),
-			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule"),
-			"source_ip_groups":      setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			"url_categories":        setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied"),
-			"auditor":               setSingleIDSchemaTypeCustom("The auditor to which the DLP policy rule must be applied"),
-			"notification_template": setSingleIDSchemaTypeCustom("The template used for DLP notification emails"),
-			"icap_server":           setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded"),
+			"file_type_categories":     setIDsSchemaTypeCustom(nil, "The list of file types to which the rule applies"),
+			"labels":                   setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule"),
+			"source_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
+			"url_categories":           setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied"),
+			"auditor":                  setSingleIDSchemaTypeCustom("The auditor to which the DLP policy rule must be applied"),
+			"notification_template":    setSingleIDSchemaTypeCustom("The template used for DLP notification emails"),
+			"icap_server":              setSingleIDSchemaTypeCustom("The DLP server, using ICAP, to which the transaction content is forwarded"),
 			"receiver": {
 				Type:        schema.TypeSet,
 				Optional:    true,
@@ -573,6 +573,10 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("file_type_categories", flattenIDListIDs(resp.FileTypeCategories)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("auditor", flattenCustomIDSet(resp.Auditor)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -800,6 +804,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		IncludedDomainProfiles:   expandIDNameExtensionsSet(d, "included_domain_profiles"),
 		ExcludedDomainProfiles:   expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
 		WorkloadGroups:           expandWorkloadGroupsIDName(d, "workload_groups"),
+		FileTypeCategories:       expandIDSet(d, "file_type_categories"),
 	}
 	return result
 }
@@ -887,4 +892,52 @@ func flattenReceiverResource(receiver *dlp_web_rules.Receiver) []interface{} {
 	}
 
 	return []interface{}{result}
+}
+
+func flattenIDListIDs(list []common.IDName) []interface{} {
+	if len(list) == 0 {
+		// Return an empty slice instead of nil
+		return []interface{}{}
+	}
+
+	ids := []int{}
+	for _, item := range list {
+		if item.ID == 0 && item.Name == "" {
+			continue
+		}
+		ids = append(ids, item.ID)
+	}
+
+	if len(ids) == 0 {
+		// Again return []interface{}{} instead of nil
+		return []interface{}{}
+	}
+
+	// The rest remains the same
+	return []interface{}{
+		map[string]interface{}{
+			"id": ids,
+		},
+	}
+}
+
+func expandIDSet(d *schema.ResourceData, key string) []common.IDName {
+	setInterface, ok := d.GetOk(key)
+	if ok {
+		set := setInterface.(*schema.Set)
+		var result []common.IDName
+		for _, item := range set.List() {
+			itemMap, _ := item.(map[string]interface{})
+			if itemMap != nil && itemMap["id"] != nil {
+				set := itemMap["id"].(*schema.Set)
+				for _, id := range set.List() {
+					result = append(result, common.IDName{
+						ID: id.(int),
+					})
+				}
+			}
+		}
+		return result
+	}
+	return []common.IDName{}
 }

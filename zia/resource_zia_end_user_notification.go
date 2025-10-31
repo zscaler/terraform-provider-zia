@@ -19,7 +19,7 @@ func resourceEndUserNotification() *schema.Resource {
 		UpdateContext: resourceEndUserNotificationUpdate,
 		DeleteContext: resourceFuncNoOp,
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			//notificationType := d.Get("notification_type").(string)
+			// notificationType := d.Get("notification_type").(string)
 
 			// Validation for notification_type = "DEFAULT"
 			// if notificationType == "DEFAULT" {

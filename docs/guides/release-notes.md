@@ -12,9 +12,24 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.5.2``
+``Last updated: v4.5.3``
 
 ---
+
+## 4.5.3 (October, 17 2025)
+
+### Notes
+
+- Release date: **(October, 17 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #487](https://github.com/zscaler/terraform-provider-zia/pull/487) - Added new resource `zia_tenant_restriction_profile`.
+
+### Bug Fixes
+
+- [PR #487](https://github.com/zscaler/terraform-provider-zia/pull/487) - Fixed `zia_ssl_inspection_rules` attribute `url_categories` to prevent drift when value is `ANY`
 
 ## 4.5.2 (October, 14 2025)
 

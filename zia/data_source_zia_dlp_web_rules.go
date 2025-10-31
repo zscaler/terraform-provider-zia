@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
 
@@ -226,6 +227,30 @@ func dataSourceDlpWebRules() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+					},
+				},
+			},
+			"file_type_categories": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of DLP engines to which the DLP policy rule must be applied.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"parent": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "Parent category of the file type",
 						},
 					},
 				},
@@ -721,6 +746,9 @@ func dataSourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta
 		if err := d.Set("excluded_users", flattenIDExtensions(resp.ExcludedUsers)); err != nil {
 			return diag.FromErr(err)
 		}
+		if err := d.Set("file_type_categories", flattenFileTypeCategories(resp.FileTypeCategories)); err != nil {
+			return diag.FromErr(err)
+		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
@@ -752,4 +780,21 @@ func flattenReceiver(receiver *dlp_web_rules.Receiver) []map[string]interface{} 
 	}
 
 	return []map[string]interface{}{result}
+}
+
+func flattenFileTypeCategories(fileTypeCategories []common.IDName) []interface{} {
+	if fileTypeCategories == nil {
+		return nil
+	}
+
+	fileList := make([]interface{}, len(fileTypeCategories))
+	for i, file := range fileTypeCategories {
+		fileMap := make(map[string]interface{})
+		fileMap["id"] = file.ID
+		fileMap["name"] = file.Name
+		fileMap["parent"] = file.Parent
+		fileList[i] = fileMap
+	}
+
+	return fileList
 }

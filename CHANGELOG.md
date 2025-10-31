@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.5.3 (October, 17 2025)
+
+### Notes
+
+- Release date: **(October, 17 2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #488](https://github.com/zscaler/terraform-provider-zia/pull/488) - Added new resource `zia_tenant_restriction_profile`.
+- [PR #488](https://github.com/zscaler/terraform-provider-zia/pull/488) - Added new attribute `file_type_categories` to resource `zia_dlp_web_rules`.  This attribute supports the list of file types to which the rule applies. This attribute has replaced the attribute `file_types`. Zscaler recommends updating your configurations to use the `file_type_categories` attribute in place of `file_types`. Both attributes are still supported in both the API and in this Terraform provider, but they cannot be used concurrently.
+
+### Bug Fixes
+
+- [PR #488](https://github.com/zscaler/terraform-provider-zia/pull/488) - Fixed `zia_ssl_inspection_rules` attribute `url_categories` to prevent drift when value is `ANY`
+
 ## 4.5.2 (October, 14 2025)
 
 ### Notes

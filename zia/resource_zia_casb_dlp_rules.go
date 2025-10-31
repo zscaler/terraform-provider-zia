@@ -409,7 +409,6 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				}
 				rule.Order = order.Order
 				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
-
 				if err != nil {
 					return fmt.Errorf("failed to update rule order: %v", err)
 				}
@@ -638,7 +637,6 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 				}
 				rule.Order = order.Order
 				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
-
 				if err != nil {
 					return fmt.Errorf("failed to update rule order: %v", err)
 				}

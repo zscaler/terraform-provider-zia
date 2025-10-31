@@ -100,6 +100,34 @@ resource "zia_dlp_web_rules" "with_new_category" {
 }
 ```
 
+## Example Usage - "FTCATEGORY_ALL_OUTBOUND" File Type - New"
+
+```hcl
+data "zia_dlp_engines" "this" {
+  predefined_engine_name = "EXTERNAL"
+}
+
+resource "zia_dlp_web_rules" "this" {
+  name                       = "Example"
+  description                = "Example"
+  action                     = "BLOCK"
+  order                      = 1
+  rank                       = 7
+  state                      = "ENABLED"
+  protocols                  = [ "FTP_RULE", "HTTPS_RULE", "HTTP_RULE" ]
+  zscaler_incident_receiver  = false
+  without_content_inspection = true
+  user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
+  severity                   = "RULE_SEVERITY_HIGH"
+  file_type_categories {
+    id = [ 95, 116, 86, 72, 56, 119, 94, 131, 134 ]
+  }
+  dlp_engines {
+    id = [ data.zia_dlp_engines.this.id ]
+  }
+}
+```
+
 ## Example Usage - "Specify Incident Receiver Setting"
 
 ```hcl
@@ -366,6 +394,9 @@ The following arguments are supported:
 * `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
+
+* `file_type_categories` to resource `zia_dlp_web_rules`.  This attribute supports the list of file types to which the rule applies. This attribute has replaced the attribute `file_types`. Zscaler recommends updating your configurations to use the `file_type_categories` attribute in place of `file_types`. Both attributes are still supported in both the API and in this Terraform provider, but they cannot be used concurrently.
+  * `id` - (Optional) A unique identifier assigned to the workload group
 
 | Inspection Type         | File Types |
 |:------------------------|:-----------|

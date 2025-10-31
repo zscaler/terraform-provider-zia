@@ -60,12 +60,12 @@ func NewConfig(d *schema.ResourceData) *Config {
 	// defaults
 	config := Config{
 		backoff:        true,
-		minWait:        30,
-		maxWait:        300,
-		retryCount:     30,
+		minWait:        2,   // SDK default: 2 seconds
+		maxWait:        10,  // SDK default: 10 seconds
+		retryCount:     100, // SDK default: 100 retries
 		parallelism:    1,
 		logLevel:       int(hclog.Error),
-		requestTimeout: 0,
+		requestTimeout: 1800, // 30 minutes - needed for GetAll() with 1000s of firewall rules
 	}
 	logLevel := hclog.Level(config.logLevel)
 	if os.Getenv("TF_LOG") != "" {
@@ -325,11 +325,22 @@ func zscalerSDKV3Client(c *Config) (*zscaler.Client, error) {
 
 	// Start with base configuration setters
 	setters := []zscaler.ConfigSetter{
-		zscaler.WithCache(false),
+		zscaler.WithCache(true),                // Enable caching to reduce API calls
+		zscaler.WithCacheTtl(10 * time.Minute), // Cache entries for 10 minutes
+		zscaler.WithCacheTti(8 * time.Minute),  // Idle timeout of 8 minutes
 		zscaler.WithHttpClientPtr(http.DefaultClient),
 		zscaler.WithRateLimitMaxRetries(int32(c.retryCount)),
 		zscaler.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),
+		zscaler.WithRateLimitMinWait(time.Duration(c.minWait) * time.Second),
+		zscaler.WithRateLimitMaxWait(time.Duration(c.maxWait) * time.Second),
 		zscaler.WithUserAgentExtra(customUserAgent),
+	}
+
+	// Enable SDK debug logging when Terraform debug logging is enabled
+	tfLog := os.Getenv("TF_LOG")
+	if tfLog == "DEBUG" || tfLog == "TRACE" {
+		setters = append(setters, zscaler.WithDebug(true))
+		log.Println("[DEBUG] SDK debug logging enabled")
 	}
 
 	// Configure HTTP proxy if provided
