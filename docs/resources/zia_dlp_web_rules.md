@@ -107,6 +107,10 @@ data "zia_dlp_engines" "this" {
   predefined_engine_name = "EXTERNAL"
 }
 
+data "zia_file_type_categories" "this" {
+    name = "FileType01"
+}
+
 resource "zia_dlp_web_rules" "this" {
   name                       = "Example"
   description                = "Example"
@@ -120,7 +124,7 @@ resource "zia_dlp_web_rules" "this" {
   user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
   severity                   = "RULE_SEVERITY_HIGH"
   file_type_categories {
-    id = [ 95, 116, 86, 72, 56, 119, 94, 131, 134 ]
+    id = [ data.zia_file_type_categories.this.id ]
   }
   dlp_engines {
     id = [ data.zia_dlp_engines.this.id ]
@@ -396,7 +400,8 @@ The following arguments are supported:
   * `name` - (Optional) The name of the workload group
 
 * `file_type_categories` to resource `zia_dlp_web_rules`.  This attribute supports the list of file types to which the rule applies. This attribute has replaced the attribute `file_types`. Zscaler recommends updating your configurations to use the `file_type_categories` attribute in place of `file_types`. Both attributes are still supported in both the API and in this Terraform provider, but they cannot be used concurrently.
-  * `id` - (Optional) A unique identifier assigned to the workload group
+  * `id` - (Optional) File type category ID.
+    **NOTE** Use the data source `zia_file_type_categories` to retrieve file type categories.
 
 | Inspection Type         | File Types |
 |:------------------------|:-----------|

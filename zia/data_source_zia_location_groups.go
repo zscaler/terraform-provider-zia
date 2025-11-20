@@ -197,7 +197,7 @@ func dataSourceLocationGroupRead(ctx context.Context, d *schema.ResourceData, me
 	var resp *locationgroups.LocationGroup
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting time window id: %d\n", id)
+		log.Printf("[INFO] Getting location group id: %d\n", id)
 		res, err := locationgroups.GetLocationGroup(ctx, service, id)
 		if err != nil {
 			return diag.FromErr(err)

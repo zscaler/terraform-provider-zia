@@ -367,19 +367,19 @@ func resourceLocationManagement() *schema.Resource {
 				Optional:    true,
 				Description: "",
 			},
-			"dynamic_location_groups": setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
-			"static_location_groups":  setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
-			"extranet":                setSingleIDSchemaTypeCustom("The ID of the extranet resource that must be assigned to the location"),
-			"extranet_ip_pool":        setSingleIDSchemaTypeCustom("The ID of the traffic selector specified in the extranet"),
-			"extranet_dns":            setSingleIDSchemaTypeCustom("The ID of the DNS server configuration used in the extranet"),
+			//"dynamic_location_groups": setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"static_location_groups": setIDsSchemaTypeCustomSpecial(nil, "Name-ID pairs of locations for which rule must be applied"),
+			"extranet":               setSingleIDSchemaTypeCustom("The ID of the extranet resource that must be assigned to the location"),
+			"extranet_ip_pool":       setSingleIDSchemaTypeCustom("The ID of the traffic selector specified in the extranet"),
+			"extranet_dns":           setSingleIDSchemaTypeCustom("The ID of the DNS server configuration used in the extranet"),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
-			if d.Get("exclude_from_dynamic_groups").(bool) && d.HasChange("dynamic_location_groups") {
-				if v, ok := d.GetOk("dynamic_location_groups"); ok && len(v.(*schema.Set).List()) > 0 {
-					return errors.New("dynamic_location_groups cannot be set when exclude_from_dynamic_groups is set to true")
-				}
-			}
+			// if d.Get("exclude_from_dynamic_groups").(bool) && d.HasChange("dynamic_location_groups") {
+			// 	if v, ok := d.GetOk("dynamic_location_groups"); ok && len(v.(*schema.Set).List()) > 0 {
+			// 		return errors.New("dynamic_location_groups cannot be set when exclude_from_dynamic_groups is set to true")
+			// 	}
+			// }
 
 			// Validation for exclude_from_manual_groups and static_location_groups
 			if d.Get("exclude_from_manual_groups").(bool) && d.HasChange("static_location_groups") {
@@ -529,9 +529,9 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dynamic_location_groups", flattenIDExtensionsListIDs(resp.DynamiclocationGroups)); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := d.Set("dynamic_location_groups", flattenIDExtensionsListIDs(resp.DynamiclocationGroups)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	if err := d.Set("static_location_groups", flattenIDExtensionsListIDs(resp.StaticLocationGroups)); err != nil {
 		return diag.FromErr(err)
@@ -701,11 +701,11 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		ExcludeFromManualGroups:             d.Get("exclude_from_manual_groups").(bool),
 		DefaultExtranetTsPool:               d.Get("default_extranet_ts_pool").(bool),
 		DefaultExtranetDns:                  d.Get("default_extranet_dns").(bool),
-		DynamiclocationGroups:               expandIDNameExtensionsSet(d, "dynamic_location_groups"),
-		StaticLocationGroups:                expandIDNameExtensionsSet(d, "static_location_groups"),
-		Extranet:                            expandIDNameExtensionsSetSingle(d, "extranet"),
-		ExtranetIpPool:                      expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
-		ExtranetDns:                         expandIDNameExtensionsSetSingle(d, "extranet_dns"),
+		// DynamiclocationGroups:               expandIDNameExtensionsSet(d, "dynamic_location_groups"),
+		StaticLocationGroups: expandIDNameExtensionsSet(d, "static_location_groups"),
+		Extranet:             expandIDNameExtensionsSetSingle(d, "extranet"),
+		ExtranetIpPool:       expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
+		ExtranetDns:          expandIDNameExtensionsSetSingle(d, "extranet_dns"),
 
 		AUPTimeoutInDays: d.Get("aup_timeout_in_days").(int),
 		Profile:          d.Get("profile").(string),

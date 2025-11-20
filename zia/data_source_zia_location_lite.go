@@ -31,14 +31,6 @@ func dataSourceLocationLite() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kerberos_auth": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"digest_auth_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"xff_forward_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -91,9 +83,27 @@ func dataSourceLocationLite() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"ec_location": {
+			"sub_loc_scope_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"sub_loc_scope": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"sub_loc_scope_values": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"sub_loc_acc_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 		},
 	}
@@ -126,8 +136,6 @@ func dataSourceLocationLiteRead(ctx context.Context, d *schema.ResourceData, met
 	if resp != nil {
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("name", resp.Name)
-		_ = d.Set("kerberos_auth", resp.KerberosAuth)
-		_ = d.Set("digest_auth_enabled", resp.DigestAuthEnabled)
 		_ = d.Set("parent_id", resp.ParentID)
 		_ = d.Set("tz", resp.TZ)
 		_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
@@ -140,10 +148,13 @@ func dataSourceLocationLiteRead(ctx context.Context, d *schema.ResourceData, met
 		_ = d.Set("caution_enabled", resp.CautionEnabled)
 		_ = d.Set("aup_block_internet_until_accepted", resp.AUPBlockInternetUntilAccepted)
 		_ = d.Set("aup_force_ssl_inspection", resp.AUPForceSSLInspection)
-		_ = d.Set("ec_location", resp.ECLocation)
 		_ = d.Set("other_sub_location", resp.OtherSubLocation)
 		_ = d.Set("other6_sub_location", resp.Other6SubLocation)
 		_ = d.Set("ipv6_enabled", resp.IPv6Enabled)
+		_ = d.Set("sub_loc_scope_enabled", resp.SubLocScopeEnabled)
+		_ = d.Set("sub_loc_scope", resp.SubLocScope)
+		_ = d.Set("sub_loc_scope_values", resp.SubLocScopeValues)
+		_ = d.Set("sub_loc_acc_ids", resp.SubLocAccIDs)
 
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't find any location with name '%s'", name))

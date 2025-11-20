@@ -179,7 +179,7 @@ The following arguments are supported:
 ### Required
 
 * `name` - (Required) - Location Name.
-* `ip_addresses` - (Required) For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., `238.10.33.9`). For sub-locations: Egress, internal, or GRE tunnel IP addresses. Each entry is either a single IP address, CIDR (e.g., `10.10.33.0/24`), or range (e.g., `10.10.33.1-10.10.33.10`). The value is required if `vpn_credentials` are not defined.
+* `ip_addresses` - (Required) For locations: IP addresses of the egress points that are provisioned in the Zscaler Cloud. Each entry is a single IP address (e.g., `238.10.33.9`). For sub-locations: Egress, internal, or GRE tunnel IP addresses. Each entry is either a single IP address or range (e.g., `10.10.33.1-10.10.33.10`). The value is required if `vpn_credentials` are not defined.
 * `vpn_credentials`
   * `id` - (Optional) VPN credential resource id. The value is required if `ip_addresses` are not defined.
 
