@@ -263,8 +263,9 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
-	// This fetches all custom URL categories in a single API call instead of one per category
-	allCategories, err := urlcategories.GetAll(ctx, service, true, false) // customOnly=true, includeOnlyUrlKeywordCounts=false
+	// customOnly=true to only retrieve custom categories (which are the ones managed by Terraform)
+	// includeOnlyUrlKeywordCounts=false to get full category details
+	allCategories, err := urlcategories.GetAll(ctx, service, true, false)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -278,11 +279,20 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	// Category not found
+	// If not found in GetAll(), fall back to individual Get() call
+	// This handles newly created categories that may not be in the cached list yet
 	if resp == nil {
-		log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
-		d.SetId("")
-		return nil
+		log.Printf("[DEBUG] Category %s not found in GetAll() response, falling back to individual Get() call", id)
+		individualResp, err := urlcategories.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing url category %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = individualResp
 	}
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
