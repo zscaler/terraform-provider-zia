@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.6.2 (November, 20 2025)
+
+### Notes
+
+- Release date: **(November, 20  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #499](https://github.com/zscaler/terraform-provider-zia/pull/499) - Fixed `zia_traffic_forwarding_static_ip` resource to auto-determine latitude and longitude coordinates when `geo_override = true` but coordinates are not explicitly provided, eliminating "Missing geo Coordinates" API error and improving user experience.
+
 ## 4.6.1 (November, 20 2025)
 
 ### Notes
@@ -9,7 +20,7 @@
 
 ### Bug Fixes
 
-- [PR #498](https://github.com/zscaler/terraform-provider-zia/pull/498) - Fixed `zia_url_categories` resource READ function for better state refresh and rate limiting conservation. Also fixed issue with category_type `TLD_CATEGORY` not being set correctly in the state during creation.
+- [PR #498](https://github.com/zscaler/terraform-provider-zia/pull/498) - Fixed `zia_url_categories` resource READ function to use bulk `GetAll()` API call with fallback mechanism to prevent "Provider produced inconsistent result" error during resource creation while maintaining optimal performance for terraform refresh operations.
 
 ## 4.6.0 (November, 19 2025)
 

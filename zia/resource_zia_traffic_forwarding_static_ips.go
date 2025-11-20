@@ -65,9 +65,9 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Type:             schema.TypeFloat,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     ValidateLongitude,
+				ValidateFunc:     ValidateLatitude,
 				DiffSuppressFunc: DiffSuppressFuncCoordinate,
-				Description:      "Required only if the geoOverride attribute is set. Latitude with 7 digit precision after decimal point, ranges between -90 and 90 degrees.",
+				Description:      "Latitude with 7 digit precision after decimal point, ranges between -90 and 90 degrees. If not provided, the API will automatically determine it from the IP address.",
 			},
 			"longitude": {
 				Type:             schema.TypeFloat,
@@ -75,7 +75,7 @@ func resourceTrafficForwardingStaticIP() *schema.Resource {
 				Computed:         true,
 				ValidateFunc:     ValidateLongitude,
 				DiffSuppressFunc: DiffSuppressFuncCoordinate,
-				Description:      "Required only if the geoOverride attribute is set. Longitude with 7 digit precision after decimal point, ranges between -180 and 180 degrees.",
+				Description:      "Longitude with 7 digit precision after decimal point, ranges between -180 and 180 degrees. If not provided, the API will automatically determine it from the IP address.",
 			},
 			"routable_ip": {
 				Type:        schema.TypeBool,
@@ -97,19 +97,29 @@ func resourceTrafficForwardingStaticIPCreate(ctx context.Context, d *schema.Reso
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	if err := checkGeoOverride(d); err != nil {
+	// Handle geo_override with auto-determined coordinates
+	// This may create the IP if coordinates need to be determined
+	if err := autoPopulateCoordinates(ctx, d, zClient); err != nil {
 		return diag.FromErr(err)
 	}
-	req := expandTrafficForwardingStaticIP(d)
-	log.Printf("[INFO] Creating zia static ip\n%+v\n", req)
 
-	resp, _, err := staticips.Create(ctx, service, &req)
-	if err != nil {
-		return diag.FromErr(err)
+	// Check if IP was already created by autoPopulateCoordinates
+	if d.Id() != "" {
+		log.Printf("[INFO] Static IP already created during coordinate auto-population. ID: %s", d.Id())
+		// Skip to read and activation
+	} else {
+		// Normal create flow
+		req := expandTrafficForwardingStaticIP(d)
+		log.Printf("[INFO] Creating zia static ip\n%+v\n", req)
+
+		resp, _, err := staticips.Create(ctx, service, &req)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		log.Printf("[INFO] Created zia static ip request. ID: %v\n", resp)
+		d.SetId(strconv.Itoa(resp.ID))
+		_ = d.Set("static_ip_id", resp.ID)
 	}
-	log.Printf("[INFO] Created zia static ip request. ID: %v\n", resp)
-	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("static_ip_id", resp.ID)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
@@ -145,14 +155,19 @@ func resourceTrafficForwardingStaticIPRead(ctx context.Context, d *schema.Resour
 	}
 
 	log.Printf("[INFO] Getting static ip:\n%+v\n", resp)
+	log.Printf("[DEBUG] API returned coordinates - Latitude: %.10f, Longitude: %.10f", resp.Latitude, resp.Longitude)
+
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("static_ip_id", resp.ID)
 	_ = d.Set("ip_address", resp.IpAddress)
 	_ = d.Set("geo_override", resp.GeoOverride)
-	_ = d.Set("latitude", resp.Latitude)
-	_ = d.Set("longitude", resp.Longitude)
+	_ = d.Set("latitude", resp.Latitude)   // Stores exact API value as float64
+	_ = d.Set("longitude", resp.Longitude) // Stores exact API value as float64
 	_ = d.Set("routable_ip", resp.RoutableIP)
 	_ = d.Set("comment", resp.Comment)
+
+	log.Printf("[DEBUG] State updated with coordinates - Latitude: %.10f, Longitude: %.10f",
+		d.Get("latitude").(float64), d.Get("longitude").(float64))
 
 	return nil
 }
@@ -165,18 +180,34 @@ func resourceTrafficForwardingStaticIPUpdate(ctx context.Context, d *schema.Reso
 	if !ok {
 		log.Printf("[ERROR] static ip ID not set: %v\n", id)
 	}
-	if err := checkGeoOverride(d); err != nil {
-		return diag.FromErr(err)
-	}
 
-	log.Printf("[INFO] Updating static ip ID: %v\n", id)
-	req := expandTrafficForwardingStaticIP(d)
-	if _, err := staticips.Get(ctx, service, id); err != nil {
+	// Get current resource state to populate coordinates if needed
+	currentIP, err := staticips.Get(ctx, service, id)
+	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+		return diag.FromErr(err)
 	}
+
+	// If geo_override=true but coordinates not provided, use existing coordinates from API
+	geoOverride, _ := d.Get("geo_override").(bool)
+	if geoOverride {
+		_, hasLat := d.GetOk("latitude")
+		_, hasLon := d.GetOk("longitude")
+
+		if !hasLat || !hasLon {
+			// Use existing coordinates from the current resource
+			log.Printf("[INFO] geo_override=true but coordinates not provided, using existing: Latitude=%.10f, Longitude=%.10f",
+				currentIP.Latitude, currentIP.Longitude)
+			_ = d.Set("latitude", currentIP.Latitude)
+			_ = d.Set("longitude", currentIP.Longitude)
+		}
+	}
+
+	log.Printf("[INFO] Updating static ip ID: %v\n", id)
+	req := expandTrafficForwardingStaticIP(d)
 	if _, _, err := staticips.Update(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
@@ -195,18 +226,93 @@ func resourceTrafficForwardingStaticIPUpdate(ctx context.Context, d *schema.Reso
 }
 
 func checkGeoOverride(d *schema.ResourceData) error {
-	geoOverride, ok := d.GetOk("geo_override")
-	if !ok || !(geoOverride.(bool)) {
+	// Validation removed - coordinates will be auto-determined if needed
+	return nil
+}
+
+// autoPopulateCoordinates auto-determines coordinates when geo_override=true but lat/long not provided
+func autoPopulateCoordinates(ctx context.Context, d *schema.ResourceData, service *Client) error {
+	svc := service.Service
+	geoOverride, _ := d.Get("geo_override").(bool)
+
+	// If geo_override is false, API will auto-determine coordinates - nothing to do
+	if !geoOverride {
 		return nil
 	}
-	_, ok = d.GetOk("latitude")
-	if !ok {
-		return fmt.Errorf("when geo_override is set to true you must specify the latitude & longitude")
+
+	// Check if user provided coordinates
+	lat, hasLat := d.GetOk("latitude")
+	lon, hasLon := d.GetOk("longitude")
+
+	// If both provided, use user values
+	if hasLat && hasLon {
+		log.Printf("[DEBUG] User provided coordinates: Latitude=%.10f, Longitude=%.10f",
+			lat.(float64), lon.(float64))
+		return nil
 	}
-	_, ok = d.GetOk("longitude")
-	if !ok {
-		return fmt.Errorf("when geo_override is set to true you must specify the longitude & longitude")
+
+	// geo_override=true but coordinates NOT provided
+	// Solution: Temporarily use geo_override=false to let API determine coordinates
+	ipAddress := d.Get("ip_address").(string)
+	log.Printf("[INFO] geo_override=true but coordinates not provided, auto-determining for IP: %s", ipAddress)
+
+	// Check if this IP already exists (could have coordinates)
+	existingIP, err := staticips.GetByIPAddress(ctx, svc, ipAddress)
+	if err == nil {
+		// IP exists - reuse its coordinates
+		log.Printf("[INFO] Found existing IP with coordinates: Latitude=%.10f, Longitude=%.10f",
+			existingIP.Latitude, existingIP.Longitude)
+		_ = d.Set("latitude", existingIP.Latitude)
+		_ = d.Set("longitude", existingIP.Longitude)
+		return nil
 	}
+
+	// IP doesn't exist yet - create with geo_override=false first to get coordinates
+	log.Printf("[DEBUG] Creating temporary IP to determine coordinates")
+	tempReq := staticips.StaticIP{
+		IpAddress:   ipAddress,
+		GeoOverride: false, // API will determine coordinates
+		RoutableIP:  d.Get("routable_ip").(bool),
+		Comment:     d.Get("comment").(string),
+	}
+
+	tempResp, _, err := staticips.Create(ctx, svc, &tempReq)
+	if err != nil {
+		return fmt.Errorf("failed to create static IP to determine coordinates: %w", err)
+	}
+
+	// Get the full details including coordinates
+	ipWithCoords, err := staticips.Get(ctx, svc, tempResp.ID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch static IP coordinates: %w", err)
+	}
+
+	// Store coordinates for use in subsequent operations
+	_ = d.Set("latitude", ipWithCoords.Latitude)
+	_ = d.Set("longitude", ipWithCoords.Longitude)
+	log.Printf("[INFO] Auto-determined coordinates: Latitude=%.10f, Longitude=%.10f",
+		ipWithCoords.Latitude, ipWithCoords.Longitude)
+
+	// Now update with geo_override=true using the determined coordinates
+	updateReq := staticips.StaticIP{
+		ID:          tempResp.ID,
+		IpAddress:   ipAddress,
+		GeoOverride: true, // Now we can set it to true
+		Latitude:    ipWithCoords.Latitude,
+		Longitude:   ipWithCoords.Longitude,
+		RoutableIP:  d.Get("routable_ip").(bool),
+		Comment:     d.Get("comment").(string),
+	}
+
+	_, _, err = staticips.Update(ctx, svc, tempResp.ID, &updateReq)
+	if err != nil {
+		return fmt.Errorf("failed to update static IP with geo_override: %w", err)
+	}
+
+	// Set the ID so the rest of Create knows it's already created
+	d.SetId(strconv.Itoa(tempResp.ID))
+	_ = d.Set("static_ip_id", tempResp.ID)
+
 	return nil
 }
 
