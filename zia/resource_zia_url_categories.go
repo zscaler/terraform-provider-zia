@@ -261,15 +261,28 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no url category id is set"))
 	}
-	resp, err := urlcategories.Get(ctx, service, id)
-	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
 
+	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
+	// This fetches all custom URL categories in a single API call instead of one per category
+	allCategories, err := urlcategories.GetAll(ctx, service, true, false) // customOnly=true, includeOnlyUrlKeywordCounts=false
+	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// Find the specific category by ID
+	var resp *urlcategories.URLCategory
+	for i := range allCategories {
+		if allCategories[i].ID == id {
+			resp = &allCategories[i]
+			break
+		}
+	}
+
+	// Category not found
+	if resp == nil {
+		log.Printf("[WARN] Removing zia url category %s from state because it no longer exists in ZIA", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[INFO] Getting url category :\n%+v\n", resp)
