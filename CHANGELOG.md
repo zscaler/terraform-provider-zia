@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.6.1 (November, 20 2025)
+
+### Notes
+
+- Release date: **(November, 20  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #498](https://github.com/zscaler/terraform-provider-zia/pull/498) - Fixed `zia_url_categories` resource READ function for better state refresh and rate limiting conservation. Also fixed issue with category_type `TLD_CATEGORY` not being set correctly in the state during creation.
+
 ## 4.6.0 (November, 19 2025)
 
 ### Notes
@@ -9,14 +20,14 @@
 
 ### Enhancements
 
-- [PR #495](https://github.com/zscaler/terraform-provider-zia/pull/495) - Added new data source `zia_file_type_categories`. This datasource can be referenced within the `zia_dlp_web_rules` in the attribute `file_type_categories`
-- [PR #495](https://github.com/zscaler/terraform-provider-zia/pull/495) - Added new data source and resource `zia_custom_file_types`
-- [PR #495](https://github.com/zscaler/terraform-provider-zia/pull/495) - Improved `zia_url_categories` resource READ function for better state refresh and rate limiting conservation.
+- [PR #496](https://github.com/zscaler/terraform-provider-zia/pull/496) - Added new data source `zia_file_type_categories`. This datasource can be referenced within the `zia_dlp_web_rules` in the attribute `file_type_categories`
+- [PR #496](https://github.com/zscaler/terraform-provider-zia/pull/496) - Added new data source and resource `zia_custom_file_types`
+- [PR #496](https://github.com/zscaler/terraform-provider-zia/pull/496) - Improved `zia_url_categories` resource READ function for better state refresh and rate limiting conservation.
 
 ### Bug Fixes
 
-- [PR #495](https://github.com/zscaler/terraform-provider-zia/pull/495) - Upgraded to [Zscaler SDK GO v3.8.6](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.6) to fix pagination in some resources.
-- [PR #495](https://github.com/zscaler/terraform-provider-zia/pull/495) - Fixed drift with attribute `static_location_groups` in the resource `zia_location_management`
+- [PR #496](https://github.com/zscaler/terraform-provider-zia/pull/496) - Upgraded to [Zscaler SDK GO v3.8.6](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.6) to fix pagination in some resources.
+- [PR #496](https://github.com/zscaler/terraform-provider-zia/pull/496) - Fixed drift with attribute `static_location_groups` in the resource `zia_location_management`
 
 ## 4.5.3 (October, 17 2025)
 
