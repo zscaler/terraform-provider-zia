@@ -7,6 +7,10 @@
 - Release date: **(November, 24  2025)**
 - Supported Terraform version: **v1.x**
 
+### Enhancements
+
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Added the following new datasources and resources `zia_traffic_capture_rules` - Manage Traffic Capture Policy Rules in ZIA. This resource can be used to create, update, delete and retrieve traffic capture rules.
+
 ### Bug Fixes
 
 - [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Enhanced `zia_traffic_forwarding_static_ip` resource documentation with comprehensive examples, migration guide, and troubleshooting for automatic coordinate determination feature.
