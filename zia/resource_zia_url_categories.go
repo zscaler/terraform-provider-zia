@@ -30,15 +30,25 @@ func resourceURLCategories() *schema.Resource {
 
 				identifier := d.Id()
 
-				// Use the new slice-returning helper
-				categories, err := urlcategories.GetAllCustomURLCategories(ctx, service)
+				// Get custom URL_CATEGORY types only (excludes predefined categories)
+				urlCategories, err := urlcategories.GetAll(ctx, service, true, false, "URL_CATEGORY")
 				if err != nil {
-					return nil, fmt.Errorf("failed retrieving custom URL categories: %w", err)
+					return nil, fmt.Errorf("failed retrieving custom URL_CATEGORY types: %w", err)
 				}
 
+				// Get custom TLD_CATEGORY types only (excludes predefined categories)
+				tldCategories, err := urlcategories.GetAll(ctx, service, true, false, "TLD_CATEGORY")
+				if err != nil {
+					return nil, fmt.Errorf("failed retrieving custom TLD_CATEGORY types: %w", err)
+				}
+
+				// Merge results to search through all manageable custom categories
+				allCategories := append(urlCategories, tldCategories...)
+
+				// Search for matching category by ID or ConfiguredName
 				var matched *urlcategories.URLCategory
-				for i := range categories {
-					cat := categories[i]
+				for i := range allCategories {
+					cat := allCategories[i]
 					if strings.EqualFold(cat.ID, identifier) || strings.EqualFold(cat.ConfiguredName, identifier) {
 						matched = &cat
 						break
