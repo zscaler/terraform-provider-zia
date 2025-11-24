@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlcategories"
 )
 
@@ -83,7 +84,7 @@ func dataSourceURLCategories() *schema.Resource {
 						},
 						"type": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Optional: true,
 						},
 						"scope_entities": {
 							Type:     schema.TypeList,
@@ -121,7 +122,14 @@ func dataSourceURLCategories() *schema.Resource {
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				Default:  "ALL",
+				ValidateFunc: validation.StringInSlice([]string{
+					"ALL",
+					"URL_CATEGORY",
+					"TLD_CATEGORY",
+				}, false),
+				Description: "Type of URL categories to retrieve. Valid values: ALL (default - includes all types), URL_CATEGORY, TLD_CATEGORY",
 			},
 			"url_keyword_counts": {
 				Type:     schema.TypeList,
@@ -191,6 +199,12 @@ func dataSourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, me
 
 	id, _ := d.Get("id").(string)
 	name, _ := d.Get("configured_name").(string)
+	categoryType, _ := d.Get("type").(string)
+
+	// Default to "ALL" if not specified
+	if categoryType == "" {
+		categoryType = "ALL"
+	}
 
 	// Ensure either ID or name is provided
 	if id == "" && name == "" {
@@ -204,8 +218,8 @@ func dataSourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 	} else if name != "" {
-		log.Printf("[INFO] Getting URL categories by name: %s\n", name)
-		resp, err = urlcategories.GetCustomURLCategories(ctx, service, name, true, true)
+		log.Printf("[INFO] Getting URL categories by name: %s (type: %s)\n", name, categoryType)
+		resp, err = urlcategories.GetCustomURLCategories(ctx, service, name, true, true, categoryType)
 		if err != nil {
 			return diag.FromErr(err)
 		}

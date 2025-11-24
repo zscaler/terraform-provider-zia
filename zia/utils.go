@@ -115,7 +115,7 @@ func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, res
 	service := client.Service
 
 	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
-	rules, err := filteringrules.GetAll(ctx, service)
+	rules, err := filteringrules.GetAll(ctx, service, nil)
 	if err != nil {
 		log.Printf("[error] Error while getting filtering rule")
 		return err

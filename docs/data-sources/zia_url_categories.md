@@ -15,17 +15,46 @@ description: |-
 
 Use the **zia_url_categories** data source to get information about all or custom URL categories. By default, the response includes keywords.
 
+## Example Usage - Query a URL Category by Name (Default - All Types)
+
 ```hcl
-// Query a URL Category by Name
-data "zia_url_categories" "this"{
+data "zia_url_categories" "this" {
     configured_name = "Example"
 }
 ```
 
+## Example Usage - Query a URL Category by ID
+
 ```hcl
-// Query a URL Category by its Custom ID
-data "zia_url_categories" "this"{
+data "zia_url_categories" "this" {
     id = "CUSTOM_08"
+}
+```
+
+## Example Usage - Query a URL_CATEGORY Type
+
+```hcl
+data "zia_url_categories" "url_category_example" {
+    configured_name = "My URL Category"
+    type            = "URL_CATEGORY"
+}
+```
+
+## Example Usage - Query a TLD_CATEGORY Type
+
+```hcl
+data "zia_url_categories" "tld_category_example" {
+    configured_name = "tld_russia"
+    type            = "TLD_CATEGORY"
+}
+```
+
+## Example Usage - Query All Category Types (Explicit)
+
+```hcl
+data "zia_url_categories" "all_types_example" {
+    configured_name = "Example"
+    type            = "ALL"
 }
 ```
 
@@ -33,7 +62,21 @@ data "zia_url_categories" "this"{
 
 The following arguments are supported:
 
-* `id` - (String) URL category
+### Required
+
+At least one of the following must be provided:
+
+* `id` - (String) URL category ID
+* `configured_name` - (String) Name of the URL category
+
+### Optional
+
+* `type` - (String) Type of URL categories to retrieve. Valid values:
+  * `ALL` (default) - Retrieves all category types (URL_CATEGORY and TLD_CATEGORY)
+  * `URL_CATEGORY` - Retrieves only URL-based custom categories
+  * `TLD_CATEGORY` - Retrieves only TLD-based custom categories
+  
+  **Note:** When searching by name, this parameter filters which types of categories are searched. For TLD categories, you must either use `type = "TLD_CATEGORY"` or `type = "ALL"` (default).
 
 ## Attribute Reference
 

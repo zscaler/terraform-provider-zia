@@ -212,7 +212,7 @@ func sweepTestDestinationIPGroup(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	ipDestGroup, err := ipdestinationgroups.GetAll(context.Background(), service)
+	ipDestGroup, err := ipdestinationgroups.GetAll(context.Background(), service, "")
 	if err != nil {
 		return err
 	}
@@ -410,7 +410,7 @@ func sweepTestFirewallFilteringRule(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	rule, err := filteringrules.GetAll(context.Background(), service)
+	rule, err := filteringrules.GetAll(context.Background(), service, nil)
 	if err != nil {
 		return err
 	}
@@ -910,7 +910,7 @@ func sweepTestURLCategories(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	rule, err := urlcategories.GetAll(context.Background(), service, true, false)
+	rule, err := urlcategories.GetAll(context.Background(), service, true, false, "ALL")
 	if err != nil {
 		return err
 	}
@@ -978,7 +978,7 @@ func sweepTestUsers(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	rule, err := users.GetAllUsers(context.Background(), service)
+	rule, err := users.GetAllUsers(context.Background(), service, nil)
 	if err != nil {
 		return err
 	}

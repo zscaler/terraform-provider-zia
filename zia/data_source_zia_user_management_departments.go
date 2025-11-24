@@ -43,36 +43,78 @@ func dataSourceDepartmentManagementRead(ctx context.Context, d *schema.ResourceD
 	zClient := meta.(*Client)
 	service := zClient.Service
 
+	// Always fetch all departments and search locally
+	log.Printf("[INFO] Fetching all departments\n")
+	allDepartments, err := departments.GetAll(ctx, service, nil)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting all departments: %s", err))
+	}
+
+	log.Printf("[DEBUG] Retrieved %d departments\n", len(allDepartments))
+
 	var resp *departments.Department
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for department id: %d\n", id)
-		res, err := departments.GetDepartments(ctx, service, id)
-		if err != nil {
-			return diag.FromErr(err)
+	id, idProvided := getIntFromResourceData(d, "id")
+	nameObj, nameProvided := d.GetOk("name")
+	nameStr := ""
+	if nameProvided {
+		nameStr = nameObj.(string)
+	}
+
+	// Search by ID first if provided
+	if idProvided {
+		log.Printf("[INFO] Searching for department by ID: %d\n", id)
+		for _, dept := range allDepartments {
+			if dept.ID == id {
+				resp = &dept
+				break
+			}
 		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for department : %s\n", name)
-		res, err := departments.GetDepartmentsByName(ctx, service, name)
-		if err != nil {
-			return diag.FromErr(err)
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("error getting department by ID %d: department not found", id))
 		}
-		resp = res
 	}
 
-	if resp != nil {
-		d.SetId(fmt.Sprintf("%d", resp.ID))
-		_ = d.Set("name", resp.Name)
-		_ = d.Set("idp_id", resp.IdpID)
-		_ = d.Set("comments", resp.Comments)
-		_ = d.Set("deleted", resp.Deleted)
-
-	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any department with name '%s' or id '%d'", name, id))
+	// Search by name if not found by ID and name is provided
+	if resp == nil && nameProvided && nameStr != "" {
+		log.Printf("[INFO] Searching for department by name: %s\n", nameStr)
+		for _, dept := range allDepartments {
+			if dept.Name == nameStr {
+				resp = &dept
+				break
+			}
+		}
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("error getting department by name %s: department not found", nameStr))
+		}
 	}
 
+	// If neither ID nor name provided, or no match found
+	if resp == nil {
+		if idProvided || (nameProvided && nameStr != "") {
+			return diag.FromErr(fmt.Errorf("couldn't find any department with name '%s' or id '%d'", nameStr, id))
+		}
+		return diag.FromErr(fmt.Errorf("either 'id' or 'name' must be provided"))
+	}
+
+	// Set the resource data
+	d.SetId(fmt.Sprintf("%d", resp.ID))
+	err = d.Set("name", resp.Name)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting name: %s", err))
+	}
+	err = d.Set("idp_id", resp.IdpID)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting idp_id: %s", err))
+	}
+	err = d.Set("comments", resp.Comments)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting comments: %s", err))
+	}
+	err = d.Set("deleted", resp.Deleted)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting deleted: %s", err))
+	}
+
+	log.Printf("[DEBUG] Department found: ID=%d, Name=%s\n", resp.ID, resp.Name)
 	return nil
 }

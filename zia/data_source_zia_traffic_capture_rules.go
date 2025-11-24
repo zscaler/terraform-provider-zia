@@ -7,36 +7,352 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/traffic_capture"
 )
 
-func dataSourceFirewallFilteringRule() *schema.Resource {
+func dataSourceTrafficCaptureRules() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallFilteringRuleRead,
+		ReadContext: dataSourceTrafficCaptureRulesRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Optional:    true,
+				Description: "Unique identifier for the Traffic Capture policy rule",
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Optional:    true,
+				Description: "Name of the Traffic Capture policy rule",
 			},
 			"order": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Rule order number of the Traffic Capture policy rule",
 			},
 			"rank": {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Admin rank of the Traffic Capture policy rule",
 			},
 			"access_control": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The admin's access privilege to this rule based on the assigned role",
 			},
-			"enable_full_logging": {
-				Type:     schema.TypeBool,
+			"action": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The action the Traffic Capture policy rule takes when packets match the rule",
+			},
+			"state": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Determines whether the Traffic Capture policy rule is enabled or disabled",
+			},
+			"description": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Additional information about the rule",
+			},
+			"last_modified_time": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "Timestamp when the rule was last modified",
+			},
+			"last_modified_by": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "User who last modified the rule",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"src_ips": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "User-defined source IP addresses",
+			},
+			"dest_addresses": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "List of destination IP addresses",
+			},
+			"dest_ip_categories": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "IP address categories of destination",
+			},
+			"dest_countries": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Destination countries",
+			},
+			"source_countries": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Source countries",
+			},
+			"exclude_src_countries": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether source countries are excluded",
+			},
+			"nw_applications": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Network service applications",
+			},
+			"default_rule": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates if this is a default rule",
+			},
+			"predefined": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates if this is a predefined rule",
+			},
+			"txn_size_limit": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The maximum size of traffic to capture per connection",
+			},
+			"txn_sampling": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "The percentage of connections sampled for capturing each time the rule is triggered",
+			},
+			"labels": {
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"device_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"devices": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"app_service_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"dest_ip_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"nw_services": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"nw_service_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+
+			"nw_application_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
+			"src_ip_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"extensions": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
 			},
 			"locations": {
 				Type:     schema.TypeList,
@@ -176,329 +492,6 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 					},
 				},
 			},
-			"action": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_time": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"last_modified_by": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"src_ips": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"src_ip_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"dest_addresses": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dest_ip_categories": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dest_countries": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"dest_ip_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"nw_services": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"nw_service_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"nw_applications": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"nw_application_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"app_services": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"app_service_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"labels": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"device_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"devices": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"extensions": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"device_trust_levels": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"zpa_app_segments": {
-				Type:        schema.TypeList,
-				Computed:    true,
-				Description: "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:        schema.TypeInt,
-							Computed:    true,
-							Description: "A unique identifier assigned to the Application Segment",
-						},
-						"name": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "The name of the Application Segment",
-						},
-						"external_id": {
-							Type:        schema.TypeString,
-							Computed:    true,
-							Description: "Indicates the external ID. Applicable only when this reference is of an external entity.",
-						},
-					},
-				},
-			},
 			"workload_groups": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -607,36 +600,35 @@ func dataSourceFirewallFilteringRule() *schema.Resource {
 					},
 				},
 			},
-			"default_rule": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"predefined": {
-				Type:     schema.TypeBool,
-				Computed: true,
+			"device_trust_levels": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Elem:        &schema.Schema{Type: schema.TypeString},
+				Description: "Device trust levels",
 			},
 		},
 	}
 }
 
-func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceTrafficCaptureRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	var resp *filteringrules.FirewallFilteringRules
+	var resp *traffic_capture.TrafficCaptureRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
-		log.Printf("[INFO] Getting data for rule id: %d\n", id)
-		res, err := filteringrules.Get(ctx, service, id)
+		log.Printf("[INFO] Getting traffic capture rule by ID: %d\n", id)
+		res, err := traffic_capture.Get(ctx, service, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		resp = res
 	}
+
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for rule : %s\n", name)
-		res, err := filteringrules.GetByName(ctx, service, name)
+		log.Printf("[INFO] Getting traffic capture rule by name: %s\n", name)
+		res, err := traffic_capture.GetByName(ctx, service, name)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -649,7 +641,6 @@ func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.Resource
 		_ = d.Set("order", resp.Order)
 		_ = d.Set("rank", resp.Rank)
 		_ = d.Set("access_control", resp.AccessControl)
-		_ = d.Set("enable_full_logging", resp.EnableFullLogging)
 		_ = d.Set("action", resp.Action)
 		_ = d.Set("state", resp.State)
 		_ = d.Set("description", resp.Description)
@@ -658,10 +649,18 @@ func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.Resource
 		_ = d.Set("dest_addresses", resp.DestAddresses)
 		_ = d.Set("dest_ip_categories", resp.DestIpCategories)
 		_ = d.Set("dest_countries", resp.DestCountries)
+		_ = d.Set("source_countries", resp.SourceCountries)
+		_ = d.Set("exclude_src_countries", resp.ExcludeSrcCountries)
 		_ = d.Set("nw_applications", resp.NwApplications)
 		_ = d.Set("default_rule", resp.DefaultRule)
 		_ = d.Set("predefined", resp.Predefined)
 		_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+		_ = d.Set("txn_size_limit", resp.TxnSizeLimit)
+		_ = d.Set("txn_sampling", resp.TxnSampling)
+
+		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
+			return diag.FromErr(err)
+		}
 
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return diag.FromErr(err)
@@ -687,11 +686,15 @@ func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("last_modified_by", flattenLastModifiedBy(resp.LastModifiedBy)); err != nil {
+		if err := d.Set("nw_application_groups", flattenIDNameExtensions(resp.NwApplicationGroups)); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("src_ip_groups", flattenIDNameExtensions(resp.SrcIpGroups)); err != nil {
+		if err := d.Set("app_service_groups", flattenIDNameExtensions(resp.AppServiceGroups)); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -707,19 +710,7 @@ func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("nw_application_groups", flattenIDNameExtensions(resp.NwApplicationGroups)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("app_services", flattenIDNameExtensions(resp.AppServices)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("app_service_groups", flattenIDNameExtensions(resp.AppServiceGroups)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("labels", flattenIDNameExtensions(resp.Labels)); err != nil {
+		if err := d.Set("src_ip_groups", flattenIDNameExtensions(resp.SrcIpGroups)); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -733,11 +724,8 @@ func dataSourceFirewallFilteringRuleRead(ctx context.Context, d *schema.Resource
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 			return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 		}
-		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
-			return diag.FromErr(err)
-		}
 	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id))
+		return diag.FromErr(fmt.Errorf("couldn't find any traffic capture rule with name '%s' or id '%d'", name, id))
 	}
 
 	return nil

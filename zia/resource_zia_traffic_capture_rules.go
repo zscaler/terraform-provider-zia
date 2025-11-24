@@ -15,20 +15,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/traffic_capture"
 )
 
 var (
-	firewallFilteringLock          sync.Mutex
-	firewallFilteringStartingOrder int
+	trafficCaptureLock          sync.Mutex
+	trafficCaptureStartingOrder int
 )
 
-func resourceFirewallFilteringRules() *schema.Resource {
+func resourceTrafficCaptureRules() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFirewallFilteringRulesCreate,
-		ReadContext:   resourceFirewallFilteringRulesRead,
-		UpdateContext: resourceFirewallFilteringRulesUpdate,
-		DeleteContext: resourceFirewallFilteringRulesDelete,
+		CreateContext: resourceFiresourceTrafficCaptureRulesCreate,
+		ReadContext:   resourceFiresourceTrafficCaptureRulesRead,
+		UpdateContext: resourceFiresourceTrafficCaptureRulesUpdate,
+		DeleteContext: resourceFiresourceTrafficCaptureRulesDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
 			Update: schema.DefaultTimeout(60 * time.Minute),
@@ -43,7 +43,7 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := filteringrules.GetByName(ctx, service, id)
+					resp, err := traffic_capture.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -90,21 +90,13 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 7),
 				Description:  "Admin rank of the Firewall Filtering policy rule",
 			},
-			"enable_full_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
 			"action": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "The action the Firewall Filtering policy rule takes when packets match the rule",
+				Description: "The action to be enforced when the traffic matches the rule criteria",
 				ValidateFunc: validation.StringInSlice([]string{
-					"ALLOW",
-					"BLOCK_DROP",
-					"BLOCK_RESET",
-					"BLOCK_ICMP",
-					"EVAL_NWAPP",
+					"CAPTURE",
+					"SKIP",
 				}, false),
 			},
 			"state": {
@@ -150,9 +142,34 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
-			"exclude_src_countries": {
-				Type:     schema.TypeBool,
-				Optional: true,
+			"txn_size_limit": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The maximum size of traffic to capture per connection",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NONE",
+					"UNLIMITED",
+					"THIRTY_TWO_KB",
+					"TWO_FIFTY_SIX_KB",
+					"TWO_MB",
+					"FOUR_MB",
+					"THIRTY_TWO_MB",
+					"SIXTY_FOUR_MB",
+				}, false),
+			},
+			"txn_sampling": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "The percentage of connections sampled for capturing each time the rule is triggered",
+				ValidateFunc: validation.StringInSlice([]string{
+					"NONE",
+					"ONE_PERCENT",
+					"TWO_PERCENT",
+					"FIVE_PERCENT",
+					"TEN_PERCENT",
+					"TWENTY_FIVE_PERCENT",
+					"HUNDRED_PERCENT",
+				}, false),
 			},
 			"locations":             setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
 			"location_groups":       setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
@@ -166,57 +183,41 @@ func resourceFirewallFilteringRules() *schema.Resource {
 			"src_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
 			"dest_ip_groups":        setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
 			"app_service_groups":    setIDsSchemaTypeCustom(nil, "list of application service groups"),
-			"app_services":          setIDsSchemaTypeCustom(nil, "list of application services"),
 			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
 			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
-			"workload_groups":       setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
-			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
+			"workload_groups":       setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"dest_countries":        getISOCountryCodes(),
 			"source_countries":      getISOCountryCodes(),
-			// "nw_applications":       getCloudApplications(),
-			"device_trust_levels": getDeviceTrustLevels(),
+			"device_trust_levels":   getDeviceTrustLevels(),
 		},
 	}
 }
 
-func validateFirewallRule(req filteringrules.FirewallFilteringRules) error {
-	if req.Name == "Office 365 One Click Rule" || req.Name == "UCaaS One Click Rule" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Block All IPv6" || req.Name == "Block malicious IPs and domains" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	if req.Name == "Default Firewall Filtering Rule" {
-		return fmt.Errorf("deletion of the predefined rule '%s' is not allowed", req.Name)
-	}
-	return nil
-}
-
-func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	req := expandFirewallFilteringRules(d)
+	req := expandFiresourceTrafficCaptureRules(d)
 	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
 
 	start := time.Now()
 
-	firewallFilteringLock.Lock()
-	if firewallFilteringStartingOrder == 0 {
-		list, _ := filteringrules.GetAll(ctx, service, nil)
+	trafficCaptureLock.Lock()
+	if trafficCaptureStartingOrder == 0 {
+		list, _ := traffic_capture.GetAll(ctx, service, nil)
 		for _, r := range list {
-			if r.Order > firewallFilteringStartingOrder {
-				firewallFilteringStartingOrder = r.Order
+			if r.Order > trafficCaptureStartingOrder {
+				trafficCaptureStartingOrder = r.Order
 			}
 		}
-		if firewallFilteringStartingOrder == 0 {
-			firewallFilteringStartingOrder = 1
+		if trafficCaptureStartingOrder == 0 {
+			trafficCaptureStartingOrder = 1
 		} else {
-			firewallFilteringStartingOrder++
+			trafficCaptureStartingOrder++
 		}
 	}
-	firewallFilteringLock.Unlock()
+	trafficCaptureLock.Unlock()
 	startWithoutLocking := time.Now()
 
 	// Store the intended order from HCL
@@ -226,8 +227,8 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		// always start rank 7 rules at the next available order after all ranked rules
 		req.Rank = 7
 	}
-	req.Order = firewallFilteringStartingOrder
-	resp, err := filteringrules.Create(ctx, service, &req)
+	req.Order = trafficCaptureStartingOrder
+	resp, err := traffic_capture.Create(ctx, service, &req)
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -238,7 +239,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 			if reg.MatchString(err.Error()) {
-				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentFirewallOrderVsRankWording(ctx, zClient), err))
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentTrafficCaptureOrderVsRankWording(ctx, zClient), err))
 			}
 		}
 		return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
@@ -253,7 +254,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		resp.ID,
 		resourceType,
 		func() (int, error) {
-			allRules, err := filteringrules.GetAll(ctx, service, nil)
+			allRules, err := traffic_capture.GetAll(ctx, service, nil)
 			if err != nil {
 				return 0, err
 			}
@@ -262,14 +263,14 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		},
 		func(id int, order OrderRule) error {
 			// Custom updateOrder that handles predefined rules
-			rule, err := filteringrules.Get(ctx, service, id)
+			rule, err := traffic_capture.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
 
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filteringrules.Update(ctx, service, id, rule)
+			_, err = traffic_capture.Update(ctx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -291,10 +292,10 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFirewallFilteringRulesRead(ctx, d, meta)
+	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
 }
 
-func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -304,13 +305,13 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
-	allRules, err := filteringrules.GetAll(ctx, service, nil)
+	allRules, err := traffic_capture.GetAll(ctx, service, nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Find the specific rule by ID
-	var resp *filteringrules.FirewallFilteringRules
+	var resp *traffic_capture.TrafficCaptureRules
 	for i := range allRules {
 		if allRules[i].ID == id {
 			resp = &allRules[i]
@@ -341,7 +342,6 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("name", resp.Name)
 	_ = d.Set("order", resp.Order)
 	_ = d.Set("rank", resp.Rank)
-	_ = d.Set("enable_full_logging", resp.EnableFullLogging)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("state", resp.State)
@@ -354,7 +354,8 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("nw_applications", resp.NwApplications)
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
-	_ = d.Set("exclude_src_countries", resp.ExcludeSrcCountries)
+	_ = d.Set("txn_size_limit", resp.TxnSizeLimit)
+	_ = d.Set("txn_sampling", resp.TxnSampling)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
@@ -400,10 +401,6 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("app_services", flattenIDExtensionsListIDs(resp.AppServices)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("labels", flattenIDExtensionsListIDs(resp.Labels)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -418,18 +415,14 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("devices", flattenIDExtensionsListIDs(resp.Devices)); err != nil {
 		return diag.FromErr(err)
 	}
+
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
 	}
-
-	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	return nil
 }
 
-func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -439,15 +432,15 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("firewall filtering rule ID not set"))
 	}
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
-	req := expandFirewallFilteringRules(d)
+	req := expandFiresourceTrafficCaptureRules(d)
 
-	if _, err := filteringrules.Get(ctx, service, id); err != nil {
+	if _, err := traffic_capture.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
-	existingRules, err := filteringrules.GetAll(ctx, service, nil)
+	existingRules, err := traffic_capture.GetAll(ctx, service, nil)
 	if err != nil {
 		log.Printf("[ERROR] error getting all filtering rules: %v", err)
 	}
@@ -462,7 +455,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 
 	req.Order = nextAvailableOrder
 
-	_, err = filteringrules.Update(ctx, service, id, &req)
+	_, err = traffic_capture.Update(ctx, service, id, &req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -481,7 +474,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_filtering_rules",
 		func() (int, error) {
-			allRules, err := filteringrules.GetAll(ctx, service, nil)
+			allRules, err := traffic_capture.GetAll(ctx, service, nil)
 			if err != nil {
 				return 0, err
 			}
@@ -489,7 +482,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return len(allRules), nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := filteringrules.Get(ctx, service, id)
+			rule, err := traffic_capture.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
@@ -500,13 +493,13 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filteringrules.Update(ctx, service, id, rule)
+			_, err = traffic_capture.Update(ctx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceFirewallFilteringRulesRead(ctx, d, meta); diags.HasError() {
+	if diags := resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta); diags.HasError() {
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
@@ -525,7 +518,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -535,14 +528,9 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	// Retrieve the rule to check if it's a predefined one
-	rule, err := filteringrules.Get(ctx, service, id)
+	rule, err := traffic_capture.Get(ctx, service, id)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err))
-	}
-
-	// Validate if the rule can be deleted using the validateFirewallRule function
-	if err := validateFirewallRule(*rule); err != nil {
-		return diag.FromErr(err)
 	}
 
 	// Additional check for any predefined rule (backup validation)
@@ -551,7 +539,7 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 	}
 
 	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
-	if _, err := filteringrules.Delete(ctx, service, id); err != nil {
+	if _, err := traffic_capture.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
@@ -571,13 +559,13 @@ func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.FirewallFilteringRules {
+func expandFiresourceTrafficCaptureRules(d *schema.ResourceData) traffic_capture.TrafficCaptureRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
 	// Retrieve the order and fallback to 1 if it's 0
 	order := d.Get("order").(int)
 	if order == 0 {
-		log.Printf("[WARN] expandFirewallFilteringRules: Rule ID %d has order=0. Falling back to order=1", id)
+		log.Printf("[WARN] expandFiresourceTrafficCaptureRules: Rule ID %d has order=0. Falling back to order=1", id)
 		order = 1
 	}
 
@@ -585,7 +573,7 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
 
-	result := filteringrules.FirewallFilteringRules{
+	result := traffic_capture.TrafficCaptureRules{
 		ID:                  id,
 		Name:                d.Get("name").(string),
 		Order:               order,
@@ -593,6 +581,8 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		Action:              d.Get("action").(string),
 		State:               d.Get("state").(string),
 		Description:         d.Get("description").(string),
+		TxnSizeLimit:        d.Get("txn_size_limit").(string),
+		TxnSampling:         d.Get("txn_sampling").(string),
 		SrcIps:              SetToStringList(d, "src_ips"),
 		DestAddresses:       SetToStringList(d, "dest_addresses"),
 		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
@@ -600,10 +590,8 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		DestCountries:       processedDestCountries,
 		SourceCountries:     processedSourceCountries,
 		NwApplications:      SetToStringList(d, "nw_applications"),
-		EnableFullLogging:   d.Get("enable_full_logging").(bool),
 		DefaultRule:         d.Get("default_rule").(bool),
 		Predefined:          d.Get("predefined").(bool),
-		ExcludeSrcCountries: d.Get("exclude_src_countries").(bool),
 		Locations:           expandIDNameExtensionsSet(d, "locations"),
 		LocationsGroups:     expandIDNameExtensionsSet(d, "location_groups"),
 		Departments:         expandIDNameExtensionsSet(d, "departments"),
@@ -615,21 +603,19 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 		NwServices:          expandIDNameExtensionsSet(d, "nw_services"),
 		NwServiceGroups:     expandIDNameExtensionsSet(d, "nw_service_groups"),
 		NwApplicationGroups: expandIDNameExtensionsSet(d, "nw_application_groups"),
-		AppServices:         expandIDNameExtensionsSet(d, "app_services"),
 		AppServiceGroups:    expandIDNameExtensionsSet(d, "app_service_groups"),
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:             expandIDNameExtensionsSet(d, "devices"),
 		WorkloadGroups:      expandWorkloadGroupsIDName(d, "workload_groups"),
-		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 	}
 	return result
 }
 
-func currentFirewallOrderVsRankWording(ctx context.Context, zClient *Client) string {
+func currentTrafficCaptureOrderVsRankWording(ctx context.Context, zClient *Client) string {
 	service := zClient.Service
 
-	list, err := filteringrules.GetAll(ctx, service, nil)
+	list, err := traffic_capture.GetAll(ctx, service, nil)
 	if err != nil {
 		return ""
 	}
