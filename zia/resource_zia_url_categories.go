@@ -265,7 +265,8 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
 	// customOnly=true to only retrieve custom categories (which are the ones managed by Terraform)
 	// includeOnlyUrlKeywordCounts=false to get full category details
-	allCategories, err := urlcategories.GetAll(ctx, service, true, false)
+	// type="ALL" to retrieve all custom categories regardless of type (URL_CATEGORY and TLD_CATEGORY)
+	allCategories, err := urlcategories.GetAll(ctx, service, true, false, "ALL")
 	if err != nil {
 		return diag.FromErr(err)
 	}

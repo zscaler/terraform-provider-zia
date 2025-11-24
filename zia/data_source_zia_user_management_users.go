@@ -119,46 +119,98 @@ func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, m
 	zClient := meta.(*Client)
 	service := zClient.Service
 
+	// Always fetch all users and search locally
+	log.Printf("[INFO] Fetching all users\n")
+	allUsers, err := users.GetAllUsers(ctx, service, nil)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error getting all users: %s", err))
+	}
+
+	log.Printf("[DEBUG] Retrieved %d users\n", len(allUsers))
+
 	var resp *users.Users
-	id, ok := getIntFromResourceData(d, "id")
-	if ok {
-		log.Printf("[INFO] Getting data for user id: %d\n", id)
-		res, err := users.Get(ctx, service, id)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		resp = res
-	}
-	name, _ := d.Get("name").(string)
-	if resp == nil && name != "" {
-		log.Printf("[INFO] Getting data for user : %s\n", name)
-		res, err := users.GetUserByName(ctx, service, name)
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		resp = res
+	id, idProvided := getIntFromResourceData(d, "id")
+	nameObj, nameProvided := d.GetOk("name")
+	nameStr := ""
+	if nameProvided {
+		nameStr = nameObj.(string)
 	}
 
-	if resp != nil {
-		d.SetId(fmt.Sprintf("%d", resp.ID))
-		_ = d.Set("name", resp.Name)
-		_ = d.Set("email", resp.Email)
-		_ = d.Set("comments", resp.Comments)
-		_ = d.Set("temp_auth_email", resp.TempAuthEmail)
-		_ = d.Set("admin_user", resp.AdminUser)
-		_ = d.Set("type", resp.Type)
-		_ = d.Set("auth_methods", resp.AuthMethods)
-
-		if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
-			return diag.FromErr(err)
+	// Search by ID first if provided
+	if idProvided {
+		log.Printf("[INFO] Searching for user by ID: %d\n", id)
+		for _, user := range allUsers {
+			if user.ID == id {
+				resp = &user
+				break
+			}
 		}
-
-		if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
-			return diag.FromErr(err)
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("error getting user by ID %d: user not found", id))
 		}
-	} else {
-		return diag.FromErr(fmt.Errorf("couldn't find any user with name '%s' or id '%d'", name, id))
 	}
 
+	// Search by name if not found by ID and name is provided
+	if resp == nil && nameProvided && nameStr != "" {
+		log.Printf("[INFO] Searching for user by name: %s\n", nameStr)
+		for _, user := range allUsers {
+			if user.Name == nameStr {
+				resp = &user
+				break
+			}
+		}
+		if resp == nil {
+			return diag.FromErr(fmt.Errorf("error getting user by name %s: user not found", nameStr))
+		}
+	}
+
+	// If neither ID nor name provided, or no match found
+	if resp == nil {
+		if idProvided || (nameProvided && nameStr != "") {
+			return diag.FromErr(fmt.Errorf("couldn't find any user with name '%s' or id '%d'", nameStr, id))
+		}
+		return diag.FromErr(fmt.Errorf("either 'id' or 'name' must be provided"))
+	}
+
+	// Set the resource data
+	d.SetId(fmt.Sprintf("%d", resp.ID))
+	err = d.Set("name", resp.Name)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting name: %s", err))
+	}
+	err = d.Set("email", resp.Email)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting email: %s", err))
+	}
+	err = d.Set("comments", resp.Comments)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting comments: %s", err))
+	}
+	err = d.Set("temp_auth_email", resp.TempAuthEmail)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting temp_auth_email: %s", err))
+	}
+	err = d.Set("admin_user", resp.AdminUser)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting admin_user: %s", err))
+	}
+	err = d.Set("type", resp.Type)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting type: %s", err))
+	}
+	err = d.Set("auth_methods", resp.AuthMethods)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error setting auth_methods: %s", err))
+	}
+
+	if err := d.Set("department", flattenUserDepartment(resp.Department)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[DEBUG] User found: ID=%d, Name=%s\n", resp.ID, resp.Name)
 	return nil
 }

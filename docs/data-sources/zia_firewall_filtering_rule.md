@@ -1,7 +1,7 @@
 ---
 subcategory: "Firewall Policies"
 layout: "zscaler"
-page_title: "ZIA): firewall_filtering_rule"
+page_title: "ZIA: firewall_filtering_rule"
 description: |-
   Official documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
   API documentation https://help.zscaler.com/zia/firewall-policies#/firewallFilteringRules-post
@@ -86,6 +86,8 @@ In addition to all arguments above, the following attributes are exported:
       - `name` - (String) The configured name of the entity
       - `extensions` - (Map of String)
 * `src_ips` - (Optional) You can enter individual IP addresses, subnets, or address ranges.
+
+* `exclude_src_countries` - (Boolean) Indicates whether the countries specified in the sourceCountries field are included or excluded from the rule. A true value denotes that the specified source countries are excluded from the rule. A false value denotes that the rule is applied to the source countries if there is a match.
 
 `destinations` supports the following attributes:
 

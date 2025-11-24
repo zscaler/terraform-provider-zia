@@ -1,5 +1,25 @@
 # Changelog
 
+## 4.6.3 (November, 24 2025)
+
+### Notes
+
+- Release date: **(November, 24  2025)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Added the following new datasources and resources `zia_traffic_capture_rules` - Manage Traffic Capture Policy Rules in ZIA. This resource can be used to create, update, delete and retrieve traffic capture rules.
+
+### Bug Fixes
+
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Enhanced `zia_traffic_forwarding_static_ip` resource documentation with comprehensive examples, migration guide, and troubleshooting for automatic coordinate determination feature.
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Optimized `zia_user_management_groups` datasource to use bulk `GetAll` API call with local filtering for better performance and rate limit management.
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Optimized `zia_user_management_users` datasource to use bulk `GetAll` API call with local filtering for better performance and rate limit management.
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Optimized `zia_fw_filtering_time_window` datasource to use bulk `GetAll` API call with local filtering for better performance and rate limit management.
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Optimized `zia_rule_labels` datasource to use bulk `GetAll` API call with local filtering for better performance and rate limit management.
+- [PR #500](https://github.com/zscaler/terraform-provider-zia/pull/500) - Optimized `zia_user_management_departments` datasource to use bulk `GetAll` API call with local filtering for better performance and rate limit management.
+
 ## 4.6.2 (November, 20 2025)
 
 ### Notes

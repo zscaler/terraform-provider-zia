@@ -180,6 +180,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_virtual_service_edge_cluster":                  resourceVZENCluster(),
 			"zia_virtual_service_edge_node":                     resourceVZENNode(),
 			"zia_workload_groups":                               resourceWorkloadGroups(),
+			"zia_traffic_capture_rules":                         resourceTrafficCaptureRules(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -275,6 +276,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_mobile_malware_protection_policy":              dataSourceMobileMalwareProtectionPolicy(),
 			"zia_virtual_service_edge_cluster":                  dataSourceVZENCluster(),
 			"zia_virtual_service_edge_node":                     dataSourceVZENNode(),
+			"zia_traffic_capture_rules":                         dataSourceTrafficCaptureRules(),
 		},
 	}
 
