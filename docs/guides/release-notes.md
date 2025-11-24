@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.6.3``
+``Last updated: v4.6.4``
 
 ---
+
+## 4.6.4 (November, 24 2025)
+
+### Notes
+
+- Release date: **(November, 24  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #501](https://github.com/zscaler/terraform-provider-zia/pull/501) - Fix import in the resource `zia_url_categories` to ensure correct import of custom URL categories by updating the GetAll function to retrieve all URL categories (both custom and predefined) and filtering locally based on the resource ID, preventing import failures for custom categories.
 
 ## 4.6.3 (November, 24 2025)
 
