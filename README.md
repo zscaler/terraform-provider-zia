@@ -4,7 +4,6 @@
 [![codecov](https://codecov.io/gh/zscaler/terraform-provider-zia/graph/badge.svg?token=A9J4AJS7F5)](https://codecov.io/gh/zscaler/terraform-provider-zia)
 [![License](https://img.shields.io/github/license/zscaler/terraform-provider-zia?color=blue)](https://github.com/zscaler/terraform-provider-zia/v3/blob/master/LICENSE)
 [![Zscaler Community](https://img.shields.io/badge/zscaler-community-blue)](https://community.zscaler.com/)
-[![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://forms.gle/3iMJvVmJDvmUy36q9)
 
 <a href="https://terraform.io">
     <img src="https://raw.githubusercontent.com/hashicorp/terraform-website/master/public/img/logo-text.svg" alt="Terraform logo" title="Terraform" height="50" />

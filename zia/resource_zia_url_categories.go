@@ -367,17 +367,94 @@ func resourceURLCategoriesUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[INFO] Updating custom url category ID: %v\n", id)
-	req := expandURLCategory(d)
 
-	if _, err := urlcategories.Get(ctx, service, id); err != nil {
+	// Get current state from API
+	currentCategory, err := urlcategories.Get(ctx, service, id)
+	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+		return diag.FromErr(fmt.Errorf("failed to get current url category: %w", err))
 	}
 
-	if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &req); err != nil {
-		return diag.FromErr(err)
+	// Get desired state from config
+	desiredCategory := expandURLCategory(d)
+
+	// Calculate URL differences
+	currentUrls := stringSliceToMap(currentCategory.Urls)
+	desiredUrls := stringSliceToMap(desiredCategory.Urls)
+
+	var urlsToAdd []string
+	var urlsToRemove []string
+
+	for url := range desiredUrls {
+		if !currentUrls[url] {
+			urlsToAdd = append(urlsToAdd, url)
+		}
+	}
+
+	for url := range currentUrls {
+		if !desiredUrls[url] {
+			urlsToRemove = append(urlsToRemove, url)
+		}
+	}
+
+	// Determine update strategy based on changes
+	hasAdds := len(urlsToAdd) > 0
+	hasRemoves := len(urlsToRemove) > 0
+	hasOnlyAdds := hasAdds && !hasRemoves
+	hasOnlyRemoves := hasRemoves && !hasAdds
+	hasBoth := hasAdds && hasRemoves
+
+	log.Printf("[DEBUG] URL changes detected - Adds: %d, Removes: %d", len(urlsToAdd), len(urlsToRemove))
+
+	// Use incremental updates when we have URL changes
+	// The action parameter only affects URLs; other attributes are still updated normally
+	if hasOnlyAdds {
+		log.Printf("[INFO] Using incremental update with ADD_TO_LIST for %d URLs", len(urlsToAdd))
+		// Send full desired category structure, but only URLs in payload are added to existing list
+		// Other attributes in desiredCategory will be updated normally
+		addCategory := desiredCategory
+		addCategory.Urls = urlsToAdd
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &addCategory, "ADD_TO_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to add URLs: %w", err))
+		}
+	} else if hasOnlyRemoves {
+		log.Printf("[INFO] Using incremental update with REMOVE_FROM_LIST for %d URLs", len(urlsToRemove))
+		// Send full desired category structure, but only URLs in payload are removed from existing list
+		// Other attributes in desiredCategory will be updated normally
+		removeCategory := desiredCategory
+		removeCategory.Urls = urlsToRemove
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to remove URLs: %w", err))
+		}
+	} else if hasBoth {
+		// When both adds and removes are present, we need to do both operations
+		// First remove URLs, then add new ones
+		log.Printf("[INFO] Using incremental updates - removing %d URLs, then adding %d URLs", len(urlsToRemove), len(urlsToAdd))
+
+		// First, remove URLs (send full desired category structure for other attribute updates)
+		removeCategory := desiredCategory
+		removeCategory.Urls = urlsToRemove
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to remove URLs: %w", err))
+		}
+
+		// Then, add URLs (send full desired category structure for other attribute updates)
+		if len(urlsToAdd) > 0 {
+			addCategory := desiredCategory
+			addCategory.Urls = urlsToAdd
+			if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &addCategory, "ADD_TO_LIST"); err != nil {
+				return diag.FromErr(fmt.Errorf("failed to add URLs: %w", err))
+			}
+		}
+	} else {
+		// No URL changes, but other attributes might have changed - use full update
+		log.Printf("[INFO] No URL changes detected, using full update for other attribute changes")
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &desiredCategory, ""); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
@@ -485,4 +562,13 @@ func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 		}
 	}
 	return scopes
+}
+
+// stringSliceToMap converts a string slice to a map for efficient lookups
+func stringSliceToMap(slice []string) map[string]bool {
+	result := make(map[string]bool, len(slice))
+	for _, s := range slice {
+		result[s] = true
+	}
+	return result
 }
