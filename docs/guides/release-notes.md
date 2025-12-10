@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.6.4``
+``Last updated: v4.6.5``
 
 ---
+
+## 4.6.5 (December, 9 2025)
+
+### Notes
+
+- Release date: **(December, 9  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #505](https://github.com/zscaler/terraform-provider-zia/pull/505) - Fixed `zia_url_categories` resource to include optional parameters `action` to support partial updates via `ADD_TO_LIST` and `REMOVE_FROM_LIST`. The resource auto detects additional and removal of urls during updates.
 
 ## 4.6.4 (November, 24 2025)
 
