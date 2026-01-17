@@ -375,6 +375,25 @@ func dataSourceForwardingControlRule() *schema.Resource {
 					},
 				},
 			},
+			"dedicated_ip_gateway": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The dedicated IP gateway for which this rule is applicable. This field is applicable only for the Dedicated IP forwarding method.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:        schema.TypeInt,
+							Computed:    true,
+							Description: "Identifier that uniquely identifies an entity",
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "The configured name of the entity",
+						},
+					},
+				},
+			},
 			"zpa_app_segments": {
 				Type:        schema.TypeList,
 				Computed:    true,
@@ -650,13 +669,17 @@ func dataSourceForwardingControlRuleRead(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("proxy_gateway", flattenIDNameSet(resp.ProxyGateway)); err != nil {
+		return diag.FromErr(err)
+	}
 
-		if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
-			return diag.FromErr(err)
-		}
+	if err := d.Set("dedicated_ip_gateway", flattenIDNameSet(resp.DedicatedIPGateway)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
+		return diag.FromErr(err)
+	}
 
 		if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 			return diag.FromErr(err)

@@ -256,6 +256,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_ssl_inspection_rules":                          dataSourceSSLInspectionRules(),
 			"zia_forwarding_control_zpa_gateway":                dataSourceForwardingControlZPAGateway(),
 			"zia_forwarding_control_proxy_gateway":              dataSourceForwardingControlProxyGateway(),
+			"zia_forwarding_control_dedicated_ip_gateway":       dataSourceForwardingControlDedicatedIPGateway(),
 			"zia_cloud_browser_isolation_profile":               dataSourceCBIProfile(),
 			"zia_workload_groups":                               dataSourceWorkloadGroup(),
 			"zia_advanced_threat_settings":                      dataSourceAdvancedThreatSettings(),

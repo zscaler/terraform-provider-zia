@@ -51,6 +51,17 @@ func resourceForwardingControlRule() *schema.Resource {
 						return fmt.Errorf("the following attributes are required for ZPA forwarding: %v", missingAttrs)
 					}
 
+				case "ENATDEDIP":
+					if !isSet("dedicated_ip_gateway") {
+						return fmt.Errorf("dedicated_ip_gateway is required when type is 'FORWARDING' and forward_method is '%s'", forwardMethod)
+					}
+					prohibitedAttrs := []string{"proxy_gateway", "zpa_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
+					for _, attr := range prohibitedAttrs {
+						if isSet(attr) {
+							return fmt.Errorf("%s attribute cannot be set when type is 'FORWARDING' and forward_method is '%s'", attr, forwardMethod)
+						}
+					}
+
 				case "DIRECT":
 					prohibitedAttrs := []string{"zpa_gateway", "proxy_gateway", "zpa_app_segments", "zpa_application_segments", "zpa_application_segment_groups"}
 					for _, attr := range prohibitedAttrs {
@@ -72,9 +83,13 @@ func resourceForwardingControlRule() *schema.Resource {
 				}
 			}
 
+			if forwardMethod != "ENATDEDIP" && isSet("dedicated_ip_gateway") {
+				return fmt.Errorf("dedicated_ip_gateway can only be set when forward_method is 'ENATDEDIP'")
+			}
+
 			// Combined validation: `dest_addresses` and `dest_countries` can only be set when `forward_method` is either `PROXYCHAIN` or `DIRECT`
-			if (isSet("dest_addresses") || isSet("dest_countries") || isSet("dest_ip_categories")) && forwardMethod != "PROXYCHAIN" && forwardMethod != "DIRECT" {
-				return fmt.Errorf("dest_addresses, dest_countries and dest_ip_categories can only be set when forward_method is either 'PROXYCHAIN' or 'DIRECT'")
+			if (isSet("dest_addresses") || isSet("dest_countries") || isSet("dest_ip_categories")) && forwardMethod != "PROXYCHAIN" && forwardMethod != "DIRECT" && forwardMethod != "ENATDEDIP" {
+				return fmt.Errorf("dest_addresses, dest_countries and dest_ip_categories can only be set when forward_method is either 'PROXYCHAIN', 'DIRECT', or 'ENATDEDIP'")
 			}
 
 			return nil
@@ -155,6 +170,7 @@ func resourceForwardingControlRule() *schema.Resource {
 					"PROXYCHAIN",
 					"ZIA",
 					"ZPA",
+					"ENATDEDIP",
 					"ECZPA",
 					"ECSELF",
 					"DROP",
@@ -221,6 +237,7 @@ func resourceForwardingControlRule() *schema.Resource {
 			"nw_application_groups":          setIDsSchemaTypeCustom(nil, "User-defined network service application groups to which the rule applied. If not set, the rule is not restricted to a specific network service application group."),
 			"app_service_groups":             setIDsSchemaTypeCustom(nil, "list of application service groups"),
 			"proxy_gateway":                  setIdNameSchemaCustom(1, "The proxy gateway for which the rule is applicable. This field is applicable only for the Proxy Chaining forwarding method."),
+			"dedicated_ip_gateway":           setIdNameSchemaCustom(1, "The dedicated IP gateway for which this rule is applicable. This field is applicable only for the Dedicated IP forwarding method."),
 			"zpa_gateway":                    setIdNameSchemaCustom(1, "The ZPA Server Group for which this rule is applicable. Only the Server Groups that are associated with the selected Application Segments are allowed. This field is applicable only for the ZPA forwarding method."),
 			"zpa_app_segments":               setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"zpa_application_segments":       setIDsSchemaTypeCustom(intPtr(255), "List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ECZPA forwarding method (used for Zscaler Cloud Connector)."),
@@ -410,6 +427,10 @@ func resourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("dedicated_ip_gateway", flattenIDNameSet(resp.DedicatedIPGateway)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -572,6 +593,7 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		ECGroups:            expandIDNameExtensionsSet(d, "ec_groups"),
 		ProxyGateway:        expandIDNameSet(d, "proxy_gateway"),
+		DedicatedIPGateway:  expandIDNameSet(d, "dedicated_ip_gateway"),
 		ZPAGateway:          expandIDNameSet(d, "zpa_gateway"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
