@@ -109,6 +109,29 @@ resource "zia_forwarding_control_rule" "this" {
 }
 ```
 
+## Example Usage - Dedicated IP Forwarding Method
+
+```hcl
+data "zia_forwarding_control_dedicated_ip_gateway" "this" {
+  name = "Default"
+}
+
+resource "zia_forwarding_control_rule" "this" {
+  name           = "DEDIP_FORWARDING_RULE"
+  description    = "DEDIP_FORWARDING_RULE"
+  order          = 1
+  rank           = 7
+  state          = "ENABLED"
+  type           = "FORWARDING"
+  forward_method = "ENATDEDIP"
+  dest_addresses = ["example.com"]
+  dedicated_ip_gateway {
+    id   = data.zia_forwarding_control_dedicated_ip_gateway.this.id
+    name = data.zia_forwarding_control_dedicated_ip_gateway.this.name
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -122,6 +145,7 @@ The following arguments are supported:
       - `DIRECT` - If forward_method is `DIRECT` no other attribute is required.
       - `ZPA` - If forward_method is `ZPA` the attributes `zpa_gateway` and `zpa_app_segments` are required.
       - `PROXYCHAIN` - If forward_method is `PROXYCHAIN` the attributes `proxy_gateway` is required.
+      - `ENATDEDIP` - If forward_method is `ENATDEDIP` the attribute `dedicated_ip_gateway` is required.
 
 ## Attribute Reference
 
@@ -197,6 +221,10 @@ In addition to all arguments above, the following attributes are exported:
       - `external_id` - (int) Identifier that uniquely identifies an entity
 
 * `proxy_gateway` (set) The proxy gateway for which the rule is applicable. This field is applicable only for the `PROXYCHAIN` forwarding method.
+      - `id` - (int) Identifier that uniquely identifies an entity
+      - `name` - (string) The configured name of the entity.
+
+* `dedicated_ip_gateway` (set) The dedicated IP gateway for which the rule is applicable. This field is applicable only for the `ENATDEDIP` forwarding method.
       - `id` - (int) Identifier that uniquely identifies an entity
       - `name` - (string) The configured name of the entity.
 

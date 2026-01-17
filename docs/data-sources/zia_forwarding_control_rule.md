@@ -121,6 +121,10 @@ In addition to all arguments above, the following attributes are exported:
       - `id` - (int) Identifier that uniquely identifies an entity
       - `name` - (string) The configured name of the entity.
 
+* `dedicated_ip_gateway` (set) The dedicated IP gateway for which the rule is applicable. This field is applicable only for the `ENATDEDIP` forwarding method.
+      - `id` - (int) Identifier that uniquely identifies an entity
+      - `name` - (string) The configured name of the entity.
+
 * `zpa_application_segments` (set) List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the `ECZPA` forwarding method (used for Zscaler Cloud Connector).
       - `name` - (string) The configured name of the entity
       - `external_id` - (int) Identifier that uniquely identifies an entity
