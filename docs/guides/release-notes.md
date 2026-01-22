@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.6.5``
+``Last updated: v4.6.6``
 
 ---
+
+## 4.6.6 (January, 21 2026)
+
+### Notes
+
+- Release date: **(January, 21  2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #512](https://github.com/zscaler/terraform-provider-zia/pull/512) - Fixed `zia_ssl_inspection_rules` resource reorder logic.
 
 ## 4.6.5 (December, 9 2025)
 
