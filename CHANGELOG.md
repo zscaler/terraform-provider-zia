@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.6.6 (January, 21 2026)
+
+### Notes
+
+- Release date: **(January, 21  2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #512](https://github.com/zscaler/terraform-provider-zia/pull/512) - Fixed `zia_ssl_inspection_rules` resource reorder logic.
+
+## 4.6.5 (December, 9 2025)
+
+### Notes
+
+- Release date: **(December, 9  2025)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #505](https://github.com/zscaler/terraform-provider-zia/pull/505) - Fixed `zia_url_categories` resource to include optional parameters `action` to support partial updates via `ADD_TO_LIST` and `REMOVE_FROM_LIST`. The resource auto detects additional and removal of urls during updates.
+
 ## 4.6.4 (November, 24 2025)
 
 ### Notes
