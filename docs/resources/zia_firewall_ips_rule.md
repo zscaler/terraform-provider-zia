@@ -15,7 +15,12 @@ description: |-
 
 The **zia_firewall_ips_rule** resource allows the creation and management of ZIA Cloud Firewall IPS rules in the Zscaler Internet Access.
 
-**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted and NOT all attributes are suppported. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules and intend to manage those rules via Terraform, you must first import those rules into the state and start the ordering accordingly. However, if DO NOT intend to manage predefined rules via Terraform, the provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API is responsible for moving these rules to their respective positions as API calls are made.
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted (not all attributes are supported on predefined rules). The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
+- Automatically place new rules at the correct position
+- Handle reordering around predefined rules
+- Avoid configuration drift
+
+Example: If there are predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
 ## Example Usage
 

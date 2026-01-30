@@ -15,19 +15,12 @@ description: |-
 
 The **zia_ssl_inspection_rules** resource allows the creation and management of SSL Inspection rules in the Zscaler Internet Access.
 
-**NOTE 1** Zscaler SSL Inspection rules contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
+**NOTE 1** Zscaler SSL Inspection rules contain default and predefined rules which cannot be deleted. The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
+- Automatically place new rules at the correct position
+- Handle reordering around predefined rules
+- Avoid configuration drift
 
-The most common default and predefined rules:
-
-|              Rule Names                      |  Default or Predefined   |   Rule Number Associated |
-|:--------------------------------------------:|:------------------------:|:------------------------:|
-|-----------------------------|--------------------------|-------------------|
-|  `Zscaler Recommended Exemptions`                 |      `Predefined`       |           `Yes`          |
-|  `Office 365 One Click`             |      `Predefined`       |           `Yes`          |
-|  `Office365 Inspection`             |      `Predefined`       |           `Yes`          |
-|  `UCaaS One Click`             |      `Predefined`       |           `Yes`          |
-|  `Default SSL Inspection Rule`             |      `Default`       |           `No`          |
-|-------------------------|-------------------------|-----------------|
+Example: If there are 2 predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
 **NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
 

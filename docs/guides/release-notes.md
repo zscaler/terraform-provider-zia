@@ -12,9 +12,26 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.6.6``
+``Last updated: v4.6.7``
 
 ---
+
+## 4.6.7 (January, 29 2026)
+
+### Notes
+
+- Release date: **(January, 29  2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #514](https://github.com/zscaler/terraform-provider-zia/pull/514) - Added new attributes `url_type`, `regex_patterns`,  and `regex_patterns_retaining_parent_category` to `zia_url_categories` resource to specify whether the category uses exact URLs or regex patterns. Supported values are `EXACT` and `REGEX`. See [Zscaler Release Notes](https://help.zscaler.com/zia/release-upgrade-summary-2026) for details. To enable this feature, contact Zscaler Support.
+- [PR #514](https://github.com/zscaler/terraform-provider-zia/pull/514) - Enhanced `zia_file_type_categories` data source to support list mode when querying by `enums` filter, returning all matching categories in a `categories` attribute. Changed `enums` parameter from list to single string value to match API behavior.
+
+### Bug Fixes
+
+- [PR #514](https://github.com/zscaler/terraform-provider-zia/pull/514) - Fixed `zia_ssl_inspection_rules` resource validation logic to correctly require `ssl_interception_cert` only when `action.type` is `DECRYPT` and `override_default_certificate` is `true`.
+- [PR #514](https://github.com/zscaler/terraform-provider-zia/pull/514) - Fixed `zia_ssl_inspection_rules` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
 
 ## 4.6.6 (January, 21 2026)
 

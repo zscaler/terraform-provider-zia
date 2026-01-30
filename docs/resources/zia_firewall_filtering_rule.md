@@ -15,19 +15,12 @@ description: |-
 
 The **zia_firewall_filtering_rule** resource allows the creation and management of ZIA Cloud Firewall filtering rules in the Zscaler Internet Access.
 
-**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which are placed in their respective orders. These rules `CANNOT` be deleted and NOT all attributes are suppported. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules and intend to manage those rules via Terraform, you must first import those rules into the state and start the ordering accordingly. However, if DO NOT intend to manage predefined rules via Terraform, the provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API is responsible for moving these rules to their respective positions as API calls are made.
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted (not all attributes are supported on predefined rules). The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
+- Automatically place new rules at the correct position
+- Handle reordering around predefined rules
+- Avoid configuration drift
 
-The most common default and predefined rules:
-
-|              Rule Names                 |  Default or Predefined   |   Rule Number Associated |
-|:---------------------------------------:|:------------------------:|:------------------------:|
-|------------------------------|--------------------------|-------------------|
-|  `Office 365 One Click Rule`            |      `Predefined`,       |           `Yes`          |
-|  `UCaaS One Click Rule`                 |      `Predefined`,       |           `Yes`          |
-|  `Block All IPv6`                       |      `Predefined`,       |           `Yes`          |
-|  `Block malicious IPs and domains`      |      `Predefined`,       |           `Yes`          |
-|  `Default Firewall Filtering Rule`      |      `Default`,          |           `Yes`          |
-|-----------------------|-----------------------------|-----------------------------|
+Example: If there are predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
 **NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
 
@@ -99,15 +92,7 @@ The following arguments are supported:
 * `name` - (Required) Name of the Firewall Filtering policy rule
 * `order` - (Required) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
 
-**NOTE 1** Zscaler Cloud Firewall contain `default` and `predefined` rules which are placed in their respective orders. These rules `CANNOT` be deleted. When configuring your rules make sure that the `order` attributue value consider these pre-existing rules so that Terraform can place the new rules in the correct position, and drifts can be avoided. i.e If there are 2 pre-existing rules, you should start your rule order at `3` and manage your rule sets from that number onwards. The provider will reorder the rules automatically while ignoring the order of pre-existing rules, as the API will be responsible for moving these rules to their respective positions as API calls are made.
-
-The most common default rules are:
-
-* `Office 365 One Click Rule`
-* `UCaaS One Click Rule`
-* `Block All IPv6`
-* `Block malicious IPs and domains`
-* `Default Firewall Filtering Rule`
+**NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted. The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will automatically place new rules at the correct position relative to predefined rules.
 
 **NOTE 2** Certain attributes on `predefined` rules can still be managed or updated via Terraform such as:
 

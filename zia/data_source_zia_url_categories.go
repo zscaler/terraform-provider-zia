@@ -131,6 +131,14 @@ func dataSourceURLCategories() *schema.Resource {
 				}, false),
 				Description: "Type of URL categories to retrieve. Valid values: ALL (default - includes all types), URL_CATEGORY, TLD_CATEGORY",
 			},
+			"url_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"EXACT",
+					"REGEX",
+				}, false),
+			},
 			"url_keyword_counts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -185,6 +193,16 @@ func dataSourceURLCategories() *schema.Resource {
 			"ip_ranges_retaining_parent_category_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+			"regex_patterns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"regex_patterns_retaining_parent_category": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -248,6 +266,9 @@ func dataSourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, me
 	_ = d.Set("ip_ranges_retaining_parent_category", resp.IPRangesRetainingParentCategory)
 	_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
 	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
+	_ = d.Set("regex_patterns", resp.RegexPatterns)
+	_ = d.Set("regex_patterns_retaining_parent_category", resp.RegexPatternsRetainingParentCategory)
+	_ = d.Set("url_type", resp.UrlType)
 
 	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
 		return diag.FromErr(err)

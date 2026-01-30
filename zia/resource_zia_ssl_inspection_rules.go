@@ -61,11 +61,31 @@ func resourceSSLInspectionRules() *schema.Resource {
 					return fmt.Errorf("when action.type is 'DECRYPT', all required fields in decrypt_sub_actions must be set")
 				}
 
-				// Ensure sslInterceptionCert is not set if overrideDefaultCertificate is false
+				// ssl_interception_cert is mandatory when action.type is DECRYPT and override_default_certificate is true
 				overrideDefaultCertificate := actionMap["override_default_certificate"].(bool)
 				sslInterceptionCertList := actionMap["ssl_interception_cert"].([]interface{})
-				if !overrideDefaultCertificate && len(sslInterceptionCertList) > 0 {
-					return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is false, ssl_interception_cert cannot be set")
+
+				if overrideDefaultCertificate {
+					if len(sslInterceptionCertList) == 0 {
+						return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is true, ssl_interception_cert must be set")
+					}
+					// Ensure the cert block has a valid id set
+					if certMap, ok := sslInterceptionCertList[0].(map[string]interface{}); ok {
+						certID, hasID := certMap["id"]
+						if !hasID || certID == nil {
+							return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is true, ssl_interception_cert must have an id set")
+						}
+						switch v := certID.(type) {
+						case int:
+							if v == 0 {
+								return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is true, ssl_interception_cert must have a non-zero id")
+							}
+						case int64:
+							if v == 0 {
+								return fmt.Errorf("when action.type is 'DECRYPT' and override_default_certificate is true, ssl_interception_cert must have a non-zero id")
+							}
+						}
+					}
 				}
 
 				if actionMap["show_eun"].(bool) || actionMap["show_eunatp"].(bool) {
@@ -227,8 +247,9 @@ func resourceSSLInspectionRules() *schema.Resource {
 							Optional: true,
 						},
 						"ssl_interception_cert": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "SSL interception certificate. Required when action.type is 'DECRYPT'.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
@@ -417,7 +438,9 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 				if err != nil {
 					return err
 				}
-
+				// to avoid the STALE_CONFIGURATION_ERROR
+				rule.LastModifiedTime = 0
+				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = sslinspection.Update(ctx, service, id, rule)
@@ -605,11 +628,9 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			if err != nil {
 				return err
 			}
-			// Optional: avoid unnecessary updates if the current order is already correct
-			if rule.Order == order.Order && rule.Rank == order.Rank {
-				return nil
-			}
-
+			// to avoid the STALE_CONFIGURATION_ERROR
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = sslinspection.Update(ctx, service, id, rule)
