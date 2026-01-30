@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -259,7 +260,12 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		cloudAppRuleLock.Unlock()
 		startWithoutLocking := time.Now()
 
-		order := req.Order
+		intendedOrder := req.Order
+		intendedRank := req.Rank
+		if intendedRank < 7 {
+			// always start rank 7 rules at the next available order after all ranked rules
+			req.Rank = 7
+		}
 		req.Order = cloudAppRuleStartingOrder
 
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
@@ -280,62 +286,56 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			return diag.Errorf("error creating resource: %v", err)
 		}
 
-		log.Printf("[INFO] Created zia cloud app control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		log.Printf("[INFO] Created zia cloud app control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+		resourceType := "cloud_app_control_rules"
+
 		reorderWithBeforeReorder(
-			OrderRule{Order: order, Rank: req.Rank},
+			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
-			"cloud_app_control_rules",
+			resourceType,
 			func() (int, error) {
 				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 				if err != nil {
 					return 0, err
 				}
+				// Count all rules including predefined ones for proper ordering
 				return len(rules), nil
 			},
 			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
 				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
 				if err != nil {
-					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
+					return err
 				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
+				// to avoid the STALE_CONFIGURATION_ERROR
+				rule.LastModifiedTime = 0
 				rule.Order = order.Order
+				rule.Rank = order.Rank
 				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-				if err != nil {
-					return fmt.Errorf("failed to update rule order: %v", err)
-				}
-				return nil
+				return err
 			},
-			nil)
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
+		markOrderRuleAsDone(resp.ID, resourceType)
+
+		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+		if shouldActivate() {
+			// Sleep for 2 seconds before potentially triggering the activation
+			time.Sleep(2 * time.Second)
+			if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+				return diag.FromErr(activationErr)
 			}
-			return diags
+		} else {
+			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
-		markOrderRuleAsDone(resp.ID, "cloud_app_control_rules")
-		break
-	}
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
-	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
-		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
-			return diag.FromErr(activationErr)
-		}
-	} else {
-		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
+		return resourceCloudAppControlRulesRead(ctx, d, meta)
 	}
-
-	return resourceCloudAppControlRulesRead(ctx, d, meta)
 }
 
 func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -493,69 +493,71 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	timeout := d.Timeout(schema.TimeoutUpdate)
-	start := time.Now()
+	existingRules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+	if err != nil {
+		log.Printf("[ERROR] error getting all cloud app control rules: %v", err)
+	}
+	sort.Slice(existingRules, func(i, j int) bool {
+		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
+	})
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+	nextAvailableOrder := existingRules[len(existingRules)-1].Order
+	// always start rank 7 rules at the next available order after all ranked rules
+	req.Rank = 7
 
-	for {
-		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
+	req.Order = nextAvailableOrder
 
-		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := failFastOnErrorCodes(err); customErr != nil {
-			return diag.Errorf("%v", customErr)
-		}
-
-		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-				if time.Since(start) < timeout {
-					time.Sleep(10 * time.Second) // Wait before retrying
-					continue
-				}
-			}
-			return diag.Errorf("error updating resource: %v", err)
-		}
-
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "cloud_app_control_rules",
-			func() (int, error) {
-				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-				if err != nil {
-					return 0, err
-				}
-				return len(rules), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
-				if err != nil {
-					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
-				rule.Order = order.Order
-				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-				if err != nil {
-					return fmt.Errorf("failed to update rule order: %v", err)
-				}
-				return nil
-			},
-			nil)
-
-		if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
-		markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
-		break
+	_, err = cloudappcontrol.Update(ctx, service, ruleType, id, &req)
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+	if customErr := failFastOnErrorCodes(err); customErr != nil {
+		return diag.Errorf("%v", customErr)
+	}
+
+	if err != nil {
+		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
+		}
+		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
+	}
+
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "cloud_app_control_rules",
+		func() (int, error) {
+			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+			if err != nil {
+				return 0, err
+			}
+			// Count all rules including predefined ones for proper ordering
+			return len(rules), nil
+		},
+		func(id int, order OrderRule) error {
+			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
+			if err != nil {
+				return err
+			}
+			// to avoid the STALE_CONFIGURATION_ERROR
+			rule.LastModifiedTime = 0
+			rule.Order = order.Order
+			rule.Rank = order.Rank
+			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+			return err
+		},
+		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	)
+
+	if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
+		return diags
+	}
+	markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
+
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
 	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -563,7 +565,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCloudAppControlRulesRead(ctx, d, meta)
+	return nil
 }
 
 func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

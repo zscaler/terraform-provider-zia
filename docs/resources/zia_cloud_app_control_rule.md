@@ -17,143 +17,165 @@ The **zia_cloud_app_control_rule** resource allows the creation and management o
 
 **NOTE** Resources or DataSources to retrieve Tenant Profile or Cloud Application Risk Profile ID information are not currently available.
 
-## Example Usage - Basic Rule Configuration
+## Example Usage - Using Data Source for Actions (Recommended)
 
 ```hcl
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+# Get valid actions for the applications
+data "zia_cloud_app_control_rule_actions" "webmail_actions" {
+  type       = "WEBMAIL"
+  cloud_apps = ["GOOGLE_WEBMAIL", "YAHOO_WEBMAIL"]
+}
+
+resource "zia_cloud_app_control_rule" "webmail_rule" {
+  name                = "WebMail Control Rule"
+  description         = "Control webmail access"
+  order               = 1
+  rank                = 7
+  state               = "ENABLED"
+  type                = "WEBMAIL"
+  
+  # Use data source to get valid actions
+  actions             = data.zia_cloud_app_control_rule_actions.webmail_actions.available_actions_without_isolate
+  
+  applications        = ["GOOGLE_WEBMAIL", "YAHOO_WEBMAIL"]
+  device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  user_agent_types    = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
 }
 ```
 
-## Example Usage - With Cloud Risk Profile Configuration
+## Example Usage - AI/ML Application Control
 
 ```hcl
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    cloud_app_risk_profile {
-      id = 318
-    }
+data "zia_cloud_app_control_rule_actions" "ai_actions" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+}
+
+resource "zia_cloud_app_control_rule" "ai_control" {
+  name         = "ChatGPT Controls"
+  description  = "Control ChatGPT usage"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "AI_ML"
+  
+  # Automatically gets all valid actions except ISOLATE
+  actions      = data.zia_cloud_app_control_rule_actions.ai_actions.available_actions_without_isolate
+  
+  applications = ["CHATGPT_AI"]
 }
 ```
 
-## Example Usage - With Tenant Profile Configuration
-
-**NOTE** Tenant profile is supported only for specific applications depending on the type
+## Example Usage - File Sharing Controls
 
 ```hcl
-
-data "zia_cloud_app_control_rule_actions" "dropbox_actions" {
-  type        = "WEBMAIL"
-  cloud_apps  = ["SLACK"]
+data "zia_cloud_app_control_rule_actions" "file_share_actions" {
+  type       = "FILE_SHARE"
+  cloud_apps = ["DROPBOX", "ONEDRIVE"]
 }
 
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example_WebMail_Rule"
-    description                  = "Example_WebMail_Rule"
-    order                        = 1
-    rank                         = 7
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    tenancy_profile_ids {
-        id = [ 19016237 ]
-    }
+resource "zia_cloud_app_control_rule" "file_sharing" {
+  name         = "File Sharing Controls"
+  description  = "Control file sharing operations"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "FILE_SHARE"
+  
+  # Returns only actions supported by both Dropbox and OneDrive
+  actions      = data.zia_cloud_app_control_rule_actions.file_share_actions.available_actions_without_isolate
+  
+  applications = ["DROPBOX", "ONEDRIVE"]
 }
 ```
 
-## Example Usage - With ISOLATE ACTION
+## Example Usage - Cloud Browser Isolation (ISOLATE Actions)
 
-⚠️ **WARNING 1:**: Creating a Cloud Application Control Rule with the actions containing `ISOLATE_` Cloud Browser Isolation subscription is required. See the "Cloud Application Control - Rule Types vs Actions Matrix" below. To learn more, contact Zscaler Support or your local account team.
+ISOLATE actions require Cloud Browser Isolation subscription and must be used alone (cannot mix with other actions):
 
 ```hcl
-data "zia_cloud_browser_isolation_profile" "this" {
-    name = "BD_SA_Profile1_ZIA"
+data "zia_cloud_app_control_rule_actions" "chatgpt_isolate" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
 }
 
-resource "zia_cloud_app_control_rule" "this" {
-    name                         = "Example"
-    description                  = "Example"
-    state                        = "ENABLED"
-    type                         = "WEBMAIL"
-    actions                      = [
-        "ALLOW_WEBMAIL_VIEW",
-        "ALLOW_WEBMAIL_ATTACHMENT_SEND",
-        "ALLOW_WEBMAIL_SEND",
-    ]
-    applications          = [
-        "GOOGLE_WEBMAIL",
-        "YAHOO_WEBMAIL",
-    ]
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota            = 15
-    size_quota            = 10
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    cbi_profile {
-        id = data.zia_cloud_browser_isolation_profile.this.id
-        name = data.zia_cloud_browser_isolation_profile.this.name
-        url = data.zia_cloud_browser_isolation_profile.this.url
-    }
-    user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE" ]
+data "zia_cloud_browser_isolation_profile" "cbi_profile" {
+  name = "My-CBI-Profile"
+}
+
+resource "zia_cloud_app_control_rule" "isolate_chatgpt" {
+  name         = "ChatGPT Isolation"
+  description  = "Isolate ChatGPT using Cloud Browser Isolation"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "AI_ML"
+  
+  # Use isolate_actions for CBI rules
+  actions      = data.zia_cloud_app_control_rule_actions.chatgpt_isolate.isolate_actions
+  
+  applications = ["CHATGPT_AI"]
+  
+  # Required for ISOLATE actions
+  cbi_profile {
+    id   = data.zia_cloud_browser_isolation_profile.cbi_profile.id
+    name = data.zia_cloud_browser_isolation_profile.cbi_profile.name
+    url  = data.zia_cloud_browser_isolation_profile.cbi_profile.url
+  }
 }
 ```
 
-## Import
+## Example Usage - Filtered Actions (ALLOW Only)
 
-Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZPA configurations into Terraform-compliant HashiCorp Configuration Language.
-[Visit](https://github.com/zscaler/zscaler-terraformer)
+```hcl
+data "zia_cloud_app_control_rule_actions" "slack_allow" {
+  type            = "ENTERPRISE_COLLABORATION"
+  cloud_apps      = ["SLACK"]
+  action_prefixes = ["ALLOW"]  # Only permissive actions
+}
 
-Policy access rule can be imported by using `<RULE_TYPE:RULE_ID>` or `<RULE_TYPE:RULE_NAME>` as the import ID.
-
-For example:
-
-```shell
-terraform import zia_cloud_app_control_rule.this <rule_type:rule_id>
+resource "zia_cloud_app_control_rule" "slack_allow_only" {
+  name         = "Slack Allow Only"
+  description  = "Allow specific Slack operations"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "ENTERPRISE_COLLABORATION"
+  
+  # Only ALLOW_ actions
+  actions      = data.zia_cloud_app_control_rule_actions.slack_allow.filtered_actions
+  
+  applications = ["SLACK"]
+}
 ```
 
-```shell
-terraform import zia_cloud_app_control_rule.this <"rule_type:rule_name">
+## Example Usage - With Time Validity
+
+```hcl
+data "zia_cloud_app_control_rule_actions" "social_media_actions" {
+  type       = "SOCIAL_NETWORKING"
+  cloud_apps = ["FACEBOOK"]
+}
+
+resource "zia_cloud_app_control_rule" "social_media_time_restricted" {
+  name                  = "Social Media Time Restricted"
+  description           = "Allow social media only during specified hours"
+  order                 = 1
+  rank                  = 7
+  state                 = "ENABLED"
+  type                  = "SOCIAL_NETWORKING"
+  actions               = data.zia_cloud_app_control_rule_actions.social_media_actions.available_actions_without_isolate
+  applications          = ["FACEBOOK"]
+  
+  enforce_time_validity = true
+  validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+  validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+  validity_time_zone_id = "US/Pacific"
+  
+  time_quota            = 15
+  size_quota            = 10
+  device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+}
 ```
 
 ## Argument Reference
@@ -169,7 +191,7 @@ The following arguments are supported:
 
 * `description` - (String) The description of the Cloud App Control rule.
 
-* `actions` - (List of String) Refer to the Cloud Application Control - Rule Types vs Actions Matrix table.
+* `actions` - (List of String) Refer to the Cloud Application Control. To retrieve the list of supported actions based on `type` use the resource: [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions)
 
 * `order` - (Number) The rule order of execution for the Cloud App Control rule with respect to other
 * `rank` - (Number) Admin rank of the admin who creates this rule
@@ -235,160 +257,60 @@ The following arguments are supported:
 * `labels` - (List of Numbers) The Name-ID pairs of rule labels associated to the Cloud App Control rule.
   * `id` - (Number) Identifier that uniquely identifies an entity.
 
-## Cloud Application Control - Rule Types vs Actions Matrix
+## Important Notes
 
-**Note**: Refer to this matrix when configuring types vs actions for each specific rules
+### Using the Data Source for Actions
 
-|              Types                   |                    Actions                                                |
-|:------------------------------------:|:-------------------------------------------------------------------------:|
-|---------------|--------------------------------------------------|
-|               `AI_ML`                | `DENY_AI_ML_WEB_USE`, `ALLOW_AI_ML_WEB_USE`, `ISOLATE_AI_ML_WEB_USE`,     |
-|               `AI_ML`                | `CAUTION_AI_ML_WEB_USE`, `DENY_AI_ML_UPLOAD`, `ALLOW_AI_ML_UPLOAD`,       |
-|               `AI_ML`                | `DENY_AI_ML_SHARE`, `ALLOW_AI_ML_SHARE`, `DENY_AI_ML_DOWNLOAD`,           |
-|               `AI_ML`                | `ALLOW_AI_ML_DOWNLOAD`, `DENY_AI_ML_DELETE`,`ALLOW_AI_ML_DELETE`,         |
-|               `AI_ML`                | `DENY_AI_ML_INVITE`, `ALLOW_AI_ML_INVITE`, `DENY_AI_ML_CHAT`,             |
-|               `AI_ML`                | `ALLOW_AI_ML_CHAT`, `DENY_AI_ML_CREATE`, `ALLOW_AI_ML_CREATE`,            |
-|               `AI_ML`                | `DENY_AI_ML_RENAME`, `ALLOW_AI_ML_RENAME`                                 |
-|-------------------------|--------------------------------------------------------|
-|       `BUSINESS_PRODUCTIVITY`        | `ALLOW_BUSINESS_PRODUCTIVITY_APPS`, `BLOCK_BUSINESS_PRODUCTIVITY_APPS`    |
-|       `BUSINESS_PRODUCTIVITY`        | `CAUTION_BUSINESS_PRODUCTIVITY_APPS`, `ISOLATE_BUSINESS_PRODUCTIVITY_APPS`|
-|------------------------|---------------------------------------------------------|
-|           `CONSUMER`                 | `ALLOW_CONSUMER_APPS`, `BLOCK_CONSUMER_APPS`                         |
-|           `CONSUMER`                 | `CAUTION_CONSUMER_APPS`, `ISOLATE_CONSUMER_APPS`                                   |
-|--------------------------|---------------------------------------------------------|
-|          `CUSTOM_CAPP`               |     `BLOCK_CUSTOM_CAPP_USE`, `ALLOW_CUSTOM_CAPP_USE`    |
-|          `CUSTOM_CAPP`               |     `ISOLATE_CUSTOM_CAPP_USE`, `CAUTION_CUSTOM_CAPP_USE`|
-|--------------------------|---------------------------------------------------------|
-|     `DNS_OVER_HTTPS`                 |            `ALLOW_DNS_OVER_HTTPS_USE`                   |
-|     `DNS_OVER_HTTPS`                 |             `DENY_DNS_OVER_HTTPS_USE`                   |
-|-------------------------|---------------------------------------------------------|
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_APPS`, `ALLOW_ENTERPRISE_COLLABORATION_CHAT`, |
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_UPLOAD`, `ALLOW_ENTERPRISE_COLLABORATION_SHARE`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_APPS`, `ALLOW_ENTERPRISE_COLLABORATION_EDIT`, |
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_RENAME`, `ALLOW_ENTERPRISE_COLLABORATION_CREATE`, |
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_DOWNLOAD`, `ALLOW_ENTERPRISE_COLLABORATION_HUDDLE`,|
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_INVITE`, `ALLOW_ENTERPRISE_COLLABORATION_MEETING`, |
-|        `ENTERPRISE_COLLABORATION`    | `ALLOW_ENTERPRISE_COLLABORATION_DELETE`, `ALLOW_ENTERPRISE_COLLABORATION_SCREEN_SHARE`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_CHAT`, `BLOCK_ENTERPRISE_COLLABORATION_UPLOAD`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_SHARE`, `BLOCK_ENTERPRISE_COLLABORATION_EDIT`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_RENAME`,  `BLOCK_ENTERPRISE_COLLABORATION_CREATE`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_DO       WNLOAD`, `BLOCK_ENTERPRISE_COLLABORATION_DELETE`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_HUDDLE`, `BLOCK_ENTERPRISE_COLLABORATION_INVITE`, |
-|        `ENTERPRISE_COLLABORATION`    | `BLOCK_ENTERPRISE_COLLABORATION_MEETING`, `BLOCK_ENTERPRISE_COLLABORATION_SCREEN_SHARE`, |
-|        `ENTERPRISE_COLLABORATION`    | `ISOLATE_ENTERPRISE_COLLABORATION_APPS`, `CAUTION_ENTERPRISE_COLLABORATION_APPS`,       |
-|--------------------------|-------------------------------------------------|
-|     `FILE_SHARE`                     | `DENY_FILE_SHARE_VIEW`, `ALLOW_FILE_SHARE_VIEW`, `CAUTION_FILE_SHARE_VIEW`,                 |
-|     `FILE_SHARE`                     | `DENY_FILE_SHARE_UPLOAD`, `ALLOW_FILE_SHARE_UPLOAD`, `ISOLATE_FILE_SHARE_VIEW`,              |
-|     `FILE_SHARE`                     | `DENY_FILE_SHARE_SHARE`, `ALLOW_FILE_SHARE_SHARE`, `DENY_FILE_SHARE_EDIT`,               |
-|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_EDIT`, `DENY_FILE_SHARE_RENAME`, `ALLOW_FILE_SHARE_RENAME`,                 |
-|     `FILE_SHARE`                     | `DENY_FILE_SHARE_CREATE`, `ALLOW_FILE_SHARE_CREATE`, `DENY_FILE_SHARE_DOWNLOAD`,               |
-|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_DOWNLOAD`, `DENY_FILE_SHARE_DELETE`, `ALLOW_FILE_SHARE_DELETE`, |
-|     `FILE_SHARE`                     | `DENY_FILE_SHARE_FORM_SHARE`, `ALLOW_FILE_SHARE_FORM_SHARE`, `DENY_FILE_SHARE_INVITE`, |
-|     `FILE_SHARE`                     | `ALLOW_FILE_SHARE_INVITE` |
-|-------------------------|-------------------------------------------------|
-|     `FINANCE`                        | `ALLOW_FINANCE_USE`, `CAUTION_FINANCE_USE`      |
-|     `FINANCE`                        | `DENY_FINANCE_USE`, `ISOLATE_FINANCE_USE`       |
-|--------------------------|-------------------------------------------------|
-|     `HEALTH_CARE`                    | `ALLOW_HEALTH_CARE_USE`,  `CAUTION_HEALTH_CARE_USE`                |
-|     `HEALTH_CARE`                    | `DENY_HEALTH_CARE_USE`, `ISOLATE_HEALTH_CARE_USE`                        |
-|-------------------------|-------------------------------------------------|
-|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_DELETE`, `DENY_HOSTING_PROVIDER_EDIT`, `ALLOW_HOSTING_PROVIDER_EDIT`,           |
-|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_CREATE`, `DENY_HOSTING_PROVIDER_CREATE`,`DENY_HOSTING_PROVIDER_DELETE`,         |
-|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_USE`, `DENY_HOSTING_PROVIDER_USE`,            |
-|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_DOWNLOAD`, `DENY_HOSTING_PROVIDER_DOWNLOAD`,         |
-|     `HOSTING_PROVIDER`               | `ALLOW_HOSTING_PROVIDER_MOVE`, `DENY_HOSTING_PROVIDER_MOVE`,          |
-|     `HOSTING_PROVIDER`               | `ISOLATE_HOSTING_PROVIDER_USE`, `CAUTION_HOSTING_PROVIDER_USE`,          |
-|--------------------------|-------------------------------------------------|
-|     `HUMAN_RESOURCES`                | `ALLOW_HUMAN_RESOURCES_USE`, `CAUTION_HUMAN_RESOURCES_USE`,            |
-|     `HUMAN_RESOURCES`                | `DENY_HUMAN_RESOURCES_USE`, `ISOLATE_HUMAN_RESOURCES_USE`,                    |
-|--------------------------|-------------------------------------------------|
-|     `INSTANT_MESSAGING`              | `ALLOW_CHAT`, `ALLOW_FILE_TRANSFER_IN_CHAT`,                           |
-|     `INSTANT_MESSAGING`              | `ALLOW_FILE_TRANSFER_IN_CHAT`, `BLOCK_CHAT`,          |
-|     `INSTANT_MESSAGING`              | `BLOCK_FILE_TRANSFER_IN_CHAT`, `CAUTION_CHAT`,                                      |
-|     `INSTANT_MESSAGING`              | `CAUTION_FILE_TRANSFER_IN_CHAT`, `ISOLATE_CHAT`                      |
-|--------------------------|-------------------------------------------------|
-|     `IT_SERVICES`                    | `ALLOW_IT_SERVICES_USE`, `CAUTION_LEGAL_USE`,                |
-|     `IT_SERVICES`                    | `DENY_IT_SERVICES_USE`, `ISOLATE_IT_SERVICES_USE`                              |
-|-------------------------|-------------------------------------------------|
-|     `LEGAL`                          | `ALLOW_LEGAL_USE`, `DENY_DNS_OVER_HTTPS_USE`,                        |
-|     `LEGAL`                          |  `DENY_LEGAL_USE`, `ISOLATE_LEGAL_USE`                       |
-|-------------------------|-------------------------------------------------|
-|     `SALES_AND_MARKETING`            | `ALLOW_SALES_MARKETING_APPS`, `BLOCK_SALES_MARKETING_APPS`,           |
-|     `SALES_AND_MARKETING`            | `CAUTION_SALES_MARKETING_APPS`, `ISOLATE_SALES_MARKETING_APPS`                      |
-|-------------------------|-------------------------------------------------|
-|     `STREAMING_MEDIA`                | `BLOCK_STREAMING_VIEW_LISTEN`, `ALLOW_STREAMING_VIEW_LISTEN`,          |
-|     `STREAMING_MEDIA`                | `CAUTION_STREAMING_VIEW_LISTEN`, `BLOCK_STREAMING_UPLOAD`,               |
-|     `STREAMING_MEDIA`                | `ALLOW_STREAMING_UPLOAD`, `ISOLATE_STREAMING_VIEW_LISTEN`               |
-|-----------------------|-------------------------------------------------|
-|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_CHAT`, `ALLOW_SOCIAL_NETWORKING_COMMENT`,          |
-|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_CREATE`, `ALLOW_SOCIAL_NETWORKING_EDIT`,         |
-|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_POST`, `ALLOW_SOCIAL_NETWORKING_SHARE`,          |
-|     `SOCIAL_NETWORKING`              | `ALLOW_SOCIAL_NETWORKING_UPLOAD`, `ALLOW_SOCIAL_NETWORKING_VIEW`,         |
-|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_CHAT`, `BLOCK_SOCIAL_NETWORKING_COMMENT`,       |
-|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_CREATE`, `BLOCK_SOCIAL_NETWORKING_EDIT`,       |
-|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_POST`,`BLOCK_SOCIAL_NETWORKING_SHARE`,       |
-|     `SOCIAL_NETWORKING`              | `BLOCK_SOCIAL_NETWORKING_UPLOAD`, `BLOCK_SOCIAL_NETWORKING_VIEW`,       |
-|     `SOCIAL_NETWORKING`              | `CAUTION_SOCIAL_NETWORKING_POST`, `CAUTION_SOCIAL_NETWORKING_VIEW`,       |
-|     `SOCIAL_NETWORKING`              | `ISOLATE_SOCIAL_NETWORKING_VIEW`,        |
-|-------------------------|-------------------------------------------------|
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_APPS`, `ALLOW_SYSTEM_DEVELOPMENT_APPS`,         |
-|     `SYSTEM_AND_DEVELOPMENT`         | `ISOLATE_SYSTEM_DEVELOPMENT_APPS`, `BLOCK_SYSTEM_DEVELOPMENT_UPLOAD`,       |
-|     `SYSTEM_AND_DEVELOPMENT`         | `ALLOW_SYSTEM_DEVELOPMENT_UPLOAD`,`CAUTION_SYSTEM_DEVELOPMENT_APPS`,        |
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_CREATE`, `ALLOW_SYSTEM_DEVELOPMENT_CREATE`,      |
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_EDIT`, `ALLOW_SYSTEM_DEVELOPMENT_EDIT`,      |
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_SHARE`, `ALLOW_SYSTEM_DEVELOPMENT_SHARE`,         |
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_COMMENT`, `ALLOW_SYSTEM_DEVELOPMENT_COMMENT`,         |
-|     `SYSTEM_AND_DEVELOPMENT`         | `BLOCK_SYSTEM_DEVELOPMENT_REACTION`,`ALLOW_SYSTEM_DEVELOPMENT_REACTION`         |
-|--------------------------|-------------------------------------------------|
-|     `WEBMAIL`                        | `ALLOW_WEBMAIL_VIEW`, `ALLOW_WEBMAIL_ATTACHMENT_SEND`                   |
-|     `WEBMAIL`                        | `ALLOW_WEBMAIL_SEND`, `CAUTION_WEBMAIL_VIEW`                    |
-|     `WEBMAIL`                        | `BLOCK_WEBMAIL_VIEW`, `BLOCK_WEBMAIL_ATTACHMENT_SEND`                            |
-|     `WEBMAIL`                        | `BLOCK_WEBMAIL_SEND`, `ISOLATE_WEBMAIL_VIEW`                          |
-|-------------------------|-------------------------------------------------|
+**Best Practice**: Always use the `zia_cloud_app_control_rule_actions` data source to retrieve valid actions for your applications. The data source automatically handles:
+- Application-specific action support
+- Action intersections when multiple applications are configured
+- Separation of ISOLATE actions from standard actions
 
-## Cloud Application Control - Rule Types vs Tenant Profile Support
+```hcl
+data "zia_cloud_app_control_rule_actions" "my_actions" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+}
 
-**Note**: Refer to this matrix when configuring a Cloud App Control rule with Tenant Profile
+resource "zia_cloud_app_control_rule" "example" {
+  actions = data.zia_cloud_app_control_rule_actions.my_actions.available_actions_without_isolate
+}
+```
 
-[Reference](https://help.zscaler.com/zia/documentation-knowledgebase/policies/cloud-apps/cloud-app-control-policies)
+### ISOLATE Actions Requirements
 
-|               Type               |         Applications          | tenancy_profile_ids |
-|:--------------------------------:|:-----------------------------:|:-------------------:|
-|----------------------------------|-------------------------------|---------------------|
-| `BUSINESS_PRODUCTIVITY`          | `"GOOGLEANALYTICS"`           |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `ENTERPRISE_COLLABORATION`       | `"GOOGLECALENDAR"`            |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"GOOGLEKEEP"`                |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"GOOGLEMEET"`                |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"GOOGLESITES"`               |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"WEBEX"`                     |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"SLACK"`                     |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"WEBEX_TEAMS"`               |          ✅         |
-| `ENTERPRISE_COLLABORATION`       | `"ZOOM"`                      |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `FILE_SHARE`                     | `"DROPBOX"`                   |          ✅         |
-| `FILE_SHARE`                     | `"GDRIVE"`                    |          ✅         |
-| `FILE_SHARE`                     | `"GPHOTOS"`                   |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `HOSTING_PROVIDER`               | `"GCLOUDCOMPUTE"`             |          ✅         |
-| `HOSTING_PROVIDER`               | `"AWS"`                       |          ✅         |
-| `HOSTING_PROVIDER`               | `"IBMSMARTCLOUD"`             |          ✅         |
-| `HOSTING_PROVIDER`               | `"GAPPENGINE"`                |          ✅         |
-| `HOSTING_PROVIDER`               | `"GOOGLE_CLOUD_PLATFORM"`     |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `IT_SERVICES`                    | `"MSLOGINSERVICES"`           |          ✅         |
-| `IT_SERVICES`                    | `"GOOGLOGINSERVICE"`          |          ✅         |
-| `IT_SERVICES`                    | `"WEBEX_LOGIN_SERVICES"`      |          ✅         |
-| `IT_SERVICES`                    | `"ZOHO_LOGIN_SERVICES"`       |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `SOCIAL_NETWORKING`              | `"GOOGLE_GROUPS"`             |          ✅         |
-| `SOCIAL_NETWORKING`              | `"GOOGLE_PLUS"`               |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `STREAMING_MEDIA`                | `"YOUTUBE"`                   |          ✅         |
-| `STREAMING_MEDIA`                | `"GOOGLE_STREAMING"`          |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `SYSTEM_AND_DEVELOPMENT`         | `"GOOGLE_DEVELOPERS"`         |          ✅         |
-| `SYSTEM_AND_DEVELOPMENT`         | `"GOOGLEAPPMAKER"`            |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
-| `WEBMAIL`                        | `"GOOGLE_WEBMAIL"`            |          ✅         |
-|----------------------------------|-------------------------------|---------------------|
+When using ISOLATE actions:
+- ISOLATE actions **cannot be mixed** with other action types (ALLOW, DENY, BLOCK, CAUTION)
+- ISOLATE actions **require** `cbi_profile` block with a valid Cloud Browser Isolation profile
+- ISOLATE actions **cannot** have `browser_eun_template_id` set
+- Create separate rules for ISOLATE vs non-ISOLATE actions
+
+### Multiple Applications
+
+When configuring multiple applications in a single rule, only actions supported by ALL applications are valid. The data source automatically computes this intersection when you specify multiple cloud_apps.
+
+### Action Validation
+
+The resource validates actions during `terraform plan`. If invalid actions are detected, an error message will show:
+- Which actions are invalid
+- List of valid actions for your configuration
+- Suggestion to use the data source
+
+For more information, see the [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions) data source documentation.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZPA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+Policy access rule can be imported by using `<RULE_TYPE:RULE_ID>` or `<RULE_TYPE:RULE_NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_cloud_app_control_rule.this <rule_type:rule_id>
+```
+
+```shell
+terraform import zia_cloud_app_control_rule.this <"rule_type:rule_name">
+```

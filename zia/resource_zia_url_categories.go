@@ -148,6 +148,14 @@ func resourceURLCategories() *schema.Resource {
 					"ALL",
 				}, false),
 			},
+			"url_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"EXACT",
+					"REGEX",
+				}, false),
+			},
 			"url_keyword_counts": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -223,6 +231,16 @@ func resourceURLCategories() *schema.Resource {
 				Type:        schema.TypeInt,
 				Computed:    true,
 				Description: "The unique ID for the URL category.",
+			},
+			"regex_patterns": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"regex_patterns_retaining_parent_category": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -327,6 +345,9 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	_ = d.Set("custom_ip_ranges_count", resp.CustomIpRangesCount)
 	_ = d.Set("ip_ranges_retaining_parent_category_count", resp.IPRangesRetainingParentCategoryCount)
 	_ = d.Set("val", resp.Val)
+	_ = d.Set("regex_patterns", resp.RegexPatterns)
+	_ = d.Set("regex_patterns_retaining_parent_category", resp.RegexPatternsRetainingParentCategory)
+	_ = d.Set("url_type", resp.UrlType)
 
 	if err := d.Set("scopes", flattenScopesLite(resp)); err != nil {
 		return diag.FromErr(err)
@@ -522,6 +543,9 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 		Type:                                 d.Get("type").(string),
 		CustomUrlsCount:                      d.Get("custom_urls_count").(int),
 		UrlsRetainingParentCategoryCount:     d.Get("urls_retaining_parent_category_count").(int),
+		RegexPatterns:                        SetToStringList(d, "regex_patterns"),
+		RegexPatternsRetainingParentCategory: SetToStringList(d, "regex_patterns_retaining_parent_category"),
+		UrlType:                              d.Get("url_type").(string),
 		Scopes:                               expandURLCategoryScopes(d),
 		URLKeywordCounts:                     expandURLKeywordCounts(d),
 	}

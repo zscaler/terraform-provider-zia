@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -383,7 +384,12 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		urlFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
 
-		order := req.Order
+		intendedOrder := req.Order
+		intendedRank := req.Rank
+		if intendedRank < 7 {
+			// always start rank 7 rules at the next available order after all ranked rules
+			req.Rank = 7
+		}
 		req.Order = urlFilteringStartingOrder
 		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
 
@@ -395,7 +401,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		if err != nil {
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && reg.MatchString(err.Error()) {
-				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 			}
 
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
@@ -408,11 +414,14 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
-		log.Printf("[INFO] Created url filtering rule request. took:%s, without locking:%s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		log.Printf("[INFO] Created url filtering rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+		resourceType := "url_filtering_rules"
+
 		reorderWithBeforeReorder(
-			OrderRule{Order: order, Rank: req.Rank},
+			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
-			"url_filtering_rules",
+			resourceType,
 			func() (int, error) {
 				allRules, err := urlfilteringpolicies.GetAll(ctx, service)
 				if err != nil {
@@ -427,7 +436,9 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 				if err != nil {
 					return err
 				}
-
+				// to avoid the STALE_CONFIGURATION_ERROR
+				rule.LastModifiedTime = 0
+				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
@@ -439,29 +450,21 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
 
-		if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
+		markOrderRuleAsDone(resp.ID, resourceType)
+
+		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+		if shouldActivate() {
+			// Sleep for 2 seconds before potentially triggering the activation
+			time.Sleep(2 * time.Second)
+			if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+				return diag.FromErr(activationErr)
 			}
-			return diags
+		} else {
+			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
-		markOrderRuleAsDone(resp.ID, "url_filtering_rules")
-		break
-	}
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
-	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
-		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
-			return diag.FromErr(activationErr)
-		}
-	} else {
-		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
+		return resourceURLFilteringRulesRead(ctx, d, meta)
 	}
-
-	return nil
 }
 
 func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -622,70 +625,79 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	timeout := d.Timeout(schema.TimeoutUpdate)
-	start := time.Now()
-
-	for {
-		_, _, err := urlfilteringpolicies.Update(ctx, service, id, &req)
-
-		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := failFastOnErrorCodes(err); customErr != nil {
-			return diag.Errorf("%v", customErr)
+	if _, err := urlfilteringpolicies.Get(ctx, service, id); err != nil {
+		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+			d.SetId("")
+			return nil
 		}
-
-		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-				if time.Since(start) < timeout {
-					time.Sleep(5 * time.Second) // Wait before retrying
-					continue
-				}
-			}
-			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
-		}
-
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "url_filtering_rules",
-			func() (int, error) {
-				allRules, err := urlfilteringpolicies.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := urlfilteringpolicies.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order && rule.Rank == order.Rank {
-					return nil
-				}
-
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
-		)
-
-		if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
-		markOrderRuleAsDone(req.ID, "url_filtering_rules")
-		break
 	}
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	existingRules, err := urlfilteringpolicies.GetAll(ctx, service)
+	if err != nil {
+		log.Printf("[ERROR] error getting all url filtering rules: %v", err)
+	}
+	sort.Slice(existingRules, func(i, j int) bool {
+		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
+	})
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+	nextAvailableOrder := existingRules[len(existingRules)-1].Order
+	// always start rank 7 rules at the next available order after all ranked rules
+	req.Rank = 7
+
+	req.Order = nextAvailableOrder
+
+	_, _, err = urlfilteringpolicies.Update(ctx, service, id, &req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+	if customErr := failFastOnErrorCodes(err); customErr != nil {
+		return diag.Errorf("%v", customErr)
+	}
+
+	if err != nil {
+		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
+		}
+		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
+	}
+
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "url_filtering_rules",
+		func() (int, error) {
+			allRules, err := urlfilteringpolicies.GetAll(ctx, service)
+			if err != nil {
+				return 0, err
+			}
+			// Count all rules including predefined ones for proper ordering
+			return len(allRules), nil
+		},
+		func(id int, order OrderRule) error {
+			rule, err := urlfilteringpolicies.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+			// to avoid the STALE_CONFIGURATION_ERROR
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
+			rule.Order = order.Order
+			rule.Rank = order.Rank
+			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
+			return err
+		},
+		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	)
+
+	if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
+		return diags
+	}
+	markOrderRuleAsDone(req.ID, "url_filtering_rules")
+
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
 	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
