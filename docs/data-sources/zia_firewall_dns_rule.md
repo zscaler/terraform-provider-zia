@@ -48,6 +48,8 @@ In addition to all arguments above, the following attributes are exported:
 * `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK`, `REDIR_REQ`, `REDIR_RES`, `REDIR_ZPA`, `REDIR_REQ_DOH`, `REDIR_REQ_KEEP_SENDER`, `REDIR_REQ_TCP`, `REDIR_REQ_UDP`, `BLOCK_WITH_RESPONSE`
 * `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank. The default value is `7`.
 * `access_control` - (String) The admin’s access privilege to this rule based on the assigned role
+* `is_web_eun_enabled` - (Boolean) If set to true, Web EUN is enabled for the rule
+* `default_dns_rule_name_used` - (Boolean) If set to true, the default DNS rule name is used for the rule
 * `redirect_ip` - (String) The IP address to which the traffic will be redirected to when the DNAT rule is triggered. If not set, no redirection is done to specific IP addresses. Only supported when the `action` is `REDIR_REQ`
 * `dns_rule_request_types` - (Set of Strings) DNS request types to which the rule applies. Supportedn values are:
 `A`, `NS`, `MD`, `MF`, `CNAME`, `SOA`, `MB`, `MG`, `MR`, `NULL`, `WKS`, `PTR`, `HINFO`, `MINFO`, `MX`, `TXT`, `RP`, `AFSDB`,

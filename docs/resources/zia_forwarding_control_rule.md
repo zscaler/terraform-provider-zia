@@ -122,6 +122,7 @@ The following arguments are supported:
       - `DIRECT` - If forward_method is `DIRECT` no other attribute is required.
       - `ZPA` - If forward_method is `ZPA` the attributes `zpa_gateway` and `zpa_app_segments` are required.
       - `PROXYCHAIN` - If forward_method is `PROXYCHAIN` the attributes `proxy_gateway` is required.
+      - `ENATDEDIP` - Dedicated IP method.
 
 ## Attribute Reference
 

@@ -274,6 +274,40 @@ func dataSourceLocationManagement() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates that the DNS server configuration used in the extranet is the designated default DNS server",
 			},
+			"other_sub_location": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.",
+			},
+			"other6_sub_location": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.",
+			},
+			"sub_loc_scope_enabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "Indicates whether defining scopes is allowed for this sublocation.",
+			},
+			"sub_loc_scope": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Defines a scope for the sublocation from the available types to segregate workload traffic from a single sublocation to apply different Cloud Connector and ZIA security policies.",
+			},
+			"sub_loc_scope_values": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"sub_loc_acc_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -349,6 +383,12 @@ func dataSourceLocationManagementRead(ctx context.Context, d *schema.ResourceDat
 		_ = d.Set("description", resp.Description)
 		_ = d.Set("default_extranet_ts_pool", resp.DefaultExtranetTsPool)
 		_ = d.Set("default_extranet_dns", resp.DefaultExtranetDns)
+		_ = d.Set("other_sub_location", resp.OtherSubLocation)
+		_ = d.Set("other6_sub_location", resp.Other6SubLocation)
+		_ = d.Set("sub_loc_scope", resp.SubLocScope)
+		_ = d.Set("sub_loc_scope_values", resp.SubLocScopeValues)
+		_ = d.Set("sub_loc_acc_ids", resp.SubLocAccIDs)
+		_ = d.Set("sub_loc_scope_enabled", resp.SubLocScopeEnabled)
 
 		if err := d.Set("vpn_credentials", flattenLocationVPNCredentials(resp.VPNCredentials)); err != nil {
 			return diag.FromErr(err)

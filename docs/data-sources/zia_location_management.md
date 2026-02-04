@@ -64,6 +64,14 @@ In addition to all arguments above, the following attributes are exported:
 * `xff_forward_enabled` - (Boolean) Enable XFF Forwarding. When set to true, traffic is passed to Zscaler Cloud via the X-Forwarded-For (XFF) header.
 * `zapp_ssl_scan_enabled` - (Boolean) This parameter was deprecated and no longer has an effect on SSL policy. It remains supported in the API payload in order to maintain backwards compatibility with existing scripts, but it will be removed in future.
 
+* `sub_loc_scope_enabled` - (Boolean) Indicates whether defining scopes is allowed for this sublocation. Sublocation scopes are available only for the Workload traffic type sublocations whose parent locations are associated with Amazon Web Services (AWS) Cloud Connector groups.
+
+* `sub_loc_scope_values` - (List of Strings) Specifies values for the selected sublocation scope type
+
+* `sub_loc_scope` - (Strings) Defines a scope for the sublocation from the available types to segregate workload traffic from a single sublocation to apply different Cloud Connector and ZIA security policies. This field is only available for the Workload traffic type sublocations whose parent locations are associated with Amazon Web Services (AWS) Cloud Connector groups. The supported options are: `VPC_ENDPOINT`, `VPC`, `NAMESPACE`, `ACCOUNT`
+
+* `sub_loc_acc_ids` - (List of Strings) Specifies one or more Amazon Web Services (AWS) account IDs. These AWS accounts are associated with the parent location of this sublocation created in the Zscaler Cloud & Branch Connector Admin Portal.
+
 * `vpn_credentials`
   * `comments` - (String) Additional information about this VPN credential.
     Additional information about this VPN credential.

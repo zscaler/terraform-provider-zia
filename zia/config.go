@@ -260,7 +260,9 @@ func zscalerSDKV2Client(c *Config) (*zscaler.Service, error) {
 
 	// Start with base configuration setters
 	setters := []zia.ConfigSetter{
-		zia.WithCache(false),
+		zia.WithCache(true),                // Enable caching to reduce API calls
+		zia.WithCacheTtl(10 * time.Minute), // Cache entries for 10 minutes
+		zia.WithCacheTti(8 * time.Minute),  // Idle timeout of 8 minutes
 		zia.WithHttpClientPtr(http.DefaultClient),
 		zia.WithRateLimitMaxRetries(int32(c.retryCount)),
 		zia.WithRequestTimeout(time.Duration(c.requestTimeout) * time.Second),

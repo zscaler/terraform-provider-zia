@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/nat_control_policies"
 )
@@ -174,32 +172,6 @@ func resourceNatControlRules() *schema.Resource {
 	}
 }
 
-func beforeReorderNatControlRules(ctx context.Context, service *zscaler.Service) func() {
-	return func() {
-		log.Printf("[INFO] beforeReorderNatControlRules")
-		// get all predefined rules and set their order to come first
-		rules, err := nat_control_policies.GetAll(ctx, service)
-		if err != nil {
-			log.Printf("[ERROR] beforeReorderNatControlRules: %v", err)
-		}
-		// first order predefined rules by their order
-		sort.Slice(rules, func(i, j int) bool {
-			return rules[i].Order < rules[j].Order
-		})
-		order := 1
-		for _, r := range rules {
-			if r.Predefined {
-				r.Order = order
-				_, err = nat_control_policies.Update(ctx, service, r.ID, &r)
-				if err != nil {
-					log.Printf("[ERROR] beforeReorderNatControlRules: %v", err)
-				}
-				order++
-			}
-		}
-	}
-}
-
 func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
@@ -221,14 +193,17 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			}
 			if natControlRuleStartingOrder == 0 {
 				natControlRuleStartingOrder = 1
-			} else {
-				natControlRuleStartingOrder++
 			}
 		}
 		natControlRuleLock.Unlock()
 		startWithoutLocking := time.Now()
 
-		order := req.Order
+		intendedOrder := req.Order
+		intendedRank := req.Rank
+		if intendedRank < 7 {
+			// always start rank 7 rules at the next available order after all ranked rules
+			req.Rank = 7
+		}
 		req.Order = natControlRuleStartingOrder
 
 		resp, err := nat_control_policies.Create(ctx, service, &req)
@@ -242,7 +217,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating nat control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -253,9 +228,9 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
-		log.Printf("[INFO] Created zia nat control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		log.Printf("[INFO] Created zia nat control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		reorderWithBeforeReorder(
-			OrderRule{Order: order, Rank: req.Rank},
+			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			"nat_control_rules",
 			func() (int, error) {
@@ -277,12 +252,15 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 					return nil
 				}
 
+				// to avoid the STALE_CONFIGURATION_ERROR
+				rule.LastModifiedTime = 0
+				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)
 				return err
 			},
-			beforeReorderNatControlRules(ctx, service),
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -487,12 +465,15 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 					return nil
 				}
 
+				// to avoid the STALE_CONFIGURATION_ERROR
+				rule.LastModifiedTime = 0
+				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)
 				return err
 			},
-			beforeReorderNatControlRules(ctx, service),
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
 		)
 
 		if diags := resourceNatControlRulesRead(ctx, d, meta); diags.HasError() {

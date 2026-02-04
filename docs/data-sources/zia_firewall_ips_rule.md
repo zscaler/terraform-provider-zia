@@ -51,6 +51,8 @@ In addition to all arguments above, the following attributes are exported:
 * `capture_pcap` - (Boolean) Value that indicates whether packet capture (PCAP) is enabled or not
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud IPS Rule or not
+* `eun_enabled` - (Boolean) A Boolean value that indicates whether Web EUN is enabled for the rule
+* `eun_template_id` - (Integer) The EUN template ID associated with the rule
 
 `Devices`
 

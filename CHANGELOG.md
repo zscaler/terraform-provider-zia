@@ -1,5 +1,27 @@
 # Changelog
 
+## 4.6.71 (February, 4 2026)
+
+### Notes
+
+- Release date: **(February, 4 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added new `forward_method` `ENATDEDIP` to resource `zia_forwarding_control_rule`.
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added new attributes to ZIA:
+  - `zia_firewall_ips_rule`: `eun_enabled`, and `eun_template_id`
+  - `zia_firewall_dns_rule`: `is_web_eun_enabled` and `default_dns_rule_name_used`
+  - `zia_location_management`: `sub_loc_scope_enabled`, `sub_loc_scope`, `sub_loc_scope_values`, `sub_loc_acc_ids`
+
+### Bug Fixes
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Fixed terraform refresh performance issue when using legacy V2 SDK client. Enabled caching for legacy client (with 10-minute TTL and 8-minute idle timeout) to prevent redundant `GetAll()` API calls. This fix resolves cases where customers using the legacy client experienced 6+ hour refresh times with many `zia_url_categories` resources.
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Fixed `zia_nat_control_rules` and `zia_forwarding_control_rule` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
+
 ## 4.6.7 (January, 29 2026)
 
 ### Notes
