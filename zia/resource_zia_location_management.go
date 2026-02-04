@@ -187,14 +187,37 @@ func resourceLocationManagement() *schema.Resource {
 			"other_sub_location": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
 				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.",
 			},
 			"other6_sub_location": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
 				Description: "If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.",
+			},
+			"sub_loc_scope": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "Defines a scope for the sublocation from the available types to segregate workload traffic from a single sublocation to apply different Cloud Connector and ZIA security policies.",
+				ValidateFunc: validation.StringInSlice([]string{
+					"VPC_ENDPOINT",
+					"VPC",
+					"NAMESPACE",
+					"ACCOUNT",
+				}, false),
+			},
+			"sub_loc_scope_values": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"sub_loc_acc_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"surrogate_ip": {
 				Type:        schema.TypeBool,
@@ -501,6 +524,9 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("iot_enforce_policy_set", resp.IOTEnforcePolicySet)
 	_ = d.Set("other_sub_location", resp.OtherSubLocation)
 	_ = d.Set("other6_sub_location", resp.Other6SubLocation)
+	_ = d.Set("sub_loc_scope", resp.SubLocScope)
+	_ = d.Set("sub_loc_scope_values", resp.SubLocScopeValues)
+	_ = d.Set("sub_loc_acc_ids", resp.SubLocAccIDs)
 	_ = d.Set("ssl_scan_enabled", resp.SSLScanEnabled)
 	_ = d.Set("zapp_ssl_scan_enabled", resp.ZappSSLScanEnabled)
 	_ = d.Set("xff_forward_enabled", resp.XFFForwardEnabled)
@@ -670,6 +696,8 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		State:                               d.Get("state").(string),
 		TZ:                                  d.Get("tz").(string),
 		IPAddresses:                         SetToStringList(d, "ip_addresses"),
+		SubLocScopeValues:                   SetToStringList(d, "sub_loc_scope_values"),
+		SubLocAccIDs:                        SetToStringList(d, "sub_loc_acc_ids"),
 		Ports:                               SetToIntList(d, "ports"),
 		CookiesAndProxy:                     d.Get("cookies_and_proxy").(bool),
 		AuthRequired:                        d.Get("auth_required").(bool),
@@ -701,15 +729,15 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		ExcludeFromManualGroups:             d.Get("exclude_from_manual_groups").(bool),
 		DefaultExtranetTsPool:               d.Get("default_extranet_ts_pool").(bool),
 		DefaultExtranetDns:                  d.Get("default_extranet_dns").(bool),
+		SubLocScope:                         d.Get("sub_loc_scope").(string),
+		StaticLocationGroups:                expandIDNameExtensionsSet(d, "static_location_groups"),
+		Extranet:                            expandIDNameExtensionsSetSingle(d, "extranet"),
+		ExtranetIpPool:                      expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
+		ExtranetDns:                         expandIDNameExtensionsSetSingle(d, "extranet_dns"),
+		AUPTimeoutInDays:                    d.Get("aup_timeout_in_days").(int),
+		Profile:                             d.Get("profile").(string),
+		VPNCredentials:                      expandLocationManagementVPNCredentials(d),
 		// DynamiclocationGroups:               expandIDNameExtensionsSet(d, "dynamic_location_groups"),
-		StaticLocationGroups: expandIDNameExtensionsSet(d, "static_location_groups"),
-		Extranet:             expandIDNameExtensionsSetSingle(d, "extranet"),
-		ExtranetIpPool:       expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
-		ExtranetDns:          expandIDNameExtensionsSetSingle(d, "extranet_dns"),
-
-		AUPTimeoutInDays: d.Get("aup_timeout_in_days").(int),
-		Profile:          d.Get("profile").(string),
-		VPNCredentials:   expandLocationManagementVPNCredentials(d),
 	}
 	vpnCredentials := expandLocationManagementVPNCredentials(d)
 	if vpnCredentials != nil {

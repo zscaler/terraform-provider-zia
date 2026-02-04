@@ -187,8 +187,8 @@ The following arguments are supported:
 
 * `description` - (String) Additional notes or information regarding the location or sub-location. The description cannot exceed 1024 characters.
 * `country` - (Optional) Country - See list of supported country names [here](https://help.zscaler.com/zia/location-management#/locations-post)
-* `state` - (Optional) Country - State Name i.e `California`
-* `tz` - (Optional) Timezone of the location. If not specified, it defaults to GMT. See list of supported country names [here](https://help.zscaler.com/zia/location-management#/locations-post)
+* `state` - (String) Country - State Name i.e `California`
+* `tz` - (String) Timezone of the location. If not specified, it defaults to GMT. See list of supported country names [here](https://help.zscaler.com/zia/location-management#/locations-post)
 * `profile` - (Optional) Profile tag that specifies the location traffic type. If not specified, this tag defaults to `Unassigned`. The supported options are: `NONE`, `CORPORATE`, `SERVER`, `GUESTWIFI`, `IOT`, `WORKLOAD`.
 
 * `aup_block_internet_until_accepted` - (Boolean) For First Time AUP Behavior, Block Internet Access. When set, all internet access (including non-HTTP traffic) is disabled until the user accepts the AUP.
@@ -223,6 +223,12 @@ The following arguments are supported:
 * `other_sub_location` - (Boolean) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv4 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other and it can be renamed, if required.
 
 * `other6_sub_location` - (Boolean) If set to true, indicates that this is a default sub-location created by the Zscaler service to accommodate IPv6 addresses that are not part of any user-defined sub-locations. The default sub-location is created with the name Other6 and it can be renamed, if required. This field is applicable only if ipv6Enabled is set is true.
+
+* `sub_loc_scope_values` - (List of Strings) Specifies values for the selected sublocation scope type
+
+* `sub_loc_scope` - (Strings) Defines a scope for the sublocation from the available types to segregate workload traffic from a single sublocation to apply different Cloud Connector and ZIA security policies. This field is only available for the Workload traffic type sublocations whose parent locations are associated with Amazon Web Services (AWS) Cloud Connector groups. The supported options are: `VPC_ENDPOINT`, `VPC`, `NAMESPACE`, `ACCOUNT`
+
+* `sub_loc_acc_ids` - (List of Strings) Specifies one or more Amazon Web Services (AWS) account IDs. These AWS accounts are associated with the parent location of this sublocation created in the Zscaler Cloud & Branch Connector Admin Portal.
 
 * `ipv6_enabled` - (Boolean) If set to true, IPv6 is enabled for the location and IPv6 traffic from the location can be forwarded to the Zscaler service to enforce security policies.
 
