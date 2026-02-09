@@ -71,6 +71,7 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.URLCategories, sweepTestURLCategories)
 		setupSweeper(resourcetype.AdminUsers, sweepTestAdminUser)
 		setupSweeper(resourcetype.Users, sweepTestUsers)
+		setupSweeper(resourcetype.Extranet, sweepTestExtranet)
 	}
 	resource.TestMain(m)
 }

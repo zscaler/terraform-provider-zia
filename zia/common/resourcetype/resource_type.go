@@ -30,6 +30,8 @@ const (
 	AdminUsers                      = "zia_admin_users"
 	Users                           = "zia_user_management"
 	RuleLabels                      = "zia_rule_labels"
+	Extranet                        = "zia_extranet"
+	DCExclusions                    = "zia_dc_exclusions"
 	SandboxRules                    = "zia_sandbox_rules"
 	SSLInspectionRules              = "zia_ssl_inspection_rules"
 	AuthSettingsURLs                = "zia_auth_settings_urls"

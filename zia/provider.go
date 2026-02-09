@@ -181,6 +181,9 @@ func ZIAProvider() *schema.Provider {
 			"zia_virtual_service_edge_node":                     resourceVZENNode(),
 			"zia_workload_groups":                               resourceWorkloadGroups(),
 			"zia_traffic_capture_rules":                         resourceTrafficCaptureRules(),
+			"zia_sub_cloud":                                     resourceSubCloud(),
+			"zia_extranet":                                      resourceExtranet(),
+			"zia_dc_exclusions":                                 resourceDCExclusions(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -277,6 +280,10 @@ func ZIAProvider() *schema.Provider {
 			"zia_virtual_service_edge_cluster":                  dataSourceVZENCluster(),
 			"zia_virtual_service_edge_node":                     dataSourceVZENNode(),
 			"zia_traffic_capture_rules":                         dataSourceTrafficCaptureRules(),
+			"zia_sub_cloud":                                     dataSourceSubCloud(),
+			"zia_datacenters":                                   dataSourceDatacenters(),
+			"zia_extranet":                                      dataSourceExtranet(),
+			"zia_dc_exclusions":                                 dataSourceDCExclusions(),
 		},
 	}
 

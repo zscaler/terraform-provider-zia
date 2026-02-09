@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,10 +18,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 )
 
-// var (
-// 	forwardingControlLock          sync.Mutex
-// 	forwardingControlStartingOrder int
-// )
+var (
+	forwardingControlLock          sync.Mutex
+	forwardingControlStartingOrder int
+)
 
 func resourceForwardingControlRule() *schema.Resource {
 	return &schema.Resource{
@@ -158,6 +161,7 @@ func resourceForwardingControlRule() *schema.Resource {
 					"ECZPA",
 					"ECSELF",
 					"DROP",
+					"ENATDEDIP",
 				}, false),
 			},
 			"order": {
@@ -251,51 +255,122 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
+	start := time.Now()
+
 	forwardMethod := d.Get("forward_method").(string)
 	if forwardMethod == "ZPA" {
 		// Sleep for 60 seconds before invoking Create
 		time.Sleep(60 * time.Second)
 	}
 
-	// Retry logic in case of specific error
-	var resp *forwarding_rules.ForwardingRules
-	var err error
-	for i := 0; i < 3; i++ {
-		resp, err = forwarding_rules.Create(ctx, service, &req)
-		if err == nil {
-			break
-		}
-
-		if forwardMethod == "ZPA" {
-			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
-				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
-				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
-				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
-				continue
+	for {
+		forwardingControlLock.Lock()
+		if forwardingControlStartingOrder == 0 {
+			list, _ := forwarding_rules.GetAll(ctx, service)
+			for _, r := range list {
+				if r.Order > forwardingControlStartingOrder {
+					forwardingControlStartingOrder = r.Order
+				}
+			}
+			if forwardingControlStartingOrder == 0 {
+				forwardingControlStartingOrder = 1
 			}
 		}
-		return diag.FromErr(err)
-	}
+		forwardingControlLock.Unlock()
+		startWithoutLocking := time.Now()
 
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	log.Printf("[INFO] Created zia ip source groups request. ID: %v\n", resp)
-	d.SetId(strconv.Itoa(resp.ID))
-	_ = d.Set("rule_id", resp.ID)
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
-	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
-		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
-			return diag.FromErr(activationErr)
+		intendedOrder := req.Order
+		intendedRank := req.Rank
+		if intendedRank < 7 {
+			// always start rank 7 rules at the next available order after all ranked rules
+			req.Rank = 7
 		}
-	} else {
-		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
-	}
+		req.Order = forwardingControlStartingOrder
 
-	return resourceForwardingControlRuleRead(ctx, d, meta)
+		// Retry logic in case of specific error
+		var resp *forwarding_rules.ForwardingRules
+		var err error
+		for i := 0; i < 3; i++ {
+			resp, err = forwarding_rules.Create(ctx, service, &req)
+			if err == nil {
+				break
+			}
+
+			if forwardMethod == "ZPA" {
+				if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+					strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
+					log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
+					time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
+					continue
+				}
+			}
+			return diag.FromErr(err)
+		}
+
+		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
+		}
+
+		if err != nil {
+			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				if reg.MatchString(err.Error()) {
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+				}
+			}
+			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
+		}
+
+		log.Printf("[INFO] Created zia forwarding control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
+		resourceType := "forwarding_control_rule"
+
+		reorderWithBeforeReorder(
+			OrderRule{Order: intendedOrder, Rank: intendedRank},
+			resp.ID,
+			resourceType,
+			func() (int, error) {
+				allRules, err := forwarding_rules.GetAll(ctx, service)
+				if err != nil {
+					return 0, err
+				}
+				// Count all rules including predefined ones for proper ordering
+				return len(allRules), nil
+			},
+			func(id int, order OrderRule) error {
+				// Custom updateOrder that handles predefined rules
+				rule, err := forwarding_rules.Get(ctx, service, id)
+				if err != nil {
+					return err
+				}
+
+				rule.Order = order.Order
+				rule.Rank = order.Rank
+				_, err = forwarding_rules.Update(ctx, service, id, rule)
+				return err
+			},
+			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		)
+
+		d.SetId(strconv.Itoa(resp.ID))
+		_ = d.Set("rule_id", resp.ID)
+
+		markOrderRuleAsDone(resp.ID, resourceType)
+
+		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+		if shouldActivate() {
+			// Sleep for 2 seconds before potentially triggering the activation
+			time.Sleep(2 * time.Second)
+			if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+				return diag.FromErr(activationErr)
+			}
+		} else {
+			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
+		}
+
+		return resourceForwardingControlRuleRead(ctx, d, meta)
+	}
 }
 
 func resourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -428,9 +503,9 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] forwarding control rule ID not set: %v\n", id)
+		return diag.FromErr(fmt.Errorf("forwarding control rule ID not set"))
 	}
-
-	log.Printf("[INFO] Updating zia forwarding control rule ID: %v\n", id)
+	log.Printf("[INFO] Updating forwarding control rule ID: %v\n", id)
 	req := expandForwardingControlRule(d)
 
 	if err := validatePredefinedRules(req); err != nil {
@@ -444,6 +519,21 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	existingRules, err := forwarding_rules.GetAll(ctx, service)
+	if err != nil {
+		log.Printf("[ERROR] error getting all forwarding control rules: %v", err)
+	}
+	sort.Slice(existingRules, func(i, j int) bool {
+		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
+	})
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+	nextAvailableOrder := existingRules[len(existingRules)-1].Order
+	// always start rank 7 rules at the next available order after all ranked rules
+	req.Rank = 7
+
+	req.Order = nextAvailableOrder
+
 	forwardMethod := d.Get("forward_method").(string)
 	if forwardMethod == "ZPA" {
 		// Sleep for 60 seconds before invoking Update
@@ -452,7 +542,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 
 	// Retry logic in case of specific error
 	for i := 0; i < 3; i++ {
-		_, err := forwarding_rules.Update(ctx, service, id, &req)
+		_, err = forwarding_rules.Update(ctx, service, id, &req)
 		if err == nil {
 			break
 		}
@@ -468,10 +558,54 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
+	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
+	if customErr := failFastOnErrorCodes(err); customErr != nil {
+		return diag.Errorf("%v", customErr)
+	}
+
+	if err != nil {
+		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			log.Printf("[INFO] Updating forwarding control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
+		}
+		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
+	}
+
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "forwarding_control_rule",
+		func() (int, error) {
+			allRules, err := forwarding_rules.GetAll(ctx, service)
+			if err != nil {
+				return 0, err
+			}
+			// Count all rules including predefined ones for proper ordering
+			return len(allRules), nil
+		},
+		func(id int, order OrderRule) error {
+			rule, err := forwarding_rules.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+			// Optional: avoid unnecessary updates if the current order is already correct
+			if rule.Order == order.Order && rule.Rank == order.Rank {
+				return nil
+			}
+
+			rule.Order = order.Order
+			rule.Rank = order.Rank
+			_, err = forwarding_rules.Update(ctx, service, id, rule)
+			return err
+		},
+		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	)
+
+	if diags := resourceForwardingControlRuleRead(ctx, d, meta); diags.HasError() {
+		return diags
+	}
+	markOrderRuleAsDone(req.ID, "forwarding_control_rule")
+
+	// Sleep for 2 seconds before potentially triggering the activation
+	time.Sleep(2 * time.Second)
+
 	if shouldActivate() {
-		// Sleep for 2 seconds before potentially triggering the activation
-		time.Sleep(2 * time.Second)
 		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
 			return diag.FromErr(activationErr)
 		}
@@ -479,7 +613,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlRuleRead(ctx, d, meta)
+	return nil
 }
 
 func resourceForwardingControlRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

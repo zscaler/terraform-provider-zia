@@ -15,6 +15,17 @@ Use the navigation on the left to read about the available resources.
 
 -> **Disclaimer:** Please refer to our [General Support Statement](guides/support.md) before proceeding with the use of this provider. You can also refer to our [troubleshooting guide](guides/troubleshooting.md) for guidance on typical problems.
 
+## Feature Availability and API Parity
+
+-> **Important:** The ZIA Terraform provider maintain parity with publicly available API endpoints. In some instances, certain features or attributes available via the Zscaler UI may not be immediately available through the API, and therefore cannot be included in the Terraform provider. This does not indicate that the provider is lagging behind; rather, it reflects that we implement only the features that are currently exposed by the public API.
+
+If there is a feature or attribute you would like to see included in the provider, you are welcome to:
+
+- Submit a feature request via [GitHub Issues](https://github.com/zscaler/terraform-provider-zia/issues)
+- Contact Zscaler Global Support by opening a support ticket
+
+Our team continuously works with product teams to expand API coverage and will incorporate new features into the provider as they become publicly available through the API.
+
 ## Zscaler OneAPI New Framework
 
 The ZIA Terraform Provider now offers support for [OneAPI](https://help.zscaler.com/oneapi/understanding-oneapi) Oauth2 authentication through [Zidentity](https://help.zscaler.com/zidentity/what-zidentity).
@@ -93,7 +104,7 @@ As of version v4.0.0, this provider supports authentication via the new Zscaler 
 
 Zscaler OneAPI uses the OAuth 2.0 authorization framework to provide secure access to Zscaler Internet Access (ZIA) APIs. OAuth 2.0 allows third-party applications to obtain controlled access to protected resources using access tokens. OneAPI uses the Client Credentials OAuth flow, in which client applications can exchange their credentials with the authorization server for an access token and obtain access to the API resources, without any user authentication involved in the process.
 
-* [ZIA API](https://help.zscaler.com/oneapi/understanding-oneapi#:~:text=managed%20using%20OneAPI.-,ZIA%20API,-Zscaler%20Internet%20Access)
+- [ZIA API](https://help.zscaler.com/oneapi/understanding-oneapi#:~:text=managed%20using%20OneAPI.-,ZIA%20API,-Zscaler%20Internet%20Access)
 
 ### Default Environment variables
 
@@ -111,10 +122,10 @@ You can provide credentials via the `ZSCALER_CLIENT_ID`, `ZSCALER_CLIENT_SECRET`
 
 OneAPI supports authentication and can interact with alternative Zscaler enviornments i.e `beta`. To authenticate to these environments you must provide the following values:
 
-| Argument         | Description                                                                                         |   | Environment Variable     |
-|------------------|-----------------------------------------------------------------------------------------------------|---|--------------------------|
-| `vanity_domain`   | _(String)_ Refers to the domain name used by your organization |   | `ZSCALER_VANITY_DOMAIN`  |
-| `zscaler_cloud`          | _(String)_ The name of the Zidentity cloud i.e beta      |   | `ZSCALER_CLOUD`          |
+| Argument        | Description                                                         | Environment Variable     |
+|-----------------|---------------------------------------------------------------------|--------------------------|
+| `vanity_domain` | _(String)_ Refers to the domain name used by your organization     | `ZSCALER_VANITY_DOMAIN`  |
+| `zscaler_cloud` | _(String)_ The name of the Zidentity cloud i.e beta                | `ZSCALER_CLOUD`          |
 
 For example: Authenticating to Zscaler Beta environment:
 
@@ -139,7 +150,7 @@ on-demand sync of newly created roles.
 
 ### ZIA native authentication
 
-* As of version v4.0.0, this Terraform provider offers backwards compatibility to the Zscaler legacy API framework. This is the recommended authentication method for organizations whose tenants are still not migrated to [Zidentity](https://help.zscaler.com/zidentity/what-zidentity).
+- As of version v4.0.0, this Terraform provider offers backwards compatibility to the Zscaler legacy API framework. This is the recommended authentication method for organizations whose tenants are still not migrated to [Zidentity](https://help.zscaler.com/zidentity/what-zidentity).
 
 ### Examples Usage
 
@@ -173,27 +184,27 @@ provider "zia" {
 
 The ZIA Cloud is identified by several cloud name prefixes, which determines which API endpoint the requests should be sent to. The following cloud environments are supported:
 
-* `zscaler`
-* `zscloud`
-* `zscalerone`
-* `zscalertwo`
-* `zscalerthree`
-* `zscalerbeta`
-* `zscalergov`
-* `zscalerten`
-* `zspreview`
+- `zscaler`
+- `zscloud`
+- `zscalerone`
+- `zscalertwo`
+- `zscalerthree`
+- `zscalerbeta`
+- `zscalergov`
+- `zscalerten`
+- `zspreview`
 
 ### Environment variables
 
 You can provide credentials via the `ZIA_USERNAME`, `ZIA_PASSWORD`, `ZIA_API_KEY`, `ZIA_CLOUD`, `ZSCALER_USE_LEGACY_CLIENT` environment variables, representing your ZIA `username`, `password`, `api_key`,  `zia_cloud` and `use_legacy_client` respectively.
 
-| Argument     | Description | Environment variable |
-|--------------|-------------|-------------------|
-| `username`       | _(String)_ A string that contains the email ID of the API admin.| `ZIA_USERNAME` |
-| `password`       | _(String)_ A string that contains the password for the API admin.| `ZIA_PASSWORD` |
-| `api_key`       | _(String)_ A string that contains the obfuscated API key (i.e., the return value of the obfuscateApiKey() method).| `ZIA_API_KEY` |
-| `zia_cloud`       | _(String)_ The host and basePath for the cloud services API is `$zsapi.<Zscaler Cloud Name>/api/v1`.| `ZIA_CLOUD` |
-| `use_legacy_client`       | _(Bool)_ Enable use of the legacy ZIA API Client.| `ZSCALER_USE_LEGACY_CLIENT` |
+| Argument            | Description                                                                                                         | Environment variable        |
+|---------------------|---------------------------------------------------------------------------------------------------------------------|------------------------------|
+| `username`          | _(String)_ A string that contains the email ID of the API admin.                                                     | `ZIA_USERNAME`              |
+| `password`          | _(String)_ A string that contains the password for the API admin.                                                    | `ZIA_PASSWORD`              |
+| `api_key`           | _(String)_ A string that contains the obfuscated API key (i.e., the return value of the obfuscateApiKey() method).  | `ZIA_API_KEY`               |
+| `zia_cloud`         | _(String)_ The host and basePath for the cloud services API is `$zsapi.<Zscaler Cloud Name>/api/v1`.                | `ZIA_CLOUD`                 |
+| `use_legacy_client` | _(Bool)_ Enable use of the legacy ZIA API Client.                                                                    | `ZSCALER_USE_LEGACY_CLIENT` |
 
 ```sh
 # Change place holder values denoted by brackets to real values, including the
@@ -241,55 +252,55 @@ Authentication to the Zscaler Sandbox service requires the following new environ
 
 Before starting with this Terraform provider you must create an API Client in the Zscaler Identity Service portal [Zidentity](https://help.zscaler.com/zidentity/what-zidentity) or have create an API key via the legacy method.
 
-* `client_id` - (Required) This is the client ID for obtaining the API token. It can also be sourced from the `ZSCALER_CLIENT_ID` environment variable.
+- `client_id` - (Required) This is the client ID for obtaining the API token. It can also be sourced from the `ZSCALER_CLIENT_ID` environment variable.
 
-* `client_secret` - (Optional) This is the client secret for obtaining the API token. It can also be sourced from the `ZSCALER_CLIENT_SECRET` environment variable. `client_secret` conflicts with `private_key`.
+- `client_secret` - (Optional) This is the client secret for obtaining the API token. It can also be sourced from the `ZSCALER_CLIENT_SECRET` environment variable. `client_secret` conflicts with `private_key`.
 
-* `private_key` - (Optional) This is the private key for obtaining the API token (can be represented by a filepath, or the key itself). It can also be sourced from the `ZSCALER_PRIVATE_KEY` environment variable. `private_key` conflicts with `client_secret`. The format of the PK is PKCS#1 unencrypted (header starts with `-----BEGIN RSA PRIVATE KEY-----` or PKCS#8 unencrypted (header starts with `-----BEGIN PRIVATE KEY-----`).
+- `private_key` - (Optional) This is the private key for obtaining the API token (can be represented by a filepath, or the key itself). It can also be sourced from the `ZSCALER_PRIVATE_KEY` environment variable. `private_key` conflicts with `client_secret`. The format of the PK is PKCS#1 unencrypted (header starts with `-----BEGIN RSA PRIVATE KEY-----` or PKCS#8 unencrypted (header starts with `-----BEGIN PRIVATE KEY-----`).
 
-* `vanity_domain` - (Optional) This refers to the domain name used by your organization. It can also be sourced from the `ZSCALER_VANITY_DOMAIN`.
+- `vanity_domain` - (Optional) This refers to the domain name used by your organization. It can also be sourced from the `ZSCALER_VANITY_DOMAIN`.
 
-* `zscaler_cloud` - (Optional) This refers to Zscaler cloud name where API calls will be directed to i.e `beta`. It can also be sourced from the `ZSCALER_CLOUD`.
+- `zscaler_cloud` - (Optional) This refers to Zscaler cloud name where API calls will be directed to i.e `beta`. It can also be sourced from the `ZSCALER_CLOUD`.
 
-* `sandbox_token` - (Optional) This refers to the Zscaler Sandbox service API Token. It can also be sourced from the `ZSCALER_SANDBOX_TOKEN`.
+- `sandbox_token` - (Optional) This refers to the Zscaler Sandbox service API Token. It can also be sourced from the `ZSCALER_SANDBOX_TOKEN`.
 
-* `sandbox_cloud` - (Optional) This refers to the Zscaler cloud name where API calls to the sandbox service will be directed. It can also be sourced from the `ZSCALER_SANDBOX_CLOUD`. Currently the following cloud names are supported:
-  * `zscaler`
-  * `zscalerone`
-  * `zscalertwo`
-  * `zscalerthree`
-  * `zscloud`
-  * `zscalerbeta`
-  * `zscalergov`
-  * `zscalerten`
-  * `zspreview`
+- `sandbox_cloud` - (Optional) This refers to the Zscaler cloud name where API calls to the sandbox service will be directed. It can also be sourced from the `ZSCALER_SANDBOX_CLOUD`. Currently the following cloud names are supported:
+  - `zscaler`
+  - `zscalerone`
+  - `zscalertwo`
+  - `zscalerthree`
+  - `zscloud`
+  - `zscalerbeta`
+  - `zscalergov`
+  - `zscalerten`
+  - `zspreview`
 
 **NOTE**: Authentication to the Sandbox service is idependent from authentication to OneAPI or the Legacy API framework and can be set and used in standalone mode.
 
-* `http_proxy` - (Optional) This is a custom URL endpoint that can be used for unit testing or local caching proxies. Can also be sourced from the `ZSCALER_HTTP_PROXY` environment variable.
+- `http_proxy` - (Optional) This is a custom URL endpoint that can be used for unit testing or local caching proxies. Can also be sourced from the `ZSCALER_HTTP_PROXY` environment variable.
 
-* `parallelism` - (Optional) Number of concurrent requests to make within a resource where bulk operations are not possible. The provider creates a worker pool of this size to serialize API calls. The default is `1`. [Learn More](https://help.zscaler.com/oneapi/understanding-rate-limiting)
+- `parallelism` - (Optional) Number of concurrent requests to make within a resource where bulk operations are not possible. The provider creates a worker pool of this size to serialize API calls. The default is `1`. [Learn More](https://help.zscaler.com/oneapi/understanding-rate-limiting)
 
-* `max_retries` - (Optional) Maximum number of retries to attempt before returning an error, the default is `5`.
+- `max_retries` - (Optional) Maximum number of retries to attempt before returning an error, the default is `5`.
 
-* `request_timeout` - (Optional) Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.
+- `request_timeout` - (Optional) Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.
 
-* `username` - (Optional) Administrator account used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_USERNAME` environment variable.
+- `username` - (Optional) Administrator account used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_USERNAME` environment variable.
 
-* `password` - (Optional) Administrator password used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_PASSWORD` environment variable.
+- `password` - (Optional) Administrator password used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_PASSWORD` environment variable.
 
-* `api_key` - (Optional) API key found in the Zscaler Internet Access portal `Administration > Cloud Service API Security > Cloud Service API Key`. Can also be sourced from the `ZIA_API_KEY` environment variable. Ensure you have the following SKU enabled `Z_API`
+- `api_key` - (Optional) API key found in the Zscaler Internet Access portal `Administration > Cloud Service API Security > Cloud Service API Key`. Can also be sourced from the `ZIA_API_KEY` environment variable. Ensure you have the following SKU enabled `Z_API`
 
-* `zia_cloud` - (Optional) This refers to the Zscaler cloud name where api calls will be forward to. Can also be sourced from the `ZIA_CLOUD` environment variable.
+- `zia_cloud` - (Optional) This refers to the Zscaler cloud name where api calls will be forward to. Can also be sourced from the `ZIA_CLOUD` environment variable.
 Currently the following cloud names are supported:
-  * `zscaler`
-  * `zscalerone`
-  * `zscalertwo`
-  * `zscalerthree`
-  * `zscloud`
-  * `zscalerbeta`
-  * `zscalergov`
-  * `zscalerten`
-  * `zspreview`
+  - `zscaler`
+  - `zscalerone`
+  - `zscalertwo`
+  - `zscalerthree`
+  - `zscloud`
+  - `zscalerbeta`
+  - `zscalergov`
+  - `zscalerten`
+  - `zspreview`
 
-* `use_legacy_client` - (Optional) This parameter is required when using the legacy API framework. Can also be sourced from the `ZSCALER_USE_LEGACY_CLIENT` environment variable.
+- `use_legacy_client` - (Optional) This parameter is required when using the legacy API framework. Can also be sourced from the `ZSCALER_USE_LEGACY_CLIENT` environment variable.

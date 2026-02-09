@@ -157,6 +157,16 @@ func resourceFirewallIPSRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
 			},
+			"is_eun_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, Web EUN is enabled for the rule",
+			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The EUN template ID associated with the rule",
+			},
 			"locations":         setIDsSchemaTypeCustom(intPtr(8), "list of locations for which rule must be applied"),
 			"location_groups":   setIDsSchemaTypeCustom(intPtr(32), "list of locations groups"),
 			"users":             setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
@@ -338,6 +348,8 @@ func resourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("source_countries", processedSrcCountries)
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
+	_ = d.Set("is_eun_enabled", resp.IsEUNEnabled)
+	_ = d.Set("eun_template_id", resp.EUNTemplateID)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
@@ -577,6 +589,8 @@ func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.F
 		EnableFullLogging: d.Get("enable_full_logging").(bool),
 		DefaultRule:       d.Get("default_rule").(bool),
 		Predefined:        d.Get("predefined").(bool),
+		IsEUNEnabled:      d.Get("is_eun_enabled").(bool),
+		EUNTemplateID:     d.Get("eun_template_id").(int),
 		Locations:         expandIDNameExtensionsSet(d, "locations"),
 		LocationsGroups:   expandIDNameExtensionsSet(d, "location_groups"),
 		Departments:       expandIDNameExtensionsSet(d, "departments"),
