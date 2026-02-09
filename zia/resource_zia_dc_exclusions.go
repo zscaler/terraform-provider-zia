@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"strconv"
 	"time"
 
@@ -27,12 +26,9 @@ func resourceDCExclusions() *schema.Resource {
 				service := zClient.Service
 
 				id := d.Id()
-				idInt64, parseIDErr := strconv.ParseInt(id, 10, 64)
+				idInt, parseIDErr := strconv.ParseInt(id, 10, strconv.IntSize)
 				if parseIDErr == nil {
-					if idInt64 < int64(math.MinInt) || idInt64 > int64(math.MaxInt) {
-						return nil, fmt.Errorf("invalid id %q: out of range for int type", id)
-					}
-					_ = d.Set("datacenter_id", int(idInt64))
+					_ = d.Set("datacenter_id", int(idInt))
 				} else {
 					resp, err := dc_exclusions.GetByName(ctx, service, id)
 					if err == nil {
@@ -262,12 +258,9 @@ func resourceDCExclusionsID(d *schema.ResourceData) (int, error) {
 	if idStr == "" {
 		return 0, fmt.Errorf("datacenter_id is required: set it (e.g. from zia_datacenters.datacenter_id) or import this resource by id")
 	}
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(idStr, 10, strconv.IntSize)
 	if err != nil {
 		return 0, fmt.Errorf("invalid id %q: %w", idStr, err)
-	}
-	if id < int64(math.MinInt) || id > int64(math.MaxInt) {
-		return 0, fmt.Errorf("invalid id %q: out of range for int type", idStr)
 	}
 	return int(id), nil
 }
