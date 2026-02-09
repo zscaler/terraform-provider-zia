@@ -74,6 +74,10 @@ The following arguments are supported:
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
 * `number_of_applications` - (Number) Total number of applications assigned to the rule.
 
+* `eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule.
+* `browser_eun_template_id` - (Integer) The ID of the Browser Enhanced User Notification (EUN) template associated with the rule.
+
 * `applications` - (List) List of cloud applications for which rule will be applied.
   * `val` - (Number) Identifier that uniquely identifies an entity
 

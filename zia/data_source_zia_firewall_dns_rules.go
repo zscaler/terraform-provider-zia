@@ -480,6 +480,16 @@ func dataSourceFirewallDNSRules() *schema.Resource {
 					},
 				},
 			},
+			"is_web_eun_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, Web EUN is enabled for the rule",
+			},
+			"default_dns_rule_name_used": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, the default DNS rule name is used for the rule",
+			},
 		},
 	}
 }
@@ -531,6 +541,8 @@ func dataSourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData,
 		_ = d.Set("default_rule", resp.DefaultRule)
 		_ = d.Set("predefined", resp.Predefined)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
+		_ = d.Set("is_web_eun_enabled", resp.IsWebEUNEnabled)
+		_ = d.Set("default_dns_rule_name_used", resp.DefaultDNSRuleNameUsed)
 
 		if err := d.Set("application_groups", flattenIDNameExtensions(resp.ApplicationGroups)); err != nil {
 			return diag.FromErr(err)

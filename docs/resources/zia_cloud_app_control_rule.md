@@ -33,10 +33,10 @@ resource "zia_cloud_app_control_rule" "webmail_rule" {
   rank                = 7
   state               = "ENABLED"
   type                = "WEBMAIL"
-  
+
   # Use data source to get valid actions
   actions             = data.zia_cloud_app_control_rule_actions.webmail_actions.available_actions_without_isolate
-  
+
   applications        = ["GOOGLE_WEBMAIL", "YAHOO_WEBMAIL"]
   device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
   user_agent_types    = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
@@ -58,10 +58,10 @@ resource "zia_cloud_app_control_rule" "ai_control" {
   rank         = 7
   state        = "ENABLED"
   type         = "AI_ML"
-  
+
   # Automatically gets all valid actions except ISOLATE
   actions      = data.zia_cloud_app_control_rule_actions.ai_actions.available_actions_without_isolate
-  
+
   applications = ["CHATGPT_AI"]
 }
 ```
@@ -81,10 +81,10 @@ resource "zia_cloud_app_control_rule" "file_sharing" {
   rank         = 7
   state        = "ENABLED"
   type         = "FILE_SHARE"
-  
+
   # Returns only actions supported by both Dropbox and OneDrive
   actions      = data.zia_cloud_app_control_rule_actions.file_share_actions.available_actions_without_isolate
-  
+
   applications = ["DROPBOX", "ONEDRIVE"]
 }
 ```
@@ -110,12 +110,12 @@ resource "zia_cloud_app_control_rule" "isolate_chatgpt" {
   rank         = 7
   state        = "ENABLED"
   type         = "AI_ML"
-  
+
   # Use isolate_actions for CBI rules
   actions      = data.zia_cloud_app_control_rule_actions.chatgpt_isolate.isolate_actions
-  
+
   applications = ["CHATGPT_AI"]
-  
+
   # Required for ISOLATE actions
   cbi_profile {
     id   = data.zia_cloud_browser_isolation_profile.cbi_profile.id
@@ -141,10 +141,10 @@ resource "zia_cloud_app_control_rule" "slack_allow_only" {
   rank         = 7
   state        = "ENABLED"
   type         = "ENTERPRISE_COLLABORATION"
-  
+
   # Only ALLOW_ actions
   actions      = data.zia_cloud_app_control_rule_actions.slack_allow.filtered_actions
-  
+
   applications = ["SLACK"]
 }
 ```
@@ -166,12 +166,12 @@ resource "zia_cloud_app_control_rule" "social_media_time_restricted" {
   type                  = "SOCIAL_NETWORKING"
   actions               = data.zia_cloud_app_control_rule_actions.social_media_actions.available_actions_without_isolate
   applications          = ["FACEBOOK"]
-  
+
   enforce_time_validity = true
   validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
   validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
   validity_time_zone_id = "US/Pacific"
-  
+
   time_quota            = 15
   size_quota            = 10
   device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
@@ -222,6 +222,9 @@ The following arguments are supported:
 
 * `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
+* `eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule.
+* `browser_eun_template_id` - (Integer) The ID of the Browser Enhanced User Notification (EUN) template associated with the rule.
 * `tenancy_profile_ids` - (List of Numbers) This is an immutable reference to an entity. which mainly consists of id and name.
   * `id` - (Number) Identifier that uniquely identifies an entity
 
@@ -262,9 +265,10 @@ The following arguments are supported:
 ### Using the Data Source for Actions
 
 **Best Practice**: Always use the `zia_cloud_app_control_rule_actions` data source to retrieve valid actions for your applications. The data source automatically handles:
-- Application-specific action support
-- Action intersections when multiple applications are configured
-- Separation of ISOLATE actions from standard actions
+
+* Application-specific action support
+* Action intersections when multiple applications are configured
+* Separation of ISOLATE actions from standard actions
 
 ```hcl
 data "zia_cloud_app_control_rule_actions" "my_actions" {
@@ -280,10 +284,11 @@ resource "zia_cloud_app_control_rule" "example" {
 ### ISOLATE Actions Requirements
 
 When using ISOLATE actions:
-- ISOLATE actions **cannot be mixed** with other action types (ALLOW, DENY, BLOCK, CAUTION)
-- ISOLATE actions **require** `cbi_profile` block with a valid Cloud Browser Isolation profile
-- ISOLATE actions **cannot** have `browser_eun_template_id` set
-- Create separate rules for ISOLATE vs non-ISOLATE actions
+
+* ISOLATE actions **cannot be mixed** with other action types (ALLOW, DENY, BLOCK, CAUTION)
+* ISOLATE actions **require** `cbi_profile` block with a valid Cloud Browser Isolation profile
+* ISOLATE actions **cannot** have `browser_eun_template_id` set
+* Create separate rules for ISOLATE vs non-ISOLATE actions
 
 ### Multiple Applications
 
@@ -292,9 +297,11 @@ When configuring multiple applications in a single rule, only actions supported 
 ### Action Validation
 
 The resource validates actions during `terraform plan`. If invalid actions are detected, an error message will show:
-- Which actions are invalid
-- List of valid actions for your configuration
-- Suggestion to use the data source
+
+* Which actions are invalid
+
+* List of valid actions for your configuration
+* Suggestion to use the data source
 
 For more information, see the [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions) data source documentation.
 

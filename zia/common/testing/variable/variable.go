@@ -285,3 +285,22 @@ const (
 	DisplayCompName                      = true
 	DisplayCompLogo                      = true
 )
+
+// DC Exclusions
+const (
+	DCExclusionsDescription = "tf-acc-dc-exclusions"
+)
+
+// Rule Labels
+const (
+	ExtranetName               = "testAcc_extranet"
+	ExtranetDescription        = "testAcc_extranet"
+	ExtranetDNSName            = "testAcc_extranet_dns"
+	ExtranetDNSServer          = "192.168.1.1"
+	ExtranetDNSServer2         = "192.168.1.2"
+	ExtranetDNSUseAsDefault    = true
+	ExtranetIPPoolName         = "testAcc_extranet_ip_pool"
+	ExtranetIPPoolStart        = "192.168.1.1"
+	ExtranetIPPoolEnd          = "192.168.1.2"
+	ExtranetIPPoolUseAsDefault = true
+)

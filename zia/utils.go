@@ -297,6 +297,55 @@ func ConvertRFC1123ToEpoch(timeStr string) (int, error) {
 	return int(t.Unix()), nil
 }
 
+// ExclusionTimeUTCLayout is the layout for DC exclusion / subcloud exclusion times (UTC): "MM/DD/YYYY HH:MM:SS am/pm"
+const ExclusionTimeUTCLayout = "01/02/2006 03:04:05 pm"
+
+// ParseExclusionTimeUTC parses a string in "MM/DD/YYYY HH:MM:SS am/pm" (UTC) and returns Unix epoch seconds.
+// Seconds are required. Used by both zia_dc_exclusions and zia_sub_cloud for exclusion time conversion.
+func ParseExclusionTimeUTC(timeStr string) (int, error) {
+	s := strings.TrimSpace(timeStr)
+	if s == "" {
+		return 0, fmt.Errorf("exclusion time string is empty")
+	}
+	t, err := time.ParseInLocation(ExclusionTimeUTCLayout, s, time.UTC)
+	if err != nil {
+		return 0, fmt.Errorf("invalid time format: %v. Expected format: MM/DD/YYYY HH:MM:SS am/pm (e.g. 02/19/2026 11:59:00 pm)", err)
+	}
+	return int(t.Unix()), nil
+}
+
+// FormatExclusionTimeUTC formats Unix epoch seconds as "MM/DD/YYYY HH:MM:SS am/pm" in UTC.
+// Used by both zia_dc_exclusions and zia_sub_cloud when writing exclusion times to state.
+func FormatExclusionTimeUTC(epoch int) string {
+	return time.Unix(int64(epoch), 0).UTC().Format(ExclusionTimeUTCLayout)
+}
+
+// ResolveExclusionTimeEpoch returns Unix epoch from either the UTC string (MM/DD/YYYY HH:MM:SS am/pm) or the epoch int.
+// If utcStr is non-empty it is parsed and overrides epochVal. Otherwise epochVal is used (hasEpoch must be true).
+// Used by both zia_dc_exclusions and zia_sub_cloud so exclusion time handling is consistent.
+func ResolveExclusionTimeEpoch(hasEpoch bool, epochVal int, utcStr string) (int, error) {
+	s := strings.TrimSpace(utcStr)
+	if s != "" {
+		return ParseExclusionTimeUTC(s)
+	}
+	if hasEpoch {
+		return epochVal, nil
+	}
+	return 0, fmt.Errorf("either epoch or UTC string must be set")
+}
+
+// ValidateExclusionTimeUTC validates that the value is in "MM/DD/YYYY HH:MM:SS am/pm" (UTC) format. Empty string is allowed (optional field).
+func ValidateExclusionTimeUTC(v interface{}, k string) (warnings []string, errors []error) {
+	s, ok := v.(string)
+	if !ok || s == "" {
+		return nil, nil
+	}
+	if _, err := ParseExclusionTimeUTC(s); err != nil {
+		errors = append(errors, fmt.Errorf("%s: %w", k, err))
+	}
+	return nil, errors
+}
+
 func convertAndValidateSizeQuota(sizeQuotaMB int) (int, error) {
 	const (
 		minMB = 10

@@ -29,6 +29,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/extranet"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/staticips"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/vpncredentials"
@@ -988,6 +989,39 @@ func sweepTestUsers(client *testClient) error {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
 			if _, err := users.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.Users, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestExtranet(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	rule, err := extranet.GetAll(context.Background(), service, nil)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rule)))
+	for _, b := range rule {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := extranet.Delete(context.Background(), service, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}

@@ -75,6 +75,8 @@ data "zia_cloud_applications" "this" {
 * `capture_pcap` - (Boolean) Value that indicates whether packet capture (PCAP) is enabled or not
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud DNS Rule or not
+* `is_web_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `default_dns_rule_name_used` - (Boolean) A Boolean value that indicates whether the default DNS rule name is used for the rule.
 
 `Devices`
 

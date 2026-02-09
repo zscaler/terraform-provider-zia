@@ -16,9 +16,10 @@ description: |-
 The **zia_firewall_dns_rule** resource allows the creation and management of ZIA Cloud Firewall DNS rules in the Zscaler Internet Access.
 
 **NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted (not all attributes are supported on predefined rules). The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
-- Automatically place new rules at the correct position
-- Handle reordering around predefined rules
-- Avoid configuration drift
+
+* Automatically place new rules at the correct position
+* Handle reordering around predefined rules
+* Avoid configuration drift
 
 Example: If there are predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
@@ -155,6 +156,8 @@ data "zia_cloud_applications" "this" {
 * `capture_pcap` - (Boolean) Value that indicates whether packet capture (PCAP) is enabled or not
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud DNS Rule or not
+* `is_web_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `default_dns_rule_name_used` - (Boolean) A Boolean value that indicates whether the default DNS rule name is used for the rule.
 
 `Devices`
 

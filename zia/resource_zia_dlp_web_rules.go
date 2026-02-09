@@ -247,6 +247,11 @@ func resourceDlpWebRules() *schema.Resource {
 				Computed:    true,
 				Description: "Indicates a DLP policy rule without content inspection, when the value is set to true.",
 			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The EUN template ID associated with the rule",
+			},
 			"zscaler_incident_receiver": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -523,6 +528,7 @@ func resourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta i
 	_ = d.Set("dlp_download_scan_enabled", resp.DLPDownloadScanEnabled)
 	_ = d.Set("zcc_notifications_enabled", resp.ZCCNotificationsEnabled)
 	_ = d.Set("zscaler_incident_receiver", resp.ZscalerIncidentReceiver)
+	_ = d.Set("eun_template_id", resp.EUNTemplateID)
 
 	// Flatten sub_rules
 	subRuleIDs := make([]interface{}, len(resp.SubRules))
@@ -779,6 +785,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		InspectHttpGetEnabled:    d.Get("inspect_http_get_enabled").(bool),
 		MinSize:                  d.Get("min_size").(int),
 		ParentRule:               d.Get("parent_rule").(int),
+		EUNTemplateID:            d.Get("eun_template_id").(int),
 		Protocols:                SetToStringList(d, "protocols"),
 		FileTypes:                SetToStringList(d, "file_types"),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
