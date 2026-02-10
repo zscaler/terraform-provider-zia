@@ -143,7 +143,7 @@ func resourceSandboxRules() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Description: `The list of URL Categories to which the SSL inspection rule must be applied.
+				Description: `The list of URL Categories to which the sandbox rule must be applied.
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
@@ -211,7 +211,7 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentSandboxOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating sandbox rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -527,4 +527,22 @@ func filterOutDefaultRule(rules []sandbox_rules.SandboxRules) []sandbox_rules.Sa
 		}
 	}
 	return filteredRules
+}
+
+func currentSandboxOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := sandbox_rules.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
+	}
+	return result
 }

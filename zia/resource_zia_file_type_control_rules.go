@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -210,7 +211,7 @@ func resourceFileTypeControlRules() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Description: `The list of URL Categories to which the SSL inspection rule must be applied.
+				Description: `The list of URL Categories to which the file type control rule rule must be applied.
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
@@ -246,10 +247,8 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 	service := zClient.Service
 
 	req := expandFileTypeControlRules(d)
+	log.Printf("[INFO] Creating zia file type control rule rule\n%+v\n", req)
 
-	log.Printf("[INFO] Creating zia file type control rule\n%+v\n", req)
-
-	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
 	for {
@@ -275,7 +274,6 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			req.Rank = 7
 		}
 		req.Order = fileTypeStartingOrder
-
 		resp, err := filetypecontrol.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
@@ -284,16 +282,16 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		if err != nil {
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
-				if time.Since(start) < timeout {
-					time.Sleep(5 * time.Second) // Wait before retrying
-					continue
+			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+				if reg.MatchString(err.Error()) {
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentFileTypeControlOrderVsRankWording(ctx, zClient), err))
 				}
 			}
 			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 		}
 
-		log.Printf("[INFO] Created zia file type control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		log.Printf("[INFO] Created zia file type control rule rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "file_type_control_rules"
 
@@ -595,6 +593,24 @@ func expandFileTypeControlRules(d *schema.ResourceData) filetypecontrol.FileType
 		TimeWindows:          expandIDNameExtensionsSet(d, "time_windows"),
 		Labels:               expandIDNameExtensionsSet(d, "labels"),
 		ZPAAppSegments:       expandZPAAppSegmentSet(d, "zpa_app_segments"),
+	}
+	return result
+}
+
+func currentFileTypeControlOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := filetypecontrol.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
 	}
 	return result
 }

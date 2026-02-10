@@ -261,7 +261,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentFirewallDNSOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating firewall dns rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -643,6 +643,24 @@ func expandFirewallDNSRules(d *schema.ResourceData) firewalldnscontrolpolicies.F
 		DNSGateway:             expandIDNameSet(d, "dns_gateway"),
 		EDNSEcsObject:          expandIDNameSet(d, "edns_ecs_object"),
 		ZPAIPGroup:             expandIDNameSet(d, "zpa_ip_group"),
+	}
+	return result
+}
+
+func currentFirewallDNSOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
 	}
 	return result
 }

@@ -335,24 +335,6 @@ func resourceURLFilteringRules() *schema.Resource {
 	}
 }
 
-func currentOrderVsRankWording(ctx context.Context, zClient *Client) string {
-	service := zClient.Service
-
-	list, err := urlfilteringpolicies.GetAll(ctx, service)
-	if err != nil {
-		return ""
-	}
-	result := ""
-	for i, r := range list {
-		if i > 0 {
-			result += ", "
-		}
-		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
-
-	}
-	return result
-}
-
 func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
@@ -616,6 +598,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
 		log.Printf("[ERROR] url filtering rule ID not set: %v\n", id)
+		return diag.FromErr(fmt.Errorf("url filtering rule ID not set"))
 	}
 	log.Printf("[INFO] Updating url filtering rule ID: %v\n", id)
 	req := expandURLFilteringRules(d)
@@ -744,7 +727,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	// Retrieve the order and fallback to 1 if it's 0
 	order := d.Get("order").(int)
 	if order == 0 {
-		log.Printf("[WARN] expandSSLInspectionRules: Rule ID %d has order=0. Falling back to order=1", id)
+		log.Printf("[WARN] expandURLFilteringRules: Rule ID %d has order=0. Falling back to order=1", id)
 		order = 1
 	}
 
@@ -870,4 +853,22 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 			"url":  cbiProfile.URL,
 		},
 	}
+}
+
+func currentOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := urlfilteringpolicies.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
+	}
+	return result
 }

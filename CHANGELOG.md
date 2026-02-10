@@ -1,10 +1,23 @@
 # Changelog
 
-## 4.7.0 (February, xx 2026)
+## 4.7.1 (February, 10 2026)
 
 ### Notes
 
-- Release date: **(February, xx 2026)**
+- Release date: **(February, 10 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #519](https://github.com/zscaler/terraform-provider-zia/pull/519) - Fixed `zia_url_filtering_rules` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
+
+- [PR #519](https://github.com/zscaler/terraform-provider-zia/pull/519) - Fixed `zia_url_filtering_rules`, `zia_firewall_ips_rule`, `zia_nat_control_rules`, `zia_ssl_inspection_rules`, `zia_file_type_control_rules` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
+
+## 4.7.0 (February, 9 2026)
+
+### Notes
+
+- Release date: **(February, 9 2026)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
