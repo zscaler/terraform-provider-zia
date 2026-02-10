@@ -316,7 +316,7 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentForwardingControlOrderVsRankWording(ctx, zClient), err))
 				}
 			}
 			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
@@ -711,5 +711,23 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
 	}
 
+	return result
+}
+
+func currentForwardingControlOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := forwarding_rules.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
+	}
 	return result
 }

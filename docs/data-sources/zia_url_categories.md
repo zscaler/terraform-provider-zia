@@ -58,6 +58,14 @@ data "zia_url_categories" "all_types_example" {
 }
 ```
 
+## Example Usage - Query Predefined URL Categories
+
+```hcl
+data "zia_url_categories" "this" {
+    id = "CORPORATE_MARKETING"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -66,8 +74,8 @@ The following arguments are supported:
 
 At least one of the following must be provided:
 
-* `id` - (String) URL category ID
-* `configured_name` - (String) Name of the URL category
+* `id` - (String) URL category ID. Consult the API documentation here for the updated list of [predefined URL categories](https://automate.zscaler.com/docs/api-reference-and-guides/api-reference/zia/url-categories/get-url-categories)
+* `configured_name` - (String) Name of the URL category. This attribute is only returned for custom URL categories.
 
 ### Optional
 
@@ -75,7 +83,7 @@ At least one of the following must be provided:
   * `ALL` (default) - Retrieves all category types (URL_CATEGORY and TLD_CATEGORY)
   * `URL_CATEGORY` - Retrieves only URL-based custom categories
   * `TLD_CATEGORY` - Retrieves only TLD-based custom categories
-  
+
   **Note:** When searching by name, this parameter filters which types of categories are searched. For TLD categories, you must either use `type = "TLD_CATEGORY"` or `type = "ALL"` (default).
 
 ## Attribute Reference

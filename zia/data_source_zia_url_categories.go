@@ -25,6 +25,11 @@ func dataSourceURLCategories() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"category_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"keywords": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -269,6 +274,8 @@ func dataSourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, me
 	_ = d.Set("regex_patterns", resp.RegexPatterns)
 	_ = d.Set("regex_patterns_retaining_parent_category", resp.RegexPatternsRetainingParentCategory)
 	_ = d.Set("url_type", resp.UrlType)
+	_ = d.Set("category_group", resp.CategoryGroup)
+	_ = d.Set("super_category", resp.SuperCategory)
 
 	if err := d.Set("scopes", flattenScopes(resp)); err != nil {
 		return diag.FromErr(err)

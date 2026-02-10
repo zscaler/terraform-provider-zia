@@ -12,15 +12,28 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.6.71``
+``Last updated: v4.7.1``
 
 ---
 
-## 4.6.71 (February, 4 2026)
+## 4.7.1 (February, 10 2026)
 
 ### Notes
 
-- Release date: **(February, 4 2026)**
+- Release date: **(February, 10 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #519](https://github.com/zscaler/terraform-provider-zia/pull/519) - Fixed `zia_url_filtering_rules` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
+
+- [PR #519](https://github.com/zscaler/terraform-provider-zia/pull/519) - Fixed `zia_url_filtering_rules`, `zia_firewall_ips_rule`, `zia_nat_control_rules`, `zia_ssl_inspection_rules`, `zia_file_type_control_rules` resource reorder logic due to recent API enforcement changes. Included safeguard to prevent unnecessary reordering when the order is already correct.
+
+## 4.7.0 (February, 9 2026)
+
+### Notes
+
+- Release date: **(February, 9 2026)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
@@ -28,9 +41,18 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 - [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added new `forward_method` `ENATDEDIP` to resource `zia_forwarding_control_rule`.
 
 - [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added new attributes to ZIA:
-  - `zia_firewall_ips_rule`: `eun_enabled`, and `eun_template_id`
+  - `zia_firewall_ips_rule`: `is_eun_enabled`, and `eun_template_id`
   - `zia_firewall_dns_rule`: `is_web_eun_enabled` and `default_dns_rule_name_used`
   - `zia_location_management`: `sub_loc_scope_enabled`, `sub_loc_scope`, `sub_loc_scope_values`, `sub_loc_acc_ids`
+  - `zia_dlp_web_rules`: `eun_template_id`
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added the following new datasources and resources:
+  - `zia_sub_cloud` - Manage Zscaler Sub-Clouds in ZIA
+  - `zia_extranet` - Manage Extranet configurations in ZIA
+  - `zia_dc_exclusions` - Manage Extranet configurations in ZIA
+
+- [PR #516](https://github.com/zscaler/terraform-provider-zia/pull/516) - Added the following new datasources
+  - `zia_datacenters` - Retrieves the list of Zscaler data centers (DCs) that can be excluded from service
 
 ### Bug Fixes
 

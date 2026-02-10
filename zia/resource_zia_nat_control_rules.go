@@ -217,7 +217,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentNatControlOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating nat control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -588,6 +588,24 @@ func expandNatControlRules(d *schema.ResourceData) nat_control_policies.NatContr
 		Labels:            expandIDNameExtensionsSet(d, "labels"),
 		DeviceGroups:      expandIDNameExtensionsSet(d, "device_groups"),
 		Devices:           expandIDNameExtensionsSet(d, "devices"),
+	}
+	return result
+}
+
+func currentNatControlOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := nat_control_policies.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
 	}
 	return result
 }

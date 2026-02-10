@@ -163,7 +163,7 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
 			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
 				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentOrderVsRankWording(ctx, zClient), err))
+					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, order, req.Rank, currentBandwidthControlOrderVsRankWording(ctx, zClient), err))
 				}
 				if time.Since(start) < timeout {
 					log.Printf("[INFO] Creating bandwidth control rule name: %v, got INVALID_INPUT_ARGUMENT\n", req.Name)
@@ -434,4 +434,22 @@ func filterOutBandwidthDefaultRule(rules []bandwidth_control_rules.BandwidthCont
 		}
 	}
 	return filteredRules
+}
+
+func currentBandwidthControlOrderVsRankWording(ctx context.Context, zClient *Client) string {
+	service := zClient.Service
+
+	list, err := bandwidth_control_rules.GetAll(ctx, service)
+	if err != nil {
+		return ""
+	}
+	result := ""
+	for i, r := range list {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("Rank %d VS Order %d", r.Rank, r.Order)
+
+	}
+	return result
 }
