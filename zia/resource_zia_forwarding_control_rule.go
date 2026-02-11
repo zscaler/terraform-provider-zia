@@ -357,6 +357,7 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		_ = d.Set("rule_id", resp.ID)
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 
 		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 		if shouldActivate() {
@@ -601,6 +602,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "forwarding_control_rule")
+	waitForReorder("forwarding_control_rule")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

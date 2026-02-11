@@ -283,6 +283,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		_ = d.Set("rule_id", resp.ID)
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 
 		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 		if shouldActivate() {
@@ -502,6 +503,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "firewall_ips_rule")
+	waitForReorder("firewall_ips_rule")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

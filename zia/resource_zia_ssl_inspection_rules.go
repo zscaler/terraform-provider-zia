@@ -453,6 +453,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		_ = d.Set("rule_id", resp.ID)
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 
 		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 		if shouldActivate() {
@@ -643,6 +644,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "ssl_inspection_rules")
+	waitForReorder("ssl_inspection_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

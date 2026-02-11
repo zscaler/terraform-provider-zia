@@ -213,6 +213,7 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "bandwidth_control_rule")
+		waitForReorder("bandwidth_control_rule")
 		break
 	}
 
@@ -358,6 +359,7 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 			return diags
 		}
 		markOrderRuleAsDone(req.ID, "bandwidth_control_rule")
+		waitForReorder("bandwidth_control_rule")
 		break
 	}
 
