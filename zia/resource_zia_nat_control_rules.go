@@ -274,6 +274,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "nat_control_rules")
+		waitForReorder("nat_control_rules")
 		break
 	}
 
@@ -484,6 +485,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diags
 		}
 		markOrderRuleAsDone(req.ID, "nat_control_rules")
+		waitForReorder("nat_control_rules")
 		break
 	}
 

@@ -427,6 +427,7 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			return diags
 		}
 		markOrderRuleAsDone(resp.ID, "casb_dlp_rules")
+		waitForReorder("casb_dlp_rules")
 		break
 	}
 
@@ -652,6 +653,7 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diags
 		}
 		markOrderRuleAsDone(req.ID, "casb_dlp_rules")
+		waitForReorder("casb_dlp_rules")
 		break
 	}
 

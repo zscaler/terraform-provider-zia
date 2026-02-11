@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.1``
+``Last updated: v4.7.2``
 
 ---
+
+## 4.7.2 (February, 11 2026)
+
+### Notes
+
+- Release date: **(February, 11 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #521](https://github.com/zscaler/terraform-provider-zia/pull/521) - Fixed rule reorder race condition where the reorder timer could fire before all rules of a type were registered, causing incorrect ordering when multiple rule types are deployed together. The reorder goroutine now runs asynchronously with automatic re-run for late-arriving rules, and all rules wait for the reorder to complete before reading final state.
+
+- [PR #521](https://github.com/zscaler/terraform-provider-zia/pull/521) Fixed `zia_cloud_app_control_rule` to allow users to hardcode the `actions` value in case it isn't returned by the API via the data source `zia_cloud_app_control_rule_actions`
 
 ## 4.7.1 (February, 10 2026)
 

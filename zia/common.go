@@ -1091,13 +1091,15 @@ type orderWithState struct {
 }
 
 type listrules struct {
-	orders  map[string]map[int]orderWithState
-	orderer map[string]int
+	orders      map[string]map[int]orderWithState
+	orderer     map[string]int
+	reorderDone map[string]chan struct{}
 	sync.Mutex
 }
 
 var rules = listrules{
-	orders: make(map[string]map[int]orderWithState),
+	orders:      make(map[string]map[int]orderWithState),
+	reorderDone: make(map[string]chan struct{}),
 }
 
 type RuleIDOrderPair struct {
@@ -1116,45 +1118,61 @@ func (p RuleIDOrderPairList) Less(i, j int) bool {
 }
 func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 
+// reorderTickInterval controls how often the reorder ticker fires.
+// Default is 30 seconds. Tests can override this to speed up reorder cycles.
+var reorderTickInterval = 30 * time.Second
+
 func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
-	ticker := time.NewTicker(time.Second * 30) // create a ticker that ticks every 30 seconds
-	defer ticker.Stop()                        // stop the ticker when the loop ends
-	numResources := []int{0, 0, 0}
+	ticker := time.NewTicker(reorderTickInterval)
+	defer ticker.Stop()
+	lastReorderedSize := 0
+	stableAfterReorder := 0
 	for {
 		select {
 		case <-ticker.C:
 			rules.Lock()
 			size := len(rules.orders[resourceType])
-			done := true
-			// first check if all rules creation is done
+			allDone := true
 			for _, v := range rules.orders[resourceType] {
 				if !v.done {
-					done = false
+					allDone = false
+					break
 				}
 			}
-			numResources[0], numResources[1], numResources[2] = numResources[1], numResources[2], size
-			if done && numResources[0] == numResources[1] && numResources[1] == numResources[2] {
-				// No changes after a while (4 runs), so reorder, and return
-				count, _ := getCount()
-				// sort by order (ascending)
-				sorted := sortOrders(rules.orders[resourceType])
-				log.Printf("[INFO] sorting filtering rule after tick; sorted:%v", sorted)
-				if beforeReorder != nil {
-					beforeReorder()
-				}
-				for _, v := range sorted {
-					if v.Order.Order <= count {
-						if err := updateOrder(v.ID, v.Order); err != nil {
-							log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
+
+			if allDone && size > 0 {
+				if size != lastReorderedSize {
+					// New rules registered since last reorder — reorder with the full set
+					count, _ := getCount()
+					sorted := sortOrders(rules.orders[resourceType])
+					log.Printf("[INFO] sorting filtering rule after tick; sorted:%v (size changed from %d to %d)", sorted, lastReorderedSize, size)
+					if beforeReorder != nil {
+						beforeReorder()
+					}
+					for _, v := range sorted {
+						if v.Order.Order <= count {
+							if err := updateOrder(v.ID, v.Order); err != nil {
+								log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
+							}
 						}
 					}
+					lastReorderedSize = size
+					stableAfterReorder = 0
+				} else {
+					// Same size as last reorder — count towards stability
+					stableAfterReorder++
+					log.Printf("[INFO] reorder stable tick %d/3 for %s (%d rules)", stableAfterReorder, resourceType, size)
 				}
-				rules.Unlock()
-				return
+
+				if stableAfterReorder >= 3 {
+					log.Printf("[INFO] reorder complete for %s: %d rules, stable for 3 ticks", resourceType, size)
+					rules.Unlock()
+					return
+				}
 			}
 			rules.Unlock()
 		default:
-			time.Sleep(time.Second * 15)
+			time.Sleep(reorderTickInterval / 2)
 		}
 	}
 }
@@ -1175,25 +1193,55 @@ type OrderRule struct {
 func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
 	rules.Lock()
 	shouldCallReorder := false
-	if len(rules.orders) == 0 {
-		rules.orders = map[string]map[int]orderWithState{}
+	if rules.orderer == nil {
 		rules.orderer = map[string]int{}
+		rules.reorderDone = map[string]chan struct{}{}
+	}
+	if rules.orders == nil {
+		rules.orders = map[string]map[int]orderWithState{}
 	}
 	if _, ok := rules.orderer[resourceType]; ok {
-		shouldCallReorder = false
+		// Check if the previous reorder goroutine has already finished
+		select {
+		case <-rules.reorderDone[resourceType]:
+			// Channel is closed — previous reorder finished.
+			// Start a new reorder cycle for late-arriving rules.
+			log.Printf("[INFO] previous reorder for %s completed, starting new cycle for rule:%d", resourceType, id)
+			rules.reorderDone[resourceType] = make(chan struct{})
+			shouldCallReorder = true
+		default:
+			// Reorder goroutine still running — just register, don't start another
+			shouldCallReorder = false
+		}
 	} else {
 		rules.orderer[resourceType] = id
 		shouldCallReorder = true
+		rules.reorderDone[resourceType] = make(chan struct{})
 	}
-	if len(rules.orders[resourceType]) == 0 {
+	if rules.orders[resourceType] == nil {
 		rules.orders[resourceType] = map[int]orderWithState{}
 	}
-	rules.orders[resourceType][id] = orderWithState{order, shouldCallReorder}
+	rules.orders[resourceType][id] = orderWithState{order, false}
 	rules.Unlock()
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
-		// one resource will wait until all resources are done and reorder then return
-		reorderAll(resourceType, getCount, updateOrder, beforeReorder)
+		doneCh := rules.reorderDone[resourceType]
+		go func() {
+			reorderAll(resourceType, getCount, updateOrder, beforeReorder)
+			close(doneCh)
+		}()
+	}
+}
+
+// waitForReorder blocks until the reorder goroutine for the given resource type
+// has completed. All rules should call this after markOrderRuleAsDone and before
+// reading the resource, to ensure the final order is reflected in the API.
+func waitForReorder(resourceType string) {
+	rules.Lock()
+	ch := rules.reorderDone[resourceType]
+	rules.Unlock()
+	if ch != nil {
+		<-ch
 	}
 }
 

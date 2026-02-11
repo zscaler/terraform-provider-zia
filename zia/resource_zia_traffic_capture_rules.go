@@ -280,6 +280,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 	_ = d.Set("rule_id", resp.ID)
 
 	markOrderRuleAsDone(resp.ID, resourceType)
+	waitForReorder(resourceType)
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {
@@ -503,6 +504,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
+	waitForReorder("firewall_filtering_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

@@ -433,6 +433,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		_ = d.Set("rule_id", resp.ID)
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 
 		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 		if shouldActivate() {
@@ -676,6 +677,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "url_filtering_rules")
+	waitForReorder("url_filtering_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

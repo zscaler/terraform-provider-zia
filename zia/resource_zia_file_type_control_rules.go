@@ -328,6 +328,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		_ = d.Set("rule_id", resp.ID)
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 
 		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 		if shouldActivate() {
@@ -508,6 +509,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		return diags
 	}
 	markOrderRuleAsDone(req.ID, "file_type_control_rules")
+	waitForReorder("file_type_control_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

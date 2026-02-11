@@ -469,6 +469,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		markOrderRuleAsDone(resp.ID, resourceType)
+		waitForReorder(resourceType)
 		break
 	}
 
@@ -719,6 +720,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	)
 
 	markOrderRuleAsDone(id, resourceType)
+	waitForReorder(resourceType)
 
 	return nil
 }

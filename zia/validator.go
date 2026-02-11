@@ -709,6 +709,11 @@ func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff
 		if err != nil {
 			// If API call fails, log warning but don't block (graceful degradation)
 			log.Printf("[WARN] Could not validate actions via API: %v. Skipping action validation.", err)
+		} else if len(validActions) == 0 {
+			// If API returns an empty list, skip validation and allow user-specified actions.
+			// Some applications return empty available actions from the API even though
+			// valid actions exist. In this case, trust the user's configuration.
+			log.Printf("[WARN] API returned empty valid actions for rule_type=%s, applications=%v. Skipping action validation to allow user-specified actions.", ruleType, applications)
 		} else {
 			// Create set of valid actions for quick lookup
 			validSet := make(map[string]bool)
