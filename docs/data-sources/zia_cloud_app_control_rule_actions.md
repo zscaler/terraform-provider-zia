@@ -15,11 +15,14 @@ description: |-
 
 Use the **zia_cloud_app_control_rule_actions** data source to retrieve the available actions for specific cloud applications and rule types. This data source automatically handles action intersections when multiple applications are specified, returning only actions supported by ALL applications.
 
+**NOTE**: Note that some new actions may not be returned in the API response. This is a known issue, and is being investigated via the following issue `ONEAPI-2421`. Please contact Zscaler support for an update if the action you're attempting ton configure isn't supported or returned in the response.
+
 The data source provides multiple output attributes for different use cases:
-- **`available_actions_without_isolate`** - Most common use case for standard rules
-- **`isolate_actions`** - For Cloud Browser Isolation (CBI) rules
-- **`filtered_actions`** - Custom filtering by action type (ALLOW, DENY, etc.)
-- **`available_actions`** - Complete list of all actions
+
+* **`available_actions_without_isolate`** - Most common use case for standard rules
+* **`isolate_actions`** - For Cloud Browser Isolation (CBI) rules
+* **`filtered_actions`** - Custom filtering by action type (ALLOW, DENY, etc.)
+* **`available_actions`** - Complete list of all actions
 
 ## Example Usage - Standard Rule (Most Common)
 
@@ -38,7 +41,7 @@ resource "zia_cloud_app_control_rule" "standard" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # Use available_actions_without_isolate for standard rules
   actions = data.zia_cloud_app_control_rule_actions.chatgpt.available_actions_without_isolate
 }
@@ -65,10 +68,10 @@ resource "zia_cloud_app_control_rule" "isolate" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # Use isolate_actions for CBI rules
   actions = data.zia_cloud_app_control_rule_actions.chatgpt.isolate_actions
-  
+
   # Required when using ISOLATE actions
   cbi_profile {
     id   = data.zia_cloud_browser_isolation_profile.profile.id
@@ -95,7 +98,7 @@ resource "zia_cloud_app_control_rule" "multi_ai" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI", "GOOGLE_GEMINI"]
-  
+
   # Returns only actions supported by BOTH applications
   actions = data.zia_cloud_app_control_rule_actions.multi_ai.available_actions_without_isolate
 }
@@ -124,7 +127,7 @@ resource "zia_cloud_app_control_rule" "allow_rule" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # Only ALLOW_ actions
   actions = data.zia_cloud_app_control_rule_actions.allow_only.filtered_actions
 }
@@ -148,7 +151,7 @@ resource "zia_cloud_app_control_rule" "mixed_rule" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # ALLOW_ and DENY_ actions only (excludes CAUTION, ISOLATE, ESC)
   actions = data.zia_cloud_app_control_rule_actions.allow_deny.filtered_actions
 }
@@ -169,7 +172,7 @@ resource "zia_cloud_app_control_rule" "onedrive_rule" {
   rank         = 7
   state        = "ENABLED"
   applications = ["ONEDRIVE"]
-  
+
   # Get all file sharing actions except ISOLATE
   actions = data.zia_cloud_app_control_rule_actions.onedrive.available_actions_without_isolate
 }
@@ -191,7 +194,7 @@ resource "zia_cloud_app_control_rule" "block_chatgpt" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # Only DENY_ actions (restrictive)
   actions = data.zia_cloud_app_control_rule_actions.deny_only.filtered_actions
 }
@@ -246,34 +249,35 @@ Cloud App Control rules support different action types based on the application 
 
 | Prefix | Description | Example | Can Mix With |
 |--------|-------------|---------|--------------|
-| `ALLOW_` | Permit specific operations | ALLOW_AI_ML_CHAT | DENY, CAUTION, ESC |
-| `DENY_` | Block specific operations | DENY_AI_ML_UPLOAD | ALLOW, CAUTION, ESC |
-| `BLOCK_` | Block operations (some apps) | BLOCK_FILE_SHARE_DOWNLOAD | ALLOW, CAUTION |
-| `CAUTION_` | Warn before allowing | CAUTION_AI_ML_WEB_USE | ALLOW, DENY, BLOCK |
-| `ISOLATE_` | Cloud Browser Isolation | ISOLATE_AI_ML_WEB_USE | **Cannot mix** |
-| `ESC_` | Conditional access | AI_ML_CONDITIONAL_ACCESS | ALLOW, DENY |
+| `ALLOW` | Permit specific operations | ALLOW_AI_ML_CHAT | DENY, CAUTION, ESC |
+| `DENY` | Block specific operations | DENY_AI_ML_UPLOAD | ALLOW, CAUTION, ESC |
+| `BLOCK` | Block operations (some apps) | BLOCK_FILE_SHARE_DOWNLOAD | ALLOW, CAUTION |
+| `CAUTION` | Warn before allowing | CAUTION_AI_ML_WEB_USE | ALLOW, DENY, BLOCK |
+| `ISOLATE` | Cloud Browser Isolation | ISOLATE_AI_ML_WEB_USE | **Cannot mix** |
+| `ESC` | Conditional access | AI_ML_CONDITIONAL_ACCESS | ALLOW, DENY |
 
 ### Important Rules
 
 1. **ISOLATE Actions**:
-   - Cannot be mixed with any other action type
-   - Require `cbi_profile` configuration in the resource
-   - Use `isolate_actions` attribute or filter with `action_prefixes = ["ISOLATE"]`
+   * Cannot be mixed with any other action type
+   * Require `cbi_profile` configuration in the resource
+   * Use `isolate_actions` attribute or filter with `action_prefixes = ["ISOLATE"]`
 
 2. **Multiple Applications**:
-   - The API automatically returns the intersection of actions
-   - Only actions supported by ALL specified applications are returned
-   - Always query the data source with the same applications you'll use in the resource
+   * The API automatically returns the intersection of actions
+   * Only actions supported by ALL specified applications are returned
+   * Always query the data source with the same applications you'll use in the resource
 
 3. **Action Compatibility**:
-   - Most actions can be mixed (ALLOW + DENY, ALLOW + CAUTION, etc.)
-   - ISOLATE actions are the exception - they must be used alone
+   * Most actions can be mixed (ALLOW + DENY, ALLOW + CAUTION, etc.)
+   * ISOLATE actions are the exception - they must be used alone
 
 ## Best Practices
 
 ### 1. Use Data Source Instead of Hardcoding
 
 **❌ Avoid hardcoding actions**:
+
 ```hcl
 resource "zia_cloud_app_control_rule" "example" {
   actions = ["ALLOW_AI_ML_CHAT", "DENY_AI_ML_UPLOAD"]  # May become invalid
@@ -281,6 +285,7 @@ resource "zia_cloud_app_control_rule" "example" {
 ```
 
 **✅ Use data source**:
+
 ```hcl
 data "zia_cloud_app_control_rule_actions" "actions" {
   type       = "AI_ML"
@@ -295,6 +300,7 @@ resource "zia_cloud_app_control_rule" "example" {
 ### 2. Match Applications Between Data Source and Resource
 
 **❌ Mismatch (will cause validation errors)**:
+
 ```hcl
 data "zia_cloud_app_control_rule_actions" "actions" {
   cloud_apps = ["CHATGPT_AI"]  # Only one app
@@ -307,6 +313,7 @@ resource "zia_cloud_app_control_rule" "example" {
 ```
 
 **✅ Correct match**:
+
 ```hcl
 data "zia_cloud_app_control_rule_actions" "actions" {
   cloud_apps = ["CHATGPT_AI", "GOOGLE_GEMINI"]  # Same apps
@@ -348,7 +355,7 @@ resource "zia_cloud_app_control_rule" "slack_controls" {
   state                   = "ENABLED"
   applications            = ["SLACK"]
   browser_eun_template_id = 5502
-  
+
   # Returns all actions except ISOLATE
   actions = data.zia_cloud_app_control_rule_actions.slack.available_actions_without_isolate
 }
@@ -370,7 +377,7 @@ resource "zia_cloud_app_control_rule" "dropbox_allow" {
   rank         = 7
   state        = "ENABLED"
   applications = ["DROPBOX"]
-  
+
   # Only permissive actions
   actions = data.zia_cloud_app_control_rule_actions.dropbox_allow.filtered_actions
 }
@@ -392,7 +399,7 @@ resource "zia_cloud_app_control_rule" "onedrive_block_upload" {
   rank         = 7
   state        = "ENABLED"
   applications = ["ONEDRIVE"]
-  
+
   # Only restrictive DENY actions
   actions = data.zia_cloud_app_control_rule_actions.onedrive_deny.filtered_actions
 }
@@ -414,7 +421,7 @@ resource "zia_cloud_app_control_rule" "multi_file_share" {
   rank         = 7
   state        = "ENABLED"
   applications = ["ONEDRIVE", "DROPBOX"]
-  
+
   # Returns only actions supported by BOTH OneDrive AND Dropbox
   actions = data.zia_cloud_app_control_rule_actions.multi_file_share.available_actions_without_isolate
 }
@@ -442,7 +449,7 @@ resource "zia_cloud_app_control_rule" "caution_rule" {
   rank         = 7
   state        = "ENABLED"
   applications = ["CHATGPT_AI"]
-  
+
   # Only CAUTION actions (user warnings)
   actions = data.zia_cloud_app_control_rule_actions.caution_only.filtered_actions
 }
@@ -511,10 +518,10 @@ The following attributes are exported:
 * `available_actions_without_isolate` - (List of Strings) **Recommended for most use cases**. List of available actions excluding ISOLATE actions. Use this for standard Cloud App Control rules. ISOLATE actions cannot be mixed with other action types and require separate rules.
 
 * `isolate_actions` - (List of Strings) List of only ISOLATE actions (Cloud Browser Isolation). Use this for CBI rules. When using ISOLATE actions:
-  - They **cannot** be mixed with other action types (ALLOW, DENY, etc.)
-  - They **require** `cbi_profile` block in the resource
-  - They **cannot** have `browser_eun_template_id` set
-  - Create separate rules for ISOLATE vs non-ISOLATE actions
+  * They **cannot** be mixed with other action types (ALLOW, DENY, etc.)
+  * They **require** `cbi_profile` block in the resource
+  * They **cannot** have `browser_eun_template_id` set
+  * Create separate rules for ISOLATE vs non-ISOLATE actions
 
 * `filtered_actions` - (List of Strings) List of actions filtered by the `action_prefixes` parameter. Only populated when `action_prefixes` is specified. Use this for custom filtering by specific action types (ALLOW only, DENY only, ALLOW+DENY, etc.).
 
@@ -525,9 +532,10 @@ The following attributes are exported:
 When querying multiple applications, the API returns only the intersection of actions:
 
 **Example**:
-- `CHATGPT_AI` alone supports 12 actions (including ALLOW_AI_ML_RENAME)
-- `GOOGLE_GEMINI` alone supports 11 actions (does NOT support RENAME)
-- Query with both: `["CHATGPT_AI", "GOOGLE_GEMINI"]` returns 9 actions (RENAME excluded)
+
+* `CHATGPT_AI` alone supports 12 actions (including ALLOW_AI_ML_RENAME)
+* `GOOGLE_GEMINI` alone supports 11 actions (does NOT support RENAME)
+* Query with both: `["CHATGPT_AI", "GOOGLE_GEMINI"]` returns 9 actions (RENAME excluded)
 
 This ensures that rules with multiple applications only use actions that work for all of them.
 
@@ -543,7 +551,8 @@ ISOLATE actions have unique requirements:
 ### Validation
 
 The `zia_cloud_app_control_rule` resource automatically validates actions during `terraform plan`:
-- Ensures actions are valid for the specified applications
-- Validates ISOLATE action requirements
-- Provides helpful error messages with valid action lists
-- Suggests using the data source if manual actions are invalid
+
+* Ensures actions are valid for the specified applications
+* Validates ISOLATE action requirements
+* Provides helpful error messages with valid action lists
+* Suggests using the data source if manual actions are invalid
