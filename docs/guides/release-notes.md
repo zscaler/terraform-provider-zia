@@ -12,9 +12,30 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.2``
+``Last updated: v4.7.3``
 
 ---
+
+## 4.7.3 (February, 12 2026)
+
+### Notes
+
+- Release date: **(February, 12 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #523](https://github.com/zscaler/terraform-provider-zia/pull/523) - Removed max number validation for several attributes across multiple rule based resources to align with API changes. This is a non-breaking change. The following resources are affected:
+- `zia_url_filtering_rules`
+- `zia_nat_control_rules`
+- `zia_ssl_inspection_rules`
+- `zia_file_type_control_rules`
+- `zia_firewall_dns_rules`
+- `zia_firewall_ips_rules`
+- `zia_casb_dlp_rules`
+- `zia_cloud_app_control_rules`
+- `zia_sandbox_rules`
+- `zia_casb_malware_rules`
 
 ## 4.7.2 (February, 11 2026)
 

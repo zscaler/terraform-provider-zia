@@ -351,7 +351,7 @@ The following arguments are supported:
 * `dlp_engines` - (Optional) The list of DLP engines to which the DLP policy rule must be applied.
   * `id` - (Optional) Identifier that uniquely identifies an entity. Maximum of up to `4` dlp engines. When not used it implies `Any` to apply the rule to all locations.
 
-* `locations` - (Optional) The Name-ID pairs of locations to which the DLP policy rule must be applied. Maximum of up to `8` locations. When not used it implies `Any` to apply the rule to all locations.
+* `locations` - (Optional) The Name-ID pairs of locations to which the DLP policy rule must be applied. Maximum of up to `32` locations. When not used it implies `Any` to apply the rule to all locations.
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
 * `location_groups` - (Optional) The Name-ID pairs of locations groups to which the DLP policy rule must be applied. Maximum of up to `32` location groups. When not used it implies `Any` to apply the rule to all location groups.
@@ -360,7 +360,7 @@ The following arguments are supported:
 * `users` - (Optional) The Name-ID pairs of users to which the DLP policy rule must be applied. Maximum of up to `4` users. When not used it implies `Any` to apply the rule to all users.
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
-* `groups` - (Optional) The Name-ID pairs of groups to which the DLP policy rule must be applied. Maximum of up to `8` groups. When not used it implies `Any` to apply the rule to all groups.
+* `groups` - (Optional) The Name-ID pairs of groups to which the DLP policy rule must be applied. Maximum of up to `32` groups. When not used it implies `Any` to apply the rule to all groups.
   * `id` - (Optional) Identifier that uniquely identifies an entity
 
 * `departments` - (Optional) The name-ID pairs of the departments that are excluded from the DLP policy rule.
