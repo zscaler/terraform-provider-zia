@@ -25,7 +25,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Enhancements
 
-- [PR #522](https://github.com/zscaler/terraform-provider-zia/pull/522) - Removed max number validation for several attributes across multiple rule based resources to align with API changes. This is a non-breaking change. The following resources are affected:
+- [PR #523](https://github.com/zscaler/terraform-provider-zia/pull/523) - Removed max number validation for several attributes across multiple rule based resources to align with API changes. This is a non-breaking change. The following resources are affected:
 - `zia_url_filtering_rules`
 - `zia_nat_control_rules`
 - `zia_ssl_inspection_rules`
