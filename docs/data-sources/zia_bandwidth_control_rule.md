@@ -70,7 +70,7 @@ Each of the following blocks supports nested attributes:
 
 * `id` - (int) A unique identifier for an entity
 
-#### `locations` - The Name-ID pairs of locations to which the DLP policy rule must be applied. Maximum of up to `8` locations. When not used it implies `Any` to apply the rule to all locations
+#### `locations` - The Name-ID pairs of locations to which the DLP policy rule must be applied. Maximum of up to `32` locations. When not used it implies `Any` to apply the rule to all locations
 
 * `id` - (int) Identifier that uniquely identifies an entity
 

@@ -16,9 +16,10 @@ description: |-
 The **zia_firewall_filtering_rule** resource allows the creation and management of ZIA Cloud Firewall filtering rules in the Zscaler Internet Access.
 
 **NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted (not all attributes are supported on predefined rules). The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
-- Automatically place new rules at the correct position
-- Handle reordering around predefined rules
-- Avoid configuration drift
+
+* Automatically place new rules at the correct position
+* Handle reordering around predefined rules
+* Avoid configuration drift
 
 Example: If there are predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
@@ -29,15 +30,13 @@ Example: If there are predefined rules in your tenant, you can still configure y
 * `order` - (Optional) Rule order number of the Firewall Filtering policy rule
 
 * `labels` (list) - Labels that are applicable to the rule.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 
 **NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
 
 * `name` - Name of the Firewall Filtering policy rule
 * `action` - The action the Firewall Filtering policy rule takes when packets match the rule. Supported Values: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BLOCK_ICMP`, `EVAL_NWAPP`
-
 * `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank in UI first. The default value is `7`. Visit to learn more [About Admin Rank](https://help.zscaler.com/zia/about-admin-rank)
-
 * Most other attributes that define the rule's behavior
 
 **NOTE 4** The import of `predefined` rules is still possible in case you want o have them under the Terraform management; however, remember that these rules cannot be deleted. That means, the provider will fail when executing `terraform destroy`; hence, you must remove the rules you want to delete, and re-run `terraform apply` instead.
@@ -98,18 +97,14 @@ The following arguments are supported:
 
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule. Supported Values: `ENABLED`, `DISABLED`
-
 * `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
-
 * `labels` (list) - Labels that are applicable to the rule.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 
 **NOTE 3** The following attributes on `predefined` rules **cannot** be updated:
 
 * `name` - Predefined rule names are fixed and cannot be changed
-
 * `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK_DROP`, `BLOCK_RESET`, `BYPASS_IPS`
-
 * Most other attributes that define the rule's behavior
 
 ### Optional
@@ -123,26 +118,22 @@ The following arguments are supported:
 `Who, Where and When` supports the following attributes:
 
 * `locations` (list) - You can manually select up to `8` locations. When not used it implies `Any` to apply the rule to all groups.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `location_groups` (list) - You can manually select up to `32` location groups. When not used it implies `Any` to apply the rule to all location groups.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `users` (list) - You can manually select up to `4` general and/or special users. When not used it implies `Any` to apply the rule to all users.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `groups` (list) - You can manually select up to `8` groups. When not used it implies `Any` to apply the rule to all groups.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `departments` (list) - Apply to any number of departments When not used it implies `Any` to apply the rule to all departments.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `devices` (list) - Specifies devices that are managed using Zscaler Client Connector.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `device_groups` (list) - This field is applicable for devices that are managed using Zscaler Client Connector.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
-
 * `time_windows` (list) - You can manually select up to `2` time intervals. When not used it implies `always` to apply the rule to all time intervals.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 
 `network services` supports the following attributes:
 
@@ -168,26 +159,22 @@ The following arguments are supported:
       **NOTE**: Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
 
 * `dest_ip_categories` (list) - identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `dest_ip_groups` (list) - Any number of destination IP address groups that you want to control with this rule.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `app_service_groups` (list) - Application service groups on which this rule is applied
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `app_services`  (list) - Application services on which this rule is applied
-      - `id` - (Integer) Identifier that uniquely identifies an entity
-
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 * `labels` (list) - Labels that are applicable to the rule.
-      - `id` - (Integer) Identifier that uniquely identifies an entity
+      * `id` - (Integer) Identifier that uniquely identifies an entity
 
 * `workload_groups` (list) - The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
 * `Other Exported Arguments`
-  * `enable_full_logging` (Boolean)
-  `Aggregate`: The service groups together individual sessions based on { user, rule, network service, network application } and records them periodically.`Full`: The service logs all sessions of the rule individually, except HTTP(S). Only Block rules support full logging. Full logging on all other rules requires the Full Logging license.
+  * `enable_full_logging` (Boolean) `Aggregate`: The service groups together individual sessions based on { user, rule, network service, network application } and records them periodically. `Full`: The service logs all sessions of the rule individually, except HTTP(S). Only Block rules support full logging. Full logging on all other rules requires the Full Logging license.
   * `predefined` - (Boolean) If set to true, a predefined rule is applied
 
 ## Import
