@@ -289,6 +289,11 @@ func resourceURLFilteringRules() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"profile_seq": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
 						"id": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -521,17 +526,14 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 
-	// Update the cbi_profile block in the state
-	// if resp.CBIProfile.ID != "" {
-	// 	if err := d.Set("cbi_profile", flattenCBIProfileSimple(&resp.CBIProfile)); err != nil {
-	// 		return diag.FromErr(err)
-	// 	}
-	// }
-	log.Printf("[DEBUG] Full API rule: %+v", resp)
-	log.Printf("[DEBUG] API cbi_profile: %+v", resp.CBIProfile)
-
-	if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
-		return diag.FromErr(err)
+	// Workaround for API bug: GET does not return the cbiProfile object for ISOLATE rules,
+	// only cbiProfileId (integer). Preserve the cbi_profile from state when the API doesn't return it.
+	if resp.Action == "ISOLATE" && (resp.CBIProfile == nil || resp.CBIProfile.ID == "") {
+		log.Printf("[DEBUG] API did not return cbi_profile for ISOLATE rule %d, preserving existing state", resp.ID)
+	} else {
+		if err := d.Set("cbi_profile", flattenCBIProfileSimple(resp.CBIProfile)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
@@ -830,9 +832,10 @@ func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
 			}
 
 			return &urlfilteringpolicies.CBIProfile{
-				ID:   cbiProfileData["id"].(string),
-				Name: cbiProfileData["name"].(string),
-				URL:  cbiProfileData["url"].(string),
+				ProfileSeq: cbiProfileData["profile_seq"].(int),
+				ID:         cbiProfileData["id"].(string),
+				Name:       cbiProfileData["name"].(string),
+				URL:        cbiProfileData["url"].(string),
 			}
 		}
 	}
@@ -850,9 +853,10 @@ func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []inte
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"id":   cbiProfile.ID,
-			"name": cbiProfile.Name,
-			"url":  cbiProfile.URL,
+			"profile_seq": cbiProfile.ProfileSeq,
+			"id":          cbiProfile.ID,
+			"name":        cbiProfile.Name,
+			"url":         cbiProfile.URL,
 		},
 	}
 }

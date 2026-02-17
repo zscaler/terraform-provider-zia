@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.3``
+``Last updated: v4.7.4``
 
 ---
+
+## 4.7.4 (February, 17 2026)
+
+### Notes
+
+- Release date: **(February, 17 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #525](https://github.com/zscaler/terraform-provider-zia/pull/525) - Fixed `zia_firewall_filtering_rule` reorder failures caused by missing `LastModifiedTime`/`LastModifiedBy` clearing in `updateOrder` callbacks, removed redundant early-return check, and added fallback to direct `Get` in the READ function to handle stale SDK cache after concurrent rule creation.
+- [PR #525](https://github.com/zscaler/terraform-provider-zia/pull/525) - Fixed `zia_url_filtering_rules` failing on refresh when `action` is `ISOLATE` due to API not returning `cbiProfile` object on GET. The provider now preserves `cbi_profile` from state and marks `profile_seq` as computed.
+- [PR #525](https://github.com/zscaler/terraform-provider-zia/pull/525) - Fixed `zia_forwarding_control_rule` forward method validation for `ENATDEDIP`.
 
 ## 4.7.3 (February, 12 2026)
 
