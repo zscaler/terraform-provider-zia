@@ -3,9 +3,7 @@ subcategory: "Activation"
 layout: "zscaler"
 page_title: "ZIA: activation_status"
 description: |-
-  Official documentation https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal
-  API documentation https://help.zscaler.com/zia/activation#/status-get
-  Activates configuration changes
+  Triggers activation of ZIA pending configuration changes as part of the Terraform graph.
 ---
 
 # zia_activation_status (Resource)
@@ -13,23 +11,26 @@ description: |-
 * [Official documentation](https://help.zscaler.com/zia/saving-and-activating-changes-zia-admin-portal)
 * [API documentation](https://help.zscaler.com/zia/activation#/status-get)
 
-The **zia_activation_status** resource allows the activation of ZIA pending configurations. This resource must always be executed after the resource creation for successfully policy/configuration activation to occur.
+The **zia_activation_status** resource triggers activation of ZIA pending configuration changes. Use it when you want activation to run as part of your Terraform run, after specific resources are applied — for example, by listing those resources in a `depends_on` block so that activation runs only after they are created or updated.
 
-~> **NOTE** As of right now, Terraform does not provide native support for commits or post-activation configuration, so configuration and policy activations are handled out-of-band. In order to handle the activation as part of the provider, a separate source code have been developed to generate a CLI binary.
+Activation timing is controlled by the ZIA platform, not by Terraform. The provider cannot override ZIA’s native behavior (including auto-activation after inactivity or logout). This resource is one of three ways to activate changes with the provider. For the full picture and recommended options, see the [Activation Overview](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/zia-activator-overview) guide.
 
-~> **NOTE** As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the activation is performed as part of the `terraform apply` during the creation or update of a resource or during the `terraform destroy` during the deletion of a resource. With this improvement the objective is to deprecate the dedicated `zia_activation_status` resource.
-
-## Out of Band Activation
-
-If you prefer to use the outband method for activation, please refer to the [ZIA CActivator Configuration](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/zia_activator) guide.
+~> **NOTE** You can also activate in-flight during apply by setting the `ZIA_ACTIVATION` environment variable, or use the recommended out-of-band method with the **ziaActivator** CLI after `terraform apply`. See the [Activation Overview](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/zia-activator-overview) guide.
 
 ## Example Usage
 
+Trigger activation after specific resources are applied using `depends_on`:
+
 ```hcl
-data "zia_activation_status" "activation" {}
+resource "zia_url_filtering_rule" "example" {
+  name = "Example URL Rule"
+  # ... other arguments
+}
 
 resource "zia_activation_status" "activation" {
-  status                      = "ACTIVE"
+  status = "ACTIVE"
+
+  depends_on = [zia_url_filtering_rule.example]
 }
 ```
 

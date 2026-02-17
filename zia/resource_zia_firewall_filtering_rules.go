@@ -261,12 +261,13 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			return len(allRules), nil
 		},
 		func(id int, order OrderRule) error {
-			// Custom updateOrder that handles predefined rules
 			rule, err := filteringrules.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
-
+			// to avoid the STALE_CONFIGURATION_ERROR
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = filteringrules.Update(ctx, service, id, rule)
@@ -319,11 +320,19 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	// Rule not found
+	// If not found in GetAll (may be due to stale SDK cache), fall back to direct Get
 	if resp == nil {
-		log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
-		d.SetId("")
-		return nil
+		log.Printf("[WARN] Firewall filtering rule %d not found in GetAll response, falling back to direct Get", id)
+		rule, err := filteringrules.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = rule
 	}
 	processedDestCountries := make([]string, len(resp.DestCountries))
 	for i, country := range resp.DestCountries {
@@ -494,11 +503,9 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			if err != nil {
 				return err
 			}
-			// Optional: avoid unnecessary updates if the current order is already correct
-			if rule.Order == order.Order && rule.Rank == order.Rank {
-				return nil
-			}
-
+			// to avoid the STALE_CONFIGURATION_ERROR
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = filteringrules.Update(ctx, service, id, rule)
