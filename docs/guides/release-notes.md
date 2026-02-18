@@ -12,9 +12,27 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.4``
+``Last updated: v4.7.5``
 
 ---
+
+## 4.7.5 (February, 18 2026)
+
+### Notes
+
+- Release date: **(February, 18 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #526](https://github.com/zscaler/terraform-provider-zia/pull/526) - Upgraded `zscaler-sdk-go` to `v3.8.21`. Optimized `zia_traffic_forwarding_static_ip` READ to use a single `GetAll` call instead of individual `Get` per resource, reducing API calls from N to 1 during plan/refresh for bulk static IP deployments. SDK-side rate limiter has also been relaxed to avoid unnecessary throttling.
+
+- [PR #526](https://github.com/zscaler/terraform-provider-zia/pull/526) - Added the following new resources
+  - `zia_url_categories_predefined` - Manages predefined URL categories. See [Documentation](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_url_categories_predefined) for details.
+
+### Bug Fixes
+
+- [PR #526](https://github.com/zscaler/terraform-provider-zia/pull/526) - Fixed documentation for resources and data sources `zia_virtual_service_edge_cluster` and `virtual_service_edge_node`
 
 ## 4.7.4 (February, 17 2026)
 

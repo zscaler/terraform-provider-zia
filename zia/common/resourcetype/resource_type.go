@@ -5,6 +5,7 @@ const (
 	BandwdithClasses                = "zia_bandwidth_classes"
 	BandwdithControlRules           = "zia_bandwidth_control_rule"
 	URLCategories                   = "zia_url_categories"
+	URLCategoriesPredefined         = "zia_url_categories_predefined"
 	URLFilteringRules               = "zia_url_filtering_rules"
 	FirewallFilteringRules          = "zia_firewall_filtering_rule"
 	FirewallIPSRules                = "zia_firewall_ips_rule"

@@ -242,6 +242,28 @@ For details about how to retrieve your tenant Base URL and API key/token refer t
 The ZIA platform requires every configuration to be activated. As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the provider supports implicit activation. In order to make this process more flexible, we have implemented a dedicated environment variable `ZIA_ACTIVATION`, which when set to `true` will implicitly activate the changes as resources are configured.
 If the environment variable `ZIA_ACTIVATION` is not set, you must then use the out of band activation method described here [zia activator](guides/zia-activator-overview.md) or leverage the dedicated activation resource `zia_activation_status`.
 
+### Rate Limiting and Parallelism
+
+The ZIA platform enforces API rate limits on a per-endpoint basis. Different endpoints have different thresholds — for example, some endpoints allow multiple POST requests per second, while others (such as `/staticIP`) are limited to 1 POST request per second. When a rate limit is exceeded, the API returns an HTTP `429 Too Many Requests` response with a `Retry-After` header indicating how long the client should wait before retrying. The Zscaler SDK automatically handles these responses by respecting the `Retry-After` value and retrying the request transparently.
+
+In addition to server-side enforcement, the SDK includes a client-side rate limiter that provides a first-pass throttle to reduce unnecessary 429 responses. This client-side limiter allows up to **10 POST/PUT/DELETE requests per 10-second window** and **20 GET requests per 10-second window**. These limits are intentionally less restrictive than some individual endpoint limits, because server-side enforcement via `429` + `Retry-After` is the authoritative mechanism for per-endpoint rate limiting.
+
+**Terraform Parallelism Considerations:**
+
+By default, Terraform applies changes to up to **10 resources concurrently** (`-parallelism=10`). For resources with strict per-endpoint rate limits, this default concurrency can cause a high volume of `429` retry responses, as multiple concurrent requests compete for the same endpoint's rate limit budget. While the SDK handles retries automatically, this retry cascading can increase overall execution time.
+
+For bulk operations on heavily rate-limited resources (e.g., creating hundreds of `zia_traffic_forwarding_static_ip` resources), consider reducing Terraform's parallelism to minimize retry overhead:
+
+```sh
+# Serialize resource creation to align with strict per-endpoint rate limits
+terraform apply -parallelism=1
+
+# Or use a moderate value for a balance between speed and retry efficiency
+terraform apply -parallelism=5
+```
+
+~> **Note:** The `-parallelism` flag is a Terraform CLI option, not a provider setting. It controls how many resources Terraform creates, updates, or destroys concurrently across the entire configuration. The provider cannot override this value. Refer to the [Zscaler Rate Limiting Documentation](https://automate.zscaler.com/docs/api-reference-and-guides/guides/rate-limiting/zia) for details on per-endpoint limits.
+
 ### Zscaler Sandbox Authentication
 
 As of version v4.0.0, the ZIA Terraform provider the legacy sandbox authentication environment variables `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` are no longer supported.
@@ -279,7 +301,7 @@ Before starting with this Terraform provider you must create an API Client in th
 
 - `http_proxy` - (Optional) This is a custom URL endpoint that can be used for unit testing or local caching proxies. Can also be sourced from the `ZSCALER_HTTP_PROXY` environment variable.
 
-- `parallelism` - (Optional) Number of concurrent requests to make within a resource where bulk operations are not possible. The provider creates a worker pool of this size to serialize API calls. The default is `1`. [Learn More](https://help.zscaler.com/oneapi/understanding-rate-limiting)
+- `parallelism` - (Optional) Number of concurrent requests to make within a resource where bulk operations are not possible. The provider creates a worker pool of this size to serialize API calls. The default is `1`. Note that this is separate from Terraform's CLI `-parallelism` flag, which controls how many resources are processed concurrently (default `10`). For bulk operations on rate-limited resources, consider reducing Terraform's CLI parallelism — see the [Rate Limiting and Parallelism](#rate-limiting-and-parallelism) section above. [Learn More](https://help.zscaler.com/oneapi/understanding-rate-limiting)
 
 - `max_retries` - (Optional) Maximum number of retries to attempt before returning an error, the default is `5`.
 

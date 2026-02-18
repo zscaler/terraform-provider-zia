@@ -159,15 +159,32 @@ func resourceTrafficForwardingVPNCredentialsRead(ctx context.Context, d *schema.
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no Traffic Forwarding zia vpn credentials id is set"))
 	}
-	resp, err := vpncredentials.Get(ctx, service, id)
-	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing vpn credentials %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
 
+	allCreds, err := vpncredentials.GetAll(ctx, service)
+	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	var resp *vpncredentials.VPNCredentials
+	for i := range allCreds {
+		if allCreds[i].ID == id {
+			resp = &allCreds[i]
+			break
+		}
+	}
+
+	if resp == nil {
+		log.Printf("[WARN] VPN credential %d not found in GetAll response, falling back to direct Get", id)
+		cred, err := vpncredentials.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing vpn credentials %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = cred
 	}
 
 	log.Printf("[INFO] Getting vpn credentials:\n%+v\n", resp)
