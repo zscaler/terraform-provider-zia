@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlcategories"
 )
 
@@ -220,13 +221,12 @@ func resourceURLCategoriesPredefinedCreate(ctx context.Context, d *schema.Resour
 	}
 
 	resolvedID := existing.ID
+	log.Printf("[INFO] Managing predefined URL category %s (resolved from %q)", resolvedID, name)
 
-	req := expandURLCategoryPredefined(d, existing)
-	log.Printf("[INFO] Updating predefined URL category %s (resolved from %q)", resolvedID, name)
+	desired := expandURLCategoryPredefined(d, existing)
 
-	_, _, err = urlcategories.UpdateURLCategories(ctx, service, resolvedID, &req, "")
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error updating predefined URL category %s: %w", resolvedID, err))
+	if diags := applyPredefinedCategoryDiff(ctx, service, resolvedID, existing, &desired); diags != nil {
+		return diags
 	}
 
 	d.SetId(resolvedID)
@@ -317,55 +317,10 @@ func resourceURLCategoriesPredefinedUpdate(ctx context.Context, d *schema.Resour
 
 	log.Printf("[INFO] Updating predefined URL category %s", categoryID)
 
-	desiredCategory := expandURLCategoryPredefined(d, currentCategory)
+	desired := expandURLCategoryPredefined(d, currentCategory)
 
-	// For predefined categories, the API treats ALL list fields as additive on PUT.
-	// A plain PUT will add items but never remove them. To remove items we must use
-	// the REMOVE_FROM_LIST action, and to add we use ADD_TO_LIST.
-	urlsToAdd, urlsToRemove := computeSliceDiff(currentCategory.Urls, desiredCategory.Urls)
-	ipToAdd, ipToRemove := computeSliceDiff(currentCategory.IPRanges, desiredCategory.IPRanges)
-	kwToAdd, kwToRemove := computeSliceDiff(currentCategory.Keywords, desiredCategory.Keywords)
-	kwRetToAdd, kwRetToRemove := computeSliceDiff(currentCategory.KeywordsRetainingParentCategory, desiredCategory.KeywordsRetainingParentCategory)
-	ipRetToAdd, ipRetToRemove := computeSliceDiff(currentCategory.IPRangesRetainingParentCategory, desiredCategory.IPRangesRetainingParentCategory)
-
-	totalToRemove := len(urlsToRemove) + len(ipToRemove) + len(kwToRemove) + len(kwRetToRemove) + len(ipRetToRemove)
-	totalToAdd := len(urlsToAdd) + len(ipToAdd) + len(kwToAdd) + len(kwRetToAdd) + len(ipRetToAdd)
-
-	log.Printf("[DEBUG] Predefined category diff — Removes: %d (urls=%d, ip=%d, kw=%d, kwRet=%d, ipRet=%d), Adds: %d (urls=%d, ip=%d, kw=%d, kwRet=%d, ipRet=%d)",
-		totalToRemove, len(urlsToRemove), len(ipToRemove), len(kwToRemove), len(kwRetToRemove), len(ipRetToRemove),
-		totalToAdd, len(urlsToAdd), len(ipToAdd), len(kwToAdd), len(kwRetToAdd), len(ipRetToAdd))
-
-	if totalToRemove > 0 {
-		log.Printf("[INFO] Using REMOVE_FROM_LIST to remove %d items across all list fields", totalToRemove)
-		removeCategory := buildImmutableCategory(currentCategory)
-		removeCategory.Urls = urlsToRemove
-		removeCategory.IPRanges = ipToRemove
-		removeCategory.Keywords = kwToRemove
-		removeCategory.KeywordsRetainingParentCategory = kwRetToRemove
-		removeCategory.IPRangesRetainingParentCategory = ipRetToRemove
-		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
-			return diag.FromErr(fmt.Errorf("failed to remove items from predefined category: %w", err))
-		}
-	}
-
-	if totalToAdd > 0 {
-		log.Printf("[INFO] Using ADD_TO_LIST to add %d items across all list fields", totalToAdd)
-		addCategory := buildImmutableCategory(currentCategory)
-		addCategory.Urls = urlsToAdd
-		addCategory.IPRanges = ipToAdd
-		addCategory.Keywords = kwToAdd
-		addCategory.KeywordsRetainingParentCategory = kwRetToAdd
-		addCategory.IPRangesRetainingParentCategory = ipRetToAdd
-		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &addCategory, "ADD_TO_LIST"); err != nil {
-			return diag.FromErr(fmt.Errorf("failed to add items to predefined category: %w", err))
-		}
-	}
-
-	if totalToRemove == 0 && totalToAdd == 0 {
-		log.Printf("[INFO] No list field changes detected, using full update")
-		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &desiredCategory, ""); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating predefined URL category %s: %w", categoryID, err))
-		}
+	if diags := applyPredefinedCategoryDiff(ctx, service, categoryID, currentCategory, &desired); diags != nil {
+		return diags
 	}
 
 	if shouldActivate() {
@@ -380,6 +335,62 @@ func resourceURLCategoriesPredefinedUpdate(ctx context.Context, d *schema.Resour
 	return resourceURLCategoriesPredefinedRead(ctx, d, meta)
 }
 
+// applyPredefinedCategoryDiff computes the diff between the current API state and
+// the desired HCL state, then applies changes using the appropriate API semantics:
+//   - urls, ip_ranges, ip_ranges_retaining_parent_category: incremental via
+//     ADD_TO_LIST / REMOVE_FROM_LIST (plain PUT is additive for these fields)
+//   - keywords, keywords_retaining_parent_category: replacement via plain PUT
+//     (the API does not support ADD_TO_LIST / REMOVE_FROM_LIST for keyword fields)
+func applyPredefinedCategoryDiff(ctx context.Context, service *zscaler.Service, categoryID string, current *urlcategories.URLCategory, desired *urlcategories.URLCategory) diag.Diagnostics {
+	urlsToAdd, urlsToRemove := computeSliceDiff(current.Urls, desired.Urls)
+	ipToAdd, ipToRemove := computeSliceDiff(current.IPRanges, desired.IPRanges)
+	ipRetToAdd, ipRetToRemove := computeSliceDiff(current.IPRangesRetainingParentCategory, desired.IPRangesRetainingParentCategory)
+
+	incrementalRemoves := len(urlsToRemove) + len(ipToRemove) + len(ipRetToRemove)
+	incrementalAdds := len(urlsToAdd) + len(ipToAdd) + len(ipRetToAdd)
+	keywordsChanged := !stringSlicesEqual(current.Keywords, desired.Keywords)
+	kwRetChanged := !stringSlicesEqual(current.KeywordsRetainingParentCategory, desired.KeywordsRetainingParentCategory)
+
+	log.Printf("[DEBUG] Predefined category diff — Incremental removes: %d (urls=%d, ip=%d, ipRet=%d), Incremental adds: %d (urls=%d, ip=%d, ipRet=%d), Keywords changed: %v, Keywords retaining changed: %v",
+		incrementalRemoves, len(urlsToRemove), len(ipToRemove), len(ipRetToRemove),
+		incrementalAdds, len(urlsToAdd), len(ipToAdd), len(ipRetToAdd),
+		keywordsChanged, kwRetChanged)
+
+	if incrementalRemoves > 0 {
+		log.Printf("[INFO] Using REMOVE_FROM_LIST to remove %d items from url/ip fields", incrementalRemoves)
+		removeCategory := buildImmutableCategory(current)
+		removeCategory.Urls = urlsToRemove
+		removeCategory.IPRanges = ipToRemove
+		removeCategory.IPRangesRetainingParentCategory = ipRetToRemove
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to remove items from predefined category: %w", err))
+		}
+	}
+
+	if incrementalAdds > 0 {
+		log.Printf("[INFO] Using ADD_TO_LIST to add %d items to url/ip fields", incrementalAdds)
+		addCategory := buildImmutableCategory(current)
+		addCategory.Urls = urlsToAdd
+		addCategory.IPRanges = ipToAdd
+		addCategory.IPRangesRetainingParentCategory = ipRetToAdd
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &addCategory, "ADD_TO_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to add items to predefined category: %w", err))
+		}
+	}
+
+	if keywordsChanged || kwRetChanged {
+		log.Printf("[INFO] Using plain PUT to update keyword fields (replacement semantics)")
+		kwCategory := buildImmutableCategory(current)
+		kwCategory.Keywords = desired.Keywords
+		kwCategory.KeywordsRetainingParentCategory = desired.KeywordsRetainingParentCategory
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, categoryID, &kwCategory, ""); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to update keywords for predefined category: %w", err))
+		}
+	}
+
+	return nil
+}
+
 func buildImmutableCategory(existing *urlcategories.URLCategory) urlcategories.URLCategory {
 	return urlcategories.URLCategory{
 		ID:             existing.ID,
@@ -391,6 +402,20 @@ func buildImmutableCategory(existing *urlcategories.URLCategory) urlcategories.U
 		CustomCategory: existing.CustomCategory,
 		Editable:       existing.Editable,
 	}
+}
+
+func stringSlicesEqual(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	aMap := stringSliceToMap(a)
+	bMap := stringSliceToMap(b)
+	for k := range aMap {
+		if !bMap[k] {
+			return false
+		}
+	}
+	return true
 }
 
 func computeSliceDiff(current, desired []string) (toAdd, toRemove []string) {
