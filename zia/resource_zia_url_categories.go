@@ -90,19 +90,18 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 25000,
 			},
 			"keywords": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2048,
+				// MaxItems: 2048,
 			},
 			"keywords_retaining_parent_category": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2048,
+				// MaxItems: 2048,
 			},
 			"db_categorized_urls": {
 				Type:     schema.TypeSet,
@@ -151,6 +150,7 @@ func resourceURLCategories() *schema.Resource {
 			"url_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"EXACT",
 					"REGEX",
@@ -200,13 +200,13 @@ func resourceURLCategories() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2000,
+				// MaxItems: 2000,
 			},
 			"ip_ranges_retaining_parent_category": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				MaxItems: 2000,
+				// MaxItems: 2000,
 			},
 			"custom_ip_ranges_count": {
 				Type:     schema.TypeInt,

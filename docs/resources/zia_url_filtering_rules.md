@@ -1,5 +1,5 @@
 ---
-subcategory: "URL Filtering Rule"
+subcategory: "URL Filtering Rules"
 layout: "zscaler"
 page_title: "ZIA:  url_filtering_rules"
 description: |-

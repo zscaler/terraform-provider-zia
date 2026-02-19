@@ -1,7 +1,7 @@
 ---
 subcategory: "Virtual Service Edges"
 layout: "zscaler"
-page_title: "ZIA: virtual_service_edge_cluster"
+page_title: "ZIA: zia_virtual_service_edge_cluster"
 description: |-
     Official documentation https://help.zscaler.com/zia/about-virtual-service-edge-clusters
     API documentation https://help.zscaler.com/zia/service-edges#/virtualZenClusters-get

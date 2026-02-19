@@ -149,6 +149,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_forwarding_control_zpa_gateway":                resourceForwardingControlZPAGateway(),
 			"zia_location_management":                           resourceLocationManagement(),
 			"zia_url_categories":                                resourceURLCategories(),
+			"zia_url_categories_predefined":                     resourceURLCategoriesPredefined(),
 			"zia_url_filtering_rules":                           resourceURLFilteringRules(),
 			"zia_file_type_control_rules":                       resourceFileTypeControlRules(),
 			"zia_custom_file_types":                             resourceCustomFileTypes(),

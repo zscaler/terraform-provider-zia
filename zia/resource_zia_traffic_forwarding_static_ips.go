@@ -143,15 +143,35 @@ func resourceTrafficForwardingStaticIPRead(ctx context.Context, d *schema.Resour
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no Traffic Forwarding zia static ip id is set"))
 	}
-	resp, err := staticips.Get(ctx, service, id)
-	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing static ip %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
 
+	// Use GetAll() instead of individual Get() to reduce API calls during terraform refresh.
+	// With hundreds of static IPs, individual GET calls per resource drain rate limits quickly.
+	allIPs, err := staticips.GetAll(ctx, service)
+	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	var resp *staticips.StaticIP
+	for i := range allIPs {
+		if allIPs[i].ID == id {
+			resp = &allIPs[i]
+			break
+		}
+	}
+
+	// Fallback to direct Get if not found in GetAll (may be due to stale SDK cache)
+	if resp == nil {
+		log.Printf("[WARN] Static IP %d not found in GetAll response, falling back to direct Get", id)
+		rule, err := staticips.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing static ip %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = rule
 	}
 
 	log.Printf("[INFO] Getting static ip:\n%+v\n", resp)
@@ -161,8 +181,8 @@ func resourceTrafficForwardingStaticIPRead(ctx context.Context, d *schema.Resour
 	_ = d.Set("static_ip_id", resp.ID)
 	_ = d.Set("ip_address", resp.IpAddress)
 	_ = d.Set("geo_override", resp.GeoOverride)
-	_ = d.Set("latitude", resp.Latitude)   // Stores exact API value as float64
-	_ = d.Set("longitude", resp.Longitude) // Stores exact API value as float64
+	_ = d.Set("latitude", resp.Latitude)
+	_ = d.Set("longitude", resp.Longitude)
 	_ = d.Set("routable_ip", resp.RoutableIP)
 	_ = d.Set("comment", resp.Comment)
 

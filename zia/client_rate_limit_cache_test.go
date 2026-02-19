@@ -19,6 +19,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/logger"
 	rl "github.com/zscaler/zscaler-sdk-go/v3/ratelimiter"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 )
 
 // =============================================================================
@@ -353,6 +354,171 @@ func TestRetryOn429ExhaustsRetries(t *testing.T) {
 		t.Fatalf("expected %d total attempts, got %d", expectedAttempts, totalAttempts)
 	}
 	t.Logf("correctly exhausted retries after %d attempts, error: %v", totalAttempts, err)
+}
+
+// =============================================================================
+// Section 3b: HTTP 403 LIMIT_EXCEEDED Fail-Fast Tests
+// =============================================================================
+
+// TestLimitExceeded403FailsFast verifies that an HTTP 403 response with code
+// "LIMIT_EXCEEDED" is returned immediately without retrying. This simulates the
+// tenant resource capacity error (e.g., "Maximum 100 static IPs are allowed").
+func TestLimitExceeded403FailsFast(t *testing.T) {
+	var attempt int32
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&attempt, 1)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"code":"LIMIT_EXCEEDED","message":"Maximum 100 static IPs are allowed. Limit has exceeded."}`))
+	}))
+	defer mockServer.Close()
+
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.RetryWaitMin = 10 * time.Millisecond
+	retryableClient.RetryWaitMax = 50 * time.Millisecond
+	retryableClient.RetryMax = 5
+	retryableClient.Logger = nil
+
+	// Only retry on 429, never on 403
+	retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	client := retryableClient.StandardClient()
+
+	resp, err := client.Get(mockServer.URL + "/zia/api/v1/staticIP")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", resp.StatusCode)
+	}
+
+	totalAttempts := atomic.LoadInt32(&attempt)
+	if totalAttempts != 1 {
+		t.Fatalf("expected exactly 1 attempt (no retries on 403 LIMIT_EXCEEDED), got %d", totalAttempts)
+	}
+	t.Logf("403 LIMIT_EXCEEDED returned after %d attempt (no retry) — fail-fast confirmed", totalAttempts)
+}
+
+// TestLimitExceeded403IsDetectedByErrorHelper verifies that the errorx.ErrorResponse
+// IsLimitExceeded() helper correctly identifies a 403 LIMIT_EXCEEDED response.
+func TestLimitExceeded403IsDetectedByErrorHelper(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"code":"LIMIT_EXCEEDED","message":"Maximum 100 static IPs are allowed. Limit has exceeded."}`))
+	}))
+	defer mockServer.Close()
+
+	resp, err := http.Get(mockServer.URL + "/zia/api/v1/staticIP")
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	// Feed the response through CheckErrorInResponse (same as SDK does)
+	errResult := errorx.CheckErrorInResponse(resp, fmt.Errorf("limit exceeded"))
+	if errResult == nil {
+		t.Fatal("expected non-nil error from CheckErrorInResponse")
+	}
+
+	errResp, ok := errResult.(*errorx.ErrorResponse)
+	if !ok {
+		t.Fatalf("expected *errorx.ErrorResponse, got %T", errResult)
+	}
+
+	if !errResp.IsLimitExceeded() {
+		t.Fatal("expected IsLimitExceeded() to return true")
+	}
+	t.Log("IsLimitExceeded() correctly detected 403 LIMIT_EXCEEDED")
+}
+
+// TestNon403ForbiddenIsNotLimitExceeded verifies that a 403 with a different
+// error code (e.g., ACCESS_DENIED) is NOT detected as LIMIT_EXCEEDED.
+func TestNon403ForbiddenIsNotLimitExceeded(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"code":"ACCESS_DENIED","message":"You do not have permission"}`))
+	}))
+	defer mockServer.Close()
+
+	resp, err := http.Get(mockServer.URL + "/zia/api/v1/staticIP")
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	errResult := errorx.CheckErrorInResponse(resp, fmt.Errorf("access denied"))
+	if errResult == nil {
+		t.Fatal("expected non-nil error")
+	}
+
+	errResp, ok := errResult.(*errorx.ErrorResponse)
+	if !ok {
+		t.Fatalf("expected *errorx.ErrorResponse, got %T", errResult)
+	}
+
+	if errResp.IsLimitExceeded() {
+		t.Fatal("ACCESS_DENIED should NOT be detected as LIMIT_EXCEEDED")
+	}
+	t.Log("ACCESS_DENIED correctly not detected as LIMIT_EXCEEDED")
+}
+
+// Test429StillRetriesWhile403DoesNot verifies that the retry policy correctly
+// differentiates between 429 (retry) and 403 LIMIT_EXCEEDED (no retry).
+func Test429StillRetriesWhile403DoesNot(t *testing.T) {
+	var attempt int32
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := atomic.AddInt32(&attempt, 1)
+		if count == 1 {
+			w.Header().Set("Retry-After", "0")
+			w.WriteHeader(http.StatusTooManyRequests)
+			w.Write([]byte(`{"code":"TOO_MANY_REQUESTS"}`))
+			return
+		}
+		// Second attempt returns LIMIT_EXCEEDED
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"code":"LIMIT_EXCEEDED","message":"Limit has exceeded."}`))
+	}))
+	defer mockServer.Close()
+
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.RetryWaitMin = 10 * time.Millisecond
+	retryableClient.RetryWaitMax = 50 * time.Millisecond
+	retryableClient.RetryMax = 5
+	retryableClient.Logger = nil
+
+	retryableClient.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusTooManyRequests {
+			return true, nil
+		}
+		return false, nil
+	}
+
+	client := retryableClient.StandardClient()
+
+	resp, err := client.Get(mockServer.URL + "/zia/api/v1/staticIP")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	totalAttempts := atomic.LoadInt32(&attempt)
+	if totalAttempts != 2 {
+		t.Fatalf("expected 2 attempts (1 x 429 retry + 1 x 403 stop), got %d", totalAttempts)
+	}
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected final response 403, got %d", resp.StatusCode)
+	}
+	t.Logf("correctly retried 429, then stopped on 403 LIMIT_EXCEEDED after %d attempts", totalAttempts)
 }
 
 // =============================================================================

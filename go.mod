@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.38.2
-	github.com/zscaler/zscaler-sdk-go/v3 v3.8.20
+	github.com/zscaler/zscaler-sdk-go/v3 v3.8.21
 )
 
 require (

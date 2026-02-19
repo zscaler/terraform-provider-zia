@@ -111,15 +111,32 @@ func resourceFWIPSourceGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no ip source groups id is set"))
 	}
-	resp, err := ipsourcegroups.Get(ctx, service, id)
-	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing zia ip source groups %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
 
+	allGroups, err := ipsourcegroups.GetAll(ctx, service)
+	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	var resp *ipsourcegroups.IPSourceGroups
+	for i := range allGroups {
+		if allGroups[i].ID == id {
+			resp = &allGroups[i]
+			break
+		}
+	}
+
+	if resp == nil {
+		log.Printf("[WARN] IP source group %d not found in GetAll response, falling back to direct Get", id)
+		group, err := ipsourcegroups.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing zia ip source groups %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = group
 	}
 
 	log.Printf("[INFO] Getting zia ip source groups:\n%+v\n", resp)

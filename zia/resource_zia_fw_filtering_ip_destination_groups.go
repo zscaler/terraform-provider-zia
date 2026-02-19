@@ -143,15 +143,32 @@ func resourceFWIPDestinationGroupsRead(ctx context.Context, d *schema.ResourceDa
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no ip destination groups id is set"))
 	}
-	resp, err := ipdestinationgroups.Get(ctx, service, id)
-	if err != nil {
-		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
-			log.Printf("[WARN] Removing zia ip destination groups %s from state because it no longer exists in ZIA", d.Id())
-			d.SetId("")
-			return nil
-		}
 
+	allGroups, err := ipdestinationgroups.GetAll(ctx, service, "")
+	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	var resp *ipdestinationgroups.IPDestinationGroups
+	for i := range allGroups {
+		if allGroups[i].ID == id {
+			resp = &allGroups[i]
+			break
+		}
+	}
+
+	if resp == nil {
+		log.Printf("[WARN] IP destination group %d not found in GetAll response, falling back to direct Get", id)
+		group, err := ipdestinationgroups.Get(ctx, service, id)
+		if err != nil {
+			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
+				log.Printf("[WARN] Removing zia ip destination groups %s from state because it no longer exists in ZIA", d.Id())
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
+		resp = group
 	}
 
 	processedCountries := make([]string, len(resp.Countries))
