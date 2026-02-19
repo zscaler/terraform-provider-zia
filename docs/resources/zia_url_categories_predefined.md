@@ -15,7 +15,9 @@ description: |-
 
 The **zia_url_categories_predefined** resource allows you to manage mutable fields of existing predefined URL categories. Predefined URL categories are built-in to the Zscaler platform and cannot be created or deleted — only specific fields can be updated.
 
-This resource is designed for use cases where you need to add custom URLs, keywords, or IP ranges to a predefined category such as `EDUCATION`, `FINANCE`, `CORPORATE_MARKETING`, etc.
+~> NOTE: This an Early Access feature.
+
+This resource is designed for use cases where you need to add custom URLs, keywords, or IP ranges to a predefined category such as `FINANCE`, `CORPORATE_MARKETING`, etc.
 
 ~> For managing **custom** URL categories (full CRUD lifecycle), use the [`zia_url_categories`](zia_url_categories) resource instead.
 
