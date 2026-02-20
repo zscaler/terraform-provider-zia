@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.5``
+``Last updated: v4.7.6``
 
 ---
+
+## 4.7.6 (February, xx 2026)
+
+### Notes
+
+- Release date: **(February, xx 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #527](https://github.com/zscaler/terraform-provider-zia/pull/527) - Fixed `UpdateContext` in all ordered rule resources to defer `ReadContext` until after the reorder mechanism completes, preventing stale order values from being stored in state.
 
 ## 4.7.5 (February, 18 2026)
 

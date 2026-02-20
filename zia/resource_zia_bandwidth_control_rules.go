@@ -351,13 +351,6 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 			},
 			nil)
 
-		if diags := resourceBandwdithControlRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
 		markOrderRuleAsDone(req.ID, "bandwidth_control_rule")
 		waitForReorder("bandwidth_control_rule")
 		break
@@ -374,7 +367,7 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceBandwdithControlRulesRead(ctx, d, meta)
 }
 
 func resourceBandwdithControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

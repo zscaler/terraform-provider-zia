@@ -165,6 +165,7 @@ func resourceFirewallIPSRules() *schema.Resource {
 			"eun_template_id": {
 				Type:        schema.TypeInt,
 				Optional:    true,
+				Computed:    true,
 				Description: "The EUN template ID associated with the rule",
 			},
 			"locations":         setIDsSchemaTypeCustom(nil, "list of locations for which rule must be applied"),
@@ -499,9 +500,6 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceFirewallIPSRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "firewall_ips_rule")
 	waitForReorder("firewall_ips_rule")
 
@@ -516,7 +514,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceFirewallIPSRulesRead(ctx, d, meta)
 }
 
 func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
