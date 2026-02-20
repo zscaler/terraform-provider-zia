@@ -76,13 +76,13 @@ func resourceLocationManagement() *schema.Resource {
 			"up_bandwidth": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 99999999),
+				ValidateFunc: validation.IntBetween(0, 99999999),
 				Description:  "Upload bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
 			},
 			"dn_bandwidth": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(1, 99999999),
+				ValidateFunc: validation.IntBetween(0, 99999999),
 				Description:  "Download bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
 			},
 			"country": getLocationManagementCountries(),
@@ -395,6 +395,7 @@ func resourceLocationManagement() *schema.Resource {
 			"extranet":               setSingleIDSchemaTypeCustom("The ID of the extranet resource that must be assigned to the location"),
 			"extranet_ip_pool":       setSingleIDSchemaTypeCustom("The ID of the traffic selector specified in the extranet"),
 			"extranet_dns":           setSingleIDSchemaTypeCustom("The ID of the DNS server configuration used in the extranet"),
+			"virtual_zen_clusters":   setIDsSchemaTypeCustom(nil, "list of organization's Virtual Service Edge clusters"),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
@@ -550,6 +551,10 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("ipv6_dns_64prefix", resp.IPv6Dns64Prefix)
 	_ = d.Set("exclude_from_dynamic_groups", resp.ExcludeFromDynamicGroups)
 	_ = d.Set("exclude_from_manual_groups", resp.ExcludeFromManualGroups)
+
+	if err := d.Set("virtual_zen_clusters", flattenIDExtensionsListIDs(resp.VirtualZenClusters)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	if err := d.Set("vpn_credentials", flattenLocationVPNCredentialsSimple(resp.VPNCredentials)); err != nil {
 		return diag.FromErr(err)
@@ -734,6 +739,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		Extranet:                            expandIDNameExtensionsSetSingle(d, "extranet"),
 		ExtranetIpPool:                      expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
 		ExtranetDns:                         expandIDNameExtensionsSetSingle(d, "extranet_dns"),
+		VirtualZenClusters:                  expandIDNameExtensionsSet(d, "virtual_zen_clusters"),
 		AUPTimeoutInDays:                    d.Get("aup_timeout_in_days").(int),
 		Profile:                             d.Get("profile").(string),
 		VPNCredentials:                      expandLocationManagementVPNCredentials(d),

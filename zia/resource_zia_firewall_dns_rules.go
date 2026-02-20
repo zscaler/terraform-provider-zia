@@ -530,9 +530,6 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceFirewallDNSRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "firewall_dns_rule")
 	waitForReorder("firewall_dns_rule")
 
@@ -547,7 +544,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceFirewallDNSRulesRead(ctx, d, meta)
 }
 
 func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

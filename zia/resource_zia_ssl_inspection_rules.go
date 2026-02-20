@@ -640,9 +640,6 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceSSLInspectionRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "ssl_inspection_rules")
 	waitForReorder("ssl_inspection_rules")
 
@@ -657,7 +654,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceSSLInspectionRulesRead(ctx, d, meta)
 }
 
 func resourceSSLInspectionRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

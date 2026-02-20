@@ -505,9 +505,6 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceFileTypeControlRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "file_type_control_rules")
 	waitForReorder("file_type_control_rules")
 
@@ -522,7 +519,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceFileTypeControlRulesRead(ctx, d, meta)
 }
 
 func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
