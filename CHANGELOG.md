@@ -7,9 +7,14 @@
 - Release date: **(February, xx 2026)**
 - Supported Terraform version: **v1.x**
 
+### Enhancements
+
+- [PR #526](https://github.com/zscaler/terraform-provider-zia/pull/526) - Added new resource `zia_sandbox_behavioral_analysis_v2` to updates the custom list of MD5 file hashes. See documentation for details.
+
 ### Bug Fixes
 
 - [PR #527](https://github.com/zscaler/terraform-provider-zia/pull/527) - Fixed `UpdateContext` in all ordered rule resources to defer `ReadContext` until after the reorder mechanism completes, preventing stale order values from being stored in state.
+- [PR #527](https://github.com/zscaler/terraform-provider-zia/pull/527) - Adjusted `zia_location_management` resource to allow `up_bandwidth` and `dn_bandwidth` attributes to be set to 0 to align with API behavior where 0 indicates no bandwidth control enforcement, and updated validation accordingly.
 
 ## 4.7.5 (February, 18 2026)
 
