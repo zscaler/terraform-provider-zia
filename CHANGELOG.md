@@ -1,10 +1,10 @@
 # Changelog
 
-## 4.7.6 (February, xx 2026)
+## 4.7.6 (February, 24 2026)
 
 ### Notes
 
-- Release date: **(February, xx 2026)**
+- Release date: **(February, 24 2026)**
 - Supported Terraform version: **v1.x**
 
 ### Enhancements
