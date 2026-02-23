@@ -325,6 +325,99 @@ func TestReorder_MultipleResourceTypes_Independent(t *testing.T) {
 	}
 }
 
+// TestReorder_ReadMustHappenAfterWaitForReorder validates that state is only
+// read after the reorder goroutine has completed. This is the correct lifecycle
+// for both Create and Update: register → markDone → waitForReorder → Read.
+// A previous bug had Update calling Read before markDone/waitForReorder, which
+// stored stale pre-reorder state.
+func TestReorder_ReadMustHappenAfterWaitForReorder(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 100 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	var mu sync.Mutex
+	reorderCompleted := false
+	readCalledAfterReorder := false
+
+	getCount := func() (int, error) { return 10, nil }
+	updateOrder := func(id int, order OrderRule) error {
+		mu.Lock()
+		reorderCompleted = true
+		mu.Unlock()
+		return nil
+	}
+
+	simulateRead := func() {
+		mu.Lock()
+		defer mu.Unlock()
+		if reorderCompleted {
+			readCalledAfterReorder = true
+		}
+	}
+
+	reorderWithBeforeReorder(
+		OrderRule{Order: 1, Rank: 7}, 100, "test_read_order",
+		getCount, updateOrder, nil,
+	)
+
+	// Correct lifecycle: markDone → waitForReorder → Read
+	markOrderRuleAsDone(100, "test_read_order")
+	waitForReorder("test_read_order")
+	simulateRead()
+
+	mu.Lock()
+	defer mu.Unlock()
+	if !reorderCompleted {
+		t.Fatal("expected reorder to have completed")
+	}
+	if !readCalledAfterReorder {
+		t.Fatal("Read was called before reorder completed — this would store stale state")
+	}
+}
+
+// TestReorder_SequentialRulesSimulateUpdate simulates the Update flow for
+// sequential rule creation (like Pulumi depends_on chains): each rule
+// registers, marks done, waits for reorder, then reads — one at a time.
+// Validates that each rule's final order is correct.
+func TestReorder_SequentialRulesSimulateUpdate(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 100 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	var mu sync.Mutex
+	finalOrders := map[int]int{}
+
+	getCount := func() (int, error) { return 10, nil }
+	updateOrder := func(id int, order OrderRule) error {
+		mu.Lock()
+		finalOrders[id] = order.Order
+		mu.Unlock()
+		return nil
+	}
+
+	for i := 1; i <= 5; i++ {
+		ruleID := 500 + i
+
+		reorderWithBeforeReorder(
+			OrderRule{Order: i, Rank: 7}, ruleID, "test_sequential_update",
+			getCount, updateOrder, nil,
+		)
+
+		markOrderRuleAsDone(ruleID, "test_sequential_update")
+		waitForReorder("test_sequential_update")
+
+		mu.Lock()
+		order, exists := finalOrders[ruleID]
+		mu.Unlock()
+		if !exists {
+			t.Fatalf("rule %d was not reordered", ruleID)
+		}
+		if order != i {
+			t.Errorf("rule %d: expected order %d, got %d", ruleID, i, order)
+		}
+	}
+}
+
 func TestReorder_ConcurrentRegistration(t *testing.T) {
 	resetReorderState()
 	reorderTickInterval = 100 * time.Millisecond

@@ -15,6 +15,8 @@ description: |-
 
 Use the **zia_virtual_service_edge_cluster** resource allows the creation and management of Service Edge Cluster objects in the Zscaler Internet Access.
 
+**NOTE** This resource can be associated with a `zia_location_management` via the attribute `virtual_zen_clusters`
+
 ## Example Usage
 
 ```hcl

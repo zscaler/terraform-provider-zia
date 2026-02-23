@@ -432,9 +432,6 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceSandboxRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "sandbox_rules")
 	waitForReorder("sandbox_rules")
 
@@ -449,7 +446,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceSandboxRulesRead(ctx, d, meta)
 }
 
 func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

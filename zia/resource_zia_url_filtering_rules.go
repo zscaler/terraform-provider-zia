@@ -675,9 +675,6 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceURLFilteringRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "url_filtering_rules")
 	waitForReorder("url_filtering_rules")
 
@@ -692,7 +689,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceURLFilteringRulesRead(ctx, d, meta)
 }
 
 func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

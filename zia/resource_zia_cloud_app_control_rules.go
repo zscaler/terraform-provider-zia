@@ -550,9 +550,6 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceCloudAppControlRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
 	waitForReorder("cloud_app_control_rules")
 
@@ -567,7 +564,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceCloudAppControlRulesRead(ctx, d, meta)
 }
 
 func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

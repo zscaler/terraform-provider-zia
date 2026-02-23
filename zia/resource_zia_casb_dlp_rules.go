@@ -645,13 +645,6 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			},
 			nil)
 
-		if diags := resourceCasbDlpRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
 		markOrderRuleAsDone(req.ID, "casb_dlp_rules")
 		waitForReorder("casb_dlp_rules")
 		break

@@ -722,7 +722,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	markOrderRuleAsDone(id, resourceType)
 	waitForReorder(resourceType)
 
-	return nil
+	return resourceDlpWebRulesRead(ctx, d, meta)
 }
 
 func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

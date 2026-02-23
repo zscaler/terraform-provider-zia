@@ -18,7 +18,7 @@ The **zia_location_management** resource allows the creation and management of Z
 * Static IP resource
 * GRE Tunnel resource
 * VPN credentials resource
-* URL filtering and firewall filtering rules
+* URL filtering, firewall filtering annd several other types of rule based resources
 
 ## Example Usage - Location Management with UFQDN VPN Credential
 
@@ -192,7 +192,7 @@ resource "zia_location_management" "usa_sjc37_office_branch01"{
 }
 ```
 
-# ZIA SubLocation Management with UFQDN VPN Credential
+## Example Usage - SubLocation Management with UFQDN VPN Credential
 
 ```hcl
 

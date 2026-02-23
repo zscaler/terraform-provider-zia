@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,29 +54,6 @@ func resourceSandboxSettings() *schema.Resource {
 				},
 			},
 		},
-	}
-}
-
-func validateHashes(hashes []string) error {
-	for _, hash := range hashes {
-		hashType := identifyHashType(hash)
-		if hashType != "MD5" {
-			return fmt.Errorf("the hash '%s' is a %s type. The sandbox only supports MD5 hashes", hash, hashType)
-		}
-	}
-	return nil
-}
-
-func identifyHashType(hash string) string {
-	switch len(hash) {
-	case 32:
-		return "MD5"
-	case 40:
-		return "SHA1"
-	case 64:
-		return "SHA256"
-	default:
-		return "unknown"
 	}
 }
 
@@ -177,11 +153,4 @@ func expandAndSortSandboxSettings(d *schema.ResourceData) sandbox_settings.BaAdv
 	return sandbox_settings.BaAdvancedSettings{
 		FileHashesToBeBlocked: sortedHashes,
 	}
-}
-
-func sortStringSlice(slice []string) []string {
-	sorted := make([]string, len(slice))
-	copy(sorted, slice)
-	sort.Strings(sorted)
-	return sorted
 }

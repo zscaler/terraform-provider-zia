@@ -477,13 +477,6 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
 		)
 
-		if diags := resourceNatControlRulesRead(ctx, d, meta); diags.HasError() {
-			if time.Since(start) < timeout {
-				time.Sleep(10 * time.Second) // Wait before retrying
-				continue
-			}
-			return diags
-		}
 		markOrderRuleAsDone(req.ID, "nat_control_rules")
 		waitForReorder("nat_control_rules")
 		break
@@ -500,7 +493,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceNatControlRulesRead(ctx, d, meta)
 }
 
 func resourceNatControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

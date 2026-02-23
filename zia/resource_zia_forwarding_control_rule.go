@@ -598,9 +598,6 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceForwardingControlRuleRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "forwarding_control_rule")
 	waitForReorder("forwarding_control_rule")
 
@@ -615,7 +612,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceForwardingControlRuleRead(ctx, d, meta)
 }
 
 func resourceForwardingControlRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -500,9 +500,6 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	if diags := resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta); diags.HasError() {
-		return diags
-	}
 	markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
 	waitForReorder("firewall_filtering_rules")
 
@@ -517,7 +514,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return nil
+	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
 }
 
 func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

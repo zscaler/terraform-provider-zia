@@ -740,12 +740,12 @@ Valid actions for applications %v with rule_type '%s':
 To resolve this issue:
 1. Remove the unsupported actions from your configuration, OR
 2. Use the data source to automatically get valid actions:
-   
+
    data "zia_cloud_app_control_rule_actions" "valid" {
      type       = "%s"
      cloud_apps = %v
    }
-   
+
    resource "zia_cloud_app_control_rule" "example" {
      ...
      actions = data.zia_cloud_app_control_rule_actions.valid.available_actions
@@ -2588,4 +2588,34 @@ func noChangeInMultiLineText(k, oldText, newText string, d *schema.ResourceData)
 func unescapeTerraformVariables(val string) string {
 	// Convert `$$` back to `$` for the API
 	return strings.ReplaceAll(val, "$$", "$")
+}
+
+func validateHashes(hashes []string) error {
+	for _, hash := range hashes {
+		hashType := identifyHashType(hash)
+		if hashType != "MD5" {
+			return fmt.Errorf("the hash '%s' is a %s type. The sandbox only supports MD5 hashes", hash, hashType)
+		}
+	}
+	return nil
+}
+
+func identifyHashType(hash string) string {
+	switch len(hash) {
+	case 32:
+		return "MD5"
+	case 40:
+		return "SHA1"
+	case 64:
+		return "SHA256"
+	default:
+		return "unknown"
+	}
+}
+
+func sortStringSlice(slice []string) []string {
+	sorted := make([]string, len(slice))
+	copy(sorted, slice)
+	sort.Strings(sorted)
+	return sorted
 }
