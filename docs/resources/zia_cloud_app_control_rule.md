@@ -15,7 +15,7 @@ description: |-
 
 The **zia_cloud_app_control_rule** resource allows the creation and management of ZIA Cloud Application Control rules in the Zscaler Internet Access.
 
-**NOTE** Resources or DataSources to retrieve Tenant Profile or Cloud Application Risk Profile ID information are not currently available.
+**NOTE** Resources or Data Sources to retrieve Tenant Profile or Cloud Application Risk Profile ID information are not currently available.
 
 ## Example Usage - Using Data Source for Actions (Recommended)
 
@@ -191,7 +191,7 @@ The following arguments are supported:
 
 * `description` - (String) The description of the Cloud App Control rule.
 
-* `actions` - (List of String) Refer to the Cloud Application Control. To retrieve the list of supported actions based on `type` use the resource: [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions)
+* `actions` - (List of String) The actions applied by this rule. You can either use the [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions) data source to retrieve valid actions, or specify them manually for granular control (e.g., mixing `ALLOW_` and `BLOCK_` for different action categories). See the [Granular Mixed Actions](#granular-mixed-actions) section below for details.
 
 * `order` - (Number) The rule order of execution for the Cloud App Control rule with respect to other
 * `rank` - (Number) Admin rank of the admin who creates this rule
@@ -294,14 +294,37 @@ When using ISOLATE actions:
 
 When configuring multiple applications in a single rule, only actions supported by ALL applications are valid. The data source automatically computes this intersection when you specify multiple cloud_apps.
 
-### Action Validation
+### Granular Mixed Actions
 
-The resource validates actions during `terraform plan`. If invalid actions are detected, an error message will show:
+Some application types (e.g., `SYSTEM_AND_DEVELOPMENT`, `FILE_SHARE`) support granular action control, where you can allow certain operations while blocking others within the same rule. For example, you may want to allow uploading to GitHub but block creating repositories.
 
-* Which actions are invalid
+In this case, set the `actions` attribute manually instead of using the data source `filtered_actions`:
 
-* List of valid actions for your configuration
-* Suggestion to use the data source
+```hcl
+resource "zia_cloud_app_control_rule" "github_granular" {
+  name         = "GitHub Granular Control"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "SYSTEM_AND_DEVELOPMENT"
+  applications = ["GITHUB"]
+
+  # Manually specify a mix of ALLOW and BLOCK for granular control
+  actions = [
+      "ALLOW_SYSTEM_DEVELOPMENT_UPLOAD",
+      "BLOCK_SYSTEM_DEVELOPMENT_CREATE",
+      "BLOCK_SYSTEM_DEVELOPMENT_EDIT",
+      "ALLOW_SYSTEM_DEVELOPMENT_SHARE",
+      "ALLOW_SYSTEM_DEVELOPMENT_COMMENT",
+      "BLOCK_SYSTEM_DEVELOPMENT_REACTION",
+      "ALLOW_SYSTEM_DEVELOPMENT_APPS"
+  ]
+}
+```
+
+~> **Note:** Each action category (e.g., Uploading, Creating, Sharing) must have exactly one of `ALLOW_` or `BLOCK_` — not both. If conflicting actions are provided (e.g., both `ALLOW_SYSTEM_DEVELOPMENT_REACTION` and `BLOCK_SYSTEM_DEVELOPMENT_REACTION`), the API will return an error at apply time.
+
+~> **Important:** Some `BLOCK_` actions require a companion `ALLOW_` action to also be present. For example, when using `BLOCK_SYSTEM_DEVELOPMENT_CREATE`, the API requires `ALLOW_SYSTEM_DEVELOPMENT_APPS` to also be specified. If it is missing, the API will return an error such as: `"If BLOCK_SYSTEM_DEVELOPMENT_CREATE is specified, then ALLOW_SYSTEM_DEVELOPMENT_APPS must also be specified."` This means that filtering the data source with `action_prefixes = ["BLOCK"]` alone may not be sufficient — you may need to add the required companion action manually or use the full `available_actions` output and adjust from there.
 
 For more information, see the [zia_cloud_app_control_rule_actions](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions) data source documentation.
 
