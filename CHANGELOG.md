@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.7.7 (February, 24 2026)
+
+### Notes
+
+- Release date: **(February, 24 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #527](https://github.com/zscaler/terraform-provider-zia/pull/527) - Fixed `zia_cloud_app_control_rule` to remove local action validation that incorrectly rejected valid actions due to incomplete API responses. Users can now set actions manually for granular control. See [documentation](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_cloud_app_control_rule#granular-mixed-actions) for details.
+
+- [PR #527](https://github.com/zscaler/terraform-provider-zia/pull/527) - Upgraded to [zscaler-sdk-go v3.8.23](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.23)
+
 ## 4.7.6 (February, 24 2026)
 
 ### Notes

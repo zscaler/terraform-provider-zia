@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strings"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
@@ -681,81 +679,6 @@ func validateActionsCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff
 	if isolateCount > 0 {
 		if eunID, eunSet := diff.GetOk("browser_eun_template_id"); eunSet && eunID != "" {
 			return fmt.Errorf("browser_eun_template_id cannot be set when ISOLATE_ actions are configured")
-		}
-	}
-
-	// Rule 4: Validate actions against API (application-specific validation)
-	ruleType, hasRuleType := diff.GetOk("type")
-	applicationsSet := diff.Get("applications").(*schema.Set)
-
-	if hasRuleType && applicationsSet.Len() > 0 && len(actionStrings) > 0 {
-		client := meta.(*Client)
-		service := client.Service
-
-		// Convert applications set to string slice
-		applications := make([]string, applicationsSet.Len())
-		for i, app := range applicationsSet.List() {
-			applications[i] = app.(string)
-		}
-
-		// Call API to get valid actions for these specific applications
-		payload := cloudappcontrol.AvailableActionsRequest{
-			CloudApps: applications,
-			Type:      ruleType.(string),
-		}
-
-		log.Printf("[DEBUG] Validating actions via API for rule_type=%s, applications=%v", ruleType, applications)
-		validActions, err := cloudappcontrol.AllAvailableActions(ctx, service, ruleType.(string), payload)
-		if err != nil {
-			// If API call fails, log warning but don't block (graceful degradation)
-			log.Printf("[WARN] Could not validate actions via API: %v. Skipping action validation.", err)
-		} else if len(validActions) == 0 {
-			// If API returns an empty list, skip validation and allow user-specified actions.
-			// Some applications return empty available actions from the API even though
-			// valid actions exist. In this case, trust the user's configuration.
-			log.Printf("[WARN] API returned empty valid actions for rule_type=%s, applications=%v. Skipping action validation to allow user-specified actions.", ruleType, applications)
-		} else {
-			// Create set of valid actions for quick lookup
-			validSet := make(map[string]bool)
-			for _, action := range validActions {
-				validSet[action] = true
-			}
-
-			// Check for invalid actions
-			var invalidActions []string
-			for _, action := range actionStrings {
-				if !validSet[action] {
-					invalidActions = append(invalidActions, action)
-				}
-			}
-
-			if len(invalidActions) > 0 {
-				return fmt.Errorf(`Invalid actions for the specified applications.
-
-The following actions are not supported: %v
-
-Valid actions for applications %v with rule_type '%s':
-%v
-
-To resolve this issue:
-1. Remove the unsupported actions from your configuration, OR
-2. Use the data source to automatically get valid actions:
-
-   data "zia_cloud_app_control_rule_actions" "valid" {
-     type       = "%s"
-     cloud_apps = %v
-   }
-
-   resource "zia_cloud_app_control_rule" "example" {
-     ...
-     actions = data.zia_cloud_app_control_rule_actions.valid.available_actions
-   }
-
-Note: When using multiple applications, only actions supported by ALL applications are valid.
-
-For more information, see: https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_cloud_app_control_rule`,
-					invalidActions, applications, ruleType, validActions, ruleType, applications)
-			}
 		}
 	}
 
