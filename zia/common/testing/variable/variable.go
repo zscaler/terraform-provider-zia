@@ -291,6 +291,12 @@ const (
 	DCExclusionsDescription = "tf-acc-dc-exclusions"
 )
 
+// Email Profiles
+const (
+	EmailProfileDescription       = "testAcc_email_profile"
+	EmailProfileDescriptionUpdate = "testAcc_email_profile_updated"
+)
+
 // Rule Labels
 const (
 	ExtranetName               = "testAcc_extranet"

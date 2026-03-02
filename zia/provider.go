@@ -186,6 +186,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_sub_cloud":                                     resourceSubCloud(),
 			"zia_extranet":                                      resourceExtranet(),
 			"zia_dc_exclusions":                                 resourceDCExclusions(),
+			"zia_email_profile":                                 resourceEmailProfile(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -287,6 +288,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_datacenters":                                   dataSourceDatacenters(),
 			"zia_extranet":                                      dataSourceExtranet(),
 			"zia_dc_exclusions":                                 dataSourceDCExclusions(),
+			"zia_email_profile":                                 dataSourceEmailProfile(),
 		},
 	}
 

@@ -19,7 +19,6 @@ The **zia_url_filtering_and_cloud_app_settings** resource allows you to updates 
 
 ```hcl
 resource "zia_url_filtering_and_cloud_app_settings" "this" {
-    block_skype                             = true
     consider_embedded_sites                 = false
     enable_block_override_for_non_auth_user = false
     enable_chatgpt_prompt                   = false
@@ -32,7 +31,7 @@ resource "zia_url_filtering_and_cloud_app_settings" "this" {
     enable_newly_registered_domains         = false
     enable_office365                        = true
     enable_per_plexity_prompt               = false
-    enable_poep_prompt                      = false
+    enable_poe_prompt                      = false
     enable_ucaas_logmein                    = false
     enable_ucaas_ring_central               = false
     enable_ucaas_talkdesk                   = false
@@ -64,13 +63,20 @@ The following arguments are supported:
 * `enable_chatgpt_prompt` - (Boolean) Indicates if the use of generative AI prompts with ChatGPT by users should be categorized and logged.
 * `enable_microsoft_copilot_prompt` - (Boolean) Indicates if the use of generative AI prompts with Microsoft Copilot by users should be categorized and logged.
 * `enable_gemini_prompt` - (Boolean) Indicates if the use of generative AI prompts with Google Gemini by users should be categorized and logged.
-* `enable_poeprompt` - (Boolean) Indicates if the use of generative AI prompts with Poe by users should be categorized and logged.
+* `enable_poe_prompt` - (Boolean) Indicates if the use of generative AI prompts with Poe by users should be categorized and logged.
 * `enable_meta_prompt` - (Boolean) Indicates if the use of generative AI prompts with Meta AI by users should be categorized and logged.
 * `enable_perplexity_prompt` - (Boolean) Indicates if the use of generative AI prompts with Perplexity by users should be categorized and logged.
-* `block_skype` - (Boolean) Indicates whether access to Skype is blocked.
+* `enable_deep_seek_prompt` - (Boolean) Indicates if the use of generative AI prompts with DeepSeek by users should be categorized and logged.
+* `enable_writer_prompt` - (Boolean) Indicates if the use of generative AI prompts with Writer by users should be categorized and logged.
+* `enable_grok_prompt` - (Boolean) Indicates if the use of generative AI prompts with Grok by users should be categorized and logged.
+* `enable_mistral_ai_prompt` - (Boolean) Indicates if the use of generative AI prompts with Mistral AI by users should be categorized and logged.
+* `enable_claude_prompt` - (Boolean) Indicates if the use of generative AI prompts with Claude by users should be categorized and logged.
+* `enable_grammarly_prompt` - (Boolean) Indicates if the use of generative AI prompts with Grammarly by users should be categorized and logged.
 * `enable_newly_registered_domains` - (Boolean) Indicates whether newly registered and observed domains identified within hours of going live are allowed or blocked.
 * `enable_block_override_for_non_auth_user` - (Boolean) Indicates if authorized users can temporarily override block action on websites by providing their authentication information.
 * `enable_cipa_compliance` - (Boolean) Indicates if the predefined CIPA Compliance Rule is enabled.
+* `zvelo_db_lookup_disabled` - (Boolean) Indicates if Zvelo database lookup is disabled.
+* `enable_creative_commons_search_results` - (Boolean) Indicates if Creative Commons search results are enabled.
 
 ## Import
 

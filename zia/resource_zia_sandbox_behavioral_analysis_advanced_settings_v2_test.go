@@ -98,7 +98,8 @@ func testAccSandboxSettingsV2Config(hashes []struct {
 	URL        string
 	URLComment string
 	Type       string
-}) string {
+},
+) string {
 	var sb strings.Builder
 	sb.WriteString("resource \"zia_sandbox_behavioral_analysis_v2\" \"test\" {\n")
 	for _, h := range hashes {
@@ -116,7 +117,8 @@ func testAccSandboxSettingsV2WithDataSource(hashes []struct {
 	URL        string
 	URLComment string
 	Type       string
-}) string {
+},
+) string {
 	return testAccSandboxSettingsV2Config(hashes) + "\n" + `data "zia_sandbox_behavioral_analysis_v2" "list_all" {}`
 }
 

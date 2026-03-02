@@ -93,10 +93,35 @@ func dataSourceURLFilteringCloludAppSettings() *schema.Resource {
 				Computed:    true,
 				Description: "A Boolean value indicating if the use of generative AI prompts with Perplexity by users should be categorized and logged",
 			},
-			"block_skype": {
+			"enable_deep_seek_prompt": {
 				Type:        schema.TypeBool,
 				Computed:    true,
-				Description: "A Boolean value indicating whether access to Skype is blocked or not.",
+				Description: "A Boolean value indicating if the use of generative AI prompts with DeepSeek by users should be categorized and logged",
+			},
+			"enable_writer_prompt": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if the use of generative AI prompts with Writer by users should be categorized and logged",
+			},
+			"enable_grok_prompt": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if the use of generative AI prompts with Grok by users should be categorized and logged",
+			},
+			"enable_mistral_ai_prompt": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if the use of generative AI prompts with Mistral AI by users should be categorized and logged",
+			},
+			"enable_claude_prompt": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if the use of generative AI prompts with Claude by users should be categorized and logged",
+			},
+			"enable_grammarly_prompt": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if the use of generative AI prompts with Grammarly by users should be categorized and logged",
 			},
 			"enable_newly_registered_domains": {
 				Type:        schema.TypeBool,
@@ -112,6 +137,16 @@ func dataSourceURLFilteringCloludAppSettings() *schema.Resource {
 				Type:        schema.TypeBool,
 				Computed:    true,
 				Description: "A Boolean value indicating if the predefined CIPA Compliance Rule is enabled or not. ",
+			},
+			"zvelo_db_lookup_disabled": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if Zvelo database lookup is disabled.",
+			},
+			"enable_creative_commons_search_results": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "A Boolean value indicating if Creative Commons search results are enabled.",
 			},
 		},
 	}
@@ -144,10 +179,17 @@ func dataSourceURLFilteringCloludAppSettingsRead(ctx context.Context, d *schema.
 		_ = d.Set("enable_poep_prompt", resp.EnablePOEPrompt)
 		_ = d.Set("enable_meta_prompt", resp.EnableMetaPrompt)
 		_ = d.Set("enable_per_plexity_prompt", resp.EnablePerPlexityPrompt)
-		_ = d.Set("block_skype", resp.BlockSkype)
+		_ = d.Set("enable_deep_seek_prompt", resp.EnableDeepSeekPrompt)
+		_ = d.Set("enable_writer_prompt", resp.EnableWriterPrompt)
+		_ = d.Set("enable_grok_prompt", resp.EnableGrokPrompt)
+		_ = d.Set("enable_mistral_ai_prompt", resp.EnableMistralAIPrompt)
+		_ = d.Set("enable_claude_prompt", resp.EnableClaudePrompt)
+		_ = d.Set("enable_grammarly_prompt", resp.EnableGrammarlyPrompt)
 		_ = d.Set("enable_newly_registered_domains", resp.EnableNewlyRegisteredDomains)
 		_ = d.Set("enable_block_override_for_non_auth_user", resp.EnableBlockOverrideForNonAuthUser)
 		_ = d.Set("enable_cipa_compliance", resp.EnableCIPACompliance)
+		_ = d.Set("zvelo_db_lookup_disabled", resp.ZveloDbLookupDisabled)
+		_ = d.Set("enable_creative_commons_search_results", resp.EnableCreativeCommonsSearchResults)
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't read url filtering and cloud app settings"))
 	}
