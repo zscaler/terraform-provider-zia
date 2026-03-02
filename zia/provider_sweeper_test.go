@@ -18,6 +18,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_notification_templates"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlpdictionaries"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/email_profiles"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
@@ -1029,6 +1030,35 @@ func sweepTestExtranet(client *testClient) error {
 		}
 	}
 	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEmailProfile(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	items, err := email_profiles.GetAll(context.Background(), service, nil)
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(items)))
+	for _, b := range items {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := email_profiles.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.EmailProfile, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
 	if len(errorList) > 0 {
 		for _, err := range errorList {
 			sweeperLogger.Error(err.Error())

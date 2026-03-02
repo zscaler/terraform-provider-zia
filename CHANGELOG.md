@@ -1,5 +1,26 @@
 # Changelog
 
+## 4.7.8 (March, 2 2026)
+
+### Notes
+
+- Release date: **(March, 2 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #537](https://github.com/zscaler/terraform-provider-zia/pull/537) - Added new resource and data source `zia_email_profile` for managing email recipient profiles. See [documentation](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_email_profile) for details.
+
+- [PR #537](https://github.com/zscaler/terraform-provider-zia/pull/537) Added new AI attributes to ZIA resource and datasource `zia_url_filtering_and_cloud_app_settings`
+  - `Enable_deep_seek_prompt`
+  - `Enable_writer_prompt`
+  - `Enable_grok_prompt`
+  - `enable_mistral_ai_prompt`
+  - `enable_claude_prompt`
+  - `enable_grammarly_prompt`
+  - `zvelo_db_lookup_disabled`
+  - `enable_creative_commons_search_results`
+
 ## 4.7.7 (February, 24 2026)
 
 ### Notes

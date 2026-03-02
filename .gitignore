@@ -28,6 +28,7 @@ website/node_modules
 .idea
 .vscode
 .cursor
+.claude
 *.iml
 *.test
 *.iml
