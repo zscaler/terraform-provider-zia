@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall Policies"
+subcategory: "Forwarding Control Policy"
 layout: "zscaler"
 page_title: "ZIA): forwarding_control_proxies"
 description: |-

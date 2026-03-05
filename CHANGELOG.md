@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.7.9 (March, 5 2026)
+
+### Notes
+
+- Release date: **(March, 5 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #538](https://github.com/zscaler/terraform-provider-zia/pull/538) - Added new data source `zia_dedicated_ip_proxy` for retrieving Dedicated IP Gateway information from the forwarding control policy. Supports lookup by ID or name. See [documentation](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_dedicated_ip_proxy) for details.
+
 ## 4.7.8 (March, 2 2026)
 
 ### Notes

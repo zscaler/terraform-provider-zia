@@ -279,6 +279,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_nss_server":                                    dataSourceNSSServer(),
 			"zia_subscription_alert":                            dataSourceSubscriptionAlerts(),
 			"zia_forwarding_control_proxies":                    dataSourceForwardingControlProxies(),
+			"zia_dedicated_ip_proxy":                            dataSourceDedicatedIPProxy(),
 			"zia_ftp_control_policy":                            dataSourceFTPControlPolicy(),
 			"zia_mobile_malware_protection_policy":              dataSourceMobileMalwareProtectionPolicy(),
 			"zia_virtual_service_edge_cluster":                  dataSourceVZENCluster(),

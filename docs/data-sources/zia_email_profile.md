@@ -1,5 +1,5 @@
 ---
-subcategory: "DLP"
+subcategory: "Data Loss Prevention"
 layout: "zscaler"
 page_title: "ZIA: email_profile"
 description: |-
