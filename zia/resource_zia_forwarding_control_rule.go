@@ -225,6 +225,7 @@ func resourceForwardingControlRule() *schema.Resource {
 			"nw_application_groups":          setIDsSchemaTypeCustom(nil, "User-defined network service application groups to which the rule applied. If not set, the rule is not restricted to a specific network service application group."),
 			"app_service_groups":             setIDsSchemaTypeCustom(nil, "list of application service groups"),
 			"proxy_gateway":                  setIdNameSchemaCustom(1, "The proxy gateway for which the rule is applicable. This field is applicable only for the Proxy Chaining forwarding method."),
+			"dedicated_ip_gateway":           setIdNameSchemaCustom(1, "The dedicated IP gateway for which the rule is applicable. This field is applicable only for the Proxy Chaining forwarding method."),
 			"zpa_gateway":                    setIdNameSchemaCustom(1, "The ZPA Server Group for which this rule is applicable. Only the Server Groups that are associated with the selected Application Segments are allowed. This field is applicable only for the ZPA forwarding method."),
 			"zpa_app_segments":               setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
 			"zpa_application_segments":       setIDsSchemaTypeCustom(intPtr(255), "List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ECZPA forwarding method (used for Zscaler Cloud Connector)."),
@@ -486,6 +487,10 @@ func resourceForwardingControlRuleRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("dedicated_ip_gateway", flattenIDNameSet(resp.DedicatedIPGateway)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := d.Set("zpa_gateway", flattenIDNameSet(resp.ZPAGateway)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -705,6 +710,7 @@ func expandForwardingControlRule(d *schema.ResourceData) forwarding_rules.Forwar
 		Labels:              expandIDNameExtensionsSet(d, "labels"),
 		ECGroups:            expandIDNameExtensionsSet(d, "ec_groups"),
 		ProxyGateway:        expandIDNameSet(d, "proxy_gateway"),
+		DedicatedIPGateway:  expandIDNameSet(d, "dedicated_ip_gateway"),
 		ZPAGateway:          expandIDNameSet(d, "zpa_gateway"),
 		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
 		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),

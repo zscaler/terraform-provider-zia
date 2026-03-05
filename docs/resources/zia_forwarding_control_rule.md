@@ -109,6 +109,32 @@ resource "zia_forwarding_control_rule" "this" {
 }
 ```
 
+## Example Usage - ENATDEDIP Forwarding Method
+
+data "zia_dedicated_ip_proxy" "this" {
+  name = "GW01"
+}
+
+```hcl
+resource "zia_forwarding_control_rule" "this" {
+  name               = "FC_ENATDEDIPRULE"
+  description        = "FC_ENATDEDIP_RULE"
+  order              = 1
+  rank               = 7
+  state              = "ENABLED"
+  type               = "FORWARDING"
+  forward_method     = "ENATDEDIP"
+  src_ips            = ["192.168.200.200"]
+  dest_addresses     = ["192.168.255.1"]
+  dest_ip_categories = ["ZSPROXY_IPS", "CUSTOM_01"]
+  dest_countries     = ["CA", "US"]
+  dedicated_ip_gateway {
+    id   = data.zia_dedicated_ip_proxy.this.id
+    name = data.zia_dedicated_ip_proxy.this.name
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
