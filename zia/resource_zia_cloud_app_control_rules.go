@@ -108,9 +108,10 @@ func resourceCloudAppControlRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The order of execution for the forwarding rule order",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The order of execution for the Cloud App Control rule.",
 			},
 			"state": {
 				Type:        schema.TypeString,
@@ -310,6 +311,9 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 				}
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.Predefined = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
@@ -542,6 +546,9 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			}
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)

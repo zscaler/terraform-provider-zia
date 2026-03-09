@@ -439,6 +439,8 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 					return err
 				}
 
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 
@@ -699,6 +701,8 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 				return nil
 			}
 
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.AccessControl = ""
 			// Update the order
 			rule.Order = order.Order
 			rule.Rank = order.Rank

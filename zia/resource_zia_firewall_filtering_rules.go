@@ -79,9 +79,10 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number of the Firewall Filtering policy rule.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -268,6 +269,10 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = filteringrules.Update(ctx, service, id, rule)
@@ -506,6 +511,10 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = filteringrules.Update(ctx, service, id, rule)

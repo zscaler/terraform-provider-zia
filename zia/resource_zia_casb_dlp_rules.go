@@ -133,9 +133,10 @@ func resourceCasbDlpRules() *schema.Resource {
 				}, false),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Order of rule execution with respect to other SaaS Security Data at Rest Scanning DLP rules",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Order of rule execution with respect to other SaaS Security Data at Rest Scanning DLP rules.",
 			},
 			"rank": {
 				Type:        schema.TypeInt,
@@ -407,6 +408,8 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				if rule.Order == order.Order {
 					return nil
 				}
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
 				if err != nil {
@@ -636,6 +639,8 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 				if rule.Order == order.Order {
 					return nil
 				}
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
 				if err != nil {

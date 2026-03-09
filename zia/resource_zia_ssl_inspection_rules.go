@@ -193,9 +193,10 @@ func resourceSSLInspectionRules() *schema.Resource {
 				Description: "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The rule order of execution for the  SSL Inspection rules with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the SSL Inspection rules with respect to other rules.",
 			},
 			"road_warrior_for_kerberos": {
 				Type:        schema.TypeBool,
@@ -441,6 +442,10 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.Predefined = false
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = sslinspection.Update(ctx, service, id, rule)
@@ -632,6 +637,10 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = sslinspection.Update(ctx, service, id, rule)

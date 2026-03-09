@@ -79,9 +79,10 @@ func resourceFirewallIPSRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number of the IPS Control policy rule.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -272,6 +273,10 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.Predefined = false
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
@@ -492,6 +497,10 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)

@@ -5,7 +5,7 @@ page_title: "ZIA: url_filtering_and_cloud_app_settings"
 description: |-
     Official documentation https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get
     API documentation https://help.zscaler.com/zia/url-cloud-app-control-policy-settings#/advancedUrlFilterAndCloudAppSettings-get
-  Updates the URL and Cloud App Control advanced policy settings
+    Updates the URL and Cloud App Control advanced policy settings
 ---
 
 # zia_url_filtering_and_cloud_app_settings (Resource)

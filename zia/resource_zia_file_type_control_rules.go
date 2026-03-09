@@ -316,6 +316,8 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = filetypecontrol.Update(ctx, service, id, rule)
@@ -497,6 +499,8 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = filetypecontrol.Update(ctx, service, id, rule)

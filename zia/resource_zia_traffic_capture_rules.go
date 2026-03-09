@@ -79,9 +79,10 @@ func resourceTrafficCaptureRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number of the Traffic Capture rule.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -268,6 +269,10 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 				return err
 			}
 
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = traffic_capture.Update(ctx, service, id, rule)
@@ -492,6 +497,10 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 				return nil
 			}
 
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = traffic_capture.Update(ctx, service, id, rule)
