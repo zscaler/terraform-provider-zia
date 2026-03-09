@@ -15,6 +15,12 @@ description: |-
 
 The **zia_file_type_control_rules** resource allows the creation and management of ZIA file type control rules in the Zscaler Internet Access.
 
+~> **NOTE:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them. When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed.
+
+~> **NOTE:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+
+~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
+
 ## Example Usage
 
 ```hcl

@@ -5,7 +5,7 @@ page_title: "ZIA: virtual_service_edge_node"
 description: |-
     Official documentation https://help.zscaler.com/zia/about-virtual-service-edges
     API documentation https://help.zscaler.com/zia/service-edges#/virtualZenNodes-post
-   Retrieves a list of ZIA Virtual Service Edge nodes.
+    Retrieves a list of ZIA Virtual Service Edge nodes.
 ---
 
 # zia_virtual_service_edge_node (Resource)

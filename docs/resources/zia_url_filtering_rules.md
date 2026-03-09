@@ -1,7 +1,7 @@
 ---
 subcategory: "URL Filtering Rules"
 layout: "zscaler"
-page_title: "ZIA:  url_filtering_rules"
+page_title: "ZIA: url_filtering_rules"
 description: |-
     Official documentation https://help.zscaler.com/zia/about-url-filtering
     API documentation https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-get
@@ -14,6 +14,12 @@ description: |-
 * [API documentation](https://help.zscaler.com/zia/url-filtering-policy#/urlFilteringRules-post)
 
 The **zia_url_filtering_rules** resource creates and manages a URL filtering rules within the Zscaler Internet Access cloud.
+
+~> **NOTE:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them. When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed.
+
+~> **NOTE:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+
+~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
 ## Example Usage - ALLOW ACTION
 

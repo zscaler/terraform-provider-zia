@@ -95,9 +95,10 @@ func resourceSandboxRules() *schema.Resource {
 				Description:  "Admin rank of the admin who creates this rule",
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The rule order of execution for the  sandbox rules with respect to other rules.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The rule order of execution for the sandbox rules with respect to other rules.",
 			},
 			"ba_rule_action": {
 				Type:        schema.TypeString,
@@ -248,6 +249,9 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = sandbox_rules.Update(ctx, service, id, rule)
@@ -424,6 +428,9 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
+			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.DefaultRule = false
+			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = sandbox_rules.Update(ctx, service, id, rule)

@@ -77,9 +77,10 @@ func resourceNatControlRules() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "Rule order number. If omitted, the rule will be added to the end of the rule set.",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "Rule order number of the NAT Control policy rule.",
 			},
 			"rank": {
 				Type:         schema.TypeInt,
@@ -247,14 +248,14 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 				if err != nil {
 					return err
 				}
-				if rule.Predefined {
-					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
-					return nil
-				}
 
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.Predefined = false
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)
@@ -456,10 +457,6 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				if err != nil {
 					return err
 				}
-				if rule.Predefined {
-					log.Printf("[INFO] Skipping reorder update for predefined rule ID %d (order: %d)", id, rule.Order)
-					return nil
-				}
 
 				// Optional: avoid unnecessary updates if the current order is already correct
 				if rule.Order == order.Order && rule.Rank == order.Rank {
@@ -469,6 +466,10 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				// to avoid the STALE_CONFIGURATION_ERROR
 				rule.LastModifiedTime = 0
 				rule.LastModifiedBy = nil
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.Predefined = false
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = nat_control_policies.Update(ctx, service, id, rule)

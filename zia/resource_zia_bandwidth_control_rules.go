@@ -89,9 +89,10 @@ func resourceBandwdithControlRules() *schema.Resource {
 				}, false),
 			},
 			"order": {
-				Type:        schema.TypeInt,
-				Required:    true,
-				Description: "The order of the bandwidth control rule",
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntAtLeast(1),
+				Description:  "The order of the bandwidth control rule.",
 			},
 			"rank": {
 				Type:        schema.TypeInt,
@@ -196,6 +197,9 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 				if rule.Order == order.Order {
 					return nil
 				}
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
 				return err
@@ -345,6 +349,9 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 				if rule.Order == order.Order {
 					return nil
 				}
+				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.DefaultRule = false
+				rule.AccessControl = ""
 				rule.Order = order.Order
 				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
 				return err

@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.9``
+``Last updated: v4.7.10``
 
 ---
+## 4.7.10 (March, 9 2026)
+
+### Notes
+
+- Release date: **(March, 9 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #541](https://github.com/zscaler/terraform-provider-zia/pull/541) - Fixed rule reordering failures for predefined rules across all rule-based resources by stripping read-only fields (`Predefined`, `DefaultRule`, `AccessControl`) from the API request body during reorder operations.
+
+- [PR #541](https://github.com/zscaler/terraform-provider-zia/pull/541) - Added `order` field input validation (`IntAtLeast(1)`) to all rule-based resources to prevent negative or zero order values that could result in corrupted, undeletable rules.
+
 ## 4.7.9 (March, 5 2026)
 
 ### Notes
