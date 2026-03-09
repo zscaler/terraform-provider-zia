@@ -93,9 +93,11 @@ resource "zia_forwarding_control_rule" "this" {
 
 ## Example Usage - PROXYCHAIN Forwarding Method
 
-  ⚠️ **WARNING:**: Creating or retrieving a Proxy Gateway via API is not currently supported; hence, the `id` and `name` for the `proxy_gateway` must be passed manually to the `proxy_gateway` block in the below configuration.
-
 ```hcl
+data "zia_forwarding_control_proxies" "this" {
+    name                 = "GW01"
+}
+
 resource "zia_forwarding_control_rule" "this" {
   name               = "PROXYCHAIN_FORWARDING_RULE"
   description        = "PROXYCHAIN_FORWARDING_RULE"
@@ -109,19 +111,19 @@ resource "zia_forwarding_control_rule" "this" {
   dest_ip_categories = ["ZSPROXY_IPS", "CUSTOM_01"]
   dest_countries     = ["CA", "US"]
   proxy_gateway {
-    id   = 2589270
-    name = "ProxyGW01"
+    id   = data.zia_forwarding_control_proxies.this.id
+    name = data.zia_forwarding_control_proxies.this.name
   }
 }
 ```
 
 ## Example Usage - ENATDEDIP Forwarding Method
 
+```hcl
 data "zia_dedicated_ip_proxy" "this" {
   name = "GW01"
 }
 
-```hcl
 resource "zia_forwarding_control_rule" "this" {
   name               = "FC_ENATDEDIPRULE"
   description        = "FC_ENATDEDIP_RULE"
@@ -221,17 +223,21 @@ In addition to all arguments above, the following attributes are exported:
 * `device_groups` (list) Name-ID pairs of device groups for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. If no value is set, this field is ignored during the policy evaluation.
       - `id` - (int) Identifier that uniquely identifies an entity
 
-* `zpa_gateway` (set) The ZPA Gateway for which this rule is applicable. This field is applicable only for the `ZPA` forwarding method.
+* `zpa_gateway` (set) The ZPA Gateway for which this rule is applicable. This field is applicable only for the `ZPA` forwarding method. Use the following data source or resource  [forwarding_control_zpa_gateway](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_forwarding_control_zpa_gateway) to retrieve the required attribute values.
       - `id` - (int) Identifier that uniquely identifies an entity
       - `name` - (string) The configured name of the entity
+
+* `proxy_gateway` (set) The proxy gateway for which the rule is applicable. This field is applicable only for the `PROXYCHAIN` forwarding method. Use the following data source or resource [zia_forwarding_control_proxy_gateway](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_forwarding_control_proxy_gateway) to retrieve the required attribute values.
+      - `id` - (int) Identifier that uniquely identifies an entity
+      - `name` - (string) The configured name of the entity.
+
+* `dedicated_ip_gateway` (set) The dedicated IP gateway for which the rule is applicable. Use the following data source  [zia_dedicated_ip_proxy](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_dedicated_ip_proxy) to retrieve the required attribute values.
+      - `id` - (string) The configured ID of the entity
+      - `name` - (int) Identifier that uniquely identifies the entity
 
 * `zpa_app_segments` (set) The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the `ZPA` Gateway forwarding method.
       - `name` - (string) The configured name of the entity
       - `external_id` - (int) Identifier that uniquely identifies an entity
-
-* `proxy_gateway` (set) The proxy gateway for which the rule is applicable. This field is applicable only for the `PROXYCHAIN` forwarding method.
-      - `id` - (int) Identifier that uniquely identifies an entity
-      - `name` - (string) The configured name of the entity.
 
 * `zpa_application_segments` (set) List of ZPA Application Segments for which this rule is applicable. This field is applicable only for the `ECZPA` forwarding method (used for Zscaler Cloud Connector).
       - `name` - (string) The configured name of the entity
