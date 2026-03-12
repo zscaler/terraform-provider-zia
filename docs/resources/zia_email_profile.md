@@ -15,6 +15,8 @@ description: |-
 
 The **zia_email_profile** resource allows the creation and management of email recipient profiles in the Zscaler Internet Access cloud. Email recipient profiles define sets of email addresses that can be referenced in DLP rules and notification configurations.
 
+~> NOTE: This an Early Access feature.
+
 ## Example Usage
 
 ```hcl

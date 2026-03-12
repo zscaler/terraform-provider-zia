@@ -429,7 +429,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
+				_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -634,7 +634,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 
 	req.Order = nextAvailableOrder
 
-	_, _, err = urlfilteringpolicies.Update(ctx, service, id, &req)
+	_, err = urlfilteringpolicies.Update(ctx, service, id, &req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -670,7 +670,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, _, err = urlfilteringpolicies.Update(ctx, service, id, rule)
+			_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map

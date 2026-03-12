@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.7.11 (March, 11 2026)
+
+### Notes
+
+- Release date: **(March, 11 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #542](https://github.com/zscaler/terraform-provider-zia/pull/542) - Upgraded provider to Zscaler SDK GO v3.8.27[https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.27], to how the attribute `cbi_profile` is handlded within the resource `zia_url_filtering_rule`
+
 ## 4.7.10 (March, 9 2026)
 
 ### Notes
@@ -36,9 +47,9 @@
 - [PR #537](https://github.com/zscaler/terraform-provider-zia/pull/537) - Added new resource and data source `zia_email_profile` for managing email recipient profiles. See [documentation](https://registry.terraform.io/providers/zscaler/zia/latest/docs/resources/zia_email_profile) for details.
 
 - [PR #537](https://github.com/zscaler/terraform-provider-zia/pull/537) Added new AI attributes to ZIA resource and datasource `zia_url_filtering_and_cloud_app_settings`
-  - `Enable_deep_seek_prompt`
-  - `Enable_writer_prompt`
-  - `Enable_grok_prompt`
+  - `enable_deep_seek_prompt`
+  - `enable_writer_prompt`
+  - `enable_grok_prompt`
   - `enable_mistral_ai_prompt`
   - `enable_claude_prompt`
   - `enable_grammarly_prompt`

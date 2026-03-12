@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.10``
+``Last updated: v4.7.11``
 
 ---
+## 4.7.11 (March, 11 2026)
+
+### Notes
+
+- Release date: **(March, 11 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #542](https://github.com/zscaler/terraform-provider-zia/pull/542) - Upgraded provider to Zscaler SDK GO v3.8.27[https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.27], to how the attribute `cbi_profile` is handlded within the resource `zia_url_filtering_rule`
+
 ## 4.7.10 (March, 9 2026)
 
 ### Notes
