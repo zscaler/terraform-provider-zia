@@ -514,19 +514,10 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 	req.Order = nextAvailableOrder
 
 	_, err = cloudappcontrol.Update(ctx, service, ruleType, id, &req)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)
 	}
-
 	if err != nil {
-		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-			log.Printf("[INFO] Updating cloud app control rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

@@ -12,9 +12,24 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.11``
+``Last updated: v4.7.12``
 
 ---
+
+## 4.7.12 (March, 20 2026)
+
+### Notes
+
+- Release date: **(March, 20 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #546](https://github.com/zscaler/terraform-provider-zia/pull/546) - Fixed dead-code error handling ("impossible condition: nil != nil") in Update functions across all 9 rule-based resources by restructuring `failFastOnErrorCodes` to execute before the general error return.
+- [PR #546](https://github.com/zscaler/terraform-provider-zia/pull/546) - Removed unconditionally terminated `for` loop in Create functions for `zia_file_type_control_rules` and `zia_ssl_inspection_rules`.
+- [PR #546](https://github.com/zscaler/terraform-provider-zia/pull/546) - Fixed tautological `nil == nil` condition in data source `zia_file_type_categories`.
+- [PR #546](https://github.com/zscaler/terraform-provider-zia/pull/546) - Fixed search by ID and Name using `enums` parameter to provide more accuracy.
+
 ## 4.7.11 (March, 11 2026)
 
 ### Notes

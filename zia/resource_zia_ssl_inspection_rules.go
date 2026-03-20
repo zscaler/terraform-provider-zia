@@ -377,102 +377,91 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 
 	start := time.Now()
 
-	for {
-		sslInspectionLock.Lock()
+	sslInspectionLock.Lock()
+	if sslInspectionStartingOrder == 0 {
+		list, _ := sslinspection.GetAll(ctx, service)
+		for _, r := range list {
+			if r.Order > sslInspectionStartingOrder {
+				sslInspectionStartingOrder = r.Order
+			}
+		}
 		if sslInspectionStartingOrder == 0 {
-			list, _ := sslinspection.GetAll(ctx, service)
-			for _, r := range list {
-				if r.Order > sslInspectionStartingOrder {
-					sslInspectionStartingOrder = r.Order
-				}
-			}
-			if sslInspectionStartingOrder == 0 {
-				sslInspectionStartingOrder = 1
-			}
+			sslInspectionStartingOrder = 1
 		}
-		sslInspectionLock.Unlock()
-		startWithoutLocking := time.Now()
-
-		intendedOrder := req.Order
-		intendedRank := req.Rank
-		if intendedRank < 7 {
-			// always start rank 7 rules at the next available order after all ranked rules
-			req.Rank = 7
-		}
-		req.Order = sslInspectionStartingOrder
-		resp, err := sslinspection.Create(ctx, service, &req)
-
-		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
-		if customErr := failFastOnErrorCodes(err); customErr != nil {
-			return diag.Errorf("%v", customErr)
-		}
-
-		if err != nil {
-			reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
-			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-				if reg.MatchString(err.Error()) {
-					return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentSSLInspectionOrderVsRankWording(ctx, zClient), err))
-				}
-			}
-			return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
-		}
-
-		log.Printf("[INFO] Created zia ssl inspection rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
-		resourceType := "ssl_inspection_rules"
-
-		reorderWithBeforeReorder(
-			OrderRule{Order: intendedOrder, Rank: intendedRank},
-			resp.ID,
-			resourceType,
-			func() (int, error) {
-				allRules, err := sslinspection.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := sslinspection.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// to avoid the STALE_CONFIGURATION_ERROR
-				rule.LastModifiedTime = 0
-				rule.LastModifiedBy = nil
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.Predefined = false
-				rule.DefaultRule = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = sslinspection.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
-		)
-
-		d.SetId(strconv.Itoa(resp.ID))
-		_ = d.Set("rule_id", resp.ID)
-
-		markOrderRuleAsDone(resp.ID, resourceType)
-		waitForReorder(resourceType)
-
-		// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
-		if shouldActivate() {
-			// Sleep for 2 seconds before potentially triggering the activation
-			time.Sleep(2 * time.Second)
-			if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
-				return diag.FromErr(activationErr)
-			}
-		} else {
-			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
-		}
-
-		return resourceSSLInspectionRulesRead(ctx, d, meta)
 	}
+	sslInspectionLock.Unlock()
+	startWithoutLocking := time.Now()
+
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+	if intendedRank < 7 {
+		req.Rank = 7
+	}
+	req.Order = sslInspectionStartingOrder
+	resp, err := sslinspection.Create(ctx, service, &req)
+
+	if customErr := failFastOnErrorCodes(err); customErr != nil {
+		return diag.Errorf("%v", customErr)
+	}
+
+	if err != nil {
+		reg := regexp.MustCompile("Rule with rank [0-9]+ is not allowed at order [0-9]+")
+		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
+			if reg.MatchString(err.Error()) {
+				return diag.FromErr(fmt.Errorf("error creating resource: %s, please check the order %d vs rank %d, current rules:%s , err:%s", req.Name, intendedOrder, req.Rank, currentSSLInspectionOrderVsRankWording(ctx, zClient), err))
+			}
+		}
+		return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
+	}
+
+	log.Printf("[INFO] Created zia ssl inspection rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+	resourceType := "ssl_inspection_rules"
+
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		resp.ID,
+		resourceType,
+		func() (int, error) {
+			allRules, err := sslinspection.GetAll(ctx, service)
+			if err != nil {
+				return 0, err
+			}
+			return len(allRules), nil
+		},
+		func(id int, order OrderRule) error {
+			rule, err := sslinspection.Get(ctx, service, id)
+			if err != nil {
+				return err
+			}
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
+			rule.Predefined = false
+			rule.DefaultRule = false
+			rule.AccessControl = ""
+			rule.Order = order.Order
+			rule.Rank = order.Rank
+			_, err = sslinspection.Update(ctx, service, id, rule)
+			return err
+		},
+		nil,
+	)
+
+	d.SetId(strconv.Itoa(resp.ID))
+	_ = d.Set("rule_id", resp.ID)
+
+	markOrderRuleAsDone(resp.ID, resourceType)
+	waitForReorder(resourceType)
+
+	if shouldActivate() {
+		time.Sleep(2 * time.Second)
+		if activationErr := triggerActivation(ctx, zClient); activationErr != nil {
+			return diag.FromErr(activationErr)
+		}
+	} else {
+		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
+	}
+
+	return resourceSSLInspectionRulesRead(ctx, d, meta)
 }
 
 func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -604,19 +593,10 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 	req.Order = nextAvailableOrder
 
 	_, err = sslinspection.Update(ctx, service, id, &req)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)
 	}
-
 	if err != nil {
-		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-			log.Printf("[INFO] Updating ssl inspection rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

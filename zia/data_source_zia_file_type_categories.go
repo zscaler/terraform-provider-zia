@@ -77,36 +77,96 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 
 	// Build filter options from schema
 	var opts *filetypecontrol.GetFileTypeCategoriesFilterOptions
-	var hasFilters bool
+	var enumSpecified bool
 
-	// Get enums from schema
 	if enumsValue, ok := d.GetOk("enums"); ok {
 		enumStr := enumsValue.(string)
 		if enumStr != "" {
-			if opts == nil {
-				opts = &filetypecontrol.GetFileTypeCategoriesFilterOptions{}
-			}
+			opts = &filetypecontrol.GetFileTypeCategoriesFilterOptions{}
 			opts.Enums = []string{enumStr}
-			hasFilters = true
+			enumSpecified = true
 		}
 	}
 
-	// Get exclude_custom_file_types from schema
 	if excludeCustom, ok := d.GetOk("exclude_custom_file_types"); ok {
 		exclude := excludeCustom.(bool)
 		if opts == nil {
 			opts = &filetypecontrol.GetFileTypeCategoriesFilterOptions{}
 		}
 		opts.ExcludeCustomFileTypes = &exclude
-		hasFilters = true
 	}
 
-	// Only create opts if we have filters
-	if !hasFilters {
-		opts = nil
+	// Check if user wants a specific category by id or name
+	id, hasID := getIntFromResourceData(d, "id")
+	name, _ := d.Get("name").(string)
+
+	// When searching by id or name without a specific enum filter, query all
+	// enum scopes because the API requires an enum to return results and a
+	// given file type category may only exist within a particular scope.
+	if (hasID || name != "") && !enumSpecified {
+		log.Printf("[INFO] Searching file type categories across all enum scopes\n")
+		allEnums := []string{"ZSCALERDLP", "EXTERNALDLP", "FILETYPECATEGORYFORFILETYPECONTROL"}
+		var allCategories []filetypecontrol.FileTypeCategory
+		seen := make(map[int]bool)
+		for _, enumVal := range allEnums {
+			searchOpts := &filetypecontrol.GetFileTypeCategoriesFilterOptions{
+				Enums: []string{enumVal},
+			}
+			if excludeCustom, ok := d.GetOk("exclude_custom_file_types"); ok {
+				exclude := excludeCustom.(bool)
+				searchOpts.ExcludeCustomFileTypes = &exclude
+			}
+			categories, err := filetypecontrol.GetFileTypeCategories(ctx, service, searchOpts)
+			if err != nil {
+				log.Printf("[WARN] Failed to get file type categories for enum %s: %v", enumVal, err)
+				continue
+			}
+			for _, cat := range categories {
+				if !seen[cat.ID] {
+					seen[cat.ID] = true
+					allCategories = append(allCategories, cat)
+				}
+			}
+		}
+
+		if len(allCategories) == 0 {
+			return diag.FromErr(fmt.Errorf("no file type categories found across any enum scope"))
+		}
+
+		var resp *filetypecontrol.FileTypeCategory
+		if hasID {
+			log.Printf("[INFO] Searching for file type category by id: %d\n", id)
+			for i := range allCategories {
+				if allCategories[i].ID == id {
+					resp = &allCategories[i]
+					break
+				}
+			}
+			if resp == nil {
+				return diag.FromErr(fmt.Errorf("couldn't find any file type category with id '%d'", id))
+			}
+		} else {
+			log.Printf("[INFO] Searching for file type category by name: %s\n", name)
+			for i := range allCategories {
+				if strings.EqualFold(allCategories[i].Name, name) {
+					resp = &allCategories[i]
+					break
+				}
+			}
+			if resp == nil {
+				return diag.FromErr(fmt.Errorf("couldn't find any file type category with name '%s'", name))
+			}
+		}
+
+		d.SetId(fmt.Sprintf("%d", resp.ID))
+		_ = d.Set("id", resp.ID)
+		_ = d.Set("name", resp.Name)
+		_ = d.Set("parent", resp.Parent)
+		_ = d.Set("categories", []interface{}{})
+		return nil
 	}
 
-	// Get all file type categories with optional filters
+	// Fetch categories with the specified filter (or nil for list-all mode)
 	log.Printf("[INFO] Getting file type categories\n")
 	fileTypeCategories, err := filetypecontrol.GetFileTypeCategories(ctx, service, opts)
 	if err != nil {
@@ -117,11 +177,7 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("no file type categories found"))
 	}
 
-	// Check if user wants a specific category by id or name
-	id, hasID := getIntFromResourceData(d, "id")
-	name, _ := d.Get("name").(string)
-
-	// If id or name is provided, return single result (backward compatible)
+	// If id or name is provided with a specific enum, find the single result
 	if hasID || name != "" {
 		var resp *filetypecontrol.FileTypeCategory
 
@@ -136,7 +192,7 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 			if resp == nil {
 				return diag.FromErr(fmt.Errorf("couldn't find any file type category with id '%d'", id))
 			}
-		} else if name != "" {
+		} else {
 			log.Printf("[INFO] Searching for file type category by name: %s\n", name)
 			for i := range fileTypeCategories {
 				if strings.EqualFold(fileTypeCategories[i].Name, name) {
@@ -149,21 +205,17 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		// Set single result
 		d.SetId(fmt.Sprintf("%d", resp.ID))
 		_ = d.Set("id", resp.ID)
 		_ = d.Set("name", resp.Name)
 		_ = d.Set("parent", resp.Parent)
-		// Clear categories list when returning single result
 		_ = d.Set("categories", []interface{}{})
-
 		return nil
 	}
 
-	// If only filters provided (enums/exclude_custom_file_types), return all matching categories
+	// List mode: return all matching categories
 	log.Printf("[INFO] Returning %d file type categories\n", len(fileTypeCategories))
 
-	// Generate a stable ID for this list query based on the query parameters
 	var idBuilder strings.Builder
 	if enumsValue, ok := d.GetOk("enums"); ok {
 		idBuilder.WriteString(enumsValue.(string))
@@ -175,11 +227,9 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 		idBuilder.WriteString(fmt.Sprintf("-exclude_%v", excludeCustom))
 	}
 
-	// Use hash code to generate a stable numeric ID
 	hashCode := schema.HashString(idBuilder.String())
 	d.SetId(strconv.Itoa(hashCode))
 
-	// Flatten the categories list
 	categoriesList := make([]interface{}, len(fileTypeCategories))
 	for i, cat := range fileTypeCategories {
 		categoriesList[i] = map[string]interface{}{
@@ -190,6 +240,5 @@ func dataSourceFileTypeCategoriesRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	_ = d.Set("categories", categoriesList)
-
 	return nil
 }
