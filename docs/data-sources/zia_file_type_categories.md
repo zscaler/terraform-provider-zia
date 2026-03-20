@@ -16,8 +16,9 @@ description: |-
 Use the **zia_file_type_categories** data source to retrieve the list of all file types, including predefined and custom file types, available for configuring rule conditions in different ZIA policies. You can retrieve predefined file types for specific file categories of policies. This data source can be referenced within the `zia_dlp_web_rules` in the attribute `file_type_categories`.
 
 The data source supports two modes:
-- **Single Result Mode**: Retrieve a specific file type by `id` or `name` (returns `id`, `name`, `parent` fields)
-- **List Mode**: Retrieve all file types matching filters like `enums` (returns results in the `categories` list)
+**Single Result Mode**: Retrieve a specific file type by `id` or `name` (returns `id`, `name`, `parent` fields)
+
+**List Mode**: Retrieve all file types matching filters like `enums` (returns results in the `categories` list)
 
 ## Example Usage - Retrieve a specific file type by name
 

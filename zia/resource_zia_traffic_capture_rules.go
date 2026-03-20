@@ -67,7 +67,7 @@ func resourceTrafficCaptureRules() *schema.Resource {
 			"name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "Name of the Firewall Filtering policy rule",
+				Description: "Name of the traffic capture rules policy rule",
 				// ValidateFunc: validation.StringLenBetween(0, 31),
 			},
 			"description": {
@@ -89,7 +89,7 @@ func resourceTrafficCaptureRules() *schema.Resource {
 				Optional:     true,
 				Default:      7,
 				ValidateFunc: validation.IntBetween(0, 7),
-				Description:  "Admin rank of the Firewall Filtering policy rule",
+				Description:  "Admin rank of the traffic capture rules policy rule",
 			},
 			"action": {
 				Type:        schema.TypeString,
@@ -103,7 +103,7 @@ func resourceTrafficCaptureRules() *schema.Resource {
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "Determines whether the Firewall Filtering policy rule is enabled or disabled",
+				Description: "Determines whether the traffic capture rules policy rule is enabled or disabled",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ENABLED",
 					"DISABLED",
@@ -177,7 +177,7 @@ func resourceTrafficCaptureRules() *schema.Resource {
 			"users":                 setIDsSchemaTypeCustom(intPtr(4), "list of users for which rule must be applied"),
 			"groups":                setIDsSchemaTypeCustom(intPtr(8), "list of groups for which rule must be applied"),
 			"departments":           setIDsSchemaTypeCustom(intPtr(140000), "list of departments for which rule must be applied"),
-			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
+			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the traffic capture rules policy rule applies"),
 			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"device_groups":         setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
 			"devices":               setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
@@ -200,7 +200,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 	service := zClient.Service
 
 	req := expandFiresourceTrafficCaptureRules(d)
-	log.Printf("[INFO] Creating zia firewall filtering rule\n%+v\n", req)
+	log.Printf("[INFO] Creating zia traffic capture rules rule\n%+v\n", req)
 
 	start := time.Now()
 
@@ -246,7 +246,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("error creating resource: %s", err))
 	}
 
-	log.Printf("[INFO] Created zia firewall filtering rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+	log.Printf("[INFO] Created zia traffic capture rules rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 	resourceType := "firewall_filtering_rules"
 
@@ -307,7 +307,7 @@ func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.Re
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		return diag.FromErr(fmt.Errorf("no zia firewall filtering rule id is set"))
+		return diag.FromErr(fmt.Errorf("no zia traffic capture rules rule id is set"))
 	}
 
 	// Use GetAll() instead of Get() to reduce API calls during terraform refresh
@@ -327,7 +327,7 @@ func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.Re
 
 	// Rule not found
 	if resp == nil {
-		log.Printf("[WARN] Removing firewall filtering rule %s from state because it no longer exists in ZIA", d.Id())
+		log.Printf("[WARN] Removing traffic capture rules rule %s from state because it no longer exists in ZIA", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -341,7 +341,7 @@ func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.Re
 		processedSrcCountries[i] = strings.TrimPrefix(country, "COUNTRY_")
 	}
 
-	log.Printf("[INFO] Getting firewall filtering rule:\n%+v\n", resp)
+	log.Printf("[INFO] Getting traffic capture rules rule:\n%+v\n", resp)
 
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
@@ -434,10 +434,10 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] firewall filtering rule ID not set: %v\n", id)
-		return diag.FromErr(fmt.Errorf("firewall filtering rule ID not set"))
+		log.Printf("[ERROR] traffic capture rules rule ID not set: %v\n", id)
+		return diag.FromErr(fmt.Errorf("traffic capture rules rule ID not set"))
 	}
-	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
+	log.Printf("[INFO] Updating traffic capture rules rule ID: %v\n", id)
 	req := expandFiresourceTrafficCaptureRules(d)
 
 	if _, err := traffic_capture.Get(ctx, service, id); err != nil {
@@ -462,23 +462,14 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 	req.Order = nextAvailableOrder
 
 	_, err = traffic_capture.Update(ctx, service, id, &req)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)
 	}
-
 	if err != nil {
-		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-			log.Printf("[INFO] Updating firewall filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_filtering_rules",
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "traffic_capture_rules",
 		func() (int, error) {
 			allRules, err := traffic_capture.GetAll(ctx, service, nil)
 			if err != nil {
@@ -509,8 +500,8 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	markOrderRuleAsDone(req.ID, "firewall_filtering_rules")
-	waitForReorder("firewall_filtering_rules")
+	markOrderRuleAsDone(req.ID, "traffic_capture_rules")
+	waitForReorder("traffic_capture_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)
@@ -532,13 +523,13 @@ func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.
 
 	id, ok := getIntFromResourceData(d, "rule_id")
 	if !ok {
-		log.Printf("[ERROR] firewall filtering rule not set: %v\n", id)
+		log.Printf("[ERROR] traffic capture rules rule not set: %v\n", id)
 	}
 
 	// Retrieve the rule to check if it's a predefined one
 	rule, err := traffic_capture.Get(ctx, service, id)
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error retrieving firewall filtering rule %d: %v", id, err))
+		return diag.FromErr(fmt.Errorf("error retrieving traffic capture rules rule %d: %v", id, err))
 	}
 
 	// Additional check for any predefined rule (backup validation)
@@ -546,12 +537,12 @@ func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
-	log.Printf("[INFO] Deleting firewall filtering rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting traffic capture rules rule ID: %v\n", (d.Id()))
 	if _, err := traffic_capture.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
-	log.Printf("[INFO] firewall filtering rule deleted")
+	log.Printf("[INFO] traffic capture rules rule deleted")
 
 	// Check if ZIA_ACTIVATION is set to a truthy value before triggering activation
 	if shouldActivate() {

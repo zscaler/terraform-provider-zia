@@ -635,9 +635,6 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 	req.Order = nextAvailableOrder
 
 	_, err = urlfilteringpolicies.Update(ctx, service, id, &req)
-	if err != nil {
-		return diag.FromErr(err)
-	}
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -645,9 +642,6 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") {
-			log.Printf("[INFO] Updating url filtering rule ID: %v, got INVALID_INPUT_ARGUMENT\n", id)
-		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
