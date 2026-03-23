@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.12``
+``Last updated: v4.7.13``
 
 ---
+
+## 4.7.13 (March, 23 2026)
+
+### Notes
+
+- Release date: **(March, 23 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: reorder callbacks no longer send both `fileTypes` and `fileTypeCategories` in the PUT body; when categories are present, `fileTypes` is cleared so the API accepts the request.
+- [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: reorder callbacks zero `lastModifiedTime` and omit `lastModifiedBy` before order updates to avoid `STALE_CONFIGURATION_ERROR` (same pattern as other rule resources).
+- [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: `expandSubRules` now uses `[]dlp_web_rules.WebDLPRules`, matching the SDK model for nested sub-rules.
 
 ## 4.7.12 (March, 20 2026)
 

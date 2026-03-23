@@ -175,7 +175,9 @@ resource "zia_dlp_web_rules" "this" {
 
 ## Example Usage - "Creating Parent Rules and SubRules"
 
-⚠️ **WARNING:** Destroying a parent rule will also destroy all subrules
+⚠️ **WARNING:** Destroying a parent rule will also destroy all sub-rules.
+
+~> **NOTE:** Exception (sub-) rules are **separate** `zia_dlp_web_rules` resources. Set `parent_rule` to the parent’s numeric rule ID (`rule_id`). The parent’s `sub_rules` attribute is **computed** after apply—it lists child rule IDs returned by the API; you do not author nested rule blocks inside the parent resource.
 
  **NOTE** Exception rules can be configured only when the inline DLP rule evaluation type is set
  to evaluate all DLP rules in the DLP Advanced Settings.
@@ -208,7 +210,7 @@ resource "zia_dlp_web_rules" "subrule1" {
   cloud_applications         = ["GOOGLE_WEBMAIL", "WINDOWS_LIVE_HOTMAIL"]
   without_content_inspection = false
   match_only                 = false
-  parent_rule = zia_dlp_web_rules.parent_rule.id
+  parent_rule                = zia_dlp_web_rules.parent_rule.rule_id
 }
 ```
 
@@ -332,17 +334,17 @@ The following arguments are supported:
 
 * `severity` - (Optional) Indicates the severity selected for the DLP rule violation: Returned values are:  `RULE_SEVERITY_HIGH`, `RULE_SEVERITY_MEDIUM`, `RULE_SEVERITY_LOW`, `RULE_SEVERITY_INFO`
 
-* `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+* `user_risk_score_levels` (Optional) - Indicates the user risk score level selected for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
-* `parent_rule`(Optional) - The unique identifier of the parent rule under which an exception rule is added. The rule rank must be set to `0`
+* `parent_rule` (Optional) - The unique identifier of the parent rule under which an exception (sub-) rule is added. Use the parent resource’s `rule_id` (integer). The rule rank must be set to `0`.
 
     ~> **Note**: Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings. To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
 
-    ~> **Note**: It is not possible to add existing rules as as subrules under the parent rule.
+    ~> **Note**: It is not possible to add existing rules as sub-rules under the parent rule.
 
-* `sub_rules`(List) - The list of exception rules added to a parent rule. The rule rank must be set to `0`
+* `sub_rules` (Optional, Computed) - Set of sub-rule IDs (strings), populated from the API for a **parent** rule after read. Sub-rules are managed as their own `zia_dlp_web_rules` resources with `parent_rule` set; do not model sub-rules as nested blocks in the parent. When sending updates, the provider may pass sub-rule references as ID-only entries as required by the API. The rule rank must be set to `0` where applicable.
 
-    ~> **Note**: All attributes within the WebDlpRule model are applicable to the sub-rules. Values for each rule are specified by using the WebDlpRule object Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings. To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
+    ~> **Note**: All attributes within the Web DLP rule model apply to sub-rules. Exception rules can be configured only when the inline DLP rule evaluation type is set to evaluate all DLP rules in the DLP Advanced Settings. To learn more, see [Configuring DLP Advanced Settings](https://help.zscaler.com/%22/zia/configuring-dlp-advanced-settings/%22)
 
 * `notification_template` - (Optional) The template used for DLP notification emails.
   * `id` - (Optional) Identifier that uniquely identifies an entity
@@ -405,7 +407,7 @@ The following arguments are supported:
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
-* `file_type_categories` to resource `zia_dlp_web_rules`.  This attribute supports the list of file types to which the rule applies. This attribute has replaced the attribute `file_types`. Zscaler recommends updating your configurations to use the `file_type_categories` attribute in place of `file_types`. Both attributes are still supported in both the API and in this Terraform provider, but they cannot be used concurrently.
+* `file_type_categories` - (Optional) File type categories to which the rule applies (IDs from `zia_file_type_categories`). Zscaler recommends this over legacy `file_types` where possible. The API allows either `fileTypes` or `fileTypeCategories`, but **not both** in the same request; use only one of `file_types` or `file_type_categories` in configuration.
   * `id` - (Optional) File type category ID.
     **NOTE** Use the data source `zia_file_type_categories` to retrieve file type categories.
 
@@ -414,7 +416,10 @@ The following arguments are supported:
 Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
 [Visit](https://github.com/zscaler/zscaler-terraformer)
 
-**zia_dlp_web_rules** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+**zia_dlp_web_rules** can be imported using either:
+
+* `<RULE ID>` — numeric ID of the rule (parent or exception/sub-rule), or
+* `<RULE NAME>` — exact rule name; resolution includes **exception rules** nested under parents in the API (not only top-level rule names).
 
 For example:
 
@@ -427,3 +432,5 @@ or
 ```shell
 terraform import zia_dlp_web_rules.example <rule_name>
 ```
+
+After import, run `terraform plan` and align `parent_rule` and other attributes with your intended configuration.
