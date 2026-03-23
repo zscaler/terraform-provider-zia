@@ -396,6 +396,7 @@ func resourceLocationManagement() *schema.Resource {
 			"extranet_ip_pool":       setSingleIDSchemaTypeCustom("The ID of the traffic selector specified in the extranet"),
 			"extranet_dns":           setSingleIDSchemaTypeCustom("The ID of the DNS server configuration used in the extranet"),
 			"virtual_zen_clusters":   setIDsSchemaTypeCustom(nil, "list of organization's Virtual Service Edge clusters"),
+			"virtual_zens":           setIDsSchemaTypeCustom(nil, "lists your organization's Virtual Service Edges"),
 		},
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 			// Validation for exclude_from_dynamic_groups and dynamic_location_groups
@@ -553,6 +554,10 @@ func resourceLocationManagementRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("exclude_from_manual_groups", resp.ExcludeFromManualGroups)
 
 	if err := d.Set("virtual_zen_clusters", flattenIDExtensionsListIDs(resp.VirtualZenClusters)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("virtual_zens", flattenIDExtensionsListIDs(resp.VirtualZens)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -740,6 +745,7 @@ func expandLocationManagement(d *schema.ResourceData) locationmanagement.Locatio
 		ExtranetIpPool:                      expandIDNameExtensionsSetSingle(d, "extranet_ip_pool"),
 		ExtranetDns:                         expandIDNameExtensionsSetSingle(d, "extranet_dns"),
 		VirtualZenClusters:                  expandIDNameExtensionsSet(d, "virtual_zen_clusters"),
+		VirtualZens:                         expandIDNameExtensionsSet(d, "virtual_zens"),
 		AUPTimeoutInDays:                    d.Get("aup_timeout_in_days").(int),
 		Profile:                             d.Get("profile").(string),
 		VPNCredentials:                      expandLocationManagementVPNCredentials(d),

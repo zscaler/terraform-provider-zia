@@ -433,16 +433,20 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 				return len(allRules), nil
 			},
 			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
 				rule, err := dlp_web_rules.Get(ctx, service, id)
 				if err != nil {
 					return err
 				}
 
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
+				rule.LastModifiedTime = 0
+				rule.LastModifiedBy = nil
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
+
+				if len(rule.FileTypeCategories) > 0 {
+					rule.FileTypes = nil
+				}
 
 				if rule.ParentRule != 0 {
 					log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
@@ -696,18 +700,20 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if err != nil {
 				return err
 			}
-			// Optional: avoid unnecessary updates if the current order is already correct
 			if rule.Order == order.Order && rule.Rank == order.Rank {
 				return nil
 			}
 
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
+			rule.LastModifiedTime = 0
+			rule.LastModifiedBy = nil
 			rule.AccessControl = ""
-			// Update the order
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 
-			// Log and ensure ParentRule is set for sub-rules
+			if len(rule.FileTypeCategories) > 0 {
+				rule.FileTypes = nil
+			}
+
 			if rule.ParentRule != 0 {
 				log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
 			} else {
@@ -822,12 +828,12 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 	return result
 }
 
-func expandSubRules(set *schema.Set) []dlp_web_rules.SubRule {
-	var subRules []dlp_web_rules.SubRule
+func expandSubRules(set *schema.Set) []dlp_web_rules.WebDLPRules {
+	var subRules []dlp_web_rules.WebDLPRules
 	for _, item := range set.List() {
 		subRuleID, err := strconv.Atoi(item.(string))
 		if err == nil {
-			subRules = append(subRules, dlp_web_rules.SubRule{ID: subRuleID})
+			subRules = append(subRules, dlp_web_rules.WebDLPRules{ID: subRuleID})
 		}
 	}
 	return subRules
