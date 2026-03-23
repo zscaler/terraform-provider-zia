@@ -12,6 +12,8 @@
 - [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: reorder callbacks no longer send both `fileTypes` and `fileTypeCategories` in the PUT body; when categories are present, `fileTypes` is cleared so the API accepts the request.
 - [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: reorder callbacks zero `lastModifiedTime` and omit `lastModifiedBy` before order updates to avoid `STALE_CONFIGURATION_ERROR` (same pattern as other rule resources).
 - [PR #548](https://github.com/zscaler/terraform-provider-zia/pull/548) - `zia_dlp_web_rules`: `expandSubRules` now uses `[]dlp_web_rules.WebDLPRules`, matching the SDK model for nested sub-rules.
+- [PR #549](https://github.com/zscaler/terraform-provider-zia/pull/549) - Added newely supported attributes `virtual_zens` and `virtual_zen_clusters` to resource `zia_location_management`
+- [PR #549](https://github.com/zscaler/terraform-provider-zia/pull/549) - Added additional configuration examples for `zia_virtual_service_edge_cluster` and `zia_virtual_service_edge_node`
 
 ## 4.7.12 (March, 20 2026)
 

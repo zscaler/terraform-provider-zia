@@ -98,3 +98,9 @@ In addition to all arguments above, the following attributes are exported:
 
 * `extranet_dns` - (Block, Max: 1) The ID of the DNS server configuration used in the extranet
   * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `virtual_zens` - (Block, Max: 1) List your of Virtual Service Edges. Virtual Service Edge uses a virtual machine to function as a full-featured ZEN dedicated to your organization's traffic. Use resource `zia_virtual_service_edge_node`
+  * `id` - (int) The Identifier that uniquely identifies an entity
+
+* `virtual_zen_clusters` - (Block, Max: 1) Lists Virtual Service Edge clusters. Virtual Service Edges are deployed in a cluster, which requires at least two Virtual Service Edge instances for active-active redundancy and load balancing. organization's traffic. Use resource `zia_virtual_service_edge_node`
+  * `id` - (int) The Identifier that uniquely identifies an entity
