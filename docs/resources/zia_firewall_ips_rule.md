@@ -23,11 +23,13 @@ The **zia_firewall_ips_rule** resource allows the creation and management of ZIA
 
 Example: If there are predefined rules in your tenant, you can still configure your rules starting at `order = 1`. The provider will automatically handle the reordering to place your rules in the correct position relative to predefined rules.
 
-~> **NOTE:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them. When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed.
+~> **NOTE 2:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them. When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed.
 
-~> **NOTE:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+**NOTE 3** DO NOT import or manage Default Rules. Management of default rules are not supported via the API.
 
-~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
+~> **NOTE 4:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+
+~> **NOTE 5:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
 ## Example Usage
 
