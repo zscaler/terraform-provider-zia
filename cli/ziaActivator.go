@@ -37,7 +37,7 @@ func main() {
 		username := getEnvVarOrFail("ZIA_USERNAME")
 		password := getEnvVarOrFail("ZIA_PASSWORD")
 		apiKey := getEnvVarOrFail("ZIA_API_KEY")
-		cloud := getEnvVarOrFail("ZIA_CLOUD")
+		cloud := os.Getenv("ZIA_CLOUD") // Optional: might not be required, set as empty if not
 
 		ziaCfg, err := zia.NewConfiguration(
 			zia.WithZiaUsername(username),
@@ -60,7 +60,7 @@ func main() {
 		clientID := getEnvVarOrFail("ZSCALER_CLIENT_ID")
 		clientSecret := getEnvVarOrFail("ZSCALER_CLIENT_SECRET")
 		vanityDomain := getEnvVarOrFail("ZSCALER_VANITY_DOMAIN")
-		cloud := getEnvVarOrFail("ZSCALER_CLOUD")
+		cloud := os.Getenv("ZSCALER_CLOUD") // Optional: might not be required, set as empty if not
 
 		cfg, err := zscaler.NewConfiguration(
 			zscaler.WithClientID(clientID),
