@@ -60,15 +60,24 @@ func main() {
 		clientID := getEnvVarOrFail("ZSCALER_CLIENT_ID")
 		clientSecret := getEnvVarOrFail("ZSCALER_CLIENT_SECRET")
 		vanityDomain := getEnvVarOrFail("ZSCALER_VANITY_DOMAIN")
-		cloud := getEnvVarOrFail("ZSCALER_CLOUD")
+		// ZSCALER_CLOUD is optional: unset or empty selects the default production cloud, matching
+		// zia/config.go and the SDK activation sample. Set it for non-production (e.g. beta).
+		cloud := strings.TrimSpace(os.Getenv("ZSCALER_CLOUD"))
+		if cloud == "" {
+			log.Printf("[INFO] ZSCALER_CLOUD is unset; using default cloud (production)")
+		}
 
-		cfg, err := zscaler.NewConfiguration(
+		opts := []zscaler.ConfigSetter{
 			zscaler.WithClientID(clientID),
 			zscaler.WithClientSecret(clientSecret),
 			zscaler.WithVanityDomain(vanityDomain),
-			zscaler.WithZscalerCloud(cloud),
 			zscaler.WithUserAgentExtra(fmt.Sprintf("(%s %s) cli/ziaActivator", runtime.GOOS, runtime.GOARCH)),
-		)
+		}
+		if cloud != "" {
+			opts = append(opts, zscaler.WithZscalerCloud(cloud))
+		}
+
+		cfg, err := zscaler.NewConfiguration(opts...)
 		if err != nil {
 			log.Fatalf("[ERROR] Failed to build OneAPI configuration: %v", err)
 		}

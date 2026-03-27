@@ -5,7 +5,7 @@ page_title: "ZIA: firewall_dns_rule"
 description: |-
   Official documentation https://help.zscaler.com/zia/configuring-dns-control-policy
   API documentation https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post
-  Creates and manages ZIA Cloud firewall DNS rule.
+  Creates and manages ZIA Cloud firewall DNS rules. When using res_categories and dest_ip_categories, both must list the same category IDs; see the resource documentation.
 ---
 
 # zia_firewall_dns_rule (Resource)
@@ -14,6 +14,12 @@ description: |-
 * [API documentation](https://help.zscaler.com/zia/dns-control-policy#/firewallDnsRules-post)
 
 The **zia_firewall_dns_rule** resource allows the creation and management of ZIA Cloud Firewall DNS rules in the Zscaler Internet Access.
+
+### Request and response URL categories (`dest_ip_categories` / `res_categories`)
+
+The ZIA admin UI exposes **Request categories** and **Response categories** for DNS application criteria. In Terraform and the API these correspond to **`dest_ip_categories`** and **`res_categories`**, using the same category identifier strings (predefined names or custom category IDs).
+
+The API requires both lists to contain the **same set** of categories whenever you scope the rule by URL category: if one side is populated, the other must match. If they differ, the API returns `INVALID_INPUT_ARGUMENT` with an unhelpful message (*"Requested IP-Categories and Resolved Domain Categories aren't matching"*). This provider **validates that match at plan time** (`terraform plan`) and again on **create and update**, and documents the requirement below (NOTE 8 and NOTE 9). To match the **Any** behavior in the UI for both fields, **omit** both attributes in Terraform.
 
 **NOTE 1** Zscaler Cloud Firewall contain default and predefined rules which cannot be deleted (not all attributes are supported on predefined rules). The provider **automatically handles predefined rules** during rule ordering. You can simply use sequential order values (1, 2, 3...) and the provider will:
 
@@ -39,6 +45,10 @@ Example: If there are predefined rules in your tenant, you can still configure y
 ~> **NOTE 6:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
 
 ~> **NOTE 7:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
+
+~> **NOTE 8:** In the ZIA admin UI (**DNS Application** criteria for a DNS filtering rule), **Request categories** maps to Terraform **`dest_ip_categories`** (API `destIpCategories`). **Response categories** maps to Terraform **`res_categories`** (API `resCategories`). In both cases you pass the category identifier strings the API expects (predefined names or custom category IDs as documented by ZIA).
+
+~> **NOTE 9:** The provider validates that **`res_categories` and `dest_ip_categories` contain the same set of category IDs** whenever at least one of them is non-empty: validation runs at **plan** time (so `terraform plan` fails fast) and again on **create** and **update** (mirroring the admin UI, which keeps the two lists in sync). If they differ, the ZIA API returns an unclear `INVALID_INPUT_ARGUMENT` (*"Requested IP-Categories and Resolved Domain Categories aren't matching"*); the provider returns an explicit error instead. To apply the rule to all categories, omit both attributes.
 
 ## Example Usage - Create Firewall DNS Rules - Redirect Action
 
@@ -100,6 +110,7 @@ resource "zia_firewall_dns_rule" "this2" {
 
 ## Example Usage - Create Firewall DNS Rules - Redirect TCP Request
 
+```hcl
 resource "zia_firewall_dns_rule" "this3" {
     name = "Example_DNS_Rule03"
     description = "Example_DNS_Rule03"
@@ -115,6 +126,7 @@ resource "zia_firewall_dns_rule" "this3" {
       name = "DNS_GW01"
     }
 }
+```
 
 ## Argument Reference
 
@@ -215,10 +227,11 @@ data "zia_cloud_applications" "this" {
 * `dest_countries` (Set of String) Identify destinations based on the location of a server, select Any to apply the rule to all countries or select the countries to which you want to control traffic.
     **NOTE**: Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
 
-* `res_categories` (Set of String) URL categories associated with resolved IP addresses to which the rule applies. If not set, the rule is not restricted to a specific URL category.
+* `res_categories` (Set of String) URL categories associated with resolved IP addresses to which the rule applies. Matches the admin UI **Response categories** field (see NOTE 8). Whenever this attribute or `dest_ip_categories` is non-empty, both must list the **same** category IDs (see NOTE 9).
 
-* `dest_ip_categories` (Set of String)  identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
-* `dest_ip_groups`** - (List of Objects) Any number of destination IP address groups that you want to control with this rule.
+* `dest_ip_categories` (Set of String) Identify destinations based on the URL category of the domain. Matches the admin UI **Request categories** field (see NOTE 8). Whenever this attribute or `res_categories` is non-empty, both must list the **same** category IDs (see NOTE 9).
+
+* `dest_ip_groups` - (List of Objects) Any number of destination IP address groups that you want to control with this rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 
 * `labels` (List of Objects) Labels that are applicable to the rule.
