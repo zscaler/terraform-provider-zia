@@ -133,7 +133,7 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "URL categories associated with resolved IP addresses to which the rule applies. If not set, the rule is not restricted to a specific URL category.",
+				Description: "URL categories associated with resolved IP addresses to which the rule applies (admin UI: Response categories). If either this or dest_ip_categories is set, both must list the same category IDs as sets. Omit both to apply to all categories.",
 			},
 			"src_ips": {
 				Type:        schema.TypeSet,
@@ -153,7 +153,7 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Type:        schema.TypeSet,
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
-				Description: "Destination IP categories to which the rule applies. If not set, the rule is not restricted to specific categories.",
+				Description: "Destination IP categories to which the rule applies (admin UI: Request categories). If either this or res_categories is set, both must list the same category IDs as sets. Omit both to apply to all categories.",
 			},
 			"capture_pcap": {
 				Type:        schema.TypeBool,
@@ -214,12 +214,79 @@ func resourceFirewallDNSRules() *schema.Resource {
 			// "applications":           getCloudApplications(),
 			"protocols": getDNSRuleProtocols(),
 		},
+		CustomizeDiff: firewallDNSCategoriesMirrorCustomizeDiff,
 	}
+}
+
+// firewallDNSCategoriesMirrorCustomizeDiff enforces that res_categories and dest_ip_categories list the same
+// category IDs. The ZIA API requires Request (destIpCategories) and Response (resCategories) to match; otherwise
+// it returns INVALID_INPUT_ARGUMENT: "Requested IP-Categories and Resolved Domain Categories aren't matching".
+func firewallDNSCategoriesMirrorCustomizeDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	return firewallDNSCategorySetsMustMatch(
+		stringSliceFromFirewallDNSResourceDiffSet(d, "res_categories"),
+		stringSliceFromFirewallDNSResourceDiffSet(d, "dest_ip_categories"),
+	)
+}
+
+func firewallDNSCategorySetsMustMatch(res, dest []string) error {
+	if len(res) == 0 && len(dest) == 0 {
+		return nil
+	}
+	if !stringSlicesEqualAsSets(res, dest) {
+		return fmt.Errorf(
+			"res_categories and dest_ip_categories must contain the same URL category IDs (same elements as sets). " +
+				"The ZIA API requires Request categories (dest_ip_categories) and Response categories (res_categories) to match; " +
+				"a mismatch returns INVALID_INPUT_ARGUMENT. " +
+				"Set both attributes to the same list, or omit both to apply the rule to all categories",
+		)
+	}
+	return nil
+}
+
+func stringSliceFromFirewallDNSResourceDiffSet(d *schema.ResourceDiff, key string) []string {
+	v := d.Get(key)
+	if v == nil {
+		return nil
+	}
+	set, ok := v.(*schema.Set)
+	if !ok || set == nil {
+		return nil
+	}
+	out := make([]string, 0, set.Len())
+	for _, item := range set.List() {
+		if s, ok := item.(string); ok {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func stringSlicesEqualAsSets(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	aCopy := append([]string(nil), a...)
+	bCopy := append([]string(nil), b...)
+	sort.Strings(aCopy)
+	sort.Strings(bCopy)
+	for i := range aCopy {
+		if aCopy[i] != bCopy[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
+
+	if err := firewallDNSCategorySetsMustMatch(
+		SetToStringList(d, "res_categories"),
+		SetToStringList(d, "dest_ip_categories"),
+	); err != nil {
+		return diag.FromErr(err)
+	}
 
 	req := expandFirewallDNSRules(d)
 	log.Printf("[INFO] Creating zia firewall dns rule\n%+v\n", req)
@@ -469,6 +536,14 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("firewall dns rule ID not set"))
 	}
 	log.Printf("[INFO] Updating firewall dns rule ID: %v\n", id)
+
+	if err := firewallDNSCategorySetsMustMatch(
+		SetToStringList(d, "res_categories"),
+		SetToStringList(d, "dest_ip_categories"),
+	); err != nil {
+		return diag.FromErr(err)
+	}
+
 	req := expandFirewallDNSRules(d)
 
 	if _, err := firewalldnscontrolpolicies.Get(ctx, service, id); err != nil {

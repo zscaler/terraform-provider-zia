@@ -12,9 +12,24 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.13``
+``Last updated: v4.7.14``
 
 ---
+
+## 4.7.14 (March, 27 2026)
+
+### Notes
+
+- Release date: **(March, 27 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #554](https://github.com/zscaler/terraform-provider-zia/pull/554) - Activation CLI (`cli/ziaActivator.go`): `ZSCALER_CLOUD` is optional in OneAPI mode; when unset or empty, the client uses the default production cloud, matching `zia/config.go` and the SDK activation sample ([issue #552](https://github.com/zscaler/terraform-provider-zia/issues/552)).
+
+### Enhancements
+
+- [PR #554](https://github.com/zscaler/terraform-provider-zia/pull/554) - `zia_firewall_dns_rule`: validate at plan time and on create/update that `res_categories` and `dest_ip_categories` contain the same URL category IDs whenever either is set (aligned with ZIA admin UI and API requirements); documented in the resource page ([issue #551](https://github.com/zscaler/terraform-provider-zia/issues/551)).
 
 ## 4.7.13 (March, 23 2026)
 
