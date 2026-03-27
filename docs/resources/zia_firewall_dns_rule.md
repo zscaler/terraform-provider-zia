@@ -110,6 +110,7 @@ resource "zia_firewall_dns_rule" "this2" {
 
 ## Example Usage - Create Firewall DNS Rules - Redirect TCP Request
 
+```hcl
 resource "zia_firewall_dns_rule" "this3" {
     name = "Example_DNS_Rule03"
     description = "Example_DNS_Rule03"
@@ -125,6 +126,7 @@ resource "zia_firewall_dns_rule" "this3" {
       name = "DNS_GW01"
     }
 }
+```
 
 ## Argument Reference
 
