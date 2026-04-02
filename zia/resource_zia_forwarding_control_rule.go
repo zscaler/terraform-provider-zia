@@ -76,8 +76,8 @@ func resourceForwardingControlRule() *schema.Resource {
 			}
 
 			// Combined validation: `dest_addresses` and `dest_countries` can only be set when `forward_method` is either `PROXYCHAIN` or `DIRECT` or `ENATDEDIP`
-			if (isSet("dest_addresses") || isSet("dest_countries") || isSet("dest_ip_categories")) && forwardMethod != "PROXYCHAIN" && forwardMethod != "DIRECT" && forwardMethod != "ENATDEDIP" {
-				return fmt.Errorf("dest_addresses, dest_countries and dest_ip_categories can only be set when forward_method is either 'PROXYCHAIN' or 'DIRECT' or 'ENATDEDIP'")
+			if (isSet("dest_addresses") || isSet("dest_countries") || isSet("dest_ip_categories")) && forwardMethod != "PROXYCHAIN" && forwardMethod != "DIRECT" && forwardMethod != "ENATDEDIP" && forwardMethod != "GEOIP" {
+				return fmt.Errorf("dest_addresses, dest_countries and dest_ip_categories can only be set when forward_method is either 'PROXYCHAIN' or 'DIRECT' or 'ENATDEDIP' or 'GEOIP'")
 			}
 
 			return nil
@@ -162,6 +162,7 @@ func resourceForwardingControlRule() *schema.Resource {
 					"ECSELF",
 					"DROP",
 					"ENATDEDIP",
+					"GEOIP",
 				}, false),
 			},
 			"order": {

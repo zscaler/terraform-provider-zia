@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.7.15 (April, 2 2026)
+
+### Notes
+
+- Release date: **(April, 2  2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #556](https://github.com/zscaler/terraform-provider-zia/pull/556) - Updated `zia_forwarding_control_rule` Included support to the new `forward_method` `GEOIP`. ([issue #551](https://github.com/zscaler/terraform-provider-zia/issues/544)).
+
 ## 4.7.14 (March, 27 2026)
 
 ### Notes
