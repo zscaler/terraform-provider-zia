@@ -159,6 +159,7 @@ The following arguments are supported:
       - `ZPA` - If forward_method is `ZPA` the attributes `zpa_gateway` and `zpa_app_segments` are required.
       - `PROXYCHAIN` - If forward_method is `PROXYCHAIN` the attributes `proxy_gateway` is required.
       - `ENATDEDIP` - Dedicated IP method.
+      - `GEOIP` - Zscaler automatically selects the nearest data center to forward the traffic based on the data center mappings in the Geo IP page.
 
 ## Attribute Reference
 
