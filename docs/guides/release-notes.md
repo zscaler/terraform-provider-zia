@@ -12,9 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.15``
+``Last updated: v4.7.16``
 
 ---
+
+## 4.7.16 (April, 7 2026)
+
+### Notes
+
+- Release date: **(April, 7 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #559](https://github.com/zscaler/terraform-provider-zia/pull/559) - Added optional `search` attribute to data sources for JMESPath client-side filtering. Supported data sources: `zia_group_management`, `zia_user_management`, `zia_department_management`, `zia_devices`, `zia_cloud_applications`, `zia_location_groups`, `zia_location_management`. The `search` attribute accepts a [JMESPath](https://jmespath.org/) expression applied after pagination completes, enabling advanced filtering (e.g., `contains`, equality, boolean, nested field access) before local name/ID matching. Fully backward compatible — omitting `search` preserves existing behavior.
+- [PR #559](https://github.com/zscaler/terraform-provider-zia/pull/559) - Upgraded SDK to GO v1.25.x
+- [PR #559](https://github.com/zscaler/terraform-provider-zia/pull/559) - Upgraded go-jose library from v3 to v4
 
 ## 4.7.15 (April, 2 2026)
 

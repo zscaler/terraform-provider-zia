@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/groups"
 )
 
@@ -31,6 +32,11 @@ func dataSourceGroupManagement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression to filter results client-side. Applied after pagination completes. Example: \"[?contains(name, 'Engineering')]\"",
+			},
 		},
 	}
 }
@@ -39,7 +45,11 @@ func dataSourceGroupManagementRead(ctx context.Context, d *schema.ResourceData, 
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	// Always fetch all groups and search locally
+	if searchExpr, ok := d.GetOk("search"); ok {
+		ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+		log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+	}
+
 	log.Printf("[INFO] Fetching all groups\n")
 	allGroups, err := groups.GetAllGroups(ctx, service, nil)
 	if err != nil {

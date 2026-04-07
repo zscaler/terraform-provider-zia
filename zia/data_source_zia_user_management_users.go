@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/users"
 )
 
@@ -111,6 +112,11 @@ func dataSourceUserManagement() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression to filter results client-side. Applied after pagination completes. Example: \"[?contains(name, 'Admin')]\"",
+			},
 		},
 	}
 }
@@ -119,7 +125,11 @@ func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, m
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	// Always fetch all users and search locally
+	if searchExpr, ok := d.GetOk("search"); ok {
+		ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+		log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+	}
+
 	log.Printf("[INFO] Fetching all users\n")
 	allUsers, err := users.GetAllUsers(ctx, service, nil)
 	if err != nil {

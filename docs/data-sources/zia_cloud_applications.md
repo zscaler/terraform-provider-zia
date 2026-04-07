@@ -78,12 +78,35 @@ output "zia_cloud_applications" {
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to filter cloud applications by category
+data "zia_cloud_applications" "ai_apps" {
+  policy_type = "cloud_application_policy"
+  search      = "[?parentName == 'AI_ML']"
+}
+
+output "ai_app_names" {
+  value = [for app in data.zia_cloud_applications.ai_apps.applications : app["app_name"]]
+}
+```
+
+```hcl
+# Filter applications whose name contains "Slack"
+data "zia_cloud_applications" "slack" {
+  policy_type = "cloud_application_policy"
+  search      = "[?contains(appName, 'Slack')]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `cloud_application_policy` - (Required) Retrieves a list of Predefined and User Defined Cloud Applications associated with the DLP rules, Cloud App Control rules, Advanced Settings, Bandwidth Classes, and File Type Control rules.
 * `cloud_application_ssl_policy` - (Optional) Retrieves a list of Predefined and User Defined Cloud Applications associated with the SSL Inspection rules.
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all data has been retrieved from the API. This is useful for narrowing down large application lists. Field names in expressions must use the API's camelCase names (e.g., `app`, `appName`, `parent`, `parentName`).
 
     **NOTE** You may use `cloud_application_policy` or `cloud_application_ssl_policy` but not both at the same time.
 

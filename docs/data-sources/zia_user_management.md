@@ -24,12 +24,39 @@ data "zia_user_management" "adam_ashcroft" {
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to pre-filter users by department before matching by name
+data "zia_user_management" "adam_ashcroft" {
+ name   = "Adam Ashcroft"
+ search = "[?department.name == 'Engineering']"
+}
+```
+
+```hcl
+# Filter to admin users only
+data "zia_user_management" "admin_user" {
+ name   = "Jane Smith"
+ search = "[?adminUser == `true`]"
+}
+```
+
+```hcl
+# Filter users whose name contains a specific string
+data "zia_user_management" "user" {
+ name   = "Adam Ashcroft"
+ search = "[?contains(name, 'Adam')]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) User name. This appears when choosing users for policies.
 * `id` - (Optional) The ID of the time window resource.
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of users before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `email`, `department`, `adminUser`, `type`).
 
 ## Attribute Reference
 

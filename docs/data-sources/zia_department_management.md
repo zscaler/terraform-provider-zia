@@ -31,12 +31,31 @@ data "zia_department_management" "finance" {
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to pre-filter departments by name pattern
+data "zia_department_management" "engineering" {
+ name   = "Engineering"
+ search = "[?contains(name, 'Eng')]"
+}
+```
+
+```hcl
+# Filter out deleted departments
+data "zia_department_management" "active_dept" {
+ name   = "Finance"
+ search = "[?deleted == `false`]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (String) Name of the user department
 * `id` - (String) ID of the user department
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of departments before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `idpId`, `comments`, `deleted`).
 
 ## Attribute Reference
 

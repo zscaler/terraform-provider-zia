@@ -24,12 +24,31 @@ data "zia_devices" "device"{
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to pre-filter devices by OS type
+data "zia_devices" "windows_device" {
+    name   = "workstation-01"
+    search = "[?osType == 'WINDOWS_OS']"
+}
+```
+
+```hcl
+# Filter devices by model
+data "zia_devices" "device" {
+    name   = "administrator"
+    search = "[?contains(deviceModel, 'MacBook')]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) The name of the devices to be exported.
 * `id` - (Optional) The unique identifer for the devices.
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of devices before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `osType`, `osVersion`, `deviceModel`, `ownerName`).
 
 ## Attribute Reference
 

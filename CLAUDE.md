@@ -119,6 +119,58 @@ Setting `order = -1` may be accepted by the API and stored as `order = 0`, creat
 
 Rule orders must be sequential with no gaps. If a rule at order 5 is deleted, rules at orders 6+ must be re-adjusted to fill the gap, or the API will not honour the requested positions.
 
+## JMESPath Client-Side Filtering
+
+The provider supports an optional `search` attribute on select data sources that enables client-side filtering via [JMESPath](https://jmespath.org/) expressions. This feature is powered by the `zscaler-sdk-go` JMESPath integration — the SDK applies the expression after all pages have been fetched from the API, before results are returned to the provider.
+
+### How It Works
+
+1. The data source checks for a `search` attribute in the Terraform configuration
+2. If present, the context is enriched via `zscaler.ContextWithJMESPath(ctx, expression)`
+3. The SDK's pagination engine fetches all pages as usual
+4. `ApplyJMESPathFromContext` applies the JMESPath filter to the aggregated results
+5. The filtered results are returned to the provider for local name/ID matching
+
+### Supported Data Sources
+
+| Data Source | Filterable Fields (camelCase) |
+|---|---|
+| `zia_group_management` | `name`, `idpId`, `comments` |
+| `zia_user_management` | `name`, `email`, `department`, `adminUser`, `type` |
+| `zia_department_management` | `name`, `idpId`, `comments`, `deleted` |
+| `zia_devices` | `name`, `osType`, `osVersion`, `deviceModel`, `ownerName` |
+| `zia_cloud_applications` | `app`, `appName`, `parent`, `parentName` |
+| `zia_location_groups` | `name`, `groupType`, `comments`, `predefined` |
+| `zia_location_management` | `name`, `country`, `sslScanEnabled`, `ofwEnabled`, `authRequired`, `profile` |
+
+### Implementation Pattern
+
+When adding `search` to a new data source:
+
+```go
+import "github.com/zscaler/zscaler-sdk-go/v3/zscaler"
+
+// 1. Add to schema
+"search": {
+    Type:        schema.TypeString,
+    Optional:    true,
+    Description: "JMESPath expression to filter results client-side.",
+},
+
+// 2. Enrich context before SDK calls
+if searchExpr, ok := d.GetOk("search"); ok {
+    ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+    log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+}
+```
+
+### Key Rules
+
+- The `search` attribute MUST always be `Optional` — existing behavior is unchanged when omitted
+- Field names in JMESPath expressions use the API's **camelCase** names (e.g., `idpId`, not `idp_id`)
+- JMESPath filtering narrows the pool BEFORE local name/ID matching — if the filter excludes the target, the lookup will fail with "not found"
+- Debug logs are emitted by the SDK when JMESPath is active (visible with `TF_LOG=DEBUG`)
+
 ## Schema Conventions
 
 - Booleans with `omitempty` in the SDK: use `Optional: true, Computed: true`

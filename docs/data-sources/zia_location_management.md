@@ -25,12 +25,39 @@ data "zia_location_management" "example"{
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to pre-filter locations by country
+data "zia_location_management" "us_location" {
+    name   = "San Jose"
+    search = "[?country == 'UNITED_STATES']"
+}
+```
+
+```hcl
+# Filter locations with SSL scan enabled
+data "zia_location_management" "ssl_location" {
+    name   = "Branch Office"
+    search = "[?sslScanEnabled == `true`]"
+}
+```
+
+```hcl
+# Filter locations by name pattern
+data "zia_location_management" "branch" {
+    name   = "Branch Office - NYC"
+    search = "[?contains(name, 'Branch')]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) - The name of the location to be exported.
 * `id` - (Required) - The ID of the location to be exported.
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of locations before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `country`, `sslScanEnabled`, `ofwEnabled`, `authRequired`, `profile`).
 
 ## Attribute Reference
 
