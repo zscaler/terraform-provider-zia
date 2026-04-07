@@ -3,9 +3,11 @@ package zia
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudapplications/cloudapplications"
 )
 
@@ -58,6 +60,11 @@ func dataSourceCloudApplications() *schema.Resource {
 				Optional:    true,
 				Description: "Filter results to include only a specific application name",
 			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression to filter results client-side. Applied after pagination completes. Example: \"[?contains(appName, 'Slack')]\"",
+			},
 		},
 	}
 }
@@ -65,6 +72,11 @@ func dataSourceCloudApplications() *schema.Resource {
 func dataSourceCloudApplicationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
+
+	if searchExpr, ok := d.GetOk("search"); ok {
+		ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+		log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+	}
 
 	policyType := d.Get("policy_type").(string)
 	params := map[string]interface{}{}

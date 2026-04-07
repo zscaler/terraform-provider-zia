@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 )
 
@@ -308,6 +309,11 @@ func dataSourceLocationManagement() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression to filter results client-side. Applied after pagination completes. Example: \"[?contains(name, 'Branch')]\"",
+			},
 		},
 	}
 }
@@ -317,6 +323,11 @@ func dataSourceLocationManagement() *schema.Resource {
 func dataSourceLocationManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
+
+	if searchExpr, ok := d.GetOk("search"); ok {
+		ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+		log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+	}
 
 	var resp *locationmanagement.Locations
 	id, ok := getIntFromResourceData(d, "id")

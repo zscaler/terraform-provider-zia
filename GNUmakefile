@@ -200,14 +200,14 @@ test\:integration\:zscalertwo:
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.7.15/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.7.16/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.7.15/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.7.16/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-zia_v4.7.15
+	go build -o $(DESTINATION)/terraform-provider-zia_v4.7.16
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
@@ -272,14 +272,14 @@ lint:
 		./$(PKG_NAME)
 
 tools:
-	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.5.0
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.9.2
 	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
-	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@latest
 
 tools-update:
-	@go install mvdan.cc/gofumpt@v0.5.0
+	@go install mvdan.cc/gofumpt@v0.9.2
 	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
-	@go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
+	@go install honnef.co/go/tools/cmd/staticcheck@latest
 
 ziaActivator: GOOS=$(shell go env GOOS)
 ziaActivator: GOARCH=$(shell go env GOARCH)

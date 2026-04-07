@@ -101,6 +101,7 @@ In addition to all arguments above, the following attributes are supported:
 * `first_time_operation` - (String) The action that must take place when users download unknown files for the first time. Supported Values: `ALLOW_SCAN`, `QUARANTINE`, `ALLOW_NOSCAN`, `QUARANTINE_ISOLATE`
 * `ml_action_enabled` - (Boolean) A Boolean value indicating whether to enable or disable the AI Instant Verdict option to have the Zscaler service use AI analysis to instantly assign threat scores to unknown files. This option is available to use only with specific rule actions such as Quarantine and Allow and Scan for First-Time Action.
 * `by_threat_score` - (Integer)
+* `ba_policy_categories` - (List of Strings) The threat categories to which the rule applies. Supported values: `ADWARE_BLOCK`, `BOTMAL_BLOCK`, `ANONYP2P_BLOCK`, `RANSOMWARE_BLOCK`, `OFFSEC_TOOLS_BLOCK`, `SUSPICIOUS_BLOCK`,
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud IPS Rule or not
 
 * `url_categories` - (List of Strings) The list of URL categories to which the Sandbox rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.

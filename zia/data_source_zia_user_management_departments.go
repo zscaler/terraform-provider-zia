@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/departments"
 )
 
@@ -35,6 +36,11 @@ func dataSourceDepartmentManagement() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression to filter results client-side. Applied after pagination completes. Example: \"[?contains(name, 'Engineering')]\"",
+			},
 		},
 	}
 }
@@ -43,7 +49,11 @@ func dataSourceDepartmentManagementRead(ctx context.Context, d *schema.ResourceD
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	// Always fetch all departments and search locally
+	if searchExpr, ok := d.GetOk("search"); ok {
+		ctx = zscaler.ContextWithJMESPath(ctx, searchExpr.(string))
+		log.Printf("[INFO] JMESPath filter set: %s\n", searchExpr.(string))
+	}
+
 	log.Printf("[INFO] Fetching all departments\n")
 	allDepartments, err := departments.GetAll(ctx, service, nil)
 	if err != nil {

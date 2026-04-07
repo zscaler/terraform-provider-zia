@@ -51,12 +51,31 @@ data "zia_location_groups" "example"{
 }
 ```
 
+### Example Usage - With JMESPath Search
+
+```hcl
+# Use JMESPath to pre-filter location groups by type
+data "zia_location_groups" "dynamic_groups" {
+    name   = "Corporate User Traffic Group"
+    search = "[?groupType == 'Dynamic']"
+}
+```
+
+```hcl
+# Filter location groups by name pattern
+data "zia_location_groups" "traffic_groups" {
+    name   = "Server Traffic Group"
+    search = "[?contains(name, 'Traffic')]"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) Location group name
 * `id` - (Optional) Unique identifier for the location group
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of location groups before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `groupType`, `comments`, `predefined`).
 
 ## Attribute Reference
 
