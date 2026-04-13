@@ -148,6 +148,17 @@ func resourceSandboxRules() *schema.Resource {
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
+			"file_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Description: `File type categories for which the policy is applied. If not set, the rule is applied across all file types
+				See the available file types API in:
+				https://automate.zscaler.com/docs/api-reference-and-guides/api-reference/zia/sandbox-policy-settings/ba-rule-resource-add-rule`,
+			},
 			"locations":            setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations for the which policy must be applied. If not set, policy is applied for all locations."),
 			"location_groups":      setIDsSchemaTypeCustom(nil, "Name-ID pairs of locations groups for which rule must be applied."),
 			"departments":          setIDsSchemaTypeCustom(nil, "The Name-ID pairs of departments to which the sandbox rules must be applied."),
@@ -156,7 +167,6 @@ func resourceSandboxRules() *schema.Resource {
 			"labels":               setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
 			"zpa_app_segments":     setExtIDNameSchemaCustom(intPtr(255), "List of Source IP Anchoring-enabled ZPA Application Segments for which this rule is applicable"),
 			"ba_policy_categories": getBaPolicyCategories(),
-			"file_types":           getSandboxFileTypes(),
 			"protocols":            getSandboxRuleProtocols(),
 		},
 	}
