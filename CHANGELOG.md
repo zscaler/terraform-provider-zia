@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.7.17 (April, 13 2026)
+
+### Notes
+
+- Release date: **(April, 13 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #561](https://github.com/zscaler/terraform-provider-zia/pull/561) - Removed file type validation from resource `zia_sandbox_rules`
+
 ## 4.7.16 (April, 7 2026)
 
 ### Notes

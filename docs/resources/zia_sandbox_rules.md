@@ -107,7 +107,7 @@ In addition to all arguments above, the following attributes are supported:
 * `url_categories` - (List of Strings) The list of URL categories to which the Sandbox rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 
 * `file_types` - (List of Strings) File type categories for which the policy is applied. If not set, the rule is applied across all file types.
-See the [File Type Control API](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeRules-get).
+See the [File Type Control API](https://automate.zscaler.com/docs/api-reference-and-guides/api-reference/zia/sandbox-policy-settings/ba-rule-resource-add-rule).
 
 * `urls` - (List of Strings) Domains or URLs included for the FTP Control settings
 
@@ -129,19 +129,6 @@ See the [File Type Control API](https://help.zscaler.com/zia/file-type-control-p
 
 * `zpa_app_segments` (List of Objects) The ZPA application segments to which the rule applies
       - `id` - (Integer) Identifier that uniquely identifies an entity
-
-|                              **Supported File Types**                                           |
-|:--------------------------------------------------------------------------------------------------------|
-|---------------------------------------------------------------------------------------|
-| `FTCATEGORY_BAT`, `FTCATEGORY_APK`, `FTCATEGORY_WINDOWS_SCRIPT_FILES`,|
-| `FTCATEGORY_JAVA_APPLET`, `FTCATEGORY_PDF_DOCUMENT`, `FTCATEGORY_MS_RTF`,|
-| `FTCATEGORY_FLASH`, `FTCATEGORY_POWERSHELL`, `FTCATEGORY_WINDOWS_LIBRARY`,|
-| `FTCATEGORY_MS_EXCEL`, `FTCATEGORY_HTA`, `FTCATEGORY_VISUAL_BASIC_SCRIPT`,|
-| `FTCATEGORY_MS_POWERPOINT`, `FTCATEGORY_TAR`, `FTCATEGORY_WINDOWS_EXECUTABLES`, |
-| `FTCATEGORY_SCZIP`, `FTCATEGORY_RAR`, `FTCATEGORY_ZIP`, `FTCATEGORY_P7Z`,|
-| `FTCATEGORY_MICROSOFT_INSTALLER`, `FTCATEGORY_BZIP2`, `FTCATEGORY_PYTHON`,|
-| `FTCATEGORY_MS_WORD`|
-|-------------------------------------------------------------------------------------------|
 
 ## Import
 
