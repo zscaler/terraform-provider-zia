@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.17``
+``Last updated: v4.7.18``
 
 ---
+
+## 4.7.18 (April, 17 2026)
+
+### Notes
+
+- Release date: **(April, 17 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #563](https://github.com/zscaler/terraform-provider-zia/pull/563) - Removed `country` and `tz` validation from resource `zia_location_management` to align with recent API changes.
 
 ## 4.7.17 (April, 13 2026)
 
