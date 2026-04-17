@@ -85,13 +85,25 @@ func resourceLocationManagement() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 99999999),
 				Description:  "Download bandwidth in bytes. The value 0 implies no Bandwidth Control enforcement.",
 			},
-			"country": getLocationManagementCountries(),
-			"tz":      getLocationManagementTimeZones(),
+			// "country": getLocationManagementCountries(),
+			// "tz":      getLocationManagementTimeZones(),
 			"state": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Computed:    true,
 				Description: "IP ports that are associated with the location.",
+			},
+			"country": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "IP ports that are associated with the location.",
+			},
+			"tz": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Computed:    true,
+				Description: "Timezone of the location. If not specified, it defaults to GMT.",
 			},
 			"ip_addresses": {
 				Type:     schema.TypeSet,
