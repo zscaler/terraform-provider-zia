@@ -346,6 +346,14 @@ func resourceAdvancedSettings() *schema.Resource {
 				Computed:    true,
 				Description: "Specifies the login session timeout for admins accessing the ZIA Admin Portal",
 			},
+			"api_session_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Description: `"API Session Timeout Duration (In Minutes)"
+				Specify how long an API-initiated session remains active before re-authentication is required.
+				By default, this duration is 5 minutes, and it can be configured for any period between 5 and 20 minutes.
+				Reference: https://help.zscaler.com/zia/release-upgrade-summary-2026`,
+			},
 			// "ecs_object": {
 			// 	Type:     schema.TypeList,
 			// 	Optional:    true,

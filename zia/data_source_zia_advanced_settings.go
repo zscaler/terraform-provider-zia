@@ -280,6 +280,11 @@ func dataSourceAdvancedSettings() *schema.Resource {
 				Computed:    true,
 				Description: "Specifies the login session timeout for admins accessing the ZIA Admin Portal",
 			},
+			"api_session_timeout": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "API Session Timeout Duration (In Minutes)",
+			},
 			// "ecs_object": {
 			// 	Type:     schema.TypeList,
 			// 	Computed: true,

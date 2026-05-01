@@ -75,4 +75,5 @@ The following arguments are supported:
 * `prefer_sni_over_conn_host` - (Boolean) Value indicating whether or not to use the SSL/TLS client hello SNI for DNS resolution instead of the CONNECT host for forward proxy connections.
 * `sipa_xff_header_enabled` - (Boolean) Value indicating whether or not to insert XFF header to all traffic forwarded from ZIA to ZPA, including source IP-anchored and ZIA-inspected ZPA application traffic.
 * `block_non_http_on_http_port_enabled` - (Boolean) Value indicating whether non-HTTP Traffic on HTTP/S ports are allowed or blocked.
-* `ui_session_timeout` - (Integer) Specifies the login session timeout for admins accessing the ZIA Admin Portal. Minimum value is 300 seconds.
+* `ui_session_timeout` - (Integer) Specifies the login session timeout for admins accessing the ZIA Admin Portal. Specify how long admins can be inactive on the ZIA Admin Portal before they must log in again. By default, sessions restart after 30 minutes. You can choose a different time frame, from 5 minutes to 600 minutes (10 hours).
+* `api_session_timeout` - (Integer) Specify how long an API-initiated session remains active before re-authentication is required. By default, this duration is 5 minutes, and it can be configured for any period between 5 and 20 minutes. [Reference](https://help.zscaler.com/zia/release-upgrade-summary-2026)
