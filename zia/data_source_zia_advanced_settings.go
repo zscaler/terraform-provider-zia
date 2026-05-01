@@ -351,7 +351,6 @@ func dataSourceAdvancedSettingsRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("prefer_sni_over_conn_host", res.PreferSniOverConnHost)
 	_ = d.Set("sipa_xff_header_enabled", res.SipaXffHeaderEnabled)
 	_ = d.Set("block_non_http_on_http_port_enabled", res.BlockNonHttpOnHttpPortEnabled)
-	_ = d.Set("ui_session_timeout", res.UISessionTimeout)
 	_ = d.Set("auth_bypass_apps", res.AuthBypassApps)
 	_ = d.Set("kerberos_bypass_apps", res.KerberosBypassApps)
 	_ = d.Set("basic_bypass_apps", res.BasicBypassApps)
@@ -373,6 +372,8 @@ func dataSourceAdvancedSettingsRead(ctx context.Context, d *schema.ResourceData,
 	_ = d.Set("http_range_header_remove_url_categories", res.HttpRangeHeaderRemoveUrlCategories)
 	_ = d.Set("digest_auth_bypass_url_categories", res.DigestAuthBypassUrlCategories)
 	_ = d.Set("sni_dns_optimization_bypass_url_categories", res.SniDnsOptimizationBypassUrlCategories)
+	_ = d.Set("ui_session_timeout", res.UISessionTimeout)
+	_ = d.Set("api_session_timeout", res.APISessionTimeout)
 
 	return nil
 }

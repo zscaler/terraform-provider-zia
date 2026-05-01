@@ -450,7 +450,6 @@ func resourceAdvancedSettingsRead(ctx context.Context, d *schema.ResourceData, m
 		_ = d.Set("prefer_sni_over_conn_host", resp.PreferSniOverConnHost)
 		_ = d.Set("sipa_xff_header_enabled", resp.SipaXffHeaderEnabled)
 		_ = d.Set("block_non_http_on_http_port_enabled", resp.BlockNonHttpOnHttpPortEnabled)
-		_ = d.Set("ui_session_timeout", resp.UISessionTimeout)
 		_ = d.Set("auth_bypass_apps", resp.AuthBypassApps)
 		_ = d.Set("kerberos_bypass_apps", resp.KerberosBypassApps)
 		_ = d.Set("basic_bypass_apps", resp.BasicBypassApps)
@@ -472,6 +471,8 @@ func resourceAdvancedSettingsRead(ctx context.Context, d *schema.ResourceData, m
 		_ = d.Set("http_range_header_remove_url_categories", resp.HttpRangeHeaderRemoveUrlCategories)
 		_ = d.Set("digest_auth_bypass_url_categories", resp.DigestAuthBypassUrlCategories)
 		_ = d.Set("sni_dns_optimization_bypass_url_categories", resp.SniDnsOptimizationBypassUrlCategories)
+		_ = d.Set("ui_session_timeout", resp.UISessionTimeout)
+		_ = d.Set("api_session_timeout", resp.APISessionTimeout)
 
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't read advanced settings"))
@@ -532,7 +533,6 @@ func expandAdvancedSettingsUpdate(d *schema.ResourceData) advanced_settings.Adva
 		PreferSniOverConnHost:                                  d.Get("prefer_sni_over_conn_host").(bool),
 		SipaXffHeaderEnabled:                                   d.Get("sipa_xff_header_enabled").(bool),
 		BlockNonHttpOnHttpPortEnabled:                          d.Get("block_non_http_on_http_port_enabled").(bool),
-		UISessionTimeout:                                       d.Get("ui_session_timeout").(int),
 		AuthBypassUrls:                                         SetToStringList(d, "auth_bypass_urls"),
 		KerberosBypassUrls:                                     SetToStringList(d, "kerberos_bypass_urls"),
 		DigestAuthBypassUrls:                                   SetToStringList(d, "digest_auth_bypass_urls"),
@@ -559,6 +559,8 @@ func expandAdvancedSettingsUpdate(d *schema.ResourceData) advanced_settings.Adva
 		HttpRangeHeaderRemoveUrlCategories:                     SetToStringList(d, "http_range_header_remove_url_categories"),
 		DigestAuthBypassUrlCategories:                          SetToStringList(d, "digest_auth_bypass_url_categories"),
 		SniDnsOptimizationBypassUrlCategories:                  SetToStringList(d, "sni_dns_optimization_bypass_url_categories"),
+		UISessionTimeout:                                       d.Get("ui_session_timeout").(int),
+		APISessionTimeout:                                      d.Get("api_session_timeout").(int),
 		// EcsObject:    										d.Get("potential_malicious_requests_blocked").(bool),
 	}
 	return result
