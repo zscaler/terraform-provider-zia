@@ -9,8 +9,8 @@
 
 ### Enhancements
 
-- [PR #566](https://github.com/zscaler/terraform-provider-zia/pull/566) - Added support for looking up users by `email` in the `zia_user_management` data source. The lookup matches the `email` field exactly and case-insensitively against the API result set.
-- [PR #566](https://github.com/zscaler/terraform-provider-zia/pull/566) - Fixed `search` (JMESPath) interaction with `name`/`email` lookups in `zia_user_management`. When `search` is set, the provider now bypasses the API-side `name=<lookup>` query parameter so the JMESPath expression is applied against the full user population, rather than a slice already narrowed by the lookup value. Improved the "user not found" error message to surface the active `search` expression and the resulting candidate-pool size when a JMESPath filter is in effect, making misconfigured expressions (e.g. referencing `department.email` instead of `department.name`) easier to diagnose.
+- [PR #564](https://github.com/zscaler/terraform-provider-zia/pull/564) - Added support for looking up users by `email` in the `zia_user_management` data source. The lookup matches the `email` field exactly and case-insensitively against the API result set.
+- [PR #564](https://github.com/zscaler/terraform-provider-zia/pull/564) - Fixed `search` (JMESPath) interaction with `name`/`email` lookups in `zia_user_management`. When `search` is set, the provider now bypasses the API-side `name=<lookup>` query parameter so the JMESPath expression is applied against the full user population, rather than a slice already narrowed by the lookup value. Improved the "user not found" error message to surface the active `search` expression and the resulting candidate-pool size when a JMESPath filter is in effect, making misconfigured expressions (e.g. referencing `department.email` instead of `department.name`) easier to diagnose.
 
 ## 4.7.18 (April, 17 2026)
 
