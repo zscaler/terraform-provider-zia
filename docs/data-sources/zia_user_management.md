@@ -18,9 +18,23 @@ Use the **zia_user_management** data source to get information about a user acco
 ## Example Usage
 
 ```hcl
-# ZIA Local User Account
+# Look up a user by display name (exact match)
 data "zia_user_management" "adam_ashcroft" {
  name = "Adam Ashcroft"
+}
+```
+
+```hcl
+# Look up a user by email address (exact match, case-insensitive)
+data "zia_user_management" "adam_ashcroft_by_email" {
+ email = "adam.ashcroft@acme.com"
+}
+```
+
+```hcl
+# Look up a user by numeric ID
+data "zia_user_management" "adam_ashcroft_by_id" {
+ id = 29309058
 }
 ```
 
@@ -50,19 +64,27 @@ data "zia_user_management" "user" {
 }
 ```
 
+```hcl
+# Combine email lookup with a department guard — fails at plan time if the
+# user is moved out of Engineering, even though the email still resolves
+data "zia_user_management" "engineering_only" {
+ email  = "adam.ashcroft@acme.com"
+ search = "[?department.name == 'Engineering']"
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are supported. Exactly one of `id`, `name`, or `email` must be provided. When more than one is provided, the lookup is performed in the order: `id`, then `email`, then `name`.
 
-* `name` - (Required) User name. This appears when choosing users for policies.
-* `id` - (Optional) The ID of the time window resource.
-* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of users before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `email`, `department`, `adminUser`, `type`).
+* `id` - (Optional) Numeric ID of the user. When provided, this is the most specific lookup and short-circuits any other criteria.
+* `name` - (Optional) User display name. The match is **exact** and case-sensitive against the value returned by the API.
+* `email` - (Optional) User email address. The match is **exact** and case-insensitive. Use this when the display name is not unique or unknown — the provider issues a partial-match query against the `/users` endpoint using the email value to narrow the candidate pool, then matches the `email` field exactly client-side.
+* `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the full list of users before `id`/`email`/`name` matching, so it acts as a true pre-filter against the entire population (when `search` is set, the provider deliberately bypasses the API-side `name=<lookup>` query parameter so the JMESPath can evaluate against the full set rather than a name/email-narrowed slice). Field names in expressions must use the API's camelCase names (e.g., `name`, `email`, `department.name`, `adminUser`, `type`). If the expression excludes the target user, the subsequent lookup will fail with a "user not found" error that explicitly references the `search` expression — verify the expression references valid fields (e.g. `department.name`, not `department.email`).
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
-
-* `email` - (Required) User email consists of a user name and domain name. It does not have to be a valid email address, but it must be unique and its domain must belong to the organization
 * `admin_user` - (String) True if this user is an Admin user. readOnly: `true` default: `false`
 * `comments` - (String) Additional information about this user.
 * `password` -(String, Sensitive)

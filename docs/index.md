@@ -146,6 +146,9 @@ dropdown you will see the newly created Role. In the event a newly created role 
 ZIdentity Admin UI a `Sync Now` button is provided in the API Resources menu which will initiate an
 on-demand sync of newly created roles.
 
+### Important Note - New Feature
+- [API Session Timeout](https://help.zscaler.com/zia/release-upgrade-summary-2026#:~:text=Feature%20Available-,API%20Session%20Timeout,-When%20configuring%20advanced) - A new field, `api_session_timeout`, is available for the AdvancedSettings model in the /advancedSettings APIs. This configuration allows you to specify how long API-initiated sessions can be inactive before they are forced to reauthenticate. The timeout duration can range from 5 to 20 minutes. The attribute `api_session_timeout` is available via the resource `zia_advanced_settings`
+
 ## Legacy API Framework
 
 ### ZIA native authentication
