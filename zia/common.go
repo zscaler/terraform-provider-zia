@@ -1103,6 +1103,68 @@ var rules = listrules{
 	reorderDone: make(map[string]chan struct{}),
 }
 
+// familyWriteLocks holds one mutex per rule resource family (one per
+// resourceType, e.g. "ssl_inspection_rules", "url_filtering_rules"). Both the
+// reorder engine's PUT loop and every resource's Create POST acquire the
+// matching mutex around their actual API write call.
+//
+// Why this exists:
+//
+// The engine's `rules.Lock()` is intentionally released while the engine
+// performs network I/O (snapshot GET + per-rule PUTs), so registration and
+// completion bookkeeping (markOrderRuleAsDone / waitForReorder) cannot
+// starve. With that relaxation, however, a Terraform Create's POST and the
+// engine's reorder PUTs can hit the same /<family> endpoint at the same
+// instant. Concurrent writes to the same rule family contend for ZIA's
+// edit-lock; the API returns 409 with an EDIT_LOCK_NOT_AVAILABLE / "Failed
+// during enter Org barrier" body. The Zscaler SDK's retryablehttp policy
+// retries that 409. If a retried POST commits server-side but the response
+// is observed as a 409 (or as a transport error), the next retry collides
+// with the now-existing rule and the API returns 400 DUPLICATE_ITEM, which
+// surfaces to the user as a spurious "rule already exists" failure even
+// though they never created it twice.
+//
+// familyWriteLock serializes ONLY the actual write API call for a single
+// family. It does not affect:
+//   - GETs (snapshot, Read, lookups),
+//   - registration into rules.orders,
+//   - markOrderRuleAsDone / waitForReorder,
+//   - writes to other rule families (each family has its own mutex).
+//
+// This restores the per-family write serialization the previous engine
+// achieved by accident (it held rules.Lock across all I/O), without
+// re-introducing the global starvation that motivated the optimization.
+var (
+	familyWriteLocksMu sync.Mutex
+	familyWriteLocks   = map[string]*sync.Mutex{}
+)
+
+// familyWriteLock returns the mutex for a given rule resource family,
+// creating it on first use. The returned mutex is intended to be held
+// strictly around a single API write call (POST or PUT).
+func familyWriteLock(resourceType string) *sync.Mutex {
+	familyWriteLocksMu.Lock()
+	defer familyWriteLocksMu.Unlock()
+	m, ok := familyWriteLocks[resourceType]
+	if !ok {
+		m = &sync.Mutex{}
+		familyWriteLocks[resourceType] = m
+	}
+	return m
+}
+
+// withFamilyWriteLock runs fn while holding the family's write lock. Use
+// this around the *single* API write call (POST in Create paths, PUT inside
+// the engine's updateOrder callback). Do NOT hold this across multiple
+// network calls — the lock is intentionally narrow so cross-family Creates
+// remain parallel.
+func withFamilyWriteLock(resourceType string, fn func()) {
+	m := familyWriteLock(resourceType)
+	m.Lock()
+	defer m.Unlock()
+	fn()
+}
+
 type RuleIDOrderPair struct {
 	ID    int
 	Order OrderRule
@@ -1263,10 +1325,14 @@ func reorderAll(resourceType string, snapshot SnapshotProvider, updateOrder Upda
 						skipped++
 						continue
 					}
-					if err := updateOrder(v.ID, v.Order, current.Body); err != nil {
+					// Serialize this PUT against any concurrent POST/PUT in
+					// the same family. See familyWriteLocks doc for the why.
+					var err error
+					withFamilyWriteLock(resourceType, func() {
+						err = updateOrder(v.ID, v.Order, current.Body)
+					})
+					if err != nil {
 						if isTransientReorderError(err) {
-							// Defer for one in-pass retry once predecessors
-							// have been written.
 							transient++
 							log.Printf("[WARN] reorder: rule %d (%s) deferred — API rejected target order %d as not yet allowed: %v", v.ID, resourceType, v.Order.Order, err)
 							deferred = append(deferred, deferredRule{pair: v, body: current.Body})
@@ -1287,7 +1353,11 @@ func reorderAll(resourceType string, snapshot SnapshotProvider, updateOrder Upda
 				// resource Create/Update for this rule type).
 				retrySucceeded := 0
 				for _, d := range deferred {
-					if err := updateOrder(d.pair.ID, d.pair.Order, d.body); err != nil {
+					var err error
+					withFamilyWriteLock(resourceType, func() {
+						err = updateOrder(d.pair.ID, d.pair.Order, d.body)
+					})
+					if err != nil {
 						log.Printf("[WARN] reorder: rule %d (%s) still rejected on in-pass retry: %v", d.pair.ID, resourceType, err)
 						continue
 					}

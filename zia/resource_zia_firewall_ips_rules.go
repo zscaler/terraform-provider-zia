@@ -255,6 +255,8 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			}
 			if firewallIPSStartingOrder == 0 {
 				firewallIPSStartingOrder = 1
+			} else {
+				firewallIPSStartingOrder++
 			}
 		}
 		firewallIPSLock.Unlock()
@@ -268,7 +270,13 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		req.Order = firewallIPSStartingOrder
 
-		resp, err := firewallipscontrolpolicies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *firewallipscontrolpolicies.FirewallIPSRules
+		var err error
+		withFamilyWriteLock("firewall_ips_rule", func() {
+			resp, err = firewallipscontrolpolicies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

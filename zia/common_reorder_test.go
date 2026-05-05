@@ -878,3 +878,130 @@ func TestReorder_OutOfRangeTargetDoesNotBlockEngine(t *testing.T) {
 		t.Errorf("expected 5 PUTs (only in-range targets), got %d", got)
 	}
 }
+
+// TestFamilyWriteLock_SerializesPostAgainstPut directly exercises the
+// invariant that motivated the DUPLICATE_ITEM fix: for a single resource
+// family, a Create's POST and the engine's reorder PUT must NEVER overlap.
+//
+// Without the family writer lock, the engine's PUT (which runs without
+// rules.Lock held during I/O) and a parallel Terraform Create POST can
+// collide on ZIA's edit lock, producing 409 → SDK retry → DUPLICATE_ITEM if
+// the originally-retried POST committed server-side.
+//
+// This test runs N goroutines that each repeatedly try to "POST" and N
+// goroutines that try to "PUT". Both call paths route through
+// withFamilyWriteLock(family). A counter tracks how many writers are
+// "in-flight" (between lock acquisition and release). The test fails if
+// that counter ever exceeds 1 — i.e., if any two writes for the same family
+// were ever observed running concurrently.
+//
+// A separate "other_family" PUT path uses a different family key and MUST
+// run concurrently with the first family's writes; the test asserts that
+// concurrency is preserved across families (the lock is not global).
+func TestFamilyWriteLock_SerializesPostAgainstPut(t *testing.T) {
+	const family = "test_family_serialization"
+	const otherFamily = "other_test_family"
+
+	var (
+		inFlightFamily atomic.Int32
+		maxInFlight    atomic.Int32
+
+		inFlightOther atomic.Int32
+		maxOtherSeen  atomic.Int32
+
+		crossFamilyConcurrent atomic.Int32
+	)
+
+	bumpMax := func(cur int32, max *atomic.Int32) {
+		for {
+			old := max.Load()
+			if cur <= old {
+				return
+			}
+			if max.CompareAndSwap(old, cur) {
+				return
+			}
+		}
+	}
+
+	doFamilyWrite := func() {
+		withFamilyWriteLock(family, func() {
+			cur := inFlightFamily.Add(1)
+			bumpMax(cur, &maxInFlight)
+			// Observe whether the *other* family has a concurrent in-flight
+			// writer. We expect this to happen at least once across the run
+			// — that proves the lock is per-family, not global.
+			if inFlightOther.Load() > 0 {
+				crossFamilyConcurrent.Add(1)
+			}
+			// Simulate a short network call. Sleep is chosen large enough
+			// that goroutines collide if no lock were held, but short enough
+			// to keep the test fast.
+			time.Sleep(2 * time.Millisecond)
+			inFlightFamily.Add(-1)
+		})
+	}
+
+	doOtherFamilyWrite := func() {
+		withFamilyWriteLock(otherFamily, func() {
+			cur := inFlightOther.Add(1)
+			bumpMax(cur, &maxOtherSeen)
+			time.Sleep(2 * time.Millisecond)
+			inFlightOther.Add(-1)
+		})
+	}
+
+	const writers = 16
+	const opsPerWriter = 25
+	var wg sync.WaitGroup
+	for i := 0; i < writers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < opsPerWriter; j++ {
+				doFamilyWrite()
+			}
+		}()
+	}
+	for i := 0; i < writers; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for j := 0; j < opsPerWriter; j++ {
+				doOtherFamilyWrite()
+			}
+		}()
+	}
+	wg.Wait()
+
+	if got := maxInFlight.Load(); got > 1 {
+		t.Fatalf("family %q: expected at most 1 concurrent writer, observed %d — lock failed to serialize POST vs PUT", family, got)
+	}
+	if got := maxOtherSeen.Load(); got > 1 {
+		t.Fatalf("family %q: expected at most 1 concurrent writer, observed %d — lock failed to serialize", otherFamily, got)
+	}
+	// Cross-family concurrency must have been observed at least once. If
+	// not, the family lock has degenerated into a global lock, which would
+	// re-introduce the SUP-3988 starvation we explicitly want to avoid.
+	if crossFamilyConcurrent.Load() == 0 {
+		t.Fatalf("expected concurrent writes across different families at least once, observed 0 — family lock has degenerated into a global lock")
+	}
+}
+
+// TestFamilyWriteLock_DistinctFamiliesGetDistinctMutexes is a structural
+// check on the lock-creation helper: two different family names must
+// resolve to different *sync.Mutex instances, and the same family name must
+// always resolve to the same instance (otherwise serialization would be
+// broken).
+func TestFamilyWriteLock_DistinctFamiliesGetDistinctMutexes(t *testing.T) {
+	a1 := familyWriteLock("alpha")
+	a2 := familyWriteLock("alpha")
+	b := familyWriteLock("beta")
+
+	if a1 != a2 {
+		t.Fatalf("familyWriteLock(\"alpha\") returned different *sync.Mutex on second call — registration is not stable")
+	}
+	if a1 == b {
+		t.Fatalf("familyWriteLock(\"alpha\") and familyWriteLock(\"beta\") returned the same *sync.Mutex — distinct families must have distinct locks")
+	}
+}

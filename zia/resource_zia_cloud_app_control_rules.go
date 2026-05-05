@@ -299,6 +299,8 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			}
 			if cloudAppRuleStartingOrder == 0 {
 				cloudAppRuleStartingOrder = 1
+			} else {
+				cloudAppRuleStartingOrder++
 			}
 		}
 		cloudAppRuleLock.Unlock()
@@ -312,7 +314,13 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 		req.Order = cloudAppRuleStartingOrder
 
-		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *cloudappcontrol.WebApplicationRules
+		var err error
+		withFamilyWriteLock("cloud_app_control_rules", func() {
+			resp, err = cloudappcontrol.Create(ctx, service, req.Type, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

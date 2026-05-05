@@ -146,6 +146,8 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			}
 			if bandwidthControlStartingOrder == 0 {
 				bandwidthControlStartingOrder = 1
+			} else {
+				bandwidthControlStartingOrder++
 			}
 		}
 		bandwidthControlLock.Unlock()
@@ -154,7 +156,13 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 		order := req.Order
 		req.Order = bandwidthControlStartingOrder
 
-		resp, err := bandwidth_control_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *bandwidth_control_rules.BandwidthControlRules
+		var err error
+		withFamilyWriteLock("bandwidth_control_rule", func() {
+			resp, err = bandwidth_control_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

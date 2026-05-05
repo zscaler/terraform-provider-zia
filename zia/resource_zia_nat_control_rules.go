@@ -236,6 +236,8 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			}
 			if natControlRuleStartingOrder == 0 {
 				natControlRuleStartingOrder = 1
+			} else {
+				natControlRuleStartingOrder++
 			}
 		}
 		natControlRuleLock.Unlock()
@@ -249,7 +251,13 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 		req.Order = natControlRuleStartingOrder
 
-		resp, err := nat_control_policies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *nat_control_policies.NatControlPolicies
+		var err error
+		withFamilyWriteLock("nat_control_rules", func() {
+			resp, err = nat_control_policies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

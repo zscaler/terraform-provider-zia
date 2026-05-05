@@ -314,6 +314,8 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			}
 			if forwardingControlStartingOrder == 0 {
 				forwardingControlStartingOrder = 1
+			} else {
+				forwardingControlStartingOrder++
 			}
 		}
 		forwardingControlLock.Unlock()
@@ -327,11 +329,15 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		}
 		req.Order = forwardingControlStartingOrder
 
-		// Retry logic in case of specific error
+		// Retry logic in case of specific error.
+		// Each attempt is serialized against any concurrent reorder PUT in
+		// the same family (see common.go:familyWriteLocks).
 		var resp *forwarding_rules.ForwardingRules
 		var err error
 		for i := 0; i < 3; i++ {
-			resp, err = forwarding_rules.Create(ctx, service, &req)
+			withFamilyWriteLock("forwarding_control_rule", func() {
+				resp, err = forwarding_rules.Create(ctx, service, &req)
+			})
 			if err == nil {
 				break
 			}

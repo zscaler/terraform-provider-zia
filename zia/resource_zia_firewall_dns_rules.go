@@ -347,6 +347,8 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			}
 			if firewallDNSStartingOrder == 0 {
 				firewallDNSStartingOrder = 1
+			} else {
+				firewallDNSStartingOrder++
 			}
 		}
 		firewallDNSLock.Unlock()
@@ -360,7 +362,13 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		req.Order = firewallDNSStartingOrder
 
-		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *firewalldnscontrolpolicies.FirewallDNSRules
+		var err error
+		withFamilyWriteLock("firewall_dns_rule", func() {
+			resp, err = firewalldnscontrolpolicies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

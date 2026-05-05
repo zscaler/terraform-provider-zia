@@ -362,6 +362,8 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			}
 			if cloudCasbDlpRuleStartingOrder == 0 {
 				cloudCasbDlpRuleStartingOrder = 1
+			} else {
+				cloudCasbDlpRuleStartingOrder++
 			}
 		}
 		cloudCasbDlpRuleLock.Unlock()
@@ -370,7 +372,13 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		order := req.Order
 		req.Order = cloudCasbDlpRuleStartingOrder
 
-		resp, err := casb_dlp_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *casb_dlp_rules.CasbDLPRules
+		var err error
+		withFamilyWriteLock("casb_dlp_rules", func() {
+			resp, err = casb_dlp_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

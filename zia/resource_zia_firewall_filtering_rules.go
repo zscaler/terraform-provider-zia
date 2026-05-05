@@ -270,7 +270,13 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		req.Rank = 7
 	}
 	req.Order = firewallFilteringStartingOrder
-	resp, err := filteringrules.Create(ctx, service, &req)
+	// Serialize this POST against any concurrent reorder PUT in the same
+	// family (see common.go:familyWriteLocks).
+	var resp *filteringrules.FirewallFilteringRules
+	var err error
+	withFamilyWriteLock("firewall_filtering_rules", func() {
+		resp, err = filteringrules.Create(ctx, service, &req)
+	})
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {

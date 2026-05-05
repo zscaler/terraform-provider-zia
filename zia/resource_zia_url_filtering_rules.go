@@ -406,6 +406,8 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			}
 			if urlFilteringStartingOrder == 0 {
 				urlFilteringStartingOrder = 1
+			} else {
+				urlFilteringStartingOrder++
 			}
 		}
 		urlFilteringLock.Unlock()
@@ -418,7 +420,13 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			req.Rank = 7
 		}
 		req.Order = urlFilteringStartingOrder
-		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the
+		// same family (see common.go:familyWriteLocks).
+		var resp *urlfilteringpolicies.URLFilteringRule
+		var err error
+		withFamilyWriteLock("url_filtering_rules", func() {
+			resp, err = urlfilteringpolicies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

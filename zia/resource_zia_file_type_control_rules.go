@@ -301,6 +301,8 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 		if fileTypeStartingOrder == 0 {
 			fileTypeStartingOrder = 1
+		} else {
+			fileTypeStartingOrder++
 		}
 	}
 	fileTypeLock.Unlock()
@@ -312,7 +314,13 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		req.Rank = 7
 	}
 	req.Order = fileTypeStartingOrder
-	resp, err := filetypecontrol.Create(ctx, service, &req)
+	// Serialize this POST against any concurrent reorder PUT in the same
+	// family (see common.go:familyWriteLocks).
+	var resp *filetypecontrol.FileTypeRules
+	var err error
+	withFamilyWriteLock("file_type_control_rules", func() {
+		resp, err = filetypecontrol.Create(ctx, service, &req)
+	})
 
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)

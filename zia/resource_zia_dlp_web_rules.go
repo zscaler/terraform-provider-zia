@@ -439,6 +439,8 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 				}
 				if dlpWebSubRulesStartingOrder[req.ParentRule] == 0 {
 					dlpWebSubRulesStartingOrder[req.ParentRule] = 1
+				} else {
+					dlpWebSubRulesStartingOrder[req.ParentRule]++
 				}
 			}
 		} else {
@@ -451,6 +453,8 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 				}
 				if dlpWebStartingOrder == 0 {
 					dlpWebStartingOrder = 1
+				} else {
+					dlpWebStartingOrder++
 				}
 			}
 		}
@@ -464,7 +468,18 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 			req.Order = dlpWebStartingOrder
 		}
 
-		resp, err := dlp_web_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks). The lock key must match
+		// the resourceType this Create later registers with the engine.
+		lockKey := "dlp_web_rules"
+		if isSubRule {
+			lockKey = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
+		}
+		var resp *dlp_web_rules.WebDLPRules
+		var err error
+		withFamilyWriteLock(lockKey, func() {
+			resp, err = dlp_web_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

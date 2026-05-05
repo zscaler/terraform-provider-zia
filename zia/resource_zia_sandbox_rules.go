@@ -240,6 +240,8 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			}
 			if sandboxStartingOrder == 0 {
 				sandboxStartingOrder = 1
+			} else {
+				sandboxStartingOrder++
 			}
 		}
 		sandboxLock.Unlock()
@@ -253,7 +255,13 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 		req.Order = sandboxStartingOrder
 
-		resp, err := sandbox_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *sandbox_rules.SandboxRules
+		var err error
+		withFamilyWriteLock("sandbox_rules", func() {
+			resp, err = sandbox_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

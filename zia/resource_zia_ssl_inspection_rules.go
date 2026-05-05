@@ -388,6 +388,8 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		}
 		if sslInspectionStartingOrder == 0 {
 			sslInspectionStartingOrder = 1
+		} else {
+			sslInspectionStartingOrder++
 		}
 	}
 	sslInspectionLock.Unlock()
@@ -399,7 +401,17 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		req.Rank = 7
 	}
 	req.Order = sslInspectionStartingOrder
-	resp, err := sslinspection.Create(ctx, service, &req)
+	// Serialize the POST against any concurrent reorder PUT in the same
+	// family. Without this, the engine's PUT loop (which intentionally runs
+	// without holding rules.Lock so registration/wait paths don't starve)
+	// can collide with this POST on ZIA's edit lock, triggering a 409 retry
+	// inside the SDK that can produce a spurious DUPLICATE_ITEM if the
+	// originally-retried POST already committed server-side.
+	var resp *sslinspection.SSLInspectionRules
+	var err error
+	withFamilyWriteLock("ssl_inspection_rules", func() {
+		resp, err = sslinspection.Create(ctx, service, &req)
+	})
 
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)

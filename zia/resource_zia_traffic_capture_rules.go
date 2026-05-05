@@ -269,7 +269,14 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		req.Rank = 7
 	}
 	req.Order = trafficCaptureStartingOrder
-	resp, err := traffic_capture.Create(ctx, service, &req)
+	// Serialize this POST against any concurrent reorder PUT in the same
+	// family (see common.go:familyWriteLocks). The lock key must match the
+	// engine queue this resource registers under (see resourceType below).
+	var resp *traffic_capture.TrafficCaptureRules
+	var err error
+	withFamilyWriteLock("firewall_filtering_rules", func() {
+		resp, err = traffic_capture.Create(ctx, service, &req)
+	})
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
