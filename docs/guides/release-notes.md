@@ -25,7 +25,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fixes
 
-- [PR #570](https://github.com/zscaler/terraform-provider-zia/pull/570) - Optimized the rule reordering engine used by all rule-based resources, significantly reducing apply time and API call volume on bulk create and reorder operations.
+- [PR #565](https://github.com/zscaler/terraform-provider-zia/pull/565) - Optimized the rule reordering engine used by all rule-based resources, significantly reducing apply time and API call volume on bulk create and reorder operations.
 
 ## 4.7.19 (May, 1 2026)
 
