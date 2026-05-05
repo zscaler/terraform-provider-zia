@@ -15,9 +15,48 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
+
+// urlFilteringSnapshot returns a SnapshotProvider that fetches all URL
+// filtering rules in a single GetAll call.
+func urlFilteringSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := urlfilteringpolicies.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// urlFilteringUpdateOrder mutates the snapshot body, clears stale fields, and
+// PUTs. No per-id GET.
+func urlFilteringUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*urlfilteringpolicies.URLFilteringRule)
+		if !ok || rule == nil {
+			return fmt.Errorf("url_filtering_rules: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.LastModifiedTime = 0
+		rule.LastModifiedBy = nil
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := urlfilteringpolicies.Update(ctx, service, id, rule)
+		return err
+	}
+}
 
 var (
 	urlFilteringLock          sync.Mutex
@@ -367,6 +406,8 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			}
 			if urlFilteringStartingOrder == 0 {
 				urlFilteringStartingOrder = 1
+			} else {
+				urlFilteringStartingOrder++
 			}
 		}
 		urlFilteringLock.Unlock()
@@ -379,7 +420,13 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			req.Rank = 7
 		}
 		req.Order = urlFilteringStartingOrder
-		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the
+		// same family (see common.go:familyWriteLocks).
+		var resp *urlfilteringpolicies.URLFilteringRule
+		var err error
+		withFamilyWriteLock("url_filtering_rules", func() {
+			resp, err = urlfilteringpolicies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -410,29 +457,9 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				allRules, err := urlfilteringpolicies.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := urlfilteringpolicies.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// to avoid the STALE_CONFIGURATION_ERROR
-				rule.LastModifiedTime = 0
-				rule.LastModifiedBy = nil
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			urlFilteringSnapshot(ctx, service),
+			urlFilteringUpdateOrder(ctx, service),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -645,29 +672,13 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "url_filtering_rules",
-		func() (int, error) {
-			allRules, err := urlfilteringpolicies.GetAll(ctx, service)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := urlfilteringpolicies.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			// to avoid the STALE_CONFIGURATION_ERROR
-			rule.LastModifiedTime = 0
-			rule.LastModifiedBy = nil
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"url_filtering_rules",
+		urlFilteringSnapshot(ctx, service),
+		urlFilteringUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "url_filtering_rules")

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/saas_security_api/casb_dlp_rules"
@@ -361,6 +362,8 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			}
 			if cloudCasbDlpRuleStartingOrder == 0 {
 				cloudCasbDlpRuleStartingOrder = 1
+			} else {
+				cloudCasbDlpRuleStartingOrder++
 			}
 		}
 		cloudCasbDlpRuleLock.Unlock()
@@ -369,7 +372,13 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		order := req.Order
 		req.Order = cloudCasbDlpRuleStartingOrder
 
-		resp, err := casb_dlp_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *casb_dlp_rules.CasbDLPRules
+		var err error
+		withFamilyWriteLock("casb_dlp_rules", func() {
+			resp, err = casb_dlp_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -392,32 +401,10 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"casb_dlp_rules",
-			func() (int, error) {
-				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
-				if err != nil {
-					return 0, err
-				}
-				return len(rules), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
-				if err != nil {
-					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
-				if err != nil {
-					return fmt.Errorf("failed to update rule order: %v", err)
-				}
-				return nil
-			},
-			nil)
+			casbDlpSnapshot(ctx, service, req.Type),
+			casbDlpUpdateOrder(ctx, service),
+			nil,
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -622,33 +609,14 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error updating resource: %v", err)
 		}
 
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "casb_dlp_rules",
-			func() (int, error) {
-				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
-				if err != nil {
-					return 0, err
-				}
-				return len(rules), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
-				if err != nil {
-					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
-				if err != nil {
-					return fmt.Errorf("failed to update rule order: %v", err)
-				}
-				return nil
-			},
-			nil)
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"casb_dlp_rules",
+			casbDlpSnapshot(ctx, service, req.Type),
+			casbDlpUpdateOrder(ctx, service),
+			nil,
+		)
 
 		markOrderRuleAsDone(req.ID, "casb_dlp_rules")
 		waitForReorder("casb_dlp_rules")
@@ -834,4 +802,36 @@ func flattenReceiverCASBResource(receiver *casb_dlp_rules.Receiver) []interface{
 	}
 
 	return []interface{}{result}
+}
+
+func casbDlpSnapshot(ctx context.Context, service *zscaler.Service, ruleType string) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := casb_dlp_rules.GetByRuleType(ctx, service, ruleType)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+func casbDlpUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*casb_dlp_rules.CasbDLPRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("casb_dlp reorder: unexpected body type %T for rule %d", body, id)
+		}
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		_, err := casb_dlp_rules.Update(ctx, service, id, rule)
+		return err
+	}
 }

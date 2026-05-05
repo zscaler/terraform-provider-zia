@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/bandwidth_control/bandwidth_control_rules"
 )
@@ -145,6 +146,8 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			}
 			if bandwidthControlStartingOrder == 0 {
 				bandwidthControlStartingOrder = 1
+			} else {
+				bandwidthControlStartingOrder++
 			}
 		}
 		bandwidthControlLock.Unlock()
@@ -153,7 +156,13 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 		order := req.Order
 		req.Order = bandwidthControlStartingOrder
 
-		resp, err := bandwidth_control_rules.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *bandwidth_control_rules.BandwidthControlRules
+		var err error
+		withFamilyWriteLock("bandwidth_control_rule", func() {
+			resp, err = bandwidth_control_rules.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -180,31 +189,10 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"bandwidth_control_rule",
-			func() (int, error) {
-				list, err := bandwidth_control_rules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				filteredList := filterOutBandwidthDefaultRule(list)
-				return len(filteredList), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := bandwidth_control_rules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.DefaultRule = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
-				return err
-			},
-			nil)
+			bandwidthControlSnapshot(ctx, service),
+			bandwidthControlUpdateOrder(ctx, service),
+			nil,
+		)
 
 		d.SetId(strconv.Itoa(resp.ID))
 		_ = d.Set("rule_id", resp.ID)
@@ -331,32 +319,14 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "bandwidth_control_rule",
-			func() (int, error) {
-				list, err := bandwidth_control_rules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				filteredList := filterOutBandwidthDefaultRule(list)
-				return len(filteredList), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := bandwidth_control_rules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// Optional: avoid unnecessary updates if the current order is already correct
-				if rule.Order == order.Order {
-					return nil
-				}
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.DefaultRule = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
-				return err
-			},
-			nil)
+		reorderWithBeforeReorder(
+			OrderRule{Order: req.Order, Rank: req.Rank},
+			req.ID,
+			"bandwidth_control_rule",
+			bandwidthControlSnapshot(ctx, service),
+			bandwidthControlUpdateOrder(ctx, service),
+			nil,
+		)
 
 		markOrderRuleAsDone(req.ID, "bandwidth_control_rule")
 		waitForReorder("bandwidth_control_rule")
@@ -454,4 +424,38 @@ func currentBandwidthControlOrderVsRankWording(ctx context.Context, zClient *Cli
 
 	}
 	return result
+}
+
+func bandwidthControlSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := bandwidth_control_rules.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		filtered := filterOutBandwidthDefaultRule(all)
+		out := make([]RuleSnapshot, 0, len(filtered))
+		for i := range filtered {
+			out = append(out, RuleSnapshot{
+				ID:    filtered[i].ID,
+				Order: filtered[i].Order,
+				Rank:  filtered[i].Rank,
+				Body:  &filtered[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+func bandwidthControlUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*bandwidth_control_rules.BandwidthControlRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("bandwidth_control reorder: unexpected body type %T for rule %d", body, id)
+		}
+		rule.DefaultRule = false
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		_, err := bandwidth_control_rules.Update(ctx, service, id, rule)
+		return err
+	}
 }

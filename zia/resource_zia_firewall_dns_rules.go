@@ -14,9 +14,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
 )
+
+// firewallDNSSnapshot returns a SnapshotProvider that fetches all firewall DNS
+// rules in a single GetAll call.
+func firewallDNSSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// firewallDNSUpdateOrder mutates the snapshot body, strips stale and predefined
+// read-only fields rejected by the API, and PUTs. No per-id GET.
+func firewallDNSUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*firewalldnscontrolpolicies.FirewallDNSRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("firewall_dns_rule: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.LastModifiedTime = 0
+		rule.LastModifiedBy = nil
+		rule.Predefined = false
+		rule.DefaultRule = false
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := firewalldnscontrolpolicies.Update(ctx, service, id, rule)
+		return err
+	}
+}
 
 var (
 	firewallDNSLock          sync.Mutex
@@ -305,6 +347,8 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			}
 			if firewallDNSStartingOrder == 0 {
 				firewallDNSStartingOrder = 1
+			} else {
+				firewallDNSStartingOrder++
 			}
 		}
 		firewallDNSLock.Unlock()
@@ -318,7 +362,13 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		req.Order = firewallDNSStartingOrder
 
-		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
+		// Serialize this POST against any concurrent reorder PUT in the same
+		// family (see common.go:familyWriteLocks).
+		var resp *firewalldnscontrolpolicies.FirewallDNSRules
+		var err error
+		withFamilyWriteLock("firewall_dns_rule", func() {
+			resp, err = firewalldnscontrolpolicies.Create(ctx, service, &req)
+		})
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -348,33 +398,9 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				allRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// to avoid the STALE_CONFIGURATION_ERROR
-				rule.LastModifiedTime = 0
-				rule.LastModifiedBy = nil
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.Predefined = false
-				rule.DefaultRule = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			firewallDNSSnapshot(ctx, service),
+			firewallDNSUpdateOrder(ctx, service),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -576,33 +602,13 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_dns_rule",
-		func() (int, error) {
-			allRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			// to avoid the STALE_CONFIGURATION_ERROR
-			rule.LastModifiedTime = 0
-			rule.LastModifiedBy = nil
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
-			rule.Predefined = false
-			rule.DefaultRule = false
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"firewall_dns_rule",
+		firewallDNSSnapshot(ctx, service),
+		firewallDNSUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "firewall_dns_rule")

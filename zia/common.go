@@ -2,6 +2,7 @@ package zia
 
 import (
 	"log"
+	"regexp"
 	"sort"
 	"sync"
 	"time"
@@ -1102,6 +1103,68 @@ var rules = listrules{
 	reorderDone: make(map[string]chan struct{}),
 }
 
+// familyWriteLocks holds one mutex per rule resource family (one per
+// resourceType, e.g. "ssl_inspection_rules", "url_filtering_rules"). Both the
+// reorder engine's PUT loop and every resource's Create POST acquire the
+// matching mutex around their actual API write call.
+//
+// Why this exists:
+//
+// The engine's `rules.Lock()` is intentionally released while the engine
+// performs network I/O (snapshot GET + per-rule PUTs), so registration and
+// completion bookkeeping (markOrderRuleAsDone / waitForReorder) cannot
+// starve. With that relaxation, however, a Terraform Create's POST and the
+// engine's reorder PUTs can hit the same /<family> endpoint at the same
+// instant. Concurrent writes to the same rule family contend for ZIA's
+// edit-lock; the API returns 409 with an EDIT_LOCK_NOT_AVAILABLE / "Failed
+// during enter Org barrier" body. The Zscaler SDK's retryablehttp policy
+// retries that 409. If a retried POST commits server-side but the response
+// is observed as a 409 (or as a transport error), the next retry collides
+// with the now-existing rule and the API returns 400 DUPLICATE_ITEM, which
+// surfaces to the user as a spurious "rule already exists" failure even
+// though they never created it twice.
+//
+// familyWriteLock serializes ONLY the actual write API call for a single
+// family. It does not affect:
+//   - GETs (snapshot, Read, lookups),
+//   - registration into rules.orders,
+//   - markOrderRuleAsDone / waitForReorder,
+//   - writes to other rule families (each family has its own mutex).
+//
+// This restores the per-family write serialization the previous engine
+// achieved by accident (it held rules.Lock across all I/O), without
+// re-introducing the global starvation that motivated the optimization.
+var (
+	familyWriteLocksMu sync.Mutex
+	familyWriteLocks   = map[string]*sync.Mutex{}
+)
+
+// familyWriteLock returns the mutex for a given rule resource family,
+// creating it on first use. The returned mutex is intended to be held
+// strictly around a single API write call (POST or PUT).
+func familyWriteLock(resourceType string) *sync.Mutex {
+	familyWriteLocksMu.Lock()
+	defer familyWriteLocksMu.Unlock()
+	m, ok := familyWriteLocks[resourceType]
+	if !ok {
+		m = &sync.Mutex{}
+		familyWriteLocks[resourceType] = m
+	}
+	return m
+}
+
+// withFamilyWriteLock runs fn while holding the family's write lock. Use
+// this around the *single* API write call (POST in Create paths, PUT inside
+// the engine's updateOrder callback). Do NOT hold this across multiple
+// network calls — the lock is intentionally narrow so cross-family Creates
+// remain parallel.
+func withFamilyWriteLock(resourceType string, fn func()) {
+	m := familyWriteLock(resourceType)
+	m.Lock()
+	defer m.Unlock()
+	fn()
+}
+
 type RuleIDOrderPair struct {
 	ID    int
 	Order OrderRule
@@ -1122,7 +1185,65 @@ func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 // Default is 30 seconds. Tests can override this to speed up reorder cycles.
 var reorderTickInterval = 30 * time.Second
 
-func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
+// lateArrivalDebounce is the window during which late-arriving rules (rules
+// whose Update lands after a previous reorder cycle has already returned) are
+// coalesced into a single follow-up cycle, instead of each one spawning its
+// own. With Terraform parallelism=10 and 40+ Updates this collapses 5+
+// sequential reorder cycles into 1, eliminating the N× write amplification
+// that was driving SUP-3988-class slowness.
+//
+// Tests can shrink this to keep test runtimes low.
+var lateArrivalDebounce = 2 * time.Second
+
+// RuleSnapshot represents the current state of one rule on the server,
+// captured from a single GetAll call at the start of a reorder pass. The
+// engine uses this both to skip unnecessary PUTs (when current order/rank
+// already matches the target) AND to hand the full rule body to the
+// resource's UpdateOrder callback, so it never has to issue a per-id GET.
+type RuleSnapshot struct {
+	ID    int
+	Order int
+	Rank  int
+	// Body is the SDK's full rule struct (e.g. *sslinspection.SSLInspectionRules).
+	// The resource's UpdateOrder callback type-asserts it back to its concrete
+	// type, mutates Order/Rank/clears stale fields, and PUTs.
+	Body interface{}
+}
+
+// SnapshotProvider returns the current state of every rule of a given type.
+// The engine calls this at most once per reorder pass — never per rule —
+// guaranteeing that an N-rule reorder costs O(1) GETs (the list call inside
+// the provider) plus only the PUTs needed for rules whose order changed.
+type SnapshotProvider func() ([]RuleSnapshot, error)
+
+// UpdateOrder applies a target order/rank to a rule using the rule body
+// pre-fetched by the most recent SnapshotProvider call. The engine guarantees
+// `body` is the matching rule's body from the snapshot, so the callback never
+// needs to issue a GET. The callback should mutate body.Order, body.Rank,
+// clear any stale fields the API rejects (e.g. LastModifiedTime, Predefined),
+// and issue the Update.
+type UpdateOrder func(id int, order OrderRule, body interface{}) error
+
+// transientReorderErrorRe matches API rejections that mean "this rule cannot
+// be placed at the requested order *right now*" but may succeed once earlier
+// (lower-order) rules exist. Empirically this surfaces as
+// `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N` from ZIA when a
+// rule is asked to take a position past the current count of user-managed
+// rules — which happens during a multi-batch initial Create/apply where the
+// reorder engine runs while later Create batches are still in flight.
+//
+// Hitting this error in pass K does NOT mean the rule is broken; it means we
+// should try again on the next pass once the missing predecessors exist.
+var transientReorderErrorRe = regexp.MustCompile(`(?i)not allowed at order|INVALID_INPUT_ARGUMENT.*order`)
+
+func isTransientReorderError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return transientReorderErrorRe.MatchString(err.Error())
+}
+
+func reorderAll(resourceType string, snapshot SnapshotProvider, updateOrder UpdateOrder, beforeReorder func()) {
 	ticker := time.NewTicker(reorderTickInterval)
 	defer ticker.Stop()
 	lastReorderedSize := 0
@@ -1130,6 +1251,9 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 	for {
 		select {
 		case <-ticker.C:
+			// Snapshot the registered rules and decide what to do under the lock,
+			// but execute network I/O (snapshot+updateOrder) WITHOUT the lock so
+			// markOrderRuleAsDone()/waitForReorder() callers don't block on us.
 			rules.Lock()
 			size := len(rules.orders[resourceType])
 			allDone := true
@@ -1139,38 +1263,121 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 					break
 				}
 			}
-
-			if allDone && size > 0 {
-				if size != lastReorderedSize {
-					// New rules registered since last reorder — reorder with the full set
-					count, _ := getCount()
-					sorted := sortOrders(rules.orders[resourceType])
-					log.Printf("[INFO] sorting filtering rule after tick; sorted:%v (size changed from %d to %d)", sorted, lastReorderedSize, size)
-					if beforeReorder != nil {
-						beforeReorder()
-					}
-					for _, v := range sorted {
-						if v.Order.Order <= count {
-							if err := updateOrder(v.ID, v.Order); err != nil {
-								log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
-							}
-						}
-					}
-					lastReorderedSize = size
-					stableAfterReorder = 0
-				} else {
-					// Same size as last reorder — count towards stability
-					stableAfterReorder++
-					log.Printf("[INFO] reorder stable tick %d/3 for %s (%d rules)", stableAfterReorder, resourceType, size)
-				}
-
-				if stableAfterReorder >= 3 {
-					log.Printf("[INFO] reorder complete for %s: %d rules, stable for 3 ticks", resourceType, size)
-					rules.Unlock()
-					return
-				}
+			var sorted RuleIDOrderPairList
+			doReorder := allDone && size > 0 && size != lastReorderedSize
+			if doReorder {
+				sorted = sortOrders(rules.orders[resourceType])
 			}
 			rules.Unlock()
+
+			if !allDone || size == 0 {
+				continue
+			}
+
+			if doReorder {
+				log.Printf("[INFO] reorder pass for %s; %d registered rules (size changed from %d to %d)", resourceType, size, lastReorderedSize, size)
+				if beforeReorder != nil {
+					beforeReorder()
+				}
+				snap, err := snapshot()
+				if err != nil {
+					log.Printf("[ERROR] reorder snapshot failed for %s: %v — will retry on next tick", resourceType, err)
+					// Do not advance lastReorderedSize so we retry next tick.
+					continue
+				}
+				byID := make(map[int]RuleSnapshot, len(snap))
+				for _, r := range snap {
+					byID[r.ID] = r
+				}
+				count := len(snap)
+
+				// deferred holds rules whose first attempt this pass returned
+				// a transient "order not allowed" error. We retry them once
+				// after the main pass completes — by then their lower-order
+				// predecessors (if part of the same pass) have been written.
+				type deferredRule struct {
+					pair RuleIDOrderPair
+					body interface{}
+				}
+				var deferred []deferredRule
+
+				skipped, written, missing, transient := 0, 0, 0, 0
+				for _, v := range sorted {
+					if v.Order.Order > count {
+						// Target order exceeds total rule count — skip; same
+						// defensive bound the previous engine had. Rules
+						// whose target order is beyond what currently exists
+						// will be picked up by a later pass once more rules
+						// have been Created. CRITICAL: we must still advance
+						// lastReorderedSize at the end so stable ticks fire
+						// and waitForReorder() unblocks the rules' Create
+						// goroutines, which is what allows the *next* batch
+						// to be Created at all.
+						continue
+					}
+					current, ok := byID[v.ID]
+					if !ok {
+						missing++
+						log.Printf("[WARN] reorder: rule %d (%s) not present in snapshot, skipping", v.ID, resourceType)
+						continue
+					}
+					if current.Order == v.Order.Order && current.Rank == v.Order.Rank {
+						skipped++
+						continue
+					}
+					// Serialize this PUT against any concurrent POST/PUT in
+					// the same family. See familyWriteLocks doc for the why.
+					var err error
+					withFamilyWriteLock(resourceType, func() {
+						err = updateOrder(v.ID, v.Order, current.Body)
+					})
+					if err != nil {
+						if isTransientReorderError(err) {
+							transient++
+							log.Printf("[WARN] reorder: rule %d (%s) deferred — API rejected target order %d as not yet allowed: %v", v.ID, resourceType, v.Order.Order, err)
+							deferred = append(deferred, deferredRule{pair: v, body: current.Body})
+							continue
+						}
+						log.Printf("[ERROR] reorder: failed to update rule %d (%s): %v", v.ID, resourceType, err)
+						continue
+					}
+					written++
+				}
+
+				// In-pass retry for deferred rules. Their lower-order
+				// predecessors (if any) have now been written this pass, so
+				// the API may accept the target. We do exactly one retry per
+				// deferred rule per pass; anything that still fails will be
+				// retried on a later cycle (size-changed gate, late-arrival
+				// debounce, or the eventual update path of any subsequent
+				// resource Create/Update for this rule type).
+				retrySucceeded := 0
+				for _, d := range deferred {
+					var err error
+					withFamilyWriteLock(resourceType, func() {
+						err = updateOrder(d.pair.ID, d.pair.Order, d.body)
+					})
+					if err != nil {
+						log.Printf("[WARN] reorder: rule %d (%s) still rejected on in-pass retry: %v", d.pair.ID, resourceType, err)
+						continue
+					}
+					retrySucceeded++
+					written++
+				}
+				log.Printf("[INFO] reorder pass for %s complete: %d written (%d via retry), %d skipped (already at target), %d missing, %d transient-deferred", resourceType, written, retrySucceeded, skipped, missing, transient)
+
+				lastReorderedSize = size
+				stableAfterReorder = 0
+				continue
+			}
+
+			// allDone && size>0 && size==lastReorderedSize: stability tick.
+			stableAfterReorder++
+			log.Printf("[INFO] reorder stable tick %d/3 for %s (%d rules)", stableAfterReorder, resourceType, size)
+			if stableAfterReorder >= 3 {
+				log.Printf("[INFO] reorder complete for %s: %d rules, stable for 3 ticks", resourceType, size)
+				return
+			}
 		default:
 			time.Sleep(reorderTickInterval / 2)
 		}
@@ -1190,9 +1397,21 @@ type OrderRule struct {
 	Rank  int
 }
 
-func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
+// reorderWithBeforeReorder registers a rule for reordering. It is the single
+// entry point used by every rule-based resource (Create and Update paths).
+//
+// Concurrency model:
+//   - The first registration for a given resourceType spawns the reorder
+//     goroutine immediately.
+//   - Additional registrations that arrive WHILE the goroutine is still running
+//     are simply added to the orders map; the running goroutine will pick them
+//     up on its next tick.
+//   - Registrations that arrive AFTER the goroutine has already returned are
+//     coalesced inside a `lateArrivalDebounce` window so that all late
+//     arrivals are processed by a single follow-up cycle, rather than each
+//     spawning its own.
+func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, snapshot SnapshotProvider, updateOrder UpdateOrder, beforeReorder func()) {
 	rules.Lock()
-	shouldCallReorder := false
 	if rules.orderer == nil {
 		rules.orderer = map[string]int{}
 		rules.reorderDone = map[string]chan struct{}{}
@@ -1200,34 +1419,50 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 	if rules.orders == nil {
 		rules.orders = map[string]map[int]orderWithState{}
 	}
-	if _, ok := rules.orderer[resourceType]; ok {
-		// Check if the previous reorder goroutine has already finished
-		select {
-		case <-rules.reorderDone[resourceType]:
-			// Channel is closed — previous reorder finished.
-			// Start a new reorder cycle for late-arriving rules.
-			log.Printf("[INFO] previous reorder for %s completed, starting new cycle for rule:%d", resourceType, id)
-			rules.reorderDone[resourceType] = make(chan struct{})
-			shouldCallReorder = true
-		default:
-			// Reorder goroutine still running — just register, don't start another
-			shouldCallReorder = false
-		}
-	} else {
-		rules.orderer[resourceType] = id
-		shouldCallReorder = true
-		rules.reorderDone[resourceType] = make(chan struct{})
-	}
 	if rules.orders[resourceType] == nil {
 		rules.orders[resourceType] = map[int]orderWithState{}
 	}
 	rules.orders[resourceType][id] = orderWithState{order, false}
+
+	startNow := false
+	scheduleLate := false
+	if _, exists := rules.orderer[resourceType]; !exists {
+		// First-ever registration for this resourceType.
+		rules.orderer[resourceType] = id
+		rules.reorderDone[resourceType] = make(chan struct{})
+		startNow = true
+	} else {
+		// Previous cycle exists. If still running, just register — the running
+		// goroutine will pick up this rule on its next tick. If already done,
+		// schedule a debounced follow-up cycle.
+		select {
+		case <-rules.reorderDone[resourceType]:
+			rules.reorderDone[resourceType] = make(chan struct{})
+			scheduleLate = true
+		default:
+			// Cycle still running — nothing more to do.
+		}
+	}
+	doneCh := rules.reorderDone[resourceType]
 	rules.Unlock()
-	if shouldCallReorder {
-		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
-		doneCh := rules.reorderDone[resourceType]
+
+	if startNow {
+		log.Printf("[INFO] starting reorder cycle for %s (first rule:%d, order:%v)", resourceType, id, order)
 		go func() {
-			reorderAll(resourceType, getCount, updateOrder, beforeReorder)
+			reorderAll(resourceType, snapshot, updateOrder, beforeReorder)
+			close(doneCh)
+		}()
+		return
+	}
+
+	if scheduleLate {
+		log.Printf("[INFO] late arrival for %s (rule:%d) — scheduling debounced follow-up cycle in %s", resourceType, id, lateArrivalDebounce)
+		go func() {
+			// Allow other late arrivals to register before we start the next
+			// cycle — they'll all share this single cycle instead of each
+			// spawning their own.
+			time.Sleep(lateArrivalDebounce)
+			reorderAll(resourceType, snapshot, updateOrder, beforeReorder)
 			close(doneCh)
 		}()
 	}
@@ -1245,6 +1480,6 @@ func waitForReorder(resourceType string) {
 	}
 }
 
-func reorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error) {
-	reorderWithBeforeReorder(order, id, resourceType, getCount, updateOrder, nil)
+func reorder(order OrderRule, id int, resourceType string, snapshot SnapshotProvider, updateOrder UpdateOrder) {
+	reorderWithBeforeReorder(order, id, resourceType, snapshot, updateOrder, nil)
 }

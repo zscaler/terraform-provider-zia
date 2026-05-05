@@ -14,9 +14,47 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
 )
+
+// forwardingControlSnapshot returns a SnapshotProvider that fetches all
+// forwarding control rules in a single GetAll call.
+func forwardingControlSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := forwarding_rules.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// forwardingControlUpdateOrder mutates the snapshot body and PUTs. The
+// forwarding control API does not require stripping any read-only fields.
+// No per-id GET.
+func forwardingControlUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*forwarding_rules.ForwardingRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("forwarding_control_rule: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := forwarding_rules.Update(ctx, service, id, rule)
+		return err
+	}
+}
 
 var (
 	forwardingControlLock          sync.Mutex
@@ -276,6 +314,8 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			}
 			if forwardingControlStartingOrder == 0 {
 				forwardingControlStartingOrder = 1
+			} else {
+				forwardingControlStartingOrder++
 			}
 		}
 		forwardingControlLock.Unlock()
@@ -289,11 +329,15 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		}
 		req.Order = forwardingControlStartingOrder
 
-		// Retry logic in case of specific error
+		// Retry logic in case of specific error.
+		// Each attempt is serialized against any concurrent reorder PUT in
+		// the same family (see common.go:familyWriteLocks).
 		var resp *forwarding_rules.ForwardingRules
 		var err error
 		for i := 0; i < 3; i++ {
-			resp, err = forwarding_rules.Create(ctx, service, &req)
+			withFamilyWriteLock("forwarding_control_rule", func() {
+				resp, err = forwarding_rules.Create(ctx, service, &req)
+			})
 			if err == nil {
 				break
 			}
@@ -332,27 +376,9 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				allRules, err := forwarding_rules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := forwarding_rules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = forwarding_rules.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			forwardingControlSnapshot(ctx, service),
+			forwardingControlUpdateOrder(ctx, service),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -572,31 +598,13 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "forwarding_control_rule",
-		func() (int, error) {
-			allRules, err := forwarding_rules.GetAll(ctx, service)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := forwarding_rules.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			// Optional: avoid unnecessary updates if the current order is already correct
-			if rule.Order == order.Order && rule.Rank == order.Rank {
-				return nil
-			}
-
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = forwarding_rules.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"forwarding_control_rule",
+		forwardingControlSnapshot(ctx, service),
+		forwardingControlUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "forwarding_control_rule")

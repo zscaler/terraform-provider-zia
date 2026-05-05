@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.19``
+``Last updated: v4.7.20``
 
 ---
+
+## 4.7.20 (May, 4 2026)
+
+### Notes
+
+- Release date: **(May, 4 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #565](https://github.com/zscaler/terraform-provider-zia/pull/565) - Optimized the rule reordering engine used by all rule-based resources, significantly reducing apply time and API call volume on bulk create and reorder operations.
 
 ## 4.7.19 (May, 1 2026)
 

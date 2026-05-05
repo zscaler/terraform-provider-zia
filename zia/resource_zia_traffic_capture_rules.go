@@ -14,9 +14,49 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/traffic_capture"
 )
+
+// trafficCaptureSnapshot returns a SnapshotProvider that fetches all traffic
+// capture rules in a single GetAll call.
+func trafficCaptureSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := traffic_capture.GetAll(ctx, service, nil)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// trafficCaptureUpdateOrder mutates the snapshot body, strips predefined
+// read-only fields, and PUTs. No per-id GET.
+func trafficCaptureUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*traffic_capture.TrafficCaptureRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("traffic_capture_rules: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.Predefined = false
+		rule.DefaultRule = false
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := traffic_capture.Update(ctx, service, id, rule)
+		return err
+	}
+}
 
 var (
 	trafficCaptureLock          sync.Mutex
@@ -229,7 +269,14 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		req.Rank = 7
 	}
 	req.Order = trafficCaptureStartingOrder
-	resp, err := traffic_capture.Create(ctx, service, &req)
+	// Serialize this POST against any concurrent reorder PUT in the same
+	// family (see common.go:familyWriteLocks). The lock key must match the
+	// engine queue this resource registers under (see resourceType below).
+	var resp *traffic_capture.TrafficCaptureRules
+	var err error
+	withFamilyWriteLock("firewall_filtering_rules", func() {
+		resp, err = traffic_capture.Create(ctx, service, &req)
+	})
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -254,31 +301,9 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
-		func() (int, error) {
-			allRules, err := traffic_capture.GetAll(ctx, service, nil)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			// Custom updateOrder that handles predefined rules
-			rule, err := traffic_capture.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
-			rule.Predefined = false
-			rule.DefaultRule = false
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = traffic_capture.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		trafficCaptureSnapshot(ctx, service),
+		trafficCaptureUpdateOrder(ctx, service),
+		nil,
 	)
 
 	d.SetId(strconv.Itoa(resp.ID))
@@ -469,35 +494,13 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "traffic_capture_rules",
-		func() (int, error) {
-			allRules, err := traffic_capture.GetAll(ctx, service, nil)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := traffic_capture.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			// Optional: avoid unnecessary updates if the current order is already correct
-			if rule.Order == order.Order && rule.Rank == order.Rank {
-				return nil
-			}
-
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
-			rule.Predefined = false
-			rule.DefaultRule = false
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = traffic_capture.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"traffic_capture_rules",
+		trafficCaptureSnapshot(ctx, service),
+		trafficCaptureUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "traffic_capture_rules")
