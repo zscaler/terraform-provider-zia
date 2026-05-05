@@ -119,6 +119,23 @@ Setting `order = -1` may be accepted by the API and stored as `order = 0`, creat
 
 Rule orders must be sequential with no gaps. If a rule at order 5 is deleted, rules at orders 6+ must be re-adjusted to fill the gap, or the API will not honour the requested positions.
 
+## Reordering Engine — Architecture
+
+All rule-based resources share a single in-process reordering engine in `zia/common.go` (`reorderAll`, `markOrderRuleAsDone`, `waitForReorder`, `OrderRule`, `RuleIDOrderPair`). Per-resource Create/Update/Read paths register the *desired* `(order, rank)` with the engine and the engine settles the actual API state. **Do not bypass it.** Any new rule-based resource MUST plug into this engine via the same pattern as the existing 15 resources.
+
+Design invariants — keep these intact when modifying the engine or adding a new resource:
+
+1. **Single snapshot per pass.** A reorder pass takes exactly one `GetAll` against the rule type (the snapshot) and uses each rule's body as the basis for its PUT. The engine MUST NOT issue a per-rule `Get` before each PUT — that was the SUP-3988 root cause and re-introducing it will regress every rule resource simultaneously.
+2. **Skip PUTs already at target.** If the snapshot's `order` and `rank` already match the registered target, the engine MUST NOT PUT. Bulk reorders should only PUT rules whose position actually changed.
+3. **Coalesce overlapping cycles.** Rule registrations that arrive while a cycle is already running share a single follow-up cycle via `lateArrivalDebounce` (2s window). Per-Create cycles MUST NOT spawn — under Terraform `parallelism>1` that produces N overlapping reorder sweeps and is the second-largest source of slowness.
+4. **Release the mutex during I/O.** `markOrderRuleAsDone` and `waitForReorder` callers MUST NOT block while the engine is mid-PUT or mid-snapshot. The reorder mutex is released for the duration of all network I/O.
+5. **Optimistic placement, classified rejection.** The engine is allowed to PUT a target the API may reject as not-yet-legal (e.g. `order=44` when only 40 rules exist mid-bulk-create). The ZIA API is the authority on what placements are legal at a given moment — the snapshot is a lower bound on the real rule count and cannot be trusted for a hard pre-check. When the API returns `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N`, the engine MUST classify it as transient (`isTransientReorderError`) and retry the rule once at the end of the same pass; if it still fails, leave it for the next natural cycle (triggered by the next Create batch's late-arrival debounce). Adding a hard `target > snapshotSize` skip is acceptable as a log-only optimisation, but the in-pass retry path MUST remain — it is what makes parallel bulk creates converge in one cycle once predecessors land.
+6. **No convergence-forcing loop.** The engine MUST NOT retry a pass solely because a registered rule did not reach its target. That pattern was prototyped during SUP-3988 work (the "convergence guard") and deadlocks Terraform: rules with target orders exceeding the current API rule count keep forcing new passes, `lastReorderedSize` never advances, and subsequent Create goroutines starve in `waitForReorder`. Convergence happens naturally across cycles as new Create batches land and trigger the late-arrival debounce.
+7. **Strip read-only fields in `updateOrder` callbacks.** See the "Stripping Read-Only Fields" section above. This applies to predefined rules being reordered.
+8. **Two-phase swap-safety on per-resource Update.** The per-resource `resourceUpdate` first PUTs the rule at a "parking" order = `count + 1` to avoid intra-Update collisions, then registers the real target with the engine. Don't change this without auditing every rule resource.
+
+When changing the reorder engine, run the full unit test suite in `zia/common_reorder_test.go` and at minimum exercise the bulk-create scenario in `local_dev/ssl_inspection/` with `parallelism>=10`. The non-negotiable acceptance criteria: zero 409 storms, zero per-rule pre-PUT GETs, exactly one reorder cycle per Terraform Create batch, and no Create goroutine left starving in `waitForReorder`.
+
 ## JMESPath Client-Side Filtering
 
 The provider supports an optional `search` attribute on select data sources that enables client-side filtering via [JMESPath](https://jmespath.org/) expressions. This feature is powered by the `zscaler-sdk-go` JMESPath integration — the SDK applies the expression after all pages have been fetched from the API, before results are returned to the provider.

@@ -12,10 +12,85 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 )
+
+// dlpWebRulesSnapshot returns a SnapshotProvider that fetches rules in a single
+// API call. For top-level rules it uses GetAll; for sub-rules it uses Get on the
+// parent and reads parent.SubRules. For sub-rules we also defensively set
+// ParentRule on each snapshot body so the subsequent PUT preserves the parent
+// linkage even if the nested sub-rule JSON omits parentRule. The reorder engine
+// calls this at most once per reorder pass.
+func dlpWebRulesSnapshot(ctx context.Context, service *zscaler.Service, isSubRule bool, parentID int) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		if isSubRule {
+			parent, err := dlp_web_rules.Get(ctx, service, parentID)
+			if err != nil {
+				return nil, err
+			}
+			out := make([]RuleSnapshot, 0, len(parent.SubRules))
+			for i := range parent.SubRules {
+				if parent.SubRules[i].ParentRule == 0 {
+					parent.SubRules[i].ParentRule = parentID
+				}
+				out = append(out, RuleSnapshot{
+					ID:    parent.SubRules[i].ID,
+					Order: parent.SubRules[i].Order,
+					Rank:  parent.SubRules[i].Rank,
+					Body:  &parent.SubRules[i],
+				})
+			}
+			return out, nil
+		}
+		all, err := dlp_web_rules.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(all))
+		for i := range all {
+			out = append(out, RuleSnapshot{
+				ID:    all[i].ID,
+				Order: all[i].Order,
+				Rank:  all[i].Rank,
+				Body:  &all[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// dlpWebRulesUpdateOrder mutates the snapshot body, strips read-only/stale
+// fields, enforces fileTypes/fileTypeCategories mutual exclusion, and PUTs.
+// No per-id GET — the body comes from the snapshot.
+func dlpWebRulesUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*dlp_web_rules.WebDLPRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("dlp_web_rules: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.LastModifiedTime = 0
+		rule.LastModifiedBy = nil
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		if len(rule.FileTypeCategories) > 0 {
+			rule.FileTypes = nil
+		}
+		if rule.ParentRule != 0 {
+			log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
+		} else {
+			log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
+		}
+		_, err := dlp_web_rules.Update(ctx, service, id, rule)
+		if err != nil {
+			log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
+		}
+		return err
+	}
+}
 
 var (
 	dlpWebRulesLock             sync.Mutex
@@ -417,50 +492,9 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				if isSubRule {
-					parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
-					if err != nil {
-						return 0, err
-					}
-					return len(parent.SubRules), nil
-				}
-				allRules, err := dlp_web_rules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
-			},
-			func(id int, order OrderRule) error {
-				rule, err := dlp_web_rules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-
-				rule.LastModifiedTime = 0
-				rule.LastModifiedBy = nil
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-
-				if len(rule.FileTypeCategories) > 0 {
-					rule.FileTypes = nil
-				}
-
-				if rule.ParentRule != 0 {
-					log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
-				} else {
-					log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
-				}
-
-				_, err = dlp_web_rules.Update(ctx, service, id, rule)
-				if err != nil {
-					log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
-				}
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			dlpWebRulesSnapshot(ctx, service, isSubRule, req.ParentRule),
+			dlpWebRulesUpdateOrder(ctx, service),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -679,54 +713,13 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, id, resourceType,
-		func() (int, error) {
-			if isSubRule {
-				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
-				if err != nil {
-					return 0, err
-				}
-				return len(parent.SubRules), nil
-			}
-			allRules, err := dlp_web_rules.GetAll(ctx, service)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := dlp_web_rules.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			if rule.Order == order.Order && rule.Rank == order.Rank {
-				return nil
-			}
-
-			rule.LastModifiedTime = 0
-			rule.LastModifiedBy = nil
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-
-			if len(rule.FileTypeCategories) > 0 {
-				rule.FileTypes = nil
-			}
-
-			if rule.ParentRule != 0 {
-				log.Printf("[DEBUG] Updating sub-rule ID %d (parent ID: %d) to order %d", id, rule.ParentRule, order.Order)
-			} else {
-				log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
-			}
-
-			_, err = dlp_web_rules.Update(ctx, service, id, rule)
-			if err != nil {
-				log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
-			}
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: req.Order, Rank: req.Rank},
+		id,
+		resourceType,
+		dlpWebRulesSnapshot(ctx, service, isSubRule, req.ParentRule),
+		dlpWebRulesUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(id, resourceType)

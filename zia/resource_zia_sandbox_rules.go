@@ -14,9 +14,51 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 )
+
+// sandboxSnapshot returns a SnapshotProvider that fetches all sandbox rules in
+// a single GetAll call and filters out the Default BA Rule.
+func sandboxSnapshot(ctx context.Context, service *zscaler.Service) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		all, err := sandbox_rules.GetAll(ctx, service)
+		if err != nil {
+			return nil, err
+		}
+		filtered := filterOutDefaultRule(all)
+		out := make([]RuleSnapshot, 0, len(filtered))
+		for i := range filtered {
+			out = append(out, RuleSnapshot{
+				ID:    filtered[i].ID,
+				Order: filtered[i].Order,
+				Rank:  filtered[i].Rank,
+				Body:  &filtered[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// sandboxUpdateOrder mutates the snapshot body, strips stale and read-only
+// fields, and PUTs. No per-id GET.
+func sandboxUpdateOrder(ctx context.Context, service *zscaler.Service) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*sandbox_rules.SandboxRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("sandbox_rules: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.LastModifiedTime = 0
+		rule.LastModifiedBy = nil
+		rule.DefaultRule = false
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := sandbox_rules.Update(ctx, service, id, rule)
+		return err
+	}
+}
 
 var (
 	sandboxLock          sync.Mutex
@@ -241,33 +283,9 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				list, err := sandbox_rules.GetAll(ctx, service)
-				if err != nil {
-					return 0, err
-				}
-				filteredList := filterOutDefaultRule(list)
-				// Count all rules excluding Default BA Rule
-				return len(filteredList), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := sandbox_rules.Get(ctx, service, id)
-				if err != nil {
-					return err
-				}
-				// to avoid the STALE_CONFIGURATION_ERROR
-				rule.LastModifiedTime = 0
-				rule.LastModifiedBy = nil
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.DefaultRule = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = sandbox_rules.Update(ctx, service, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			sandboxSnapshot(ctx, service),
+			sandboxUpdateOrder(ctx, service),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -411,33 +429,13 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "sandbox_rules",
-		func() (int, error) {
-			list, err := sandbox_rules.GetAll(ctx, service)
-			if err != nil {
-				return 0, err
-			}
-			filteredList := filterOutDefaultRule(list)
-			// Count all rules excluding Default BA Rule
-			return len(filteredList), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := sandbox_rules.Get(ctx, service, id)
-			if err != nil {
-				return err
-			}
-			// to avoid the STALE_CONFIGURATION_ERROR
-			rule.LastModifiedTime = 0
-			rule.LastModifiedBy = nil
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
-			rule.DefaultRule = false
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = sandbox_rules.Update(ctx, service, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"sandbox_rules",
+		sandboxSnapshot(ctx, service),
+		sandboxUpdateOrder(ctx, service),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "sandbox_rules")

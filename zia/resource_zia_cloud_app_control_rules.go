@@ -13,9 +13,52 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
+
+// cloudAppControlSnapshot returns a SnapshotProvider that fetches all rules of the
+// given type in a single GetByRuleType call. The reorder engine calls this at most
+// once per reorder pass.
+func cloudAppControlSnapshot(ctx context.Context, service *zscaler.Service, ruleType string) SnapshotProvider {
+	return func() ([]RuleSnapshot, error) {
+		rules, err := cloudappcontrol.GetByRuleType(ctx, service, ruleType)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]RuleSnapshot, 0, len(rules))
+		for i := range rules {
+			out = append(out, RuleSnapshot{
+				ID:    rules[i].ID,
+				Order: rules[i].Order,
+				Rank:  rules[i].Rank,
+				Body:  &rules[i],
+			})
+		}
+		return out, nil
+	}
+}
+
+// cloudAppControlUpdateOrder returns an UpdateOrder callback that mutates the
+// pre-fetched rule body (from the snapshot), strips read-only fields rejected
+// by the API on predefined rules, and PUTs the new order/rank. It does NOT
+// issue a per-id GET; that GET was already done as part of the snapshot.
+func cloudAppControlUpdateOrder(ctx context.Context, service *zscaler.Service, ruleType string) UpdateOrder {
+	return func(id int, order OrderRule, body interface{}) error {
+		rule, ok := body.(*cloudappcontrol.WebApplicationRules)
+		if !ok || rule == nil {
+			return fmt.Errorf("cloud_app_control_rules: unexpected snapshot body type %T for rule %d", body, id)
+		}
+		rule.LastModifiedTime = 0
+		rule.Predefined = false
+		rule.AccessControl = ""
+		rule.Order = order.Order
+		rule.Rank = order.Rank
+		_, err := cloudappcontrol.Update(ctx, service, ruleType, id, rule)
+		return err
+	}
+}
 
 var (
 	cloudAppRuleLock          sync.Mutex
@@ -295,31 +338,9 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-				if err != nil {
-					return 0, err
-				}
-				// Count all rules including predefined ones for proper ordering
-				return len(rules), nil
-			},
-			func(id int, order OrderRule) error {
-				// Custom updateOrder that handles predefined rules
-				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
-				if err != nil {
-					return err
-				}
-				// to avoid the STALE_CONFIGURATION_ERROR
-				rule.LastModifiedTime = 0
-				// Strip read-only fields that cause "Request body is invalid" for predefined rules
-				rule.Predefined = false
-				rule.AccessControl = ""
-				rule.Order = order.Order
-				rule.Rank = order.Rank
-				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-				return err
-			},
-			nil, // Remove beforeReorder function to avoid adding too many rules to the map
+			cloudAppControlSnapshot(ctx, service, req.Type),
+			cloudAppControlUpdateOrder(ctx, service, req.Type),
+			nil,
 		)
 
 		d.SetId(strconv.Itoa(resp.ID))
@@ -521,31 +542,13 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "cloud_app_control_rules",
-		func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-			if err != nil {
-				return 0, err
-			}
-			// Count all rules including predefined ones for proper ordering
-			return len(rules), nil
-		},
-		func(id int, order OrderRule) error {
-			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
-			if err != nil {
-				return err
-			}
-			// to avoid the STALE_CONFIGURATION_ERROR
-			rule.LastModifiedTime = 0
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
-			rule.Predefined = false
-			rule.AccessControl = ""
-			rule.Order = order.Order
-			rule.Rank = order.Rank
-			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
-			return err
-		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"cloud_app_control_rules",
+		cloudAppControlSnapshot(ctx, service, req.Type),
+		cloudAppControlUpdateOrder(ctx, service, req.Type),
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
