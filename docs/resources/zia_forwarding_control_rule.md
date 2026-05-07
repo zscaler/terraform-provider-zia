@@ -45,6 +45,38 @@ resource "zia_forwarding_control_rule" "this" {
 }
 ```
 
+```hcl
+data "zia_firewall_filtering_network_service" "this" {
+    name = "DNS"
+}
+
+resource "zia_forwarding_control_rule" "this" {
+  name               = "FC_DNS_DIRECT_RULE"
+  description        = "FC_DNS_DIRECT_RULE"
+  order              = 1
+  rank               = 7
+  state              = "ENABLED"
+  type               = "FORWARDING"
+  forward_method     = "DIRECT"
+  src_ips            = ["192.168.200.200"]
+  dest_addresses     = ["192.168.255.1"]
+  dest_ip_categories = ["ZSPROXY_IPS", "CUSTOM_01"]
+  dest_countries     = ["CA", "US"]
+  nw_services {
+      id = [ data.zia_firewall_filtering_network_service.this.id ]
+  }
+  departments {
+      id = [ data.zia_department_management.engineering.id ]
+    }
+  groups {
+      id = [ data.zia_group_management.normal_internet.id ]
+  }
+  time_windows {
+      id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
+  }
+}
+```
+
 ## Example Usage - ZPA Forwarding Method
 
   ⚠️ **WARNING:**: You must use the [ZPA provider](https://registry.terraform.io/providers/zscaler/zpa/latest/docs) in combination with the ZIA Terraform Provider to successfully configure a Forwarding control rule where the `forward_method` is `ZPA`

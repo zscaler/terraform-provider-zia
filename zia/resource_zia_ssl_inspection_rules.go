@@ -421,18 +421,26 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := sslinspection.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := sslinspection.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
+			// Strip read-only/server-managed fields so PUTs against
+			// predefined rules don't get rejected with
+			// "Request body is invalid". See CLAUDE.md → Rule-Based
+			// Resources → Stripping Read-Only Fields in updateOrder.
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
 			rule.Predefined = false
@@ -600,24 +608,28 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "ssl_inspection_rules",
-		func() (int, error) {
+	reorderWithBeforeReorder(
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
+		req.ID,
+		"ssl_inspection_rules",
+		func() (map[int]OrderRule, error) {
 			allRules, err := sslinspection.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := sslinspection.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
-			// to avoid the STALE_CONFIGURATION_ERROR
 			rule.LastModifiedTime = 0
 			rule.LastModifiedBy = nil
-			// Strip read-only fields that cause "Request body is invalid" for predefined rules
 			rule.Predefined = false
 			rule.DefaultRule = false
 			rule.AccessControl = ""
@@ -626,7 +638,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			_, err = sslinspection.Update(ctx, service, id, rule)
 			return err
 		},
-		nil, // Remove beforeReorder function to avoid adding too many rules to the map
+		nil,
 	)
 
 	markOrderRuleAsDone(req.ID, "ssl_inspection_rules")

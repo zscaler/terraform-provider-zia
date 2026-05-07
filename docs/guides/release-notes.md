@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.19``
+``Last updated: v4.7.20``
 
 ---
+
+## 4.7.20 (May, 7 2026)
+
+### Notes
+
+- Release date: **(May, 7 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #567](https://github.com/zscaler/terraform-provider-zia/pull/567) - Significantly reduced apply time and API call volume when creating, updating, or reordering large numbers of rules across all rule-based resources: `zia_ssl_inspection_rules`, `zia_url_filtering_rules`, `zia_firewall_filtering_rule`, `zia_firewall_dns_rules`, `zia_firewall_ips_rules`, `zia_cloud_app_control_rules`, `zia_dlp_web_rules`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_sandbox_rules`, `zia_bandwidth_control_rules`, `zia_traffic_capture_rules`, `zia_file_type_control_rules`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`. Also resolved the `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N` errors that could occur when bulk-creating rules in parallel ([SUP-3988](https://help.zscaler.com/)). Bumped the underlying Zscaler Go SDK to v3.8.33 for related rate-limit and cache-invalidation fixes.
 
 ## 4.7.19 (May, 1 2026)
 

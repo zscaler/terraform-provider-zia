@@ -1122,11 +1122,68 @@ func (p RuleIDOrderPairList) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 // Default is 30 seconds. Tests can override this to speed up reorder cycles.
 var reorderTickInterval = 30 * time.Second
 
-func reorderAll(resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
+// maxNoProgressTicks bounds how long reorderAll will keep retrying when
+// the loop has stopped making forward progress (no new rules registering
+// AND no successful PUTs AND skipped set not shrinking). Each tick is
+// reorderTickInterval (30s default), so 6 ticks ≈ 3 min. This protects
+// against configurations that can never converge (e.g. declared orders
+// with permanent gaps, or some Create calls failing so the maximum
+// declared order can never be reached). It is NOT used while creates
+// are still in flight — see the progress detection in reorderAll.
+const maxNoProgressTicks = 6
+
+// maxStuckOnSkippedTicks is the FAST early-exit when we've reconciled
+// every in-range rule and the only remaining work is rules whose
+// declared order exceeds the API's current orderable count. This is
+// the deadlock case caused by terraform parallelism: 10 rules POST,
+// 10 register and block on waitForReorder, but some of those declared
+// orders > apiOrderable, so reorder has nothing to do for them. We
+// must return so waitForReorder unblocks and the next batch of POSTs
+// can extend apiOrderable. Without this, we spent ~3 minutes per
+// batch on the slower maxNoProgressTicks safety net for what is
+// actually a normal mid-apply state. 2 ticks ≈ 60s lets the cache
+// catch up to in-flight PUTs before we declare "nothing more to do".
+const maxStuckOnSkippedTicks = 2
+
+// reorderAll runs as a background goroutine and reconciles the desired
+// order of every rule registered for resourceType against the API's
+// current state. It is intentionally diff-based:
+//
+//   - Each pass calls getCurrent ONCE to fetch {ruleID -> {Order, Rank}}
+//     for every rule the API knows about.
+//   - For each registered rule we compare the API's current Order/Rank
+//     to the desired Order/Rank and SKIP the rule entirely when they
+//     already match — no per-rule GET, no PUT, no API traffic at all.
+//   - Only rules whose position actually drifted from desired call into
+//     updateOrder. This is the property the user has been asking for
+//     since SUP-3988 was first opened: don't PUT a rule whose order
+//     hasn't changed.
+//
+// Rules whose desired Order is outside the API's orderable range
+// (1..count, where count is the number of rules in the API with
+// Order >= 1) are deferred to the next tick rather than being PUT —
+// the API rejects out-of-range orders with INVALID_INPUT_ARGUMENT.
+// This typically means more rules are still being POSTed by terraform.
+//
+// Progress detection: a pass made progress if size grew (new rule
+// registered), OR a PUT was issued successfully, OR the deferred set
+// shrank. Without progress, noProgressTicks accumulates and the loop
+// eventually returns so waitForReorder can unblock — preventing the
+// goroutine from leaking when declared orders are unreachable.
+func reorderAll(
+	resourceType string,
+	getCurrent func() (map[int]OrderRule, error),
+	updateOrder func(id int, order OrderRule) error,
+	beforeReorder func(),
+) {
 	ticker := time.NewTicker(reorderTickInterval)
 	defer ticker.Stop()
-	lastReorderedSize := 0
-	stableAfterReorder := 0
+	lastSize := -1
+	cleanPasses := 0
+	noProgressTicks := 0
+	stuckOnSkippedTicks := 0
+	prevSkipped := -1
+	prevAtTarget := -1
 	for {
 		select {
 		case <-ticker.C:
@@ -1139,38 +1196,153 @@ func reorderAll(resourceType string, getCount func() (int, error), updateOrder f
 					break
 				}
 			}
+			if !(allDone && size > 0) {
+				rules.Unlock()
+				continue
+			}
+			sorted := sortOrders(rules.orders[resourceType])
+			rules.Unlock()
 
-			if allDone && size > 0 {
-				if size != lastReorderedSize {
-					// New rules registered since last reorder — reorder with the full set
-					count, _ := getCount()
-					sorted := sortOrders(rules.orders[resourceType])
-					log.Printf("[INFO] sorting filtering rule after tick; sorted:%v (size changed from %d to %d)", sorted, lastReorderedSize, size)
-					if beforeReorder != nil {
-						beforeReorder()
-					}
-					for _, v := range sorted {
-						if v.Order.Order <= count {
-							if err := updateOrder(v.ID, v.Order); err != nil {
-								log.Printf("[ERROR] couldn't reorder the rule after tick, the order may not have taken place: %v\n", err)
-							}
-						}
-					}
-					lastReorderedSize = size
-					stableAfterReorder = 0
-				} else {
-					// Same size as last reorder — count towards stability
-					stableAfterReorder++
-					log.Printf("[INFO] reorder stable tick %d/3 for %s (%d rules)", stableAfterReorder, resourceType, size)
-				}
-
-				if stableAfterReorder >= 3 {
-					log.Printf("[INFO] reorder complete for %s: %d rules, stable for 3 ticks", resourceType, size)
-					rules.Unlock()
-					return
+			// One GetAll per pass. This is the cache-friendly call
+			// path: with the SDK cache-invalidation fix, any prior
+			// PUT in this pass invalidates the parent collection so
+			// subsequent passes always see the latest state.
+			current, err := getCurrent()
+			if err != nil {
+				log.Printf("[ERROR] reorderAll: getCurrent failed for %s: %v", resourceType, err)
+				continue
+			}
+			count := 0
+			for _, c := range current {
+				if c.Order >= 1 {
+					count++
 				}
 			}
-			rules.Unlock()
+
+			if beforeReorder != nil {
+				beforeReorder()
+			}
+
+			puterrs := 0
+			skipped := 0
+			putsIssued := 0
+			alreadyAtTarget := 0
+			for _, v := range sorted {
+				desired := v.Order
+				cur, exists := current[v.ID]
+
+				// Rule POSTed but not yet visible to GetAll
+				// (cache lag / API eventual consistency).
+				// Skip and try next tick.
+				if !exists {
+					skipped++
+					continue
+				}
+
+				// Out-of-range desired position. Defer — usually
+				// means more rules are still being POSTed and
+				// count will grow on the next tick.
+				if desired.Order < 1 || desired.Order > count {
+					log.Printf("[INFO] reorderAll: deferring rule %d for %s (desired order %d, orderable range 1..%d)", v.ID, resourceType, desired.Order, count)
+					skipped++
+					continue
+				}
+
+				// Diff check: skip rules already at the right
+				// Order AND Rank — no GET, no PUT, no traffic.
+				// This is the core optimization: with N rules
+				// fully in place, a stable pass costs ONE GetAll
+				// (the one we already did above) and ZERO PUTs.
+				if cur.Order == desired.Order && cur.Rank == desired.Rank {
+					alreadyAtTarget++
+					continue
+				}
+
+				if err := updateOrder(v.ID, desired); err != nil {
+					log.Printf("[ERROR] reorderAll: PUT for rule %d failed in %s: %v", v.ID, resourceType, err)
+					puterrs++
+					continue
+				}
+				putsIssued++
+			}
+
+			log.Printf("[INFO] reorderAll: %s pass — registered=%d apiOrderable=%d alreadyAtTarget=%d putsIssued=%d skipped=%d errors=%d", resourceType, size, count, alreadyAtTarget, putsIssued, skipped, puterrs)
+
+			// Convergence: a clean pass = nothing to do AND no
+			// errors AND size didn't grow. We require two
+			// consecutive clean passes so any in-flight PUT from
+			// the previous pass has time to be reflected by GetAll.
+			cleanPass := putsIssued == 0 && skipped == 0 && puterrs == 0 && size == lastSize
+			if cleanPass {
+				cleanPasses++
+				if cleanPasses >= 2 {
+					log.Printf("[INFO] reorder complete for %s: %d rules", resourceType, size)
+					return
+				}
+			} else {
+				cleanPasses = 0
+			}
+
+			// Fast deadlock-breaker. The terraform-parallelism
+			// deadlock looks like this:
+			//
+			//   - N rules registered and marked done.
+			//   - All in-range rules are at their target (we did
+			//     the PUTs).
+			//   - K rules have declared orders > apiOrderable,
+			//     so they're permanently skipped this cycle.
+			//
+			// With Create blocked on waitForReorder, the next
+			// batch of POSTs can't extend apiOrderable until we
+			// return. Returning here lets terraform schedule the
+			// next batch; the new rule's registration will start
+			// a fresh reorder cycle that picks up the previously
+			// skipped ones (they stay in the registry — done=true
+			// rules are diff-checked again on subsequent cycles).
+			//
+			// We require the condition to hold for two consecutive
+			// passes so in-flight PUTs from the previous pass have
+			// time to settle in the GetAll view (otherwise a
+			// mid-flight pass might falsely report "nothing
+			// changed" while a PUT is still propagating through
+			// the cache).
+			inRangeAtTarget := alreadyAtTarget == size-skipped
+			progressedThisPass := putsIssued > 0 || (prevAtTarget >= 0 && alreadyAtTarget > prevAtTarget)
+			if skipped > 0 && inRangeAtTarget && !progressedThisPass && puterrs == 0 {
+				stuckOnSkippedTicks++
+				if stuckOnSkippedTicks >= maxStuckOnSkippedTicks {
+					log.Printf("[INFO] reorderAll: %s — %d in-range rule(s) at target, %d deferred (declared orders > apiOrderable=%d). Returning so the next batch of Creates can extend the orderable range.", resourceType, alreadyAtTarget, skipped, count)
+					return
+				}
+			} else {
+				stuckOnSkippedTicks = 0
+			}
+
+			// Slower no-progress safety net for genuinely
+			// impossible configurations (e.g. declared order=100
+			// with only 1 orderable rule). Real progress = size
+			// grew, OR a PUT was issued, OR the deferred set
+			// shrank.
+			realProgress := size > lastSize || putsIssued > 0
+			if !realProgress && prevSkipped >= 0 && skipped < prevSkipped {
+				realProgress = true
+			}
+			if realProgress {
+				noProgressTicks = 0
+			} else if skipped > 0 || puterrs > 0 {
+				noProgressTicks++
+			} else {
+				noProgressTicks = 0
+			}
+
+			if noProgressTicks >= maxNoProgressTicks {
+				log.Printf("[WARN] reorderAll: no progress for %d ticks for %s — giving up. Likely the declared orders exceed the count of orderable rules (gaps in order numbers, or earlier Create failures). Re-run terraform apply to retry.", noProgressTicks, resourceType)
+				return
+			}
+
+			lastSize = size
+			prevSkipped = skipped
+			prevAtTarget = alreadyAtTarget
 		default:
 			time.Sleep(reorderTickInterval / 2)
 		}
@@ -1190,7 +1362,7 @@ type OrderRule struct {
 	Rank  int
 }
 
-func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
+func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getCurrent func() (map[int]OrderRule, error), updateOrder func(id int, order OrderRule) error, beforeReorder func()) {
 	rules.Lock()
 	shouldCallReorder := false
 	if rules.orderer == nil {
@@ -1227,7 +1399,7 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
 		doneCh := rules.reorderDone[resourceType]
 		go func() {
-			reorderAll(resourceType, getCount, updateOrder, beforeReorder)
+			reorderAll(resourceType, getCurrent, updateOrder, beforeReorder)
 			close(doneCh)
 		}()
 	}
@@ -1245,6 +1417,6 @@ func waitForReorder(resourceType string) {
 	}
 }
 
-func reorder(order OrderRule, id int, resourceType string, getCount func() (int, error), updateOrder func(id int, order OrderRule) error) {
-	reorderWithBeforeReorder(order, id, resourceType, getCount, updateOrder, nil)
+func reorder(order OrderRule, id int, resourceType string, getCurrent func() (map[int]OrderRule, error), updateOrder func(id int, order OrderRule) error) {
+	reorderWithBeforeReorder(order, id, resourceType, getCurrent, updateOrder, nil)
 }

@@ -332,13 +332,16 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				allRules, err := forwarding_rules.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
+				m := make(map[int]OrderRule, len(allRules))
+				for _, r := range allRules {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
@@ -573,13 +576,16 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "forwarding_control_rule",
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := forwarding_rules.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := forwarding_rules.Get(ctx, service, id)

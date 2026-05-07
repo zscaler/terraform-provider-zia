@@ -85,6 +85,44 @@ Only strip fields that exist in the SDK struct for each rule type:
 | dlp_web, file_type_control, casb_dlp, casb_malware | `AccessControl` |
 | url_filtering, forwarding_control | No read-only fields to strip |
 
+### Reorder Loop Architecture (`reorderAll` in `common.go`)
+
+The ZIA API does not provide a native bulk-reorder endpoint, so the provider runs a goroutine-driven reorder loop that converges the API state to the HCL-declared order using `GET` + targeted `PUT` calls. PR #567 reshaped this loop. **Do not regress these invariants.**
+
+1. **Diff-based passes.** Each `reorderAll` tick calls the resource's `getCurrent()` callback exactly once; that callback is implemented as a single `GetAll` returning `map[int]OrderRule` (id → {Order, Rank}). The loop then iterates the registered rules and only issues `updateOrder(id, …)` when the API's current `Order/Rank` differs from the desired values. **Never** re-PUT a rule whose order already matches.
+
+   When implementing `getCurrent` for a new rule resource, follow this shape (special-case `casb_malware_rules`, which lacks `Rank`):
+
+   ```go
+   return func() (map[int]OrderRule, error) {
+       all, err := <sdk_pkg>.GetAll(ctx, service)
+       if err != nil {
+           return nil, err
+       }
+       m := make(map[int]OrderRule, len(all))
+       for _, r := range all {
+           m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+       }
+       return m, nil
+   }
+   ```
+
+2. **`countOrderable` + skip-out-of-range.** Predefined / unmanaged rules can have `Order < 1` or `Order = 0`; counting them inflates the ceiling and produces `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N` from the API. `reorderAll` calls `countOrderable(current)` to get only the rules with `Order >= 1`, and defers any `PUT` whose desired `Order > apiOrderable`. Those deferred rules are picked up on a later tick once new POSTs extend the orderable range.
+
+3. **Deadlock-breaker (`maxStuckOnSkippedTicks ≈ 60s`).** Terraform's parallelism creates this state mid-apply: every in-range rule is at its target, but `K` registered rules have declared orders > `apiOrderable` and remain skipped. Without an early exit, the loop sat at the slower `maxNoProgressTicks` (≈3 min) every batch. The new fast-exit triggers when:
+   - `skipped > 0`
+   - all in-range rules at target (`alreadyAtTarget == size - skipped`)
+   - no progress this pass (`putsIssued == 0` and `alreadyAtTarget` did not grow)
+   - no PUT errors
+
+   Returning here unblocks `waitForReorder` so the next `Create` batch can extend the range. The skipped rules remain registered and are reconciled on the next reorder cycle triggered by the new registration.
+
+4. **Convergence requires two clean passes.** A pass with `putsIssued == 0`, `skipped == 0`, `puterrs == 0`, and a stable `size` counts as one clean pass. The loop exits only after **two** consecutive clean passes, so in-flight PUTs from the previous pass have time to settle in the SDK's `GetAll` view (the OneAPI cache invalidates parent collections on non-GET — see SDK ≥ v3.8.32 — but the API still has its own propagation lag).
+
+5. **`updateOrder` reset on PUT error.** If any `PUT` in a pass fails (transient 429/5xx), the loop resets its stability counters so the next tick re-evaluates from scratch. This is what lets the deadlock-breaker stay aggressive without prematurely exiting on transient failures.
+
+When adding a new rule resource, register `reorderWithBeforeReorder(resourceType, getCurrent, updateOrder, beforeReorder)` from the resource's `Create`/`Update` paths. The shared loop handles everything above — do not write a per-resource reorder loop.
+
 ### Predefined Rules — User-Facing Guidance
 
 - Predefined rules CAN be managed via Terraform for reordering purposes
@@ -118,6 +156,20 @@ Setting `order = -1` may be accepted by the API and stored as `order = 0`, creat
 ### Non-contiguous rule orders cause drift
 
 Rule orders must be sequential with no gaps. If a rule at order 5 is deleted, rules at orders 6+ must be re-adjusted to fill the gap, or the API will not honour the requested positions.
+
+### `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N`
+
+The provider attempted a `PUT` whose `Order` exceeded the API's currently orderable count. Root cause is almost always either (a) `countOrderable` was bypassed in a new resource's reorder wiring, or (b) `getCurrent()` returned a stale `GetAll` view. Verify:
+- The resource's `getCurrent` callback returns `map[int]OrderRule` and is invoked from `reorderWithBeforeReorder` (do not reimplement the loop).
+- The vendored Zscaler SDK is ≥ v3.8.32 so parent-collection cache invalidation fires on non-GET requests (otherwise `GetAll` returns a pre-PUT snapshot and the diff calculation is wrong).
+
+### Excessive duplicate `PUT`s during apply (one rule receiving 10+ updates)
+
+Symptom of regressing the diff-based reorder. Confirm `reorderAll` in `common.go` still calls `getCurrent()` once per pass and skips rules whose `Order/Rank` already match. Re-PUTting every registered rule per cycle was the SUP-3988 bug; never restore that behaviour.
+
+### Apply hangs ~3 minutes per batch with no errors
+
+The `maxStuckOnSkippedTicks` deadlock-breaker may have been removed or its predicate broken. The fast-exit must trigger when `skipped > 0`, all in-range rules are at target, and no PUTs/progress occurred this pass — otherwise the slower `maxNoProgressTicks` safety net runs and each `Create` batch waits ~3 min for it to time out.
 
 ## JMESPath Client-Side Filtering
 

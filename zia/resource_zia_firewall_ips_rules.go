@@ -256,13 +256,16 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
+				m := make(map[int]OrderRule, len(allRules))
+				for _, r := range allRules {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
@@ -472,13 +475,16 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_ips_rule",
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := firewallipscontrolpolicies.Get(ctx, service, id)

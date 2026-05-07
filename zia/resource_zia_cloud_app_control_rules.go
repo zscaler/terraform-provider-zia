@@ -295,13 +295,16 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
-				rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+			func() (map[int]OrderRule, error) {
+				list, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				// Count all rules including predefined ones for proper ordering
-				return len(rules), nil
+				m := make(map[int]OrderRule, len(list))
+				for _, r := range list {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
@@ -522,13 +525,16 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "cloud_app_control_rules",
-		func() (int, error) {
-			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+		func() (map[int]OrderRule, error) {
+			list, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(rules), nil
+			m := make(map[int]OrderRule, len(list))
+			for _, r := range list {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)

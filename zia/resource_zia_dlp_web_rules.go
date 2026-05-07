@@ -417,20 +417,27 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				if isSubRule {
 					parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
 					if err != nil {
-						return 0, err
+						return nil, err
 					}
-					return len(parent.SubRules), nil
+					m := make(map[int]OrderRule, len(parent.SubRules))
+					for _, r := range parent.SubRules {
+						m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+					}
+					return m, nil
 				}
 				allRules, err := dlp_web_rules.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				// Count all rules including predefined ones for proper ordering
-				return len(allRules), nil
+				m := make(map[int]OrderRule, len(allRules))
+				for _, r := range allRules {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				rule, err := dlp_web_rules.Get(ctx, service, id)
@@ -680,20 +687,27 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, id, resourceType,
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			if isSubRule {
 				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				return len(parent.SubRules), nil
+				m := make(map[int]OrderRule, len(parent.SubRules))
+				for _, r := range parent.SubRules {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			}
 			allRules, err := dlp_web_rules.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := dlp_web_rules.Get(ctx, service, id)
