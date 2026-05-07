@@ -253,13 +253,16 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := filteringrules.GetAll(ctx, service, nil)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := filteringrules.Get(ctx, service, id)
@@ -486,13 +489,16 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_filtering_rules",
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := filteringrules.GetAll(ctx, service, nil)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := filteringrules.Get(ctx, service, id)

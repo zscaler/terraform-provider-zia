@@ -241,14 +241,17 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				list, err := sandbox_rules.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
 				filteredList := filterOutDefaultRule(list)
-				// Count all rules excluding Default BA Rule
-				return len(filteredList), nil
+				m := make(map[int]OrderRule, len(filteredList))
+				for _, r := range filteredList {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
@@ -412,14 +415,17 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "sandbox_rules",
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			list, err := sandbox_rules.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
 			filteredList := filterOutDefaultRule(list)
-			// Count all rules excluding Default BA Rule
-			return len(filteredList), nil
+			m := make(map[int]OrderRule, len(filteredList))
+			for _, r := range filteredList {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := sandbox_rules.Get(ctx, service, id)

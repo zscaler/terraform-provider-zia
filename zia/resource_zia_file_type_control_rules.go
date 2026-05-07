@@ -295,12 +295,16 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := filetypecontrol.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := filetypecontrol.Get(ctx, service, id)
@@ -463,13 +467,16 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "file_type_control_rules",
-		func() (int, error) {
+		func() (map[int]OrderRule, error) {
 			allRules, err := filetypecontrol.GetAll(ctx, service)
 			if err != nil {
-				return 0, err
+				return nil, err
 			}
-			// Count all rules including predefined ones for proper ordering
-			return len(allRules), nil
+			m := make(map[int]OrderRule, len(allRules))
+			for _, r := range allRules {
+				m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+			}
+			return m, nil
 		},
 		func(id int, order OrderRule) error {
 			rule, err := filetypecontrol.Get(ctx, service, id)

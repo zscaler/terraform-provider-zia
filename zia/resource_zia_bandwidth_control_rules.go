@@ -180,13 +180,17 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"bandwidth_control_rule",
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				list, err := bandwidth_control_rules.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
 				filteredList := filterOutBandwidthDefaultRule(list)
-				return len(filteredList), nil
+				m := make(map[int]OrderRule, len(filteredList))
+				for _, r := range filteredList {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				rule, err := bandwidth_control_rules.Get(ctx, service, id)
@@ -332,13 +336,17 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "bandwidth_control_rule",
-			func() (int, error) {
+			func() (map[int]OrderRule, error) {
 				list, err := bandwidth_control_rules.GetAll(ctx, service)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
 				filteredList := filterOutBandwidthDefaultRule(list)
-				return len(filteredList), nil
+				m := make(map[int]OrderRule, len(filteredList))
+				for _, r := range filteredList {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				rule, err := bandwidth_control_rules.Get(ctx, service, id)

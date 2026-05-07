@@ -392,12 +392,16 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"casb_dlp_rules",
-			func() (int, error) {
-				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+			func() (map[int]OrderRule, error) {
+				list, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				return len(rules), nil
+				m := make(map[int]OrderRule, len(list))
+				for _, r := range list {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
@@ -623,12 +627,16 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "casb_dlp_rules",
-			func() (int, error) {
-				rules, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+			func() (map[int]OrderRule, error) {
+				list, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
 				if err != nil {
-					return 0, err
+					return nil, err
 				}
-				return len(rules), nil
+				m := make(map[int]OrderRule, len(list))
+				for _, r := range list {
+					m[r.ID] = OrderRule{Order: r.Order, Rank: r.Rank}
+				}
+				return m, nil
 			},
 			func(id int, order OrderRule) error {
 				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
