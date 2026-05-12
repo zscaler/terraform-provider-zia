@@ -20,13 +20,13 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlpdictionaries"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/email_profiles"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkapplicationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservicegroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/forwarding_control_policy/forwarding_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
@@ -511,7 +511,7 @@ func sweepTestFirewallIPSRule(client *testClient) error {
 		Client: client.sdkV3Client, // Use the existing SDK client
 	}
 
-	rule, err := firewallipscontrolpolicies.GetAll(context.Background(), service)
+	rule, err := ips_policies.GetAll(context.Background(), service)
 	if err != nil {
 		return err
 	}
@@ -520,7 +520,7 @@ func sweepTestFirewallIPSRule(client *testClient) error {
 	for _, b := range rule {
 		// Check if the resource name has the required prefix before deleting it
 		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
-			if _, err := firewallipscontrolpolicies.Delete(context.Background(), service, b.ID); err != nil {
+			if _, err := ips_policies.Delete(context.Background(), service, b.ID); err != nil {
 				errorList = append(errorList, err)
 				continue
 			}

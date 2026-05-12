@@ -12,11 +12,11 @@ import (
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/resourcetype"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/method"
 	"github.com/zscaler/terraform-provider-zia/v4/zia/common/testing/variable"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
 )
 
 func TestAccResourceFirewallIPSRules_Basic(t *testing.T) {
-	var rules firewallipscontrolpolicies.FirewallIPSRules
+	var rules ips_policies.FirewallIPSRules
 	resourceTypeAndName, _, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.FirewallIPSRules)
 
 	// Generate Rule Label HCL Resource
@@ -91,7 +91,7 @@ func testAccCheckFirewallIPSRulesDestroy(s *terraform.State) error {
 			return err
 		}
 
-		rule, err := firewallipscontrolpolicies.Get(context.Background(), service, id)
+		rule, err := ips_policies.Get(context.Background(), service, id)
 
 		if err == nil {
 			return fmt.Errorf("id %d already exists", id)
@@ -105,7 +105,7 @@ func testAccCheckFirewallIPSRulesDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckFirewallIPSRulesExists(resource string, rule *firewallipscontrolpolicies.FirewallIPSRules) resource.TestCheckFunc {
+func testAccCheckFirewallIPSRulesExists(resource string, rule *ips_policies.FirewallIPSRules) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[resource]
 		if !ok {
@@ -124,7 +124,7 @@ func testAccCheckFirewallIPSRulesExists(resource string, rule *firewallipscontro
 		apiClient := testAccProvider.Meta().(*Client)
 		service := apiClient.Service
 
-		receivedRule, err := firewallipscontrolpolicies.Get(context.Background(), service, id)
+		receivedRule, err := ips_policies.Get(context.Background(), service, id)
 		if err != nil {
 			return fmt.Errorf("failed fetching resource %s. Recevied error: %s", resource, err)
 		}

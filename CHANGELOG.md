@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.7.21 (May, 12 2026)
+
+### Notes
+
+- Release date: **(May, 12 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #569](https://github.com/zscaler/terraform-provider-zia/pull/569) - Enhanced the `zia_firewall_filtering_rule` data source to return a list of rules via the new `rules` block when no single-rule lookup is supplied, so multiple rules can be iterated with `for_each`. Added optional filter arguments (`rule_name`, `rule_label`, `rule_action`, `department`, `device_group`, `nw_application`, and others) and a `search` argument for client-side [JMESPath](https://jmespath.org/) filtering. Single-rule lookup still works — use `rule_id` for the numeric lookup (previously `id`) or `name` for the name lookup. Addresses [issue #568](https://github.com/zscaler/terraform-provider-zia/issues/568).
+
 ## 4.7.20 (May, 7 2026)
 
 ### Notes
