@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
 )
 
 var (
@@ -43,7 +43,7 @@ func resourceFirewallIPSRules() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("rule_id", idInt)
 				} else {
-					resp, err := firewallipscontrolpolicies.GetByName(ctx, service, id)
+					resp, err := ips_policies.GetByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("rule_id", resp.ID)
@@ -205,7 +205,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 	for {
 		firewallIPSLock.Lock()
 		if firewallIPSStartingOrder == 0 {
-			list, _ := firewallipscontrolpolicies.GetAll(ctx, service)
+			list, _ := ips_policies.GetAll(ctx, service)
 			for _, r := range list {
 				if r.Order > firewallIPSStartingOrder {
 					firewallIPSStartingOrder = r.Order
@@ -226,7 +226,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		req.Order = firewallIPSStartingOrder
 
-		resp, err := firewallipscontrolpolicies.Create(ctx, service, &req)
+		resp, err := ips_policies.Create(ctx, service, &req)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -257,7 +257,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
+				allRules, err := ips_policies.GetAll(ctx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -269,7 +269,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
+				rule, err := ips_policies.Get(ctx, service, id)
 				if err != nil {
 					return err
 				}
@@ -282,7 +282,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
+				_, err = ips_policies.Update(ctx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -318,7 +318,7 @@ func resourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("no zia firewall ips rule id is set"))
 	}
 
-	resp, err := firewallipscontrolpolicies.Get(ctx, service, id)
+	resp, err := ips_policies.Get(ctx, service, id)
 	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing firewall ips rule %s from state because it no longer exists in ZIA", d.Id())
@@ -444,14 +444,14 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	log.Printf("[INFO] Updating firewall ips rule ID: %v\n", id)
 	req := expandFirewallIPSRules(d)
 
-	if _, err := firewallipscontrolpolicies.Get(ctx, service, id); err != nil {
+	if _, err := ips_policies.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
 	}
 
-	existingRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
+	existingRules, err := ips_policies.GetAll(ctx, service)
 	if err != nil {
 		log.Printf("[ERROR] error getting all firewall ips rules: %v", err)
 	}
@@ -466,7 +466,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 	req.Order = nextAvailableOrder
 
-	_, err = firewallipscontrolpolicies.Update(ctx, service, id, &req)
+	_, err = ips_policies.Update(ctx, service, id, &req)
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)
 	}
@@ -476,7 +476,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_ips_rule",
 		func() (map[int]OrderRule, error) {
-			allRules, err := firewallipscontrolpolicies.GetAll(ctx, service)
+			allRules, err := ips_policies.GetAll(ctx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -487,7 +487,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
+			rule, err := ips_policies.Get(ctx, service, id)
 			if err != nil {
 				return err
 			}
@@ -500,7 +500,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = firewallipscontrolpolicies.Update(ctx, service, id, rule)
+			_, err = ips_policies.Update(ctx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -533,7 +533,7 @@ func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	// Retrieve the rule to check if it's predefined
-	rule, err := firewallipscontrolpolicies.Get(ctx, service, id)
+	rule, err := ips_policies.Get(ctx, service, id)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error retrieving firewall IPS rule %d: %v", id, err))
 	}
@@ -544,7 +544,7 @@ func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[INFO] Deleting firewall ips rule ID: %v\n", (d.Id()))
-	if _, err := firewallipscontrolpolicies.Delete(ctx, service, id); err != nil {
+	if _, err := ips_policies.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId("")
@@ -564,7 +564,7 @@ func resourceFirewallIPSRulesDelete(ctx context.Context, d *schema.ResourceData,
 	return nil
 }
 
-func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.FirewallIPSRules {
+func expandFirewallIPSRules(d *schema.ResourceData) ips_policies.FirewallIPSRules {
 	id, _ := getIntFromResourceData(d, "rule_id")
 
 	// Retrieve the order and fallback to 1 if it's 0
@@ -578,7 +578,7 @@ func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.F
 	processedDestCountries := processCountries(SetToStringList(d, "dest_countries"))
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
 
-	result := firewallipscontrolpolicies.FirewallIPSRules{
+	result := ips_policies.FirewallIPSRules{
 		ID:                id,
 		Name:              d.Get("name").(string),
 		Order:             order,
@@ -621,7 +621,7 @@ func expandFirewallIPSRules(d *schema.ResourceData) firewallipscontrolpolicies.F
 func currentFirewallIPsOrderVsRankWording(ctx context.Context, zClient *Client) string {
 	service := zClient.Service
 
-	list, err := firewallipscontrolpolicies.GetAll(ctx, service)
+	list, err := ips_policies.GetAll(ctx, service)
 	if err != nil {
 		return ""
 	}

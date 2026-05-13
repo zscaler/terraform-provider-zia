@@ -223,6 +223,60 @@ if searchExpr, ok := d.GetOk("search"); ok {
 - JMESPath filtering narrows the pool BEFORE local name/ID matching — if the filter excludes the target, the lookup will fail with "not found"
 - Debug logs are emitted by the SDK when JMESPath is active (visible with `TF_LOG=DEBUG`)
 
+## User-Facing Writing Conventions
+
+These rules apply to ALL user-facing prose in this repo:
+
+- `docs/resources/*.md`
+- `docs/data-sources/*.md`
+- `docs/guides/*.md` (including `release-notes.md`)
+- `CHANGELOG.md`
+- The "Description" string on schema fields (it appears in `terraform-plugin-docs` output and Registry pages)
+- Any `~> NOTE` callouts inside docs
+
+### 1. Write for the user, not for the SDK
+
+User-facing text MUST NOT reference Go SDK identifiers, internal types, or implementation primitives. The user never reads the SDK, so do not mention:
+
+- SDK package paths (`zscaler-sdk-go`, `filteringrules`, `oneapiclient`, `oneapiconfig`)
+- SDK function names (`GetAll`, `GetByName`, `Get`, `Create`, `Update`)
+- SDK struct names (`GetAllFilterOptions`, `OrderRule`, `FirewallFilteringRules`)
+- Provider-internal helpers (`reorderAll`, `countOrderable`, `reorderWithBeforeReorder`, `waitForReorder`)
+- Internal terms like "pagination engine", "JMESPath context enrichment", "diff-based PUTs", "parent-collection invalidation"
+
+Instead use neutral product language: *"the data source returns…"*, *"filter applied server-side"*, *"runs after the response is received"*, *"used to look up a single rule"*, *"used to narrow results"*.
+
+These internal mechanics belong in `CLAUDE.md`, `.cursor/rules/`, and `.claude/skills/` — never in the published docs or changelog.
+
+### 2. "Breaking change" is reserved for actual breaks
+
+Do NOT label a change as a breaking change unless it satisfies BOTH:
+
+- A working `terraform plan` / `apply` / `import` from a previous release will now error or change behaviour observably (drift, state mismatch, attribute removal, output value change), AND
+- The user has no automatic migration path — they must edit HCL or state to recover.
+
+Specifically NOT breaking, even if the user has to update HCL:
+
+- Renaming an INPUT argument when the underlying capability is preserved under another argument (e.g. "look up by id" still works, the argument name just moved from `id` to `rule_id`). Document the rename in one sentence inline; do not use `~>` callouts, banners, or a `> Breaking change:` block.
+- Adding a new optional argument or output attribute.
+- Adding a new resource or data source.
+- Tightening a `ValidateFunc` on a field that was already documented as having that constraint.
+
+When in doubt, ask the user before adding a breaking-change banner — banners scare adopters and we only spend that scariness budget when it's earned.
+
+### 3. Changelog and release-notes entries describe outcomes
+
+`CHANGELOG.md` and `docs/guides/release-notes.md` entries are read by users deciding whether to upgrade. They should:
+
+- Start with the user-visible improvement (*"Enhanced the X data source to return a list of rules…"*), not the implementation (*"Refactored X to call GetAll once and apply JMESPath context-enrichment…"*).
+- Name the resource(s) / data source(s) affected so users can `Ctrl+F` for them.
+- Reference the GitHub PR with the `[PR #NNN](https://github.com/zscaler/terraform-provider-zia/pull/NNN)` link convention already in use.
+- Reference the issue (`[issue #NNN](…)`) when the change addresses a specific report.
+- Stay to one paragraph per PR unless multiple distinct improvements ship together.
+- NEVER include SDK terminology (see rule 1).
+
+The internal mechanics — "the reorder engine now…", "parent-collection cache invalidation in OneAPI v3.8.32…", "diff-based pass with `countOrderable` deferral" — belong in `CLAUDE.md` and the architecture sections of the cursor/claude internal docs, not in the changelog.
+
 ## Schema Conventions
 
 - Booleans with `omitempty` in the SDK: use `Optional: true, Computed: true`
@@ -265,3 +319,5 @@ Every release MUST update:
 7. ALWAYS strip read-only fields in `updateOrder` callbacks for rule resources
 8. ALWAYS include the three predefined-rule / order-validation notes in rule resource docs
 9. Use existing helpers from `common.go` and `utils.go` — never reimplement
+10. NEVER reference SDK identifiers, internal helpers, or implementation primitives in user-facing docs, changelog entries, or release notes — see "User-Facing Writing Conventions"
+11. NEVER label a change as a breaking change unless a previously working configuration genuinely breaks — argument renames where the capability is preserved are a one-line inline note, not a banner

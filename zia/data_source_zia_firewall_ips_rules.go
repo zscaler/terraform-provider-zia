@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallipscontrolpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
 )
 
 func dataSourceFirewallIPSRules() *schema.Resource {
@@ -546,11 +546,11 @@ func dataSourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData,
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	var resp *firewallipscontrolpolicies.FirewallIPSRules
+	var resp *ips_policies.FirewallIPSRules
 	id, ok := getIntFromResourceData(d, "id")
 	if ok {
 		log.Printf("[INFO] Getting data for firewall ips rule id: %d\n", id)
-		res, err := firewallipscontrolpolicies.Get(ctx, service, id)
+		res, err := ips_policies.Get(ctx, service, id)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -559,7 +559,7 @@ func dataSourceFirewallIPSRulesRead(ctx context.Context, d *schema.ResourceData,
 	name, _ := d.Get("name").(string)
 	if resp == nil && name != "" {
 		log.Printf("[INFO] Getting data for firewall ips rule name: %s\n", name)
-		res, err := firewallipscontrolpolicies.GetByName(ctx, service, name)
+		res, err := ips_policies.GetByName(ctx, service, name)
 		if err != nil {
 			return diag.FromErr(err)
 		}

@@ -187,6 +187,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_extranet":                                      resourceExtranet(),
 			"zia_dc_exclusions":                                 resourceDCExclusions(),
 			"zia_email_profile":                                 resourceEmailProfile(),
+			"zia_ips_signature_rules":                           resourceIPSSignatureRules(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -290,6 +291,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_extranet":                                      dataSourceExtranet(),
 			"zia_dc_exclusions":                                 dataSourceDCExclusions(),
 			"zia_email_profile":                                 dataSourceEmailProfile(),
+			"zia_ips_signature_rules":                           dataSourceIPSSignatureRules(),
 		},
 	}
 
