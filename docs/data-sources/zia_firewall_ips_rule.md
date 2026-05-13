@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall Policies"
+subcategory: "IPS Control Policy"
 layout: "zscaler"
 page_title: "ZIA): firewall_ips_rule"
 description: |-

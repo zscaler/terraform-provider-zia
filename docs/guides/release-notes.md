@@ -27,6 +27,14 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 - [PR #569](https://github.com/zscaler/terraform-provider-zia/pull/569) - Enhanced the `zia_firewall_filtering_rule` data source to return a list of rules via the new `rules` block when no single-rule lookup is supplied, so multiple rules can be iterated with `for_each`. Added optional filter arguments (`rule_name`, `rule_label`, `rule_action`, `department`, `device_group`, `nw_application`, and others) and a `search` argument for client-side [JMESPath](https://jmespath.org/) filtering. Single-rule lookup still works — use `rule_id` for the numeric lookup (previously `id`) or `name` for the name lookup. Addresses [issue #568](https://github.com/zscaler/terraform-provider-zia/issues/568).
 
+### New Resources
+
+- [PR #569](https://github.com/zscaler/terraform-provider-zia/pull/569) - Added new resource `zia_ips_signature_rules` to create and manage custom IPS signature rules. `rule_text` is validated by the Zscaler validation endpoint on every create and update, and any syntax error is surfaced before state is committed.
+
+### New Data Sources
+
+- [PR #569](https://github.com/zscaler/terraform-provider-zia/pull/569) - Added new data source `zia_ips_signature_rules` to look up a custom IPS signature rule by `id` or `name`.
+
 ## 4.7.20 (May, 7 2026)
 
 ### Notes

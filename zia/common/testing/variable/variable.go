@@ -196,6 +196,25 @@ const (
 	RuleLabelDescription = "testAcc_rule_label"
 )
 
+// IPS Signature Rules
+const (
+	IPSSignatureRuleName        = "testAcc_ips_signature_rule"
+	IPSSignatureRuleDescription = "testAcc_ips_signature_rule"
+	// Well-formed rules the IPS validation endpoint accepts. Notes:
+	//   - Use literal `any` for source/destination networks; the Suricata
+	//     variables ($EXTERNAL_NET, $HOME_NET, ...) are not defined in the
+	//     Zscaler parser and trigger "Unexpected character(s) at rule header".
+	//   - The custom-signature sid range starts at 1,000,000; anything below
+	//     collides with Talos/ETS reserved ranges and is rejected.
+	//   - Do not put leading whitespace before `alert` — the parser is strict.
+	IPSSignatureRuleText        = `alert http any any -> any any (msg:"TF ACC TEST - HTTP /admin"; content:"/admin"; http_uri; nocase; sid:1000777; rev:1;)`
+	IPSSignatureRuleTextUpdated = `alert http any any -> any any (msg:"TF ACC TEST - HTTP /admin (updated)"; content:"/admin"; http_uri; nocase; sid:1000777; rev:2;)`
+	// Threat-category id used by the IPS signature rule acceptance test.
+	// The id is tenant-API supplied; override locally if your tenant uses a
+	// different value.
+	IPSSignatureRuleCategoryID = 64
+)
+
 // Admin Roles
 const (
 	RoleName = "testAcc_admin_role"

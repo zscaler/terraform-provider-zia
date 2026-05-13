@@ -45,4 +45,5 @@ const (
 	ServiceEdgeNode                 = "zia_virtual_service_edge_node"
 	NSSServer                       = "zia_nss_server"
 	EmailProfile                    = "zia_email_profile"
+	IPSSignatureRules               = "zia_ips_signature_rules"
 )

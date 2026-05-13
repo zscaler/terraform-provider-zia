@@ -1,5 +1,5 @@
 ---
-subcategory: "Firewall Policies"
+subcategory: "DNS Control Policy"
 layout: "zscaler"
 page_title: "ZIA: firewall_dns_rule"
 description: |-
