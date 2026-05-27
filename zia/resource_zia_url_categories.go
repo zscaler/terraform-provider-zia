@@ -23,6 +23,7 @@ func resourceURLCategories() *schema.Resource {
 		ReadContext:   resourceURLCategoriesRead,
 		UpdateContext: resourceURLCategoriesUpdate,
 		DeleteContext: resourceURLCategoriesDelete,
+		CustomizeDiff: suppressURLCategoriesReorderDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				zClient := meta.(*Client)
@@ -87,7 +88,7 @@ func resourceURLCategories() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"urls": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -331,7 +332,7 @@ func resourceURLCategoriesRead(ctx context.Context, d *schema.ResourceData, meta
 	_ = d.Set("configured_name", resp.ConfiguredName)
 	_ = d.Set("keywords", resp.Keywords)
 	_ = d.Set("keywords_retaining_parent_category", resp.KeywordsRetainingParentCategory)
-	_ = d.Set("urls", resp.Urls)
+	_ = d.Set("urls", reorderURLsToReferenceOrder(d.Get("urls"), resp.Urls))
 	_ = d.Set("db_categorized_urls", resp.DBCategorizedUrls)
 	_ = d.Set("custom_category", resp.CustomCategory)
 	_ = d.Set("super_category", resp.SuperCategory)
@@ -530,7 +531,7 @@ func expandURLCategory(d *schema.ResourceData) urlcategories.URLCategory {
 		ConfiguredName:                       d.Get("configured_name").(string),
 		Keywords:                             SetToStringList(d, "keywords"),
 		KeywordsRetainingParentCategory:      SetToStringList(d, "keywords_retaining_parent_category"),
-		Urls:                                 SetToStringList(d, "urls"),
+		Urls:                                 ListToStringList(d, "urls"),
 		DBCategorizedUrls:                    SetToStringList(d, "db_categorized_urls"),
 		IPRanges:                             SetToStringList(d, "ip_ranges"),
 		IPRangesRetainingParentCategory:      SetToStringList(d, "ip_ranges_retaining_parent_category"),
@@ -594,5 +595,91 @@ func stringSliceToMap(slice []string) map[string]bool {
 	for _, s := range slice {
 		result[s] = true
 	}
+	return result
+}
+
+// suppressURLCategoriesReorderDiff treats the `urls` attribute as
+// order-independent. When the only change between the previous state and the
+// new configuration is element ordering, the planned new value is forced to
+// match the previous state so Terraform does not report a diff. Add/remove
+// changes still produce diffs as expected.
+func suppressURLCategoriesReorderDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if !d.HasChange("urls") {
+		return nil
+	}
+	oldRaw, newRaw := d.GetChange("urls")
+	oldList, _ := oldRaw.([]interface{})
+	newList, _ := newRaw.([]interface{})
+
+	if stringListsSetEqual(oldList, newList) {
+		return d.SetNew("urls", oldList)
+	}
+	return nil
+}
+
+// stringListsSetEqual returns true when two []interface{} lists contain the
+// same string elements with the same multiplicities, regardless of order.
+func stringListsSetEqual(a, b []interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := make(map[string]int, len(a))
+	for _, v := range a {
+		s, ok := v.(string)
+		if !ok {
+			return false
+		}
+		counts[s]++
+	}
+	for _, v := range b {
+		s, ok := v.(string)
+		if !ok {
+			return false
+		}
+		counts[s]--
+		if counts[s] < 0 {
+			return false
+		}
+	}
+	for _, c := range counts {
+		if c != 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// reorderURLsToReferenceOrder reorders the API-returned URL list to match the
+// order of the reference list (HCL declaration or current state), keeping
+// any URLs not in the reference at the end. The ZIA API does not guarantee
+// URL ordering on responses, so without this step a TypeList would show
+// spurious order-only diffs after every refresh.
+func reorderURLsToReferenceOrder(reference interface{}, apiList []string) []string {
+	refList, _ := reference.([]interface{})
+
+	apiSet := make(map[string]bool, len(apiList))
+	for _, s := range apiList {
+		apiSet[s] = true
+	}
+
+	result := make([]string, 0, len(apiList))
+	seen := make(map[string]bool, len(apiList))
+
+	for _, v := range refList {
+		s, ok := v.(string)
+		if !ok || !apiSet[s] || seen[s] {
+			continue
+		}
+		result = append(result, s)
+		seen[s] = true
+	}
+
+	for _, s := range apiList {
+		if !seen[s] {
+			result = append(result, s)
+			seen[s] = true
+		}
+	}
+
 	return result
 }

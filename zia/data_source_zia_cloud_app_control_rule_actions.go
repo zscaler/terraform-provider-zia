@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
 
@@ -31,6 +32,11 @@ func dataSourceCloudAppControlRuleActions() *schema.Resource {
 				Optional:    true,
 				Elem:        &schema.Schema{Type: schema.TypeString},
 				Description: "Optional list of action prefixes to filter results. Valid values: ALLOW, DENY, BLOCK, CAUTION, ISOLATE, ESC. The underscore is automatically added. If specified, only actions starting with these prefixes will be included in filtered_actions.",
+			},
+			"search": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "JMESPath expression applied client-side to the raw action list returned by the API. The expression operates on the array of action strings (use `@` to refer to each element). Examples: \"[?starts_with(@, 'ALLOW_')]\", \"[?contains(@, 'CHAT')]\". The filter is applied before the ISOLATE split and `action_prefixes` filtering, so all computed outputs reflect the narrowed set.",
 			},
 			"available_actions": {
 				Type:        schema.TypeList,
@@ -81,6 +87,16 @@ func dataSourceCloudAppControlRuleActionsRead(ctx context.Context, d *schema.Res
 	actions, err := cloudappcontrol.AllAvailableActions(ctx, service, ruleType, payload)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	if searchExpr, ok := d.GetOk("search"); ok {
+		expr := searchExpr.(string)
+		log.Printf("[INFO] JMESPath filter set on actions: %s\n", expr)
+		filtered, jerr := zscaler.ApplyJMESPathFilter(actions, expr)
+		if jerr != nil {
+			return diag.FromErr(fmt.Errorf("invalid JMESPath expression %q: %w", expr, jerr))
+		}
+		actions = filtered
 	}
 
 	// Separate ISOLATE actions from non-ISOLATE actions

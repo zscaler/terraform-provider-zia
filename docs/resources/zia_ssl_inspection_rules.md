@@ -180,6 +180,60 @@ resource "zia_ssl_inspection_rules" "this" {
 }
 ```
 
+## Example Usage - Dynamically Resolving `cloud_applications`
+
+The cloud-application catalog evolves over time. Hard-coding `cloud_applications` means the rule may drift the first time Zscaler adds or removes an app from the category. Use the [`zia_cloud_applications`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications) data source with `policy_type = "cloud_application_ssl_policy"` to resolve the list at plan time.
+
+The data source returns objects (`app`, `app_name`, `parent`, `parent_name`); the rule expects a flat list of enum strings, so project to `app` with a `for` expression or the splat operator.
+
+```hcl
+# All AI/ML applications associated with SSL Inspection policies
+data "zia_cloud_applications" "ai_ssl" {
+  policy_type = "cloud_application_ssl_policy"
+  app_class   = ["AI_ML"]
+}
+
+resource "zia_ssl_inspection_rules" "inspect_ai" {
+  name                      = "Inspect AI/ML Traffic"
+  state                     = "ENABLED"
+  order                     = 1
+  rank                      = 7
+  road_warrior_for_kerberos = true
+  platforms                 = ["SCAN_WINDOWS", "SCAN_MACOS", "SCAN_LINUX"]
+
+  cloud_applications = [for app in data.zia_cloud_applications.ai_ssl.applications : app["app"]]
+
+  action {
+    type = "DECRYPT"
+    ssl_interception_cert {
+      id = 1
+    }
+  }
+}
+```
+
+```hcl
+# JMESPath: match apps by friendly name (case-sensitive contains)
+data "zia_cloud_applications" "chatgpt_ssl" {
+  policy_type = "cloud_application_ssl_policy"
+  search      = "[?contains(appName, 'ChatGPT')]"
+}
+
+resource "zia_ssl_inspection_rules" "inspect_chatgpt" {
+  name      = "Do Not Inspect ChatGPT"
+  state     = "ENABLED"
+  order     = 1
+  rank      = 7
+  platforms = ["SCAN_WINDOWS", "SCAN_MACOS"]
+
+  cloud_applications = data.zia_cloud_applications.chatgpt_ssl.applications[*].app
+
+  action {
+    type = "DO_NOT_DECRYPT"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

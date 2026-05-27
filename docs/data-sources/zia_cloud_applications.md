@@ -81,10 +81,10 @@ output "zia_cloud_applications" {
 ### Example Usage - With JMESPath Search
 
 ```hcl
-# Use JMESPath to filter cloud applications by category
+# Filter cloud applications by category (exact match on the parent category enum)
 data "zia_cloud_applications" "ai_apps" {
   policy_type = "cloud_application_policy"
-  search      = "[?parentName == 'AI_ML']"
+  search      = "[?parent == 'AI_ML']"
 }
 
 output "ai_app_names" {
@@ -93,10 +93,63 @@ output "ai_app_names" {
 ```
 
 ```hcl
-# Filter applications whose name contains "Slack"
-data "zia_cloud_applications" "slack" {
+# Substring match on the user-friendly application name (case-sensitive)
+data "zia_cloud_applications" "chatgpt_family" {
   policy_type = "cloud_application_policy"
-  search      = "[?contains(appName, 'Slack')]"
+  search      = "[?contains(appName, 'ChatGPT')]"
+}
+
+# Export only the enum values, ready to drop into a rule resource
+output "chatgpt_app_enums" {
+  value = [for app in data.zia_cloud_applications.chatgpt_family.applications : app["app"]]
+}
+```
+
+```hcl
+# Combine multiple conditions with && and ||
+data "zia_cloud_applications" "openai_or_gemini" {
+  policy_type = "cloud_application_policy"
+  search      = "[?app == 'CHATGPT_AI' || app == 'GOOGLE_GEMINI']"
+}
+```
+
+```hcl
+# Narrow to a category server-side first, then filter the names client-side
+data "zia_cloud_applications" "ai_blocks" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["AI_ML"]
+  search      = "[?starts_with(appName, 'Anthropic')]"
+}
+```
+
+```hcl
+# Use JMESPath projection to flatten directly to enum strings (handy in for_each)
+data "zia_cloud_applications" "social" {
+  policy_type = "cloud_application_policy"
+  search      = "[?parent == 'SOCIAL_NETWORKING'].app"
+}
+
+# Note: when using a projection like ".app" the resulting items lose the object
+# shape and all sibling fields become null. Use a `for` expression instead when
+# you still want the full record:
+output "social_app_enums" {
+  value = [for app in data.zia_cloud_applications.social.applications : app["app"]]
+}
+```
+
+```hcl
+# DNS-over-HTTPS applications, ready to attach to a DNS firewall rule
+data "zia_cloud_applications" "doh" {
+  policy_type = "cloud_application_policy"
+  search      = "[?parent == 'DNS_OVER_HTTPS']"
+}
+```
+
+```hcl
+# Exact match by name (returns at most one entry)
+data "zia_cloud_applications" "exact" {
+  policy_type = "cloud_application_policy"
+  search      = "[?appName == 'Slack']"
 }
 ```
 

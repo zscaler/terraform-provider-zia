@@ -40,6 +40,14 @@ data "zia_cloud_browser_isolation_profile" "this" {
     name = "ZS_CBI_Profile1"
 }
 
+data "zia_group_management" "this" {
+ name = "Finance"
+}
+
+data "zia_user_management" "this" {
+ email = "adam.ashcroft@acme.com"
+}
+
 resource "zia_browser_control_policy" "this" {
     plugin_check_frequency = "DAILY"
     bypass_plugins = ["ACROBAT", "FLASH", "SHOCKWAVE"]
@@ -53,11 +61,108 @@ resource "zia_browser_control_policy" "this" {
     allow_all_browsers = true
     enable_warnings = true
     enable_smart_browser_isolation = true
+
     smart_isolation_profile {
       id = data.zia_cloud_browser_isolation_profile.this.id
     }
+
+    smart_isolation_groups {
+        id = [ data.zia_group_management.this.id ]
+    }
+    smart_isolation_users = {
+    id = [ data.zia_user_management.this.id ]
+  }
 }
 ```
+
+## Example Usage - Drive `blocked_*_versions` from the Browser Catalogue
+
+The `blocked_chrome_versions`, `blocked_firefox_versions`, `blocked_safari_versions`, `blocked_opera_versions`, and `blocked_internet_explorer_versions` attributes expect the canonical version identifiers that ZIA publishes through the [`zia_supported_browser_version`](../data-sources/zia_supported_browser_version.md) data source. The patterns below cover the common ways to wire those two together. The data source page documents each pattern in full.
+
+### Block a specific, hand-picked list
+
+Most deterministic. Use this when you know exactly which versions you want to block.
+
+```hcl
+resource "zia_browser_control_policy" "this" {
+  plugin_check_frequency  = "DAILY"
+  enable_warnings         = true
+  blocked_chrome_versions = ["CH147", "CH146"]
+}
+```
+
+### Block every older Chrome version that ZIA recognises
+
+```hcl
+data "zia_supported_browser_version" "chrome" {
+  browser_type = "CHROME"
+}
+
+resource "zia_browser_control_policy" "this" {
+  plugin_check_frequency  = "DAILY"
+  enable_warnings         = true
+  blocked_chrome_versions = data.zia_supported_browser_version.chrome.browsers[0].older_versions
+}
+```
+
+### Block a specific subset, validated against the live catalogue
+
+Fails the plan if a wanted version is missing from the upstream catalogue, rather than silently dropping it from the set.
+
+```hcl
+data "zia_supported_browser_version" "chrome" {
+  browser_type = "CHROME"
+}
+
+locals {
+  wanted_chrome = ["CH147", "CH146"]
+
+  available_chrome = toset(concat(
+    data.zia_supported_browser_version.chrome.browsers[0].versions,
+    data.zia_supported_browser_version.chrome.browsers[0].older_versions,
+  ))
+
+  blocked_chrome = setintersection(toset(local.wanted_chrome), local.available_chrome)
+}
+
+resource "zia_browser_control_policy" "this" {
+  plugin_check_frequency  = "DAILY"
+  enable_warnings         = true
+  blocked_chrome_versions = local.blocked_chrome
+
+  lifecycle {
+    precondition {
+      condition     = length(local.blocked_chrome) == length(local.wanted_chrome)
+      error_message = "One or more wanted Chrome versions are not present in the supported browser catalogue."
+    }
+  }
+}
+```
+
+### Block every version matching a prefix
+
+```hcl
+data "zia_supported_browser_version" "chrome" {
+  browser_type = "CHROME"
+}
+
+locals {
+  blocked_chrome = [
+    for v in data.zia_supported_browser_version.chrome.browsers[0].versions :
+    v if startswith(v, "CH1")
+  ]
+}
+
+resource "zia_browser_control_policy" "this" {
+  plugin_check_frequency  = "DAILY"
+  enable_warnings         = true
+  blocked_chrome_versions = local.blocked_chrome
+}
+```
+
+~> **NOTE — Do not use the data source `search` argument to subset version strings.** The `search` argument on `zia_supported_browser_version` filters **which browser entries** are returned, not **which versions within an entry**. A predicate like `[?contains(versions, 'CH147')]` returns the entire CHROME entry (with its complete `versions` list) when satisfied — so wiring `browsers[0].versions` from such a query into `blocked_chrome_versions` blocks every Chrome version, not just `CH147`. For "block exactly these versions" use the hand-picked list or `setintersection` pattern above. For "block versions matching a prefix" use the `for` expression pattern.
+
+~> **NOTE — `ANY` is accepted but normalized to `NONE` on the wire.** The API treats `ANY`, `NONE`, and an empty list as equivalent. Writing `blocked_chrome_versions = ["ANY"]` (and similarly for `bypass_plugins`, `bypass_applications`, and the other `blocked_*_versions` attributes) is accepted and the provider preserves `["ANY"]` in state so subsequent plans do not show drift. Switching from `["ANY"]` to a concrete list is a real change and will be applied.
 
 ## Argument Reference
 

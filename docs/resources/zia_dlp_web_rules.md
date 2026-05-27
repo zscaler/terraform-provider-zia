@@ -290,6 +290,80 @@ resource "zia_dlp_web_rules" "this" {
 * `tenant.id`: Uses the C2CIR tenant ID (converted to string)
 * `tenant.name`: Uses the C2CIR tenant name
 
+## Example Usage - Dynamically Resolving `cloud_applications`
+
+Zscaler periodically adds or removes entries from each cloud-application category. Hard-coding `cloud_applications` means the rule may drift the first time the catalog changes. Use the [`zia_cloud_applications`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications) data source to resolve the list at plan time so the rule self-updates with the catalog.
+
+The data source returns objects with `app`, `app_name`, `parent`, and `parent_name`. The rule's `cloud_applications` attribute is a list of enum strings — project to `app` with a `for` expression (or the splat operator).
+
+```hcl
+# All Web-mail applications, resolved at plan time
+data "zia_cloud_applications" "webmail" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["WEBMAIL"]
+}
+
+data "zia_dlp_engines" "external" {
+  predefined_engine_name = "EXTERNAL"
+}
+
+resource "zia_dlp_web_rules" "webmail_dlp" {
+  name                       = "DLP - Webmail outbound"
+  description                = "Block sensitive content over webmail"
+  action                     = "BLOCK"
+  order                      = 1
+  rank                       = 7
+  state                      = "ENABLED"
+  protocols                  = ["HTTPS_RULE", "HTTP_RULE"]
+  without_content_inspection = false
+  severity                   = "RULE_SEVERITY_HIGH"
+
+  cloud_applications = [for app in data.zia_cloud_applications.webmail.applications : app["app"]]
+
+  dlp_engines {
+    id = [data.zia_dlp_engines.external.id]
+  }
+}
+```
+
+```hcl
+# JMESPath: only generative-AI apps whose user-friendly name starts with "ChatGPT"
+data "zia_cloud_applications" "chatgpt_family" {
+  policy_type = "cloud_application_policy"
+  search      = "[?contains(appName, 'ChatGPT')]"
+}
+
+resource "zia_dlp_web_rules" "chatgpt_dlp" {
+  name                       = "DLP - ChatGPT uploads"
+  action                     = "BLOCK"
+  order                      = 1
+  rank                       = 7
+  state                      = "ENABLED"
+  protocols                  = ["HTTPS_RULE", "HTTP_RULE"]
+  without_content_inspection = false
+
+  cloud_applications = [for app in data.zia_cloud_applications.chatgpt_family.applications : app["app"]]
+}
+```
+
+```hcl
+# Splat alternative — same result, shorter syntax
+data "zia_cloud_applications" "file_share" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["FILE_SHARE"]
+}
+
+resource "zia_dlp_web_rules" "file_share_dlp" {
+  name               = "DLP - File-share uploads"
+  action             = "BLOCK"
+  order              = 1
+  rank               = 7
+  state              = "ENABLED"
+  protocols          = ["HTTPS_RULE", "HTTP_RULE"]
+  cloud_applications = data.zia_cloud_applications.file_share.applications[*].app
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

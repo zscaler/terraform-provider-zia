@@ -155,6 +155,156 @@ resource "zia_cloud_app_control_rule" "slack_allow_only" {
 }
 ```
 
+## Example Usage - Dynamically Resolving `applications` and `actions`
+
+Zscaler updates its cloud-application catalog over time. If you hard-code the `applications` list and Zscaler later adds a new app to that category, the API may return that new app in the saved rule and Terraform will show drift on the next plan. The most robust pattern is to look up applications and actions at plan time from their data sources so the rule self-updates with the catalog.
+
+The two data sources work together:
+
+* [`zia_cloud_applications`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications) returns objects (`app`, `app_name`, `parent`, `parent_name`). The rule's `applications` attribute is a list of enum strings, so project to `app` with either a `for` expression or the splat operator.
+* [`zia_cloud_app_control_rule_actions`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_app_control_rule_actions) returns flat lists of strings (`available_actions`, `available_actions_without_isolate`, `isolate_actions`, `filtered_actions`). Those plug directly into `actions` with no projection.
+
+~> **Important:** Keep `cloud_apps` on the actions data source in sync with `applications` on the rule. The API returns the **intersection** of actions across all `cloud_apps`, so a broad category (e.g. every AI/ML app) often yields an empty action set. When in doubt, scope the actions data source to a single representative app and the rule to whatever set you actually want covered.
+
+### Apps + actions via category filter (no JMESPath)
+
+```hcl
+# Resolve every AI/ML application from the catalog
+data "zia_cloud_applications" "ai_apps" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["AI_ML"]
+}
+
+# Resolve actions for a single representative app (intersection-safe)
+data "zia_cloud_app_control_rule_actions" "ai_actions" {
+  type            = "AI_ML"
+  cloud_apps      = ["CHATGPT_AI"]
+  action_prefixes = ["ALLOW"]
+}
+
+resource "zia_cloud_app_control_rule" "ai_allow" {
+  name         = "Allow AI/ML Apps"
+  type         = "AI_ML"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+
+  # Project the data source objects down to the enum string the API expects
+  applications = [for app in data.zia_cloud_applications.ai_apps.applications : app["app"]]
+
+  # filtered_actions already returns []string — no projection needed
+  actions      = data.zia_cloud_app_control_rule_actions.ai_actions.filtered_actions
+}
+```
+
+### Apps + actions via JMESPath
+
+```hcl
+# Match apps by user-friendly name instead of enum
+data "zia_cloud_applications" "openai" {
+  policy_type = "cloud_application_policy"
+  search      = "[?contains(appName, 'ChatGPT')]"
+}
+
+# Keep only ALLOW_* actions, regardless of category
+data "zia_cloud_app_control_rule_actions" "allow_only" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+  search     = "[?starts_with(@, 'ALLOW_')]"
+}
+
+resource "zia_cloud_app_control_rule" "chatgpt_allow" {
+  name         = "Allow ChatGPT Family"
+  type         = "AI_ML"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  applications = [for app in data.zia_cloud_applications.openai.applications : app["app"]]
+  actions      = data.zia_cloud_app_control_rule_actions.allow_only.available_actions
+}
+```
+
+### Mixing JMESPath on apps with `action_prefixes` on actions
+
+```hcl
+# All social networking apps that start with "Facebook"
+data "zia_cloud_applications" "fb_family" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["SOCIAL_NETWORKING"]
+  search      = "[?starts_with(appName, 'Facebook')]"
+}
+
+# DENY-only actions, narrowed by JMESPath to drop ISOLATE entries up front
+data "zia_cloud_app_control_rule_actions" "deny_no_isolate" {
+  type            = "SOCIAL_NETWORKING"
+  cloud_apps      = ["FACEBOOK"]
+  search          = "[?!contains(@, 'ISOLATE')]"
+  action_prefixes = ["DENY"]
+}
+
+resource "zia_cloud_app_control_rule" "fb_deny" {
+  name         = "Restrict Facebook Family"
+  type         = "SOCIAL_NETWORKING"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  applications = [for app in data.zia_cloud_applications.fb_family.applications : app["app"]]
+  actions      = data.zia_cloud_app_control_rule_actions.deny_no_isolate.filtered_actions
+}
+```
+
+### Exporting the resolved values (debugging your filters)
+
+When tuning filters it is often useful to inspect what each data source returns before binding it to a rule. Run `terraform plan` or `terraform refresh && terraform console` against these outputs:
+
+```hcl
+data "zia_cloud_applications" "social" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["SOCIAL_NETWORKING"]
+}
+
+data "zia_cloud_app_control_rule_actions" "fb" {
+  type       = "SOCIAL_NETWORKING"
+  cloud_apps = ["FACEBOOK"]
+}
+
+# Every social-networking enum that will land in the rule
+output "social_app_enums" {
+  value = [for app in data.zia_cloud_applications.social.applications : app["app"]]
+}
+
+# Friendly names for review
+output "social_app_names" {
+  value = [for app in data.zia_cloud_applications.social.applications : app["app_name"]]
+}
+
+# All actions available for Facebook (the rule will pick a subset of this)
+output "fb_actions" {
+  value = data.zia_cloud_app_control_rule_actions.fb.available_actions_without_isolate
+}
+```
+
+### Splat shorthand for `applications`
+
+Some users prefer the splat operator over a `for` expression. Both produce a list of enum strings:
+
+```hcl
+data "zia_cloud_applications" "ai" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["AI_ML"]
+}
+
+resource "zia_cloud_app_control_rule" "ai_audit" {
+  name         = "Audit AI/ML"
+  type         = "AI_ML"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  applications = data.zia_cloud_applications.ai.applications[*].app
+  actions      = ["CAUTION_AI_ML_WEB_USE"]
+}
+```
+
 ## Example Usage - With Time Validity
 
 ```hcl
@@ -226,7 +376,7 @@ The following arguments are supported:
 
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
 
-* `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
+* `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post). To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
 * `eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
 * `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule.
