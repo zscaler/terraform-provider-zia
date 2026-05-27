@@ -128,6 +128,49 @@ resource "zia_firewall_dns_rule" "this3" {
 }
 ```
 
+## Example Usage - Dynamically Resolving `applications`
+
+The list of DNS tunnels / DNS-over-HTTPS applications is maintained by Zscaler and changes over time. Hard-coding `applications` can drift the first time Zscaler adds or removes an entry. Use the [`zia_cloud_applications`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications) data source with `app_class = ["DNS_OVER_HTTPS"]` to resolve the list at plan time.
+
+```hcl
+# All DNS-over-HTTPS applications
+data "zia_cloud_applications" "doh" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["DNS_OVER_HTTPS"]
+}
+
+resource "zia_firewall_dns_rule" "block_doh" {
+  name        = "Block DoH"
+  description = "Block all DNS-over-HTTPS applications"
+  action      = "BLOCK"
+  state       = "ENABLED"
+  order       = 1
+  rank        = 7
+  protocols   = ["ANY_RULE"]
+
+  applications = [for app in data.zia_cloud_applications.doh.applications : app["app"]]
+}
+```
+
+```hcl
+# JMESPath: only the DoH providers whose user-friendly name starts with "Cloudflare"
+data "zia_cloud_applications" "cf_doh" {
+  policy_type = "cloud_application_policy"
+  search      = "[?parent == 'DNS_OVER_HTTPS' && starts_with(appName, 'Cloudflare')]"
+}
+
+resource "zia_firewall_dns_rule" "allow_cloudflare_doh" {
+  name      = "Allow Cloudflare DoH"
+  action    = "ALLOW"
+  state     = "ENABLED"
+  order     = 1
+  rank      = 7
+  protocols = ["ANY_RULE"]
+
+  applications = data.zia_cloud_applications.cf_doh.applications[*].app
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

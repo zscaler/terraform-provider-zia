@@ -1,5 +1,32 @@
 # Changelog
 
+## 4.7.22 (May, 27 2026)
+
+### Notes
+
+- Release date: **(May, 27 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Added a `search` argument to the `zia_cloud_app_control_rule_actions` data source for client-side [JMESPath](https://jmespath.org/) filtering of the available action list. The expression operates on the action strings (for example, `"[?starts_with(@, 'ALLOW_')]"`) and is applied before the ISOLATE split and the `action_prefixes` filter, so every output attribute reflects the narrowed set.
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Added New Datasource `zia_supported_browser_version` to retrieve a list of all supported browsers and their versions
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Added support for Smart Isolation configuration in the resource `zia_browser_control_policy`
+
+### Bug Fixes
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Significantly reduced refresh, plan, and apply time on `zia_url_categories` resources holding large numbers of URLs. In our reproducer with a single custom category containing 20,000 URLs, fresh-create dropped from several minutes to around 35 seconds and refresh dropped from many minutes to around 20 seconds. Re-ordering URLs in the configuration (or the API returning them in a different order) no longer produces a diff. Addresses [issue #575](https://github.com/zscaler/terraform-provider-zia/issues/575).
+
+### Documentation
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Expanded the JMESPath examples in the `zia_cloud_applications` data source documentation with category matches, friendly-name substring search, AND/OR composition, projection, and exact-name lookups.
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Added a new "Dynamically Resolving `applications` and `actions`" section to the `zia_cloud_app_control_rule` resource documentation, showing how to pull both the application list and the action list from their data sources (with and without JMESPath) so rules self-update as Zscaler adjusts its cloud-application catalog.
+
+- [PR #576](https://github.com/zscaler/terraform-provider-zia/pull/576) - Added dynamic `cloud_applications` / `applications` resolution examples to the `zia_dlp_web_rules`, `zia_ssl_inspection_rules`, `zia_firewall_dns_rule`, and `zia_file_type_control_rules` resource documentation.
+
 ## 4.7.21 (May, 12 2026)
 
 ### Notes

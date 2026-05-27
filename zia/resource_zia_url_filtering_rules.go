@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
@@ -818,7 +819,7 @@ func expandURLFilteringRules(d *schema.ResourceData) urlfilteringpolicies.URLFil
 	return result
 }
 
-func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
+func expandCBIProfile(d *schema.ResourceData) *common.CBIProfile {
 	if v, ok := d.GetOk("cbi_profile"); ok {
 		cbiProfileList := v.([]interface{})
 		if len(cbiProfileList) > 0 {
@@ -829,7 +830,7 @@ func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
 				return nil
 			}
 
-			return &urlfilteringpolicies.CBIProfile{
+			return &common.CBIProfile{
 				ProfileSeq: cbiProfileData["profile_seq"].(int),
 				ID:         cbiProfileData["id"].(string),
 				Name:       cbiProfileData["name"].(string),
@@ -840,7 +841,7 @@ func expandCBIProfile(d *schema.ResourceData) *urlfilteringpolicies.CBIProfile {
 	return nil
 }
 
-func flattenCBIProfileSimple(cbiProfile *urlfilteringpolicies.CBIProfile) []interface{} {
+func flattenCBIProfileSimple(cbiProfile *common.CBIProfile) []interface{} {
 	if cbiProfile == nil {
 		log.Printf("[DEBUG] flattenCBIProfileSimple: received nil pointer")
 		return []interface{}{}

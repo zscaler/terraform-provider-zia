@@ -158,6 +158,7 @@ func resourceAdminRoles() *schema.Resource {
 					"EXEC_INSIGHT",
 					"EXEC_INSIGHT_AND_ORG_ADMIN",
 					"SDWAN",
+					"PUBLIC_API",
 				}, false),
 			},
 			"report_time_duration": {

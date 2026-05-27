@@ -61,6 +61,53 @@ resource "zia_file_type_control_rules" "this" {
 }
 ```
 
+## Example Usage - JMESPath Filtering for `cloud_applications`
+
+For more precise targeting — such as matching apps by their user-friendly name rather than category enum — use the `search` argument on the [`zia_cloud_applications`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications) data source. The expression runs after pagination and accepts standard [JMESPath](https://jmespath.org/) syntax.
+
+```hcl
+# Only generative-AI apps whose friendly name starts with "ChatGPT"
+data "zia_cloud_applications" "chatgpt_family" {
+  policy_type = "cloud_application_policy"
+  search      = "[?contains(appName, 'ChatGPT')]"
+}
+
+resource "zia_file_type_control_rules" "block_chatgpt_downloads" {
+  name               = "Block ChatGPT Downloads"
+  state              = "ENABLED"
+  order              = 1
+  rank               = 7
+  filtering_action   = "BLOCK"
+  operation          = "DOWNLOAD"
+  protocols          = ["HTTPS_RULE", "HTTP_RULE"]
+  file_types         = ["FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_WORD"]
+
+  cloud_applications = data.zia_cloud_applications.chatgpt_family.applications[*].app
+}
+```
+
+```hcl
+# Compose: server-side category filter + client-side JMESPath name match
+data "zia_cloud_applications" "ai_anthropic" {
+  policy_type = "cloud_application_policy"
+  app_class   = ["AI_ML"]
+  search      = "[?starts_with(appName, 'Anthropic')]"
+}
+
+resource "zia_file_type_control_rules" "block_anthropic_uploads" {
+  name               = "Block Anthropic Uploads"
+  state              = "ENABLED"
+  order              = 1
+  rank               = 7
+  filtering_action   = "BLOCK"
+  operation          = "UPLOAD"
+  protocols          = ["HTTPS_RULE", "HTTP_RULE"]
+  file_types         = ["FTCATEGORY_PDF_DOCUMENT"]
+
+  cloud_applications = [for app in data.zia_cloud_applications.ai_anthropic.applications : app["app"]]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:

@@ -157,6 +157,64 @@ resource "zia_cloud_app_control_rule" "mixed_rule" {
 }
 ```
 
+## Example Usage - JMESPath Filtering (`search`)
+
+The `search` argument applies a [JMESPath](https://jmespath.org/) expression directly to the action list returned by the API. The expression operates on the array of action strings — use `@` to refer to each element. The filter is applied **before** the ISOLATE split and `action_prefixes` filtering, so every computed output (`available_actions`, `available_actions_without_isolate`, `isolate_actions`, `filtered_actions`) reflects the narrowed result.
+
+```hcl
+# Keep only ALLOW_* actions
+data "zia_cloud_app_control_rule_actions" "allow_only" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+  search     = "[?starts_with(@, 'ALLOW_')]"
+}
+
+output "allow_actions" {
+  value = data.zia_cloud_app_control_rule_actions.allow_only.available_actions
+}
+```
+
+```hcl
+# Match any action containing "CHAT" (case-sensitive)
+data "zia_cloud_app_control_rule_actions" "chat_actions" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+  search     = "[?contains(@, 'CHAT')]"
+}
+```
+
+```hcl
+# Combine JMESPath with action_prefixes
+# JMESPath narrows the universe, action_prefixes refines the filtered_actions output.
+data "zia_cloud_app_control_rule_actions" "fine_grained" {
+  type            = "AI_ML"
+  cloud_apps      = ["CHATGPT_AI"]
+  search          = "[?!contains(@, 'ISOLATE')]"
+  action_prefixes = ["ALLOW", "DENY"]
+}
+
+resource "zia_cloud_app_control_rule" "this" {
+  name         = "ChatGPT - Allow/Deny Only"
+  type         = "AI_ML"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  applications = ["CHATGPT_AI"]
+  actions      = data.zia_cloud_app_control_rule_actions.fine_grained.filtered_actions
+}
+```
+
+```hcl
+# Negation: drop a specific action by name
+data "zia_cloud_app_control_rule_actions" "without_upload" {
+  type       = "AI_ML"
+  cloud_apps = ["CHATGPT_AI"]
+  search     = "[?@ != 'ALLOW_AI_ML_UPLOAD']"
+}
+```
+
+~> **Note:** Because the action list is a flat array of strings, JMESPath expressions reference each element with `@` (not a field name). Common useful functions: `starts_with(@, 'ALLOW_')`, `ends_with(@, '_WEB_USE')`, `contains(@, 'CHAT')`, `length(@) > \`20\``.
+
 ## Example Usage - File Sharing Applications
 
 ```hcl
@@ -228,6 +286,8 @@ The following arguments are supported:
   * `ESC` - Conditional access actions
 
   **Note**: The underscore is automatically added. Multiple prefixes can be specified to include multiple action types.
+
+* `search` - (String) Optional [JMESPath](https://jmespath.org/) expression applied to the action list returned by the API. Because actions are a flat array of strings, expressions reference each element with `@`. The filter is applied **before** the ISOLATE split and `action_prefixes` filtering, so every output attribute reflects the narrowed set. Examples: `"[?starts_with(@, 'ALLOW_')]"`, `"[?contains(@, 'CHAT')]"`, `"[?@ != 'ALLOW_AI_ML_UPLOAD']"`.
 
 ## Attributes Reference
 
@@ -508,6 +568,8 @@ The following arguments are supported:
 ### Optional
 
 * `action_prefixes` - (List of Strings) Optional list of action prefixes to filter results. Valid values: `ALLOW`, `DENY`, `BLOCK`, `CAUTION`, `ISOLATE`, `ESC`. The underscore is automatically added (e.g., `ALLOW` becomes `ALLOW_`). Multiple prefixes can be specified. When specified, results are available in the `filtered_actions` attribute.
+
+* `search` - (String) Optional [JMESPath](https://jmespath.org/) expression applied to the action list returned by the API. Because actions are a flat array of strings, expressions reference each element with `@` (for example `"[?starts_with(@, 'ALLOW_')]"`). The filter is applied **before** the ISOLATE split and `action_prefixes` filtering, so every output attribute reflects the narrowed set. See the [JMESPath Filtering example](#example-usage---jmespath-filtering-search) above.
 
 ## Attributes Reference
 
