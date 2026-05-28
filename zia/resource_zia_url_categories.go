@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,7 +24,6 @@ func resourceURLCategories() *schema.Resource {
 		ReadContext:   resourceURLCategoriesRead,
 		UpdateContext: resourceURLCategoriesUpdate,
 		DeleteContext: resourceURLCategoriesDelete,
-		CustomizeDiff: suppressURLCategoriesReorderDiff,
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				zClient := meta.(*Client)
@@ -88,9 +88,10 @@ func resourceURLCategories() *schema.Resource {
 				DiffSuppressFunc: noChangeInMultiLineText,  // Prevents unnecessary Terraform diffs
 			},
 			"urls": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:             schema.TypeList,
+				Optional:         true,
+				Elem:             &schema.Schema{Type: schema.TypeString},
+				DiffSuppressFunc: suppressURLCategoriesReorderDiff,
 			},
 			"keywords": {
 				Type:     schema.TypeSet,
@@ -598,23 +599,42 @@ func stringSliceToMap(slice []string) map[string]bool {
 	return result
 }
 
+// urlsReorderSuppressionCache memoises the per-resource result of
+// stringListsSetEqual across the many per-index invocations that the SDK
+// performs while evaluating the diff of a TypeList. Without the cache, a 20K
+// reorder would re-run the multiset comparison ~20K times. Entries are keyed
+// by the resource state ID and live for the duration of the process, which
+// matches Terraform's "one plan / apply per CLI invocation" model.
+var urlsReorderSuppressionCache sync.Map
+
 // suppressURLCategoriesReorderDiff treats the `urls` attribute as
-// order-independent. When the only change between the previous state and the
-// new configuration is element ordering, the planned new value is forced to
-// match the previous state so Terraform does not report a diff. Add/remove
-// changes still produce diffs as expected.
-func suppressURLCategoriesReorderDiff(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if !d.HasChange("urls") {
-		return nil
+// order-independent. The function is attached as a DiffSuppressFunc on the
+// `urls` schema and is invoked by the SDK for every changed index key
+// (`urls.0`, `urls.1`, ... `urls.#`). It evaluates the prior state against the
+// planned config as multisets and, when they are equal, returns true so the
+// per-index diff is suppressed and the overall list diff collapses to a
+// no-op. Add/remove changes still produce diffs as expected.
+func suppressURLCategoriesReorderDiff(k, _, _ string, d *schema.ResourceData) bool {
+	if k != "urls.#" && !strings.HasPrefix(k, "urls.") {
+		return false
 	}
+
+	id := d.Id()
+	if id != "" {
+		if cached, ok := urlsReorderSuppressionCache.Load(id); ok {
+			return cached.(bool)
+		}
+	}
+
 	oldRaw, newRaw := d.GetChange("urls")
 	oldList, _ := oldRaw.([]interface{})
 	newList, _ := newRaw.([]interface{})
+	result := stringListsSetEqual(oldList, newList)
 
-	if stringListsSetEqual(oldList, newList) {
-		return d.SetNew("urls", oldList)
+	if id != "" {
+		urlsReorderSuppressionCache.Store(id, result)
 	}
-	return nil
+	return result
 }
 
 // stringListsSetEqual returns true when two []interface{} lists contain the

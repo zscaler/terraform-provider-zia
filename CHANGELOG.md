@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.7.23 (May, 28 2026)
+
+### Notes
+
+- Release date: **(May, 28 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #578](https://github.com/zscaler/terraform-provider-zia/pull/578) - Fixed a regression in the `zia_url_categories` resource where `terraform plan` could fail immediately after `terraform import` (or any time the API returned the `urls` list in a different order than the one declared in HCL) on v4.7.22. Imports of large existing custom URL categories now plan cleanly, and re-ordering URLs in the configuration continues to produce no diff. Follow-up to [issue #575](https://github.com/zscaler/terraform-provider-zia/issues/575).
+
+- [PR #578](https://github.com/zscaler/terraform-provider-zia/pull/578) - Removed `MaxItems` from attribute `tenancy_profile_ids` and `cloud_app_instances` in the resource `zia_cloud_app_control_rule` to allow API own limit delegation. To find the exact number of tenant profiles or cloud app instances allowed per rule, please consult the [API documentation](https://automate.zscaler.com/docs/api-reference-and-guides/api-reference/zia/cloud-app-control-policy/web-application-rule-resource-add-rule)
+[issue #577](https://github.com/zscaler/terraform-provider-zia/issues/577).
+
 ## 4.7.22 (May, 27 2026)
 
 ### Notes
