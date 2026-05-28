@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.22``
+``Last updated: v4.7.23``
 
 ---
+
+## 4.7.23 (May, 28 2026)
+
+### Notes
+
+- Release date: **(May, 28 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #577](https://github.com/zscaler/terraform-provider-zia/pull/577) - Fixed a regression in the `zia_url_categories` resource where `terraform plan` could fail immediately after `terraform import` (or any time the API returned the `urls` list in a different order than the one declared in HCL) on v4.7.22. Imports of large existing custom URL categories now plan cleanly, and re-ordering URLs in the configuration continues to produce no diff. Follow-up to [issue #575](https://github.com/zscaler/terraform-provider-zia/issues/575).
 
 ## 4.7.22 (May, 27 2026)
 
