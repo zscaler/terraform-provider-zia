@@ -625,20 +625,31 @@ func flattenUserDepartment(userDepartment *common.UserDepartment) []interface{} 
 	return department
 }
 
-func flattenUserGroups(userGroups []common.UserGroups) []interface{} {
-	if userGroups == nil {
-		return nil
+func flattenUserGroups(list []common.UserGroups) []interface{} {
+	if len(list) == 0 {
+		// Return an empty slice instead of nil
+		return []interface{}{}
 	}
 
-	groupList := make([]interface{}, len(userGroups))
-	for i, wg := range userGroups {
-		grMap := make(map[string]interface{})
-		grMap["id"] = wg.ID
-		grMap["name"] = wg.Name
-		groupList[i] = grMap
+	ids := []int{}
+	for _, item := range list {
+		if item.ID == 0 && item.Name == "" {
+			continue
+		}
+		ids = append(ids, item.ID)
 	}
 
-	return groupList
+	if len(ids) == 0 {
+		// Again return []interface{}{} instead of nil
+		return []interface{}{}
+	}
+
+	// The rest remains the same
+	return []interface{}{
+		map[string]interface{}{
+			"id": ids,
+		},
+	}
 }
 
 func expandUserGroups(d *schema.ResourceData, key string) []common.UserGroups {

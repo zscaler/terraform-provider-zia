@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.7.24 (June, 1 2026)
+
+### Notes
+
+- Release date: **(June, 1 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #579](https://github.com/zscaler/terraform-provider-zia/pull/579) - Fixed the `zia_user_management` resource to read the user's `name` and `email` from the user list instead of the single-user lookup. On tenants migrated to Zidentity the single-user lookup returned these fields in an encoded form, which produced a perpetual in-place update on every `terraform plan`.
+
+- [PR #579](https://github.com/zscaler/terraform-provider-zia/pull/579) - Fixed a crash in the `zia_user_management` resource when reading a user that belongs to one or more groups.
+
 ## 4.7.23 (May, 28 2026)
 
 ### Notes

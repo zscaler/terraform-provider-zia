@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
@@ -192,7 +193,15 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 	if !ok {
 		return diag.FromErr(fmt.Errorf("no users id is set"))
 	}
-	resp, err := users.Get(ctx, service, id)
+
+	// Resolve the user from the list endpoint rather than the per-ID endpoint.
+	// On tenants migrated to Zidentity, the per-ID lookup returns the user's
+	// name and email in an encoded form, which produces spurious drift on every
+	// plan. The list endpoint returns these fields in plaintext. Looking the
+	// user up from the list also helps conserve the per-tenant GET budget,
+	// since a name-filtered list call is cheaper than repeated single-user
+	// reads across a large configuration.
+	resp, err := findUserByID(ctx, service, id, d.Get("name").(string))
 	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing user %s from state because it no longer exists in ZIA", d.Id())
@@ -200,6 +209,11 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 			return nil
 		}
 		return diag.FromErr(err)
+	}
+	if resp == nil {
+		log.Printf("[WARN] Removing user %s from state because it no longer exists in ZIA", d.Id())
+		d.SetId("")
+		return nil
 	}
 
 	log.Printf("[INFO] Getting user:\n%+v\n", resp)
@@ -219,6 +233,42 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return nil
+}
+
+// findUserByID resolves a user by numeric ID from the list endpoint, which
+// returns name and email in plaintext (the per-ID endpoint returns them
+// encoded on Zidentity-migrated tenants). When a name hint is available it is
+// passed as a server-side filter to keep the candidate pool small; if the
+// user is not present in that narrowed pool (for example because the stored
+// name drifted), the lookup falls back to an unfiltered list scan. Returns
+// (nil, nil) when no user with the given ID exists.
+func findUserByID(ctx context.Context, service *zscaler.Service, id int, nameHint string) (*users.Users, error) {
+	match := func(list []users.Users) *users.Users {
+		for i := range list {
+			if list[i].ID == id {
+				u := list[i]
+				return &u
+			}
+		}
+		return nil
+	}
+
+	if nameHint != "" {
+		filtered, err := users.GetAllUsers(ctx, service, &users.GetAllUsersFilterOptions{Name: nameHint})
+		if err != nil {
+			return nil, err
+		}
+		if found := match(filtered); found != nil {
+			return found, nil
+		}
+		log.Printf("[DEBUG] user %d not found in name-filtered pool (name=%q); falling back to full list", id, nameHint)
+	}
+
+	allUsers, err := users.GetAllUsers(ctx, service, nil)
+	if err != nil {
+		return nil, err
+	}
+	return match(allUsers), nil
 }
 
 func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
