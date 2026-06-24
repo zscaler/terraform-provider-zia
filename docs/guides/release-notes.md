@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.24``
+``Last updated: v4.7.25``
 
 ---
+
+## 4.7.25 (June, 23 2026)
+
+### Notes
+
+- Release date: **(June, 23 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #582](https://github.com/zscaler/terraform-provider-zia/pull/582) - Fixed a crash in the `zia_user_management` data source when reading a user that belongs to one or more groups.
 
 ## 4.7.24 (June, 1 2026)
 
