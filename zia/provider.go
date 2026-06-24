@@ -293,6 +293,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_email_profile":                                 dataSourceEmailProfile(),
 			"zia_ips_signature_rules":                           dataSourceIPSSignatureRules(),
 			"zia_supported_browser_version":                     dataSourceSupportedBrowserVersion(),
+			"zia_adaptive_access_profile":                       dataSourceAdaptiveAccessProfile(),
 		},
 	}
 

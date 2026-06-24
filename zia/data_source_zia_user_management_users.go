@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/users"
 )
 
@@ -275,10 +276,30 @@ func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("groups", flattenUserGroups(resp.Groups)); err != nil {
+	if err := d.Set("groups", flattenUserGroupsDetailed(resp.Groups)); err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] User found: ID=%d, Name=%s\n", resp.ID, resp.Name)
 	return nil
+}
+
+// flattenUserGroupsDetailed flattens the user's group membership for the data
+// source schema, which exposes one block per group with scalar fields. This is
+// intentionally separate from the resource flatten (flattenUserGroups), whose
+// schema nests the group IDs as a single set under one block.
+func flattenUserGroupsDetailed(list []common.UserGroups) []interface{} {
+	if len(list) == 0 {
+		return []interface{}{}
+	}
+	groups := make([]interface{}, 0, len(list))
+	for _, g := range list {
+		groups = append(groups, map[string]interface{}{
+			"id":       g.ID,
+			"name":     g.Name,
+			"idp_id":   g.IdpID,
+			"comments": g.Comments,
+		})
+	}
+	return groups
 }

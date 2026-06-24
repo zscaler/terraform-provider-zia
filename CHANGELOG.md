@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.7.25 (June, 23 2026)
+
+### Notes
+
+- Release date: **(June, 23 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #582](https://github.com/zscaler/terraform-provider-zia/pull/582) Added new datasource `zia_adaptive_access_profile`.
+
+### Bug Fixes
+
+- [PR #582](https://github.com/zscaler/terraform-provider-zia/pull/582) - Fixed a crash in the `zia_user_management` data source when reading a user that belongs to one or more groups.
+
 ## 4.7.24 (June, 1 2026)
 
 ### Notes
