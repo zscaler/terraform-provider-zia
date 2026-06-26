@@ -131,6 +131,70 @@ resource "zia_url_filtering_rules" "this" {
     user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE" ]
 }
 ```
+## Example Usage - URL Filtering with HTTP Header Control Profile
+```hcl
+resource "zia_url_filtering_rules" "this" {
+  name              = "Rule01"
+  description       = "Rule01"
+  state             = "ENABLED"
+  action            = "ALLOW"
+  order             = 1
+  rank              = 7
+  protocols         = ["ANY_RULE"]
+  url_categories    = [zia_url_categories.this.id]
+  device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  request_methods   = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  user_agent_types  = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+  http_header_profiles {
+      id = [ zia_http_header_profile.this.id ]
+    }
+  http_header_action_profiles {
+      id = [ zia_http_header_action_profile.this.id ]
+    }
+}
+
+resource "zia_http_header_profile" "this" {
+  name        = "Profile01"
+  description = "Example header profile"
+
+  http_header_profile_criteria {
+    header   = "ORIGIN"
+    cloud_app_bitmap = ["CHATGPT_AI"]
+    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+  }
+  http_header_profile_criteria {
+    header   = "REFERER"
+    cloud_app_bitmap = ["CHATGPT_AI"]
+    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+  }
+  http_header_profile_criteria {
+    header   = "USERAGENT"
+    user_agent_bitmap = "FIREFOX"
+    operator = "UAVERSIONEQ"
+    user_agent_version = "123.0"
+  }
+}
+
+resource "zia_http_header_action_profile" "this" {
+  name = "ActionProfile01"
+  description = "Example header action profile"
+
+  http_header_action_profile_keys {
+    key = "X-Forwarded-For"
+    value = "10.0.0.1"
+  }
+
+  http_header_action_profile_keys {
+    key = "User-Agent"
+    value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+  }
+
+  http_header_action_profile_keys {
+    key = "Accept"
+    value = "application/json"
+  }
+}
+```
 
 ## Argument Reference
 
@@ -212,6 +276,12 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `source_ip_groups` - (List of Object) The source ip groups to which the URL Filtering policy rule applies
   * `id` - (Optional) Source IP address groups for which the rule is applicable.
+
+* `http_header_profiles` - (List of Object) List of HTTP header profiles.
+  * `id` - (Optional) ID of the HTTP header profile. See the [HTTP Header Control API](https://help.zscaler.com/legacy-apis/http-header-control#/httpHeaderProfile-post). Use the resource or data source `zia_http_header_profile`for referencing a profile into the rule.
+
+* `http_header_action_profiles` - (List of Object) List of HTTP header insertion profile.
+  * `id` - (Optional) ID of the HTTP header insertion profile. See the [HTTP Header Control API](https://help.zscaler.com/legacy-apis/http-header-control#/httpHeaderActionProfile-post). Use the resource or data source `zia_http_header_action_profile`for referencing a profile into the rule.
 
 * `workload_groups` (Optional) The list of preconfigured workload groups to which the policy must be applied
   * `id` - (Optional) A unique identifier assigned to the workload group

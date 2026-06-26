@@ -188,6 +188,8 @@ func ZIAProvider() *schema.Provider {
 			"zia_dc_exclusions":                                 resourceDCExclusions(),
 			"zia_email_profile":                                 resourceEmailProfile(),
 			"zia_ips_signature_rules":                           resourceIPSSignatureRules(),
+			"zia_http_header_action_profile":                    resourceHttpHeaderActionProfile(),
+			"zia_http_header_profile":                           resourceHttpHeaderProfile(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -294,6 +296,8 @@ func ZIAProvider() *schema.Provider {
 			"zia_ips_signature_rules":                           dataSourceIPSSignatureRules(),
 			"zia_supported_browser_version":                     dataSourceSupportedBrowserVersion(),
 			"zia_adaptive_access_profile":                       dataSourceAdaptiveAccessProfile(),
+			"zia_http_header_action_profile":                    dataSourceHttpHeaderActionProfile(),
+			"zia_http_header_profile":                           dataSourceHttpHeaderProfile(),
 		},
 	}
 

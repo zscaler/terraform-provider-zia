@@ -196,6 +196,12 @@ const (
 	RuleLabelDescription = "testAcc_rule_label"
 )
 
+// HTTP Header Control
+const (
+	HTTPHeaderActionProfileDescription = "testAcc_http_header_action_profile"
+	HTTPHeaderProfileDescription       = "testAcc_http_header_profile"
+)
+
 // IPS Signature Rules
 const (
 	IPSSignatureRuleName        = "testAcc_ips_signature_rule"

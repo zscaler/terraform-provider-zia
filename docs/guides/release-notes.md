@@ -12,9 +12,23 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.25``
+``Last updated: v4.7.26``
 
 ---
+
+## 4.7.26 (June, 26 2026)
+
+### Notes
+
+- Release date: **(June, 26 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #583](https://github.com/zscaler/terraform-provider-zia/pull/583) - Added new Resource and Data sources for HTTP Header Control
+  - `zia_http_header_profile` and `zia_http_header_action_profile`
+
+- [PR #583](https://github.com/zscaler/terraform-provider-zia/pull/583) - The `zia_url_categories` resource now automatically detaches a custom URL category from any rules that reference it before deleting the category. This removes the need to manually remove the category from rules first and avoids the API error returned when deleting a category that is still in use.
 
 ## 4.7.25 (June, 23 2026)
 

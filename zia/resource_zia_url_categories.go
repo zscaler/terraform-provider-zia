@@ -504,6 +504,12 @@ func resourceURLCategoriesDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	log.Printf("[INFO] Deleting custom url category ID: %v\n", (d.Id()))
 
+	// The API refuses to delete a category that is still attached to a rule.
+	// Detach it from every rule-based resource that can reference it first.
+	if err := detachURLCategoryFromAllResources(ctx, zClient, d.Id()); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if _, err := urlcategories.DeleteURLCategories(ctx, service, d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
