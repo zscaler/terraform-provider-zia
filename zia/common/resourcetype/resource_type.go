@@ -46,4 +46,6 @@ const (
 	NSSServer                       = "zia_nss_server"
 	EmailProfile                    = "zia_email_profile"
 	IPSSignatureRules               = "zia_ips_signature_rules"
+	HTTPHeaderActionProfile         = "zia_http_header_action_profile"
+	HTTPHeaderProfile               = "zia_http_header_profile"
 )

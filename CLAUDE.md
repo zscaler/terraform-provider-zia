@@ -29,6 +29,54 @@ zClient := meta.(*Client)
 service := zClient.Service
 ```
 
+## Resource ID Convention (string `id` + typed `<resource>_id`)
+
+The ZIA API identifies objects with an integer ID, but Terraform requires the
+resource's internal `id` to be a string. Every resource therefore exposes two
+attributes:
+
+- `id` — `schema.TypeString`, `Computed: true`. This is Terraform's internal
+  resource ID. It is set with `d.SetId(strconv.Itoa(resp.ID))` and is what users
+  reference and import against.
+- `<resource>_id` (e.g. `rule_label_id`, `header_profile_id`) —
+  `schema.TypeInt`, `Computed: true`. This holds the API's native integer ID and
+  is what the Create/Read/Update/Delete paths pass to the SDK.
+
+Read the integer ID back out with the shared helper
+`getIntFromResourceData(d, "<resource>_id")` (in `utils.go`) — never parse
+`d.Id()` ad hoc in the CRUD body. The string↔int conversion lives only at the
+boundaries: `d.SetId(strconv.Itoa(resp.ID))` writes the string form, and the
+importer parses `d.Id()` with `strconv.ParseInt` (falling back to a name lookup
+when the import key is not numeric).
+
+```go
+"id": {
+    Type:     schema.TypeString,
+    Computed: true,
+},
+"rule_label_id": {
+    Type:     schema.TypeInt,
+    Computed: true,
+},
+```
+
+```go
+// CRUD bodies read the typed integer ID, not d.Id():
+id, ok := getIntFromResourceData(d, "rule_label_id")
+
+// Create/Read set both forms from the API response:
+d.SetId(strconv.Itoa(resp.ID))
+_ = d.Set("rule_label_id", resp.ID)
+```
+
+`resource_zia_rule_labels.go` is the canonical reference implementation. Do not
+reinvent the conversion or expose the integer ID as the Terraform `id`.
+
+Avoid `Computed: true` on input attributes that the user fully controls. Use it
+only where the API genuinely assigns or defaults the value (the two ID fields
+above, API-defaulted fields, and API-assigned nested `id`s) — see "Schema
+Conventions".
+
 ## Rule-Based Resources — Critical Conventions
 
 Rule-based resources include: `zia_ssl_inspection_rules`, `zia_firewall_filtering_rule`, `zia_firewall_dns_rules`, `zia_firewall_ips_rules`, `zia_cloud_app_control_rules`, `zia_url_filtering_rules`, `zia_dlp_web_rules`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_sandbox_rules`, `zia_bandwidth_control_rules`, `zia_traffic_capture_rules`, `zia_file_type_control_rules`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`.
@@ -142,6 +190,56 @@ All rule-based resource docs (`docs/resources/zia_*_rule*.md`) MUST include thes
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 ```
+
+## Detach-Before-Delete for Shared/Referenced Objects
+
+The ZIA API refuses to delete an object that is still referenced by a rule
+(it returns `RESOURCE_IN_USE` / "associated with N rule(s)"). Resources whose
+objects can be attached to rules must therefore detach themselves from every
+referencing rule in their `Delete` before calling the SDK delete.
+
+All detach helpers live in `utils.go`. Do not create a separate file for them,
+and do not reimplement the loop per resource.
+
+There are three shapes, depending on how the rule stores the reference:
+
+1. **`[]common.IDNameExtensions` on URL filtering rules** — use
+   `DetachURLFilteringRuleRef(ctx, client, id, label, getResources, setResources)`.
+   The `get`/`set` closures select the field (e.g. `r.HTTPHeaderProfiles`,
+   `r.HTTPHeaderActionProfiles`). Used by `zia_http_header_profile` and
+   `zia_http_header_action_profile`.
+
+2. **`[]common.IDNameExtensions` on firewall filtering / DLP web rules** — use
+   the existing `DetachRuleIDNameExtensions` / `DetachDLPEngineIDNameExtensions`
+   helpers (same closure shape, different rule type).
+
+3. **URL categories (attached across many rule types)** — call
+   `detachURLCategoryFromAllResources(ctx, client, categoryID)` from the
+   `zia_url_categories` `Delete`. It fans out **concurrently** to every rule
+   type that can reference a category and only issues a write (`Update`) for a
+   rule that actually contains the category — rule types where the category is
+   not attached incur a single read and no writes. A single settle delay runs
+   at the end only if at least one rule was updated.
+
+   The per-resource detachers it dispatches to handle two storage shapes:
+   - **`[]string` of category IDs** (url_filtering, ssl_inspection, sandbox,
+     file_type_control, bandwidth_classes, ftp_control_policy, and the mirrored
+     `dest_ip_categories`/`res_categories` pair on firewall_dns / firewall_ips).
+     Use the shared `removeStringFromSlice` primitive; for the mirrored pair,
+     strip the ID from **both** fields so the API's request/response match
+     requirement stays satisfied.
+   - **`[]common.IDNameExtensions`** (dlp_web_rules), matched on the nested
+     numeric `id` (or `name`).
+
+When adding a new rule resource that can reference a URL category, add a
+`detachCategoryFrom<Resource>` function in `utils.go` and register it in the
+`detachURLCategoryFromAllResources` dispatcher slice. When adding a new
+non-category object that can be attached to URL filtering rules, reuse
+`DetachURLFilteringRuleRef` with field closures — do not write a new loop.
+
+Performance rule: never issue an `Update` for a rule that does not actually
+reference the object being deleted. Discovery reads (`GetAll` per rule type) are
+acceptable and should run concurrently; writes must be gated on an actual match.
 
 ## Common Troubleshooting
 

@@ -16,9 +16,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/activation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/bandwidth_control/bandwidth_classes"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/filetypecontrol"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ftp_control_policy"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sslinspection"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
 )
 
 func intPtr(n int) *int {
@@ -146,6 +154,68 @@ func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, res
 	return nil
 }
 
+// DetachURLFilteringRuleRef removes a referenced object (by ID) from a
+// []common.IDNameExtensions field on every URL filtering rule that references
+// it, so the object can be deleted without the API returning RESOURCE_IN_USE.
+// The getResources/setResources closures select which field is swept, allowing
+// the same routine to serve any url_filtering association (e.g. HTTP header
+// profiles and HTTP header action profiles).
+func DetachURLFilteringRuleRef(ctx context.Context, client *Client, id int, resource string, getResources func(*urlfilteringpolicies.URLFilteringRule) []common.IDNameExtensions, setResources func(*urlfilteringpolicies.URLFilteringRule, []common.IDNameExtensions)) error {
+	service := client.Service
+
+	log.Printf("[INFO] Detaching %s reference from URL filtering rules: %d\n", resource, id)
+	rules, err := urlfilteringpolicies.GetAll(ctx, service)
+	if err != nil {
+		log.Printf("[ERROR] Error while getting URL filtering rules for detach: %v", err)
+		return err
+	}
+
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		ids := []common.IDNameExtensions{}
+		shouldUpdate := false
+		for _, ref := range getResources(rule) {
+			if ref.ID != id {
+				ids = append(ids, ref)
+			} else {
+				shouldUpdate = true
+			}
+		}
+		if !shouldUpdate {
+			continue
+		}
+		setResources(rule, ids)
+		if _, err := urlfilteringpolicies.Update(ctx, service, rule.ID, rule); err != nil {
+			return fmt.Errorf("failed detaching %s %d from URL filtering rule %d: %w", resource, id, rule.ID, err)
+		}
+		updated = true
+	}
+
+	// Give the API a moment to settle the associations before the caller issues
+	// the delete. A single settle is sufficient regardless of how many rules
+	// were updated.
+	if updated {
+		time.Sleep(time.Second * 5)
+	}
+	return nil
+}
+
+// removeStringFromSlice returns a copy of in with every occurrence of target
+// removed, plus whether any element was removed.
+func removeStringFromSlice(in []string, target string) ([]string, bool) {
+	out := make([]string, 0, len(in))
+	removed := false
+	for _, v := range in {
+		if v == target {
+			removed = true
+			continue
+		}
+		out = append(out, v)
+	}
+	return out, removed
+}
+
 func DetachDLPEngineIDNameExtensions(ctx context.Context, client *Client, id int, resource string, getResources func(*dlp_web_rules.WebDLPRules) []common.IDNameExtensions, setResources func(*dlp_web_rules.WebDLPRules, []common.IDNameExtensions)) error {
 	service := client.Service
 
@@ -179,6 +249,296 @@ func DetachDLPEngineIDNameExtensions(ctx context.Context, client *Client, id int
 		}
 	}
 	return nil
+}
+
+// detachURLCategoryFromAllResources removes a URL category (matched by its
+// string ID, e.g. "CUSTOM_08") from every rule-based resource that can
+// reference it, so the category can be deleted without the API returning
+// RESOURCE_IN_USE.
+//
+// Each rule type is checked concurrently. A rule is only updated (a write) when
+// the category is actually present on it; rule types where the category is not
+// attached incur a single read (GetAll) and no writes. A single settle delay is
+// applied at the end if any detach write occurred.
+func detachURLCategoryFromAllResources(ctx context.Context, client *Client, categoryID string) error {
+	detachers := []func(context.Context, *Client, string) (bool, error){
+		detachCategoryFromURLFilteringRules,
+		detachCategoryFromSSLInspectionRules,
+		detachCategoryFromSandboxRules,
+		detachCategoryFromFileTypeControlRules,
+		detachCategoryFromBandwidthClasses,
+		detachCategoryFromFirewallDNSRules,
+		detachCategoryFromFirewallIPSRules,
+		detachCategoryFromFTPControlPolicy,
+		detachCategoryFromDLPWebRules,
+	}
+
+	type result struct {
+		updated bool
+		err     error
+	}
+	results := make(chan result, len(detachers))
+	for _, fn := range detachers {
+		go func(f func(context.Context, *Client, string) (bool, error)) {
+			updated, err := f(ctx, client, categoryID)
+			results <- result{updated: updated, err: err}
+		}(fn)
+	}
+
+	anyUpdated := false
+	var firstErr error
+	for range detachers {
+		r := <-results
+		if r.err != nil && firstErr == nil {
+			firstErr = r.err
+		}
+		if r.updated {
+			anyUpdated = true
+		}
+	}
+	if firstErr != nil {
+		return firstErr
+	}
+
+	// Give the API a moment to settle the associations before the caller issues
+	// the delete. A single settle is sufficient regardless of how many rules
+	// across how many resource types were updated.
+	if anyUpdated {
+		time.Sleep(time.Second * 5)
+	}
+	return nil
+}
+
+func detachCategoryFromURLFilteringRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := urlfilteringpolicies.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting URL filtering rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		c1, r1 := removeStringFromSlice(rule.URLCategories, categoryID)
+		c2, r2 := removeStringFromSlice(rule.URLCategories2, categoryID)
+		if !r1 && !r2 {
+			continue
+		}
+		rule.URLCategories = c1
+		rule.URLCategories2 = c2
+		log.Printf("[INFO] Detaching URL category %q from URL filtering rule %d\n", categoryID, rule.ID)
+		if _, err := urlfilteringpolicies.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from URL filtering rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+func detachCategoryFromSSLInspectionRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := sslinspection.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting SSL inspection rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		c, removed := removeStringFromSlice(rule.URLCategories, categoryID)
+		if !removed {
+			continue
+		}
+		rule.URLCategories = c
+		log.Printf("[INFO] Detaching URL category %q from SSL inspection rule %d\n", categoryID, rule.ID)
+		if _, err := sslinspection.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from SSL inspection rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+func detachCategoryFromSandboxRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := sandbox_rules.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting sandbox rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		c, removed := removeStringFromSlice(rule.URLCategories, categoryID)
+		if !removed {
+			continue
+		}
+		rule.URLCategories = c
+		log.Printf("[INFO] Detaching URL category %q from sandbox rule %d\n", categoryID, rule.ID)
+		if _, err := sandbox_rules.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from sandbox rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+func detachCategoryFromFileTypeControlRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := filetypecontrol.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting file type control rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		c, removed := removeStringFromSlice(rule.URLCategories, categoryID)
+		if !removed {
+			continue
+		}
+		rule.URLCategories = c
+		log.Printf("[INFO] Detaching URL category %q from file type control rule %d\n", categoryID, rule.ID)
+		if _, err := filetypecontrol.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from file type control rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+func detachCategoryFromBandwidthClasses(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	classes, err := bandwidth_classes.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting bandwidth classes for category detach: %w", err)
+	}
+	updated := false
+	for i := range classes {
+		class := &classes[i]
+		c, removed := removeStringFromSlice(class.UrlCategories, categoryID)
+		if !removed {
+			continue
+		}
+		class.UrlCategories = c
+		log.Printf("[INFO] Detaching URL category %q from bandwidth class %d\n", categoryID, class.ID)
+		if _, _, err := bandwidth_classes.Update(ctx, service, class.ID, class); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from bandwidth class %d: %w", categoryID, class.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+// detachCategoryFromFirewallDNSRules sweeps both the request (DestIpCategories)
+// and response (ResCategories) category fields. The API requires these two to
+// stay mirrored, so a detach must strip the ID from both.
+func detachCategoryFromFirewallDNSRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting firewall DNS rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		dest, r1 := removeStringFromSlice(rule.DestIpCategories, categoryID)
+		res, r2 := removeStringFromSlice(rule.ResCategories, categoryID)
+		if !r1 && !r2 {
+			continue
+		}
+		rule.DestIpCategories = dest
+		rule.ResCategories = res
+		log.Printf("[INFO] Detaching URL category %q from firewall DNS rule %d\n", categoryID, rule.ID)
+		if _, err := firewalldnscontrolpolicies.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from firewall DNS rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+// detachCategoryFromFirewallIPSRules sweeps both the request (DestIpCategories)
+// and response (ResCategories) category fields, which the API requires to stay
+// mirrored.
+func detachCategoryFromFirewallIPSRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := ips_policies.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting firewall IPS rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		dest, r1 := removeStringFromSlice(rule.DestIpCategories, categoryID)
+		res, r2 := removeStringFromSlice(rule.ResCategories, categoryID)
+		if !r1 && !r2 {
+			continue
+		}
+		rule.DestIpCategories = dest
+		rule.ResCategories = res
+		log.Printf("[INFO] Detaching URL category %q from firewall IPS rule %d\n", categoryID, rule.ID)
+		if _, err := ips_policies.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from firewall IPS rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
+}
+
+// detachCategoryFromFTPControlPolicy handles the FTP control policy, which is a
+// singleton (no per-rule list); it is read once and updated only if it carries
+// the category.
+func detachCategoryFromFTPControlPolicy(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	policy, err := ftp_control_policy.GetFTPControlPolicy(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting FTP control policy for category detach: %w", err)
+	}
+	if policy == nil {
+		return false, nil
+	}
+	c, removed := removeStringFromSlice(policy.UrlCategories, categoryID)
+	if !removed {
+		return false, nil
+	}
+	policy.UrlCategories = c
+	log.Printf("[INFO] Detaching URL category %q from FTP control policy\n", categoryID)
+	if _, _, err := ftp_control_policy.UpdateFTPControlPolicy(ctx, service, policy); err != nil {
+		return false, fmt.Errorf("failed detaching URL category %q from FTP control policy: %w", categoryID, err)
+	}
+	return true, nil
+}
+
+// detachCategoryFromDLPWebRules handles DLP web rules, where the URL category is
+// stored as []common.IDNameExtensions (nested objects) rather than a string
+// list. The category's string ID is compared against each entry's numeric ID
+// rendered as a string.
+func detachCategoryFromDLPWebRules(ctx context.Context, client *Client, categoryID string) (bool, error) {
+	service := client.Service
+	rules, err := dlp_web_rules.GetAll(ctx, service)
+	if err != nil {
+		return false, fmt.Errorf("error getting DLP web rules for category detach: %w", err)
+	}
+	updated := false
+	for i := range rules {
+		rule := &rules[i]
+		kept := make([]common.IDNameExtensions, 0, len(rule.URLCategories))
+		removed := false
+		for _, cat := range rule.URLCategories {
+			if fmt.Sprintf("%d", cat.ID) == categoryID || cat.Name == categoryID {
+				removed = true
+				continue
+			}
+			kept = append(kept, cat)
+		}
+		if !removed {
+			continue
+		}
+		rule.URLCategories = kept
+		log.Printf("[INFO] Detaching URL category %q from DLP web rule %d\n", categoryID, rule.ID)
+		if _, err := dlp_web_rules.Update(ctx, service, rule.ID, rule); err != nil {
+			return updated, fmt.Errorf("failed detaching URL category %q from DLP web rule %d: %w", categoryID, rule.ID, err)
+		}
+		updated = true
+	}
+	return updated, nil
 }
 
 func ValidateLatitude(val interface{}, _ string) (warns []string, errs []error) {
