@@ -33,6 +33,14 @@ func TestHydrateURLFilteringRuleCBIProfile(t *testing.T) {
 			wantID: "existing",
 		},
 		{
+			name: "nonzero profile id leaves sdk fallback authoritative",
+			rule: urlfilteringpolicies.URLFilteringRule{
+				ID:           16,
+				Action:       "ISOLATE",
+				CBIProfileID: 9001,
+			},
+		},
+		{
 			name: "list hydrates profile when detail omits profile and profile id",
 			rule: urlfilteringpolicies.URLFilteringRule{
 				ID:           13,

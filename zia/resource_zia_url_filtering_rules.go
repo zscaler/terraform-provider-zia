@@ -630,7 +630,9 @@ func hydrateURLFilteringRuleCBIProfile(
 	rule *urlfilteringpolicies.URLFilteringRule,
 	list urlFilteringRulesLister,
 ) error {
-	if rule.Action != "ISOLATE" || (rule.CBIProfile != nil && rule.CBIProfile.ID != "") {
+	if rule.Action != "ISOLATE" ||
+		(rule.CBIProfile != nil && rule.CBIProfile.ID != "") ||
+		rule.CBIProfileID != 0 {
 		return nil
 	}
 
