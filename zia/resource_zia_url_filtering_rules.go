@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
@@ -480,6 +481,17 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 
 		return diag.FromErr(err)
 	}
+	if err := hydrateURLFilteringRuleCBIProfile(
+		ctx,
+		service,
+		resp,
+		urlfilteringpolicies.GetAll,
+	); err != nil {
+		// Retain the established refresh behavior when the fallback list request
+		// fails: existing state can still supply the profile, while a fresh import
+		// remains safely visible as drift to its caller.
+		log.Printf("[DEBUG] Unable to hydrate cbi_profile from URL filtering rule list: %v", err)
+	}
 
 	processedSrcCountries := make([]string, len(resp.SourceCountries))
 	for i, country := range resp.SourceCountries {
@@ -533,8 +545,8 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("ciparule", resp.Ciparule)
 
-	// Workaround for API bug: GET does not return the cbiProfile object for ISOLATE rules,
-	// only cbiProfileId (integer). Preserve the cbi_profile from state when the API doesn't return it.
+	// Preserve prior state only when neither the detail nor list response returned
+	// the cbiProfile object for an ISOLATE rule.
 	if resp.Action == "ISOLATE" && (resp.CBIProfile == nil || resp.CBIProfile.ID == "") {
 		log.Printf("[DEBUG] API did not return cbi_profile for ISOLATE rule %d, preserving existing state", resp.ID)
 	} else {
@@ -603,6 +615,37 @@ func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 		return diag.FromErr(fmt.Errorf("error setting workload_groups: %s", err))
+	}
+	return nil
+}
+
+type urlFilteringRulesLister func(
+	context.Context,
+	*zscaler.Service,
+) ([]urlfilteringpolicies.URLFilteringRule, error)
+
+func hydrateURLFilteringRuleCBIProfile(
+	ctx context.Context,
+	service *zscaler.Service,
+	rule *urlfilteringpolicies.URLFilteringRule,
+	list urlFilteringRulesLister,
+) error {
+	if rule.Action != "ISOLATE" || (rule.CBIProfile != nil && rule.CBIProfile.ID != "") {
+		return nil
+	}
+
+	rules, err := list(ctx, service)
+	if err != nil {
+		return fmt.Errorf("list URL filtering rules to recover cbi_profile for rule %d: %w", rule.ID, err)
+	}
+	for i := range rules {
+		candidate := &rules[i]
+		if candidate.ID != rule.ID || candidate.CBIProfile == nil || candidate.CBIProfile.ID == "" {
+			continue
+		}
+		profile := *candidate.CBIProfile
+		rule.CBIProfile = &profile
+		return nil
 	}
 	return nil
 }
