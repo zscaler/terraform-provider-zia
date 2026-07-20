@@ -143,6 +143,8 @@ See the [File Type Control API](https://help.zscaler.com/zia/file-type-control-p
 
 * `device_trust_levels` - (List of Strings) List of device trust levels for which the rule must be applied. While the High Trust, Medium Trust, or Low Trust evaluation is applicable only to Zscaler Client Connector traffic, Unknown evaluation applies to all traffic. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
+* `browser_eun_template_id` - (Optional) Browser notification template to which the rule applies. To retrieve the list of End User Templates use the data source [zia_eun_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_template_product).
+
 * `locations` - (Optional) You can manually select up to `8` locations. When not used it implies `Any` to apply the rule to all groups.
       - `id` - (String) Identifier that uniquely identifies an entity
 

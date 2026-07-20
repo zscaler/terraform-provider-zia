@@ -379,8 +379,10 @@ The following arguments are supported:
 * `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post). To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
 * `eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
-* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule.
-* `browser_eun_template_id` - (Integer) The ID of the Browser Enhanced User Notification (EUN) template associated with the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule. To retrieve the list of End User Templates use the data source [zia_eun_user_confirmation_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_user_confirmation_template_product).
+
+* `browser_eun_template_id` - (Integer) The ID of the Browser Enhanced User Notification (EUN) template associated with the rule. To retrieve the list of End User Templates use the data source [zia_eun_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_template_product).
+
 * `tenancy_profile_ids` - (List of Numbers) This is an immutable reference to an entity. which mainly consists of id and name.
   * `id` - (Number) Identifier that uniquely identifies an entity
 

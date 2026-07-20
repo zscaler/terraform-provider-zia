@@ -93,6 +93,7 @@ provider "zia" {
 ```
 
 **NOTE**: The `zscaler_cloud` is optional for production comercial Clouds and ONLY required when authenticating to other environments. Currently the only supported value are:
+
 - Production Commericial Clouds: The cloud parameter `IS NOT` required.
 - Test (Beta) Commercial Clouds: `beta`
 - FedRAMP Clouds: `gov` or `govus`

@@ -13,7 +13,7 @@ description: |-
 * [Official documentation](https://help.zscaler.com/zia/about-file-type-control)
 * [API documentation](https://help.zscaler.com/zia/file-type-control-policy#/fileTypeCategories-get)
 
-Use the **zia_file_type_categories** data source to retrieve the list of all file types, including predefined and custom file types, available for configuring rule conditions in different ZIA policies. You can retrieve predefined file types for specific file categories of policies. This data source can be referenced within the `zia_dlp_web_rules` in the attribute `file_type_categories`.
+Use the **zia_file_type_categories** data source to retrieve the list of all file types, including predefined and custom file types, available for configuring rule conditions in different ZIA policies. You can retrieve predefined file types for specific file categories of policies. This data source can be referenced within the `zia_dlp_web_rules` or  `zia_endpoint_dlp_rules` in the attribute `file_type_categories` or `file_types` respectively.
 
 The data source supports two modes:
 **Single Result Mode**: Retrieve a specific file type by `id` or `name` (returns `id`, `name`, `parent` fields)

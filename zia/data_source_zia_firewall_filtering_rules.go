@@ -48,6 +48,11 @@ func firewallFilteringRuleElementSchema() map[string]*schema.Schema {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
+		"exclude_context_shield_end_point": {
+			Type:        schema.TypeBool,
+			Computed:    true,
+			Description: "If set to true, the context shield is excluded from the rule",
+		},
 		"locations": {
 			Type:     schema.TypeList,
 			Computed: true,
@@ -203,6 +208,46 @@ func firewallFilteringRuleElementSchema() map[string]*schema.Schema {
 				},
 			},
 		},
+		"end_point_applications": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "The list of endpoint applications to which the DLP policy rule must be applied.",
+			Elem:        dataSourceEndpointDLPApplicationsSchema(),
+		},
+		"end_point_application_groups": {
+			Type:        schema.TypeList,
+			Computed:    true,
+			Description: "The list of endpoint application groups to which the DLP policy rule must be applied.",
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"group_id": {
+						Type:     schema.TypeInt,
+						Computed: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"description": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"mod_uid": {
+						Type:     schema.TypeInt,
+						Computed: true,
+					},
+					"last_modified_time": {
+						Type:     schema.TypeInt,
+						Computed: true,
+					},
+					"end_point_applications": {
+						Type:     schema.TypeList,
+						Computed: true,
+						Elem:     dataSourceEndpointDLPApplicationsSchema(),
+					},
+				},
+			},
+		},
 		"workload_groups": {
 			Type:        schema.TypeList,
 			Computed:    true,
@@ -216,6 +261,16 @@ func firewallFilteringRuleElementSchema() map[string]*schema.Schema {
 		"predefined": {
 			Type:     schema.TypeBool,
 			Computed: true,
+		},
+		"is_eun_enabled": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Description: "If set to true, Web EUN is enabled for the rule",
+		},
+		"eun_template_id": {
+			Type:        schema.TypeInt,
+			Optional:    true,
+			Description: "The EUN template ID associated with the rule",
 		},
 	}
 }
@@ -640,6 +695,7 @@ func setFirewallFilteringRuleTopLevel(d *schema.ResourceData, resp *filteringrul
 	_ = d.Set("rank", resp.Rank)
 	_ = d.Set("access_control", resp.AccessControl)
 	_ = d.Set("enable_full_logging", resp.EnableFullLogging)
+	_ = d.Set("exclude_context_shield_end_point", resp.ExcludeContextShieldEndPoint)
 	_ = d.Set("action", resp.Action)
 	_ = d.Set("state", resp.State)
 	_ = d.Set("description", resp.Description)
@@ -652,6 +708,8 @@ func setFirewallFilteringRuleTopLevel(d *schema.ResourceData, resp *filteringrul
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
+	_ = d.Set("is_eun_enabled", resp.IsEUNEnabled)
+	_ = d.Set("eun_template_id", resp.EUNTemplateID)
 
 	if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 		return diag.FromErr(err)
@@ -710,6 +768,13 @@ func setFirewallFilteringRuleTopLevel(d *schema.ResourceData, resp *filteringrul
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegments(resp.ZPAAppSegments)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("end_point_applications", flattenEndpointDLPApplications(resp.EndPointApplications)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_applications: %s", err))
+	}
+	if err := d.Set("end_point_application_groups", flattenEndpointDLPApplicationGroups(resp.EndPointApplicationGroups)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_application_groups: %s", err))
+	}
+
 	// Always reset rules to empty in the single-rule path so plan output is
 	// unambiguous about which mode the data source ran in.
 	if err := d.Set("rules", []interface{}{}); err != nil {

@@ -116,6 +116,11 @@ func dataSourceFirewallDNSRules() *schema.Resource {
 				Computed:    true,
 				Description: "A Boolean value that indicates whether packet capture (PCAP) is enabled or not",
 			},
+			"exclude_context_shield_end_point": {
+				Type:        schema.TypeBool,
+				Computed:    true,
+				Description: "If set to true, the context shield is excluded from the rule",
+			},
 			"default_rule": {
 				Type:        schema.TypeBool,
 				Computed:    true,
@@ -480,10 +485,55 @@ func dataSourceFirewallDNSRules() *schema.Resource {
 					},
 				},
 			},
+			"end_point_applications": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of endpoint applications to which the DLP policy rule must be applied.",
+				Elem:        dataSourceEndpointDLPApplicationsSchema(),
+			},
+			"end_point_application_groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of endpoint application groups to which the DLP policy rule must be applied.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"group_id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mod_uid": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"last_modified_time": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"end_point_applications": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     dataSourceEndpointDLPApplicationsSchema(),
+						},
+					},
+				},
+			},
 			"is_web_eun_enabled": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "If set to true, Web EUN is enabled for the rule",
+			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Computed:    true,
+				Description: "The unique identifier of the End User Notification (EUN) template.",
 			},
 			"default_dns_rule_name_used": {
 				Type:        schema.TypeBool,
@@ -542,7 +592,9 @@ func dataSourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData,
 		_ = d.Set("predefined", resp.Predefined)
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("is_web_eun_enabled", resp.IsWebEUNEnabled)
+		_ = d.Set("eun_template_id", resp.EUNTemplateID)
 		_ = d.Set("default_dns_rule_name_used", resp.DefaultDNSRuleNameUsed)
+		_ = d.Set("exclude_context_shield_end_point", resp.ExcludeContextShieldEndPoint)
 
 		if err := d.Set("application_groups", flattenIDNameExtensions(resp.ApplicationGroups)); err != nil {
 			return diag.FromErr(err)
@@ -604,6 +656,12 @@ func dataSourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData,
 			return diag.FromErr(err)
 		}
 
+		if err := d.Set("end_point_applications", flattenEndpointDLPApplications(resp.EndPointApplications)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting end_point_applications: %s", err))
+		}
+		if err := d.Set("end_point_application_groups", flattenEndpointDLPApplicationGroups(resp.EndPointApplicationGroups)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting end_point_application_groups: %s", err))
+		}
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't find any firewall ips rule name '%s' or id '%d'", name, id))
 	}

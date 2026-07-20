@@ -171,6 +171,16 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Optional:    true,
 				Description: "If set to true, Web EUN is enabled for the rule",
 			},
+			"is_eun_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, Web EUN is enabled for the rule",
+			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The EUN template ID associated with the rule",
+			},
 			"default_dns_rule_name_used": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -180,6 +190,11 @@ func resourceFirewallDNSRules() *schema.Resource {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Description: "If set to true, a predefined rule is applied",
+			},
+			"exclude_context_shield_end_point": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, the context shield end point is excluded from the rule",
 			},
 			"applications": {
 				Type:     schema.TypeSet,
@@ -191,28 +206,29 @@ func resourceFirewallDNSRules() *schema.Resource {
 				https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_cloud_applications
 				`,
 			},
-			"locations":              setIDsSchemaTypeCustom(nil, "list of locations for which rule must be applied"),
-			"location_groups":        setIDsSchemaTypeCustom(nil, "list of locations groups"),
-			"users":                  setIDsSchemaTypeCustom(nil, "list of users for which rule must be applied"),
-			"groups":                 setIDsSchemaTypeCustom(nil, "list of groups for which rule must be applied"),
-			"departments":            setIDsSchemaTypeCustom(nil, "list of departments for which rule must be applied"),
-			"time_windows":           setIDsSchemaTypeCustom(nil, "The time interval in which the Firewall Filtering policy rule applies"),
-			"labels":                 setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
-			"device_groups":          setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":                setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
-			"src_ip_groups":          setIDsSchemaTypeCustom(nil, "list of Source IP address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address group."),
-			"src_ipv6_groups":        setIDsSchemaTypeCustom(nil, "list of Source IPv6 address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IPv6 address group."),
-			"dest_ip_groups":         setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
-			"dest_ipv6_groups":       setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
-			"application_groups":     setIDsSchemaTypeCustom(nil, "list of nw application groups"),
-			"dns_gateway":            setIdNameSchemaCustom(1, "The DNS gateway used to redirect traffic, specified when the rule action is to redirect DNS request to an external DNS service"),
-			"zpa_ip_group":           setIdNameSchemaCustom(1, "The ZPA IP pool specified when the rule action is to resolve domain names of ZPA applications to an ephemeral IP address from a preconfigured IP pool"),
-			"edns_ecs_object":        setIdNameSchemaCustom(1, "The EDNS ECS object which resolves DNS request"),
-			"dest_countries":         getISOCountryCodes(),
-			"source_countries":       getISOCountryCodes(),
-			"dns_rule_request_types": getDnsRuleRequestTypes(),
-			// "applications":           getCloudApplications(),
-			"protocols": getDNSRuleProtocols(),
+			"locations":                    setIDsSchemaTypeCustom(nil, "list of locations for which rule must be applied"),
+			"location_groups":              setIDsSchemaTypeCustom(nil, "list of locations groups"),
+			"users":                        setIDsSchemaTypeCustom(nil, "list of users for which rule must be applied"),
+			"groups":                       setIDsSchemaTypeCustom(nil, "list of groups for which rule must be applied"),
+			"departments":                  setIDsSchemaTypeCustom(nil, "list of departments for which rule must be applied"),
+			"time_windows":                 setIDsSchemaTypeCustom(nil, "The time interval in which the Firewall Filtering policy rule applies"),
+			"labels":                       setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"device_groups":                setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":                      setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"src_ip_groups":                setIDsSchemaTypeCustom(nil, "list of Source IP address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IP address group."),
+			"src_ipv6_groups":              setIDsSchemaTypeCustom(nil, "list of Source IPv6 address groups for which the rule is applicable. If not set, the rule is not restricted to a specific source IPv6 address group."),
+			"dest_ip_groups":               setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"dest_ipv6_groups":             setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"application_groups":           setIDsSchemaTypeCustom(nil, "list of nw application groups"),
+			"dns_gateway":                  setIdNameSchemaCustom(1, "The DNS gateway used to redirect traffic, specified when the rule action is to redirect DNS request to an external DNS service"),
+			"zpa_ip_group":                 setIdNameSchemaCustom(1, "The ZPA IP pool specified when the rule action is to resolve domain names of ZPA applications to an ephemeral IP address from a preconfigured IP pool"),
+			"edns_ecs_object":              setIdNameSchemaCustom(1, "The EDNS ECS object which resolves DNS request"),
+			"end_point_applications":       setCustomKeyIDsSchema("zapp_id", "The endpoint applications to which the DLP policy rule must be applied"),
+			"end_point_application_groups": setCustomKeyIDsSchema("group_id", "The endpoint application groups to which the DLP policy rule must be applied"),
+			"dest_countries":               getISOCountryCodes(),
+			"source_countries":             getISOCountryCodes(),
+			"dns_rule_request_types":       getDnsRuleRequestTypes(),
+			"protocols":                    getDNSRuleProtocols(),
 		},
 		CustomizeDiff: firewallDNSCategoriesMirrorCustomizeDiff,
 	}
@@ -456,6 +472,9 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 	_ = d.Set("is_web_eun_enabled", resp.IsWebEUNEnabled)
+	_ = d.Set("is_eun_enabled", resp.IsEUNEnabled)
+	_ = d.Set("eun_template_id", resp.EUNTemplateID)
+	_ = d.Set("exclude_context_shield_end_point", resp.ExcludeContextShieldEndPoint)
 	_ = d.Set("default_dns_rule_name_used", resp.DefaultDNSRuleNameUsed)
 
 	if err := d.Set("application_groups", flattenIDExtensionsListIDs(resp.ApplicationGroups)); err != nil {
@@ -524,6 +543,12 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set("zpa_ip_group", flattenIDNameSet(resp.ZPAIPGroup)); err != nil {
 		return diag.FromErr(err)
+	}
+	if err := d.Set("end_point_applications", flattenEndpointDLPApplications(resp.EndPointApplications)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_applications: %s", err))
+	}
+	if err := d.Set("end_point_application_groups", flattenEndpointDLPApplicationGroups(resp.EndPointApplicationGroups)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_application_groups: %s", err))
 	}
 
 	return nil
@@ -684,45 +709,50 @@ func expandFirewallDNSRules(d *schema.ResourceData) firewalldnscontrolpolicies.F
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
 
 	result := firewalldnscontrolpolicies.FirewallDNSRules{
-		ID:                     id,
-		Name:                   d.Get("name").(string),
-		Description:            d.Get("description").(string),
-		Order:                  order,
-		Rank:                   d.Get("rank").(int),
-		Action:                 d.Get("action").(string),
-		State:                  d.Get("state").(string),
-		BlockResponseCode:      d.Get("block_response_code").(string),
-		RedirectIP:             d.Get("redirect_ip").(string),
-		DefaultRule:            d.Get("default_rule").(bool),
-		Predefined:             d.Get("predefined").(bool),
-		IsWebEUNEnabled:        d.Get("is_web_eun_enabled").(bool),
-		DefaultDNSRuleNameUsed: d.Get("default_dns_rule_name_used").(bool),
-		Applications:           SetToStringList(d, "applications"),
-		DNSRuleRequestTypes:    SetToStringList(d, "dns_rule_request_types"),
-		DestAddresses:          SetToStringList(d, "dest_addresses"),
-		DestIpCategories:       SetToStringList(d, "dest_ip_categories"),
-		Protocols:              SetToStringList(d, "protocols"),
-		ResCategories:          SetToStringList(d, "res_categories"),
-		SrcIps:                 SetToStringList(d, "src_ips"),
-		DestCountries:          processedDestCountries,
-		SourceCountries:        processedSourceCountries,
-		ApplicationGroups:      expandIDNameExtensionsSet(d, "application_groups"),
-		Locations:              expandIDNameExtensionsSet(d, "locations"),
-		LocationsGroups:        expandIDNameExtensionsSet(d, "location_groups"),
-		Departments:            expandIDNameExtensionsSet(d, "departments"),
-		Groups:                 expandIDNameExtensionsSet(d, "groups"),
-		Users:                  expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:            expandIDNameExtensionsSet(d, "time_windows"),
-		SrcIpGroups:            expandIDNameExtensionsSet(d, "src_ip_groups"),
-		SrcIpv6Groups:          expandIDNameExtensionsSet(d, "src_ipv6_groups"),
-		DestIpGroups:           expandIDNameExtensionsSet(d, "dest_ip_groups"),
-		DestIpv6Groups:         expandIDNameExtensionsSet(d, "dest_ipv6_groups"),
-		Labels:                 expandIDNameExtensionsSet(d, "labels"),
-		DeviceGroups:           expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:                expandIDNameExtensionsSet(d, "devices"),
-		DNSGateway:             expandIDNameSet(d, "dns_gateway"),
-		EDNSEcsObject:          expandIDNameSet(d, "edns_ecs_object"),
-		ZPAIPGroup:             expandIDNameSet(d, "zpa_ip_group"),
+		ID:                           id,
+		Name:                         d.Get("name").(string),
+		Description:                  d.Get("description").(string),
+		Order:                        order,
+		Rank:                         d.Get("rank").(int),
+		Action:                       d.Get("action").(string),
+		State:                        d.Get("state").(string),
+		BlockResponseCode:            d.Get("block_response_code").(string),
+		RedirectIP:                   d.Get("redirect_ip").(string),
+		DefaultRule:                  d.Get("default_rule").(bool),
+		Predefined:                   d.Get("predefined").(bool),
+		IsWebEUNEnabled:              d.Get("is_web_eun_enabled").(bool),
+		IsEUNEnabled:                 d.Get("is_eun_enabled").(bool),
+		EUNTemplateID:                d.Get("eun_template_id").(int),
+		ExcludeContextShieldEndPoint: d.Get("exclude_context_shield_end_point").(bool),
+		DefaultDNSRuleNameUsed:       d.Get("default_dns_rule_name_used").(bool),
+		Applications:                 SetToStringList(d, "applications"),
+		DNSRuleRequestTypes:          SetToStringList(d, "dns_rule_request_types"),
+		DestAddresses:                SetToStringList(d, "dest_addresses"),
+		DestIpCategories:             SetToStringList(d, "dest_ip_categories"),
+		Protocols:                    SetToStringList(d, "protocols"),
+		ResCategories:                SetToStringList(d, "res_categories"),
+		SrcIps:                       SetToStringList(d, "src_ips"),
+		DestCountries:                processedDestCountries,
+		SourceCountries:              processedSourceCountries,
+		ApplicationGroups:            expandIDNameExtensionsSet(d, "application_groups"),
+		Locations:                    expandIDNameExtensionsSet(d, "locations"),
+		LocationsGroups:              expandIDNameExtensionsSet(d, "location_groups"),
+		Departments:                  expandIDNameExtensionsSet(d, "departments"),
+		Groups:                       expandIDNameExtensionsSet(d, "groups"),
+		Users:                        expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:                  expandIDNameExtensionsSet(d, "time_windows"),
+		SrcIpGroups:                  expandIDNameExtensionsSet(d, "src_ip_groups"),
+		SrcIpv6Groups:                expandIDNameExtensionsSet(d, "src_ipv6_groups"),
+		DestIpGroups:                 expandIDNameExtensionsSet(d, "dest_ip_groups"),
+		DestIpv6Groups:               expandIDNameExtensionsSet(d, "dest_ipv6_groups"),
+		Labels:                       expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:                 expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:                      expandIDNameExtensionsSet(d, "devices"),
+		EndPointApplications:         expandEndpointApplications(d, "end_point_applications"),
+		EndPointApplicationGroups:    expandEndpointApplicationGroups(d, "end_point_application_groups"),
+		DNSGateway:                   expandIDNameSet(d, "dns_gateway"),
+		EDNSEcsObject:                expandIDNameSet(d, "edns_ecs_object"),
+		ZPAIPGroup:                   expandIDNameSet(d, "zpa_ip_group"),
 	}
 	return result
 }

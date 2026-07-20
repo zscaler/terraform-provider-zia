@@ -12,13 +12,15 @@ import (
 func TestAccDataSourceDLPDictionaries_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.DLPDictionaries)
 
+	initialName := "tf-acc-test-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckDLPDictionariesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, generatedName, variable.DLPDictionaryDescription),
+				Config: testAccCheckDLPDictionariesConfigure(resourceTypeAndName, initialName, variable.DLPDictionaryDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),

@@ -678,6 +678,46 @@ func dataSourceSSLInspectionRules() *schema.Resource {
 					},
 				},
 			},
+			"end_point_applications": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of endpoint applications to which the DLP policy rule must be applied.",
+				Elem:        dataSourceEndpointDLPApplicationsSchema(),
+			},
+			"end_point_application_groups": {
+				Type:        schema.TypeList,
+				Computed:    true,
+				Description: "The list of endpoint application groups to which the DLP policy rule must be applied.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"group_id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mod_uid": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"last_modified_time": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"end_point_applications": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     dataSourceEndpointDLPApplicationsSchema(),
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -776,6 +816,13 @@ func dataSourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceDat
 		}
 		if err := d.Set("workload_groups", flattenWorkloadGroups(resp.WorkloadGroups)); err != nil {
 			return diag.FromErr(err)
+		}
+
+		if err := d.Set("end_point_applications", flattenEndpointDLPApplications(resp.EndPointApplications)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting end_point_applications: %s", err))
+		}
+		if err := d.Set("end_point_application_groups", flattenEndpointDLPApplicationGroups(resp.EndPointApplicationGroups)); err != nil {
+			return diag.FromErr(fmt.Errorf("error setting end_point_application_groups: %s", err))
 		}
 
 	} else {

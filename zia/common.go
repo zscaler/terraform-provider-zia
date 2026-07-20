@@ -3,6 +3,7 @@ package zia
 import (
 	"log"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkservices"
 )
 
@@ -62,6 +64,30 @@ func setIDsSchemaTypeCustom(maxItems *int, desc string) *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"id": ids,
+			},
+		},
+	}
+}
+
+// setCustomKeyIDsSchema mirrors setIDsSchemaTypeCustom (single block containing a
+// set of IDs) but lets the caller name the inner list attribute when the API key
+// is not the generic "id" (e.g. "zapp_id", "group_id").
+func setCustomKeyIDsSchema(innerKey, desc string) *schema.Schema {
+	ids := &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+		},
+	}
+	return &schema.Schema{
+		Type:        schema.TypeSet,
+		Optional:    true,
+		MaxItems:    1,
+		Description: desc,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				innerKey: ids,
 			},
 		},
 	}
@@ -410,6 +436,130 @@ func flattenCustomIDNameSet(customID *common.IDCustom) []interface{} {
 			"name": customID.Name,
 		},
 	}
+}
+
+// expandSingleIDNameExtensions reads a single-element "id"-only set (as produced
+// by setSingleIDSchemaTypeCustom) and returns the corresponding
+// *common.IDNameExtensions, or nil when unset.
+func expandSingleIDNameExtensions(d *schema.ResourceData, key string) *common.IDNameExtensions {
+	if v, ok := d.GetOk(key); ok {
+		setList := v.(*schema.Set).List()
+		if len(setList) > 0 {
+			if idMap, ok := setList[0].(map[string]interface{}); ok {
+				if id, ok := idMap["id"].(int); ok && id != 0 {
+					return &common.IDNameExtensions{ID: id}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// flattenSingleIDNameExtensions renders a *common.IDNameExtensions into the
+// single-element "id"-only set shape expected by setSingleIDSchemaTypeCustom.
+func flattenSingleIDNameExtensions(v *common.IDNameExtensions) []interface{} {
+	if v == nil || v.ID == 0 {
+		return nil
+	}
+	return []interface{}{
+		map[string]interface{}{
+			"id": v.ID,
+		},
+	}
+}
+
+// expandReceiver reads the shared "receiver" block used by the DLP web and
+// endpoint DLP rule resources and returns the corresponding SDK Receiver.
+func expandReceiver(d *schema.ResourceData, key string) *dlp_web_rules.Receiver {
+	receiverSet, ok := d.Get(key).(*schema.Set)
+	if !ok || receiverSet.Len() == 0 {
+		return nil
+	}
+
+	receiverList := receiverSet.List()
+	if len(receiverList) == 0 {
+		return nil
+	}
+
+	item := receiverList[0].(map[string]interface{})
+
+	idStr := item["id"].(string)
+	idInt, err := strconv.Atoi(idStr)
+	if err != nil {
+		idInt = 0
+	}
+
+	receiver := &dlp_web_rules.Receiver{
+		ID:   idInt,
+		Name: item["name"].(string),
+		Type: item["type"].(string),
+	}
+
+	if tenantList, ok := item["tenant"].([]interface{}); ok && len(tenantList) > 0 {
+		if tenantMap, ok := tenantList[0].(map[string]interface{}); ok {
+			tenantIDStr := tenantMap["id"].(string)
+			tenantIDInt, err := strconv.Atoi(tenantIDStr)
+			if err != nil {
+				tenantIDInt = 0
+			}
+			receiver.Tenant = &common.IDNameExtensions{
+				ID:   tenantIDInt,
+				Name: tenantMap["name"].(string),
+			}
+		}
+	}
+
+	return receiver
+}
+
+// flattenReceiverResource renders the SDK Receiver into the resource-side
+// "receiver" block shape (string IDs) shared by the DLP web and endpoint DLP
+// rule resources.
+func flattenReceiverResource(receiver *dlp_web_rules.Receiver) []interface{} {
+	if receiver == nil {
+		return nil
+	}
+
+	if receiver.ID == 0 && receiver.Name == "" && receiver.Type == "" && receiver.Tenant == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"id":   strconv.Itoa(receiver.ID),
+		"name": receiver.Name,
+		"type": receiver.Type,
+	}
+
+	if receiver.Tenant != nil {
+		tenant := map[string]interface{}{
+			"id":   strconv.Itoa(receiver.Tenant.ID),
+			"name": receiver.Tenant.Name,
+		}
+		result["tenant"] = []interface{}{tenant}
+	}
+
+	return []interface{}{result}
+}
+
+// flattenReceiver renders the SDK Receiver into the data-source-side "receiver"
+// block shape (integer IDs) shared by the DLP web and endpoint DLP rule data
+// sources.
+func flattenReceiver(receiver *dlp_web_rules.Receiver) []map[string]interface{} {
+	if receiver == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"id":   receiver.ID,
+		"name": receiver.Name,
+		"type": receiver.Type,
+	}
+
+	if receiver.Tenant != nil {
+		result["tenant"] = flattenIDExtensionsList(receiver.Tenant)
+	}
+
+	return []map[string]interface{}{result}
 }
 
 func flattenIDExtensionsListIDs(list []common.IDNameExtensions) []interface{} {

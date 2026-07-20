@@ -12,9 +12,42 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.7.26``
+``Last updated: v4.8.0``
 
 ---
+
+## 4.8.0 (July, 15 2026)
+
+### Notes
+
+- Release date: **(July, 15 2026)**
+- Supported Terraform version: **v1.x**
+
+### NEW - RESOURCES AND DATA SOURCES
+
+The following new resources and data sources have been introduced:
+
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource and data source `zia_dlp_global_options` - Retrieves and updates the existing DLP Advanced Settings.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource and data source `zia_dns_application_groups` - Creates and retrieves DNS application groups.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource and data source `zia_endpoint_dlp_custom_apps` - Creates and retrieves custom Endpoint DLP applications.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource and data source `zia_endpoint_dlp_rules` - Creates and retrieves Endpoint DLP policy rules.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource and data source `zia_outbound_email_dlp` - Creates and retrieves Outbound Email DLP policy rules.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource `zia_endpoint_dlp_application_group` - Creates and manages Endpoint DLP application groups.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource `zia_endpoint_dlp_resource` - Creates and manages Endpoint DLP resources.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource `zia_endpoint_dlp_resource_group` - Creates and manages Endpoint DLP resource groups (tags).
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the resource `zia_endpoint_dlp_sub_rules` - Creates and manages exception (sub) rules under an Endpoint DLP policy rule.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the data source `zia_endpoint_dlp_application` - Retrieves an Endpoint DLP application by name or ID.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the data source `zia_dlp_endpoint_resource_channels` - Retrieves DLP resources configured for a specific channel.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the data source `zia_dlp_endpoint_resource_group_tag` - Retrieves DLP endpoint resource tags defined for a channel.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the data source `zia_eun_template_product` - Retrieves browser-based and Zscaler Client Connector notification templates by policy type.
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - Added the data source `zia_eun_user_confirmation_template_product` - Retrieves user confirmation notification templates by policy type.
+
+### Enhancements
+
+- [PR #587](https://github.com/zscaler/terraform-provider-zia/pull/587) - The resources ``zia_ssl_inspection_rules`, `zia_firewall_filtering_rule`, `zia_firewall_dns_rule` now support the following attributes to configure policy rule conditions based on endpoint applications, endpoint application tags, and endpoint application threat levels:
+  - `end_point_applications`
+  - `end_point_application_groups`
+  - `exclude_context_shield_end_point` (supported only in `zia_firewall_filtering_rule`, `zia_firewall_dns_rule` resources)
 
 ## 4.7.26 (June, 26 2026)
 

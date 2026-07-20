@@ -73,6 +73,9 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.Users, sweepTestUsers)
 		setupSweeper(resourcetype.Extranet, sweepTestExtranet)
 		setupSweeper(resourcetype.EmailProfile, sweepTestEmailProfile)
+		setupSweeper(resourcetype.DLPEndpointSubRules, sweepTestEndpointDLPSubRules)
+		setupSweeper(resourcetype.DLPEndpointResourceGroup, sweepTestEndpointDLPResourceGroup)
+		setupSweeper(resourcetype.DLPEndpointApplicationGroup, sweepTestEndpointDLPApplicationGroup)
 	}
 	resource.TestMain(m)
 }

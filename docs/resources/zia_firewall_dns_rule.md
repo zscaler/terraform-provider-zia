@@ -294,3 +294,9 @@ data "zia_cloud_applications" "this" {
 * `zpa_ip_group` (Set of Objects) The ZPA IP pool specified when the rule action is to resolve domain names of ZPA applications to an ephemeral IP address from a preconfigured IP pool. Only one object is supported.
       - `id` - (Integer) Identifier that uniquely identifies an entity
       - `name` - (Integer) The configured name of the entity
+
+* `end_point_applications` - (Block) The endpoint applications to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `zapp_id` - (List of String) The unique identifiers of the endpoint applications.
+
+* `end_point_application_groups` - (Block) The endpoint application groups to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `group_id` - (List of String) The unique identifiers of the endpoint application groups.

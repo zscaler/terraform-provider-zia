@@ -763,25 +763,6 @@ func dataSourceDlpWebRulesRead(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func flattenReceiver(receiver *dlp_web_rules.Receiver) []map[string]interface{} {
-	if receiver == nil {
-		return nil
-	}
-
-	result := map[string]interface{}{
-		"id":   receiver.ID,
-		"name": receiver.Name,
-		"type": receiver.Type,
-	}
-
-	// Set tenant if it exists
-	if receiver.Tenant != nil {
-		result["tenant"] = flattenIDExtensionsList(receiver.Tenant)
-	}
-
-	return []map[string]interface{}{result}
-}
-
 func flattenFileTypeCategories(fileTypeCategories []common.IDName) []interface{} {
 	if fileTypeCategories == nil {
 		return nil

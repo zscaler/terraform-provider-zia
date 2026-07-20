@@ -12,13 +12,15 @@ import (
 func TestAccDataSourceSubscriptionAlerts_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.SubscriptionAlerts)
 
+	initialName := "tf-acc-test-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckSubscriptionAlertsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckSubscriptionAlertsConfigure(resourceTypeAndName, generatedName, variable.AlertDescription),
+				Config: testAccCheckSubscriptionAlertsConfigure(resourceTypeAndName, initialName, variable.AlertDescription),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "email", resourceTypeAndName, "email"),

@@ -155,28 +155,44 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"locations":             setIDsSchemaTypeCustom(nil, "list of locations for which rule must be applied"),
-			"location_groups":       setIDsSchemaTypeCustom(nil, "list of locations groups"),
-			"users":                 setIDsSchemaTypeCustom(nil, "list of users for which rule must be applied"),
-			"groups":                setIDsSchemaTypeCustom(nil, "list of groups for which rule must be applied"),
-			"departments":           setIDsSchemaTypeCustom(nil, "list of departments for which rule must be applied"),
-			"time_windows":          setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
-			"labels":                setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
-			"device_groups":         setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
-			"devices":               setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
-			"src_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
-			"dest_ip_groups":        setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
-			"app_service_groups":    setIDsSchemaTypeCustom(nil, "list of application service groups"),
-			"app_services":          setIDsSchemaTypeCustom(nil, "list of application services"),
-			"nw_application_groups": setIDsSchemaTypeCustom(nil, "list of nw application groups"),
-			"nw_service_groups":     setIDsSchemaTypeCustom(nil, "list of nw service groups"),
-			"workload_groups":       setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
-			"nw_services":           setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
-			"zpa_app_segments":      setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
-			"dest_countries":        getISOCountryCodes(),
-			"source_countries":      getISOCountryCodes(),
-			// "nw_applications":       getCloudApplications(),
-			"device_trust_levels": getDeviceTrustLevels(),
+			"is_eun_enabled": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, Web EUN is enabled for the rule",
+			},
+			"eun_template_id": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The EUN template ID associated with the rule",
+			},
+			"exclude_context_shield_end_point": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "If set to true, the context shield end point is excluded from the rule",
+			},
+			"locations":                    setIDsSchemaTypeCustom(nil, "list of locations for which rule must be applied"),
+			"location_groups":              setIDsSchemaTypeCustom(nil, "list of locations groups"),
+			"users":                        setIDsSchemaTypeCustom(nil, "list of users for which rule must be applied"),
+			"groups":                       setIDsSchemaTypeCustom(nil, "list of groups for which rule must be applied"),
+			"departments":                  setIDsSchemaTypeCustom(nil, "list of departments for which rule must be applied"),
+			"time_windows":                 setIDsSchemaTypeCustom(intPtr(2), "The time interval in which the Firewall Filtering policy rule applies"),
+			"labels":                       setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule."),
+			"device_groups":                setIDsSchemaTypeCustom(nil, "This field is applicable for devices that are managed using Zscaler Client Connector."),
+			"devices":                      setIDsSchemaTypeCustom(nil, "Name-ID pairs of devices for which rule must be applied."),
+			"src_ip_groups":                setIDsSchemaTypeCustom(nil, "list of source ip groups"),
+			"dest_ip_groups":               setIDsSchemaTypeCustom(nil, "list of destination ip groups"),
+			"app_service_groups":           setIDsSchemaTypeCustom(nil, "list of application service groups"),
+			"app_services":                 setIDsSchemaTypeCustom(nil, "list of application services"),
+			"nw_application_groups":        setIDsSchemaTypeCustom(nil, "list of nw application groups"),
+			"nw_service_groups":            setIDsSchemaTypeCustom(nil, "list of nw service groups"),
+			"workload_groups":              setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
+			"nw_services":                  setIDsSchemaTypeCustom(intPtr(1024), "list of nw services"),
+			"zpa_app_segments":             setExtIDNameSchemaCustom(intPtr(255), "The list of ZPA Application Segments for which this rule is applicable. This field is applicable only for the ZPA Gateway forwarding method."),
+			"dest_countries":               getISOCountryCodes(),
+			"source_countries":             getISOCountryCodes(),
+			"device_trust_levels":          getDeviceTrustLevels(),
+			"end_point_applications":       setCustomKeyIDsSchema("zapp_id", "The endpoint applications to which the DLP policy rule must be applied"),
+			"end_point_application_groups": setCustomKeyIDsSchema("group_id", "The endpoint application groups to which the DLP policy rule must be applied"),
 		},
 	}
 }
@@ -373,6 +389,9 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 	_ = d.Set("default_rule", resp.DefaultRule)
 	_ = d.Set("predefined", resp.Predefined)
 	_ = d.Set("exclude_src_countries", resp.ExcludeSrcCountries)
+	_ = d.Set("is_eun_enabled", resp.IsEUNEnabled)
+	_ = d.Set("eun_template_id", resp.EUNTemplateID)
+	_ = d.Set("exclude_context_shield_end_point", resp.ExcludeContextShieldEndPoint)
 
 	if err := d.Set("locations", flattenIDExtensionsListIDs(resp.Locations)); err != nil {
 		return diag.FromErr(err)
@@ -442,6 +461,12 @@ func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceD
 
 	if err := d.Set("zpa_app_segments", flattenZPAAppSegmentsSimple(resp.ZPAAppSegments)); err != nil {
 		return diag.FromErr(err)
+	}
+	if err := d.Set("end_point_applications", flattenEndpointDLPApplications(resp.EndPointApplications)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_applications: %s", err))
+	}
+	if err := d.Set("end_point_application_groups", flattenEndpointDLPApplicationGroups(resp.EndPointApplicationGroups)); err != nil {
+		return diag.FromErr(fmt.Errorf("error setting end_point_application_groups: %s", err))
 	}
 
 	return nil
@@ -598,42 +623,47 @@ func expandFirewallFilteringRules(d *schema.ResourceData) filteringrules.Firewal
 	processedSourceCountries := processCountries(SetToStringList(d, "source_countries"))
 
 	result := filteringrules.FirewallFilteringRules{
-		ID:                  id,
-		Name:                d.Get("name").(string),
-		Order:               order,
-		Rank:                d.Get("rank").(int),
-		Action:              d.Get("action").(string),
-		State:               d.Get("state").(string),
-		Description:         d.Get("description").(string),
-		SrcIps:              SetToStringList(d, "src_ips"),
-		DestAddresses:       SetToStringList(d, "dest_addresses"),
-		DestIpCategories:    SetToStringList(d, "dest_ip_categories"),
-		DeviceTrustLevels:   SetToStringList(d, "device_trust_levels"),
-		DestCountries:       processedDestCountries,
-		SourceCountries:     processedSourceCountries,
-		NwApplications:      SetToStringList(d, "nw_applications"),
-		EnableFullLogging:   d.Get("enable_full_logging").(bool),
-		DefaultRule:         d.Get("default_rule").(bool),
-		Predefined:          d.Get("predefined").(bool),
-		ExcludeSrcCountries: d.Get("exclude_src_countries").(bool),
-		Locations:           expandIDNameExtensionsSet(d, "locations"),
-		LocationsGroups:     expandIDNameExtensionsSet(d, "location_groups"),
-		Departments:         expandIDNameExtensionsSet(d, "departments"),
-		Groups:              expandIDNameExtensionsSet(d, "groups"),
-		Users:               expandIDNameExtensionsSet(d, "users"),
-		TimeWindows:         expandIDNameExtensionsSet(d, "time_windows"),
-		SrcIpGroups:         expandIDNameExtensionsSet(d, "src_ip_groups"),
-		DestIpGroups:        expandIDNameExtensionsSet(d, "dest_ip_groups"),
-		NwServices:          expandIDNameExtensionsSet(d, "nw_services"),
-		NwServiceGroups:     expandIDNameExtensionsSet(d, "nw_service_groups"),
-		NwApplicationGroups: expandIDNameExtensionsSet(d, "nw_application_groups"),
-		AppServices:         expandIDNameExtensionsSet(d, "app_services"),
-		AppServiceGroups:    expandIDNameExtensionsSet(d, "app_service_groups"),
-		Labels:              expandIDNameExtensionsSet(d, "labels"),
-		DeviceGroups:        expandIDNameExtensionsSet(d, "device_groups"),
-		Devices:             expandIDNameExtensionsSet(d, "devices"),
-		WorkloadGroups:      expandWorkloadGroupsIDName(d, "workload_groups"),
-		ZPAAppSegments:      expandZPAAppSegmentSet(d, "zpa_app_segments"),
+		ID:                           id,
+		Name:                         d.Get("name").(string),
+		Order:                        order,
+		Rank:                         d.Get("rank").(int),
+		Action:                       d.Get("action").(string),
+		State:                        d.Get("state").(string),
+		Description:                  d.Get("description").(string),
+		SrcIps:                       SetToStringList(d, "src_ips"),
+		DestAddresses:                SetToStringList(d, "dest_addresses"),
+		DestIpCategories:             SetToStringList(d, "dest_ip_categories"),
+		DeviceTrustLevels:            SetToStringList(d, "device_trust_levels"),
+		DestCountries:                processedDestCountries,
+		SourceCountries:              processedSourceCountries,
+		NwApplications:               SetToStringList(d, "nw_applications"),
+		EnableFullLogging:            d.Get("enable_full_logging").(bool),
+		DefaultRule:                  d.Get("default_rule").(bool),
+		Predefined:                   d.Get("predefined").(bool),
+		ExcludeSrcCountries:          d.Get("exclude_src_countries").(bool),
+		IsEUNEnabled:                 d.Get("is_eun_enabled").(bool),
+		EUNTemplateID:                d.Get("eun_template_id").(int),
+		ExcludeContextShieldEndPoint: d.Get("exclude_context_shield_end_point").(bool),
+		Locations:                    expandIDNameExtensionsSet(d, "locations"),
+		LocationsGroups:              expandIDNameExtensionsSet(d, "location_groups"),
+		Departments:                  expandIDNameExtensionsSet(d, "departments"),
+		Groups:                       expandIDNameExtensionsSet(d, "groups"),
+		Users:                        expandIDNameExtensionsSet(d, "users"),
+		TimeWindows:                  expandIDNameExtensionsSet(d, "time_windows"),
+		SrcIpGroups:                  expandIDNameExtensionsSet(d, "src_ip_groups"),
+		DestIpGroups:                 expandIDNameExtensionsSet(d, "dest_ip_groups"),
+		NwServices:                   expandIDNameExtensionsSet(d, "nw_services"),
+		NwServiceGroups:              expandIDNameExtensionsSet(d, "nw_service_groups"),
+		NwApplicationGroups:          expandIDNameExtensionsSet(d, "nw_application_groups"),
+		AppServices:                  expandIDNameExtensionsSet(d, "app_services"),
+		AppServiceGroups:             expandIDNameExtensionsSet(d, "app_service_groups"),
+		Labels:                       expandIDNameExtensionsSet(d, "labels"),
+		DeviceGroups:                 expandIDNameExtensionsSet(d, "device_groups"),
+		Devices:                      expandIDNameExtensionsSet(d, "devices"),
+		WorkloadGroups:               expandWorkloadGroupsIDName(d, "workload_groups"),
+		ZPAAppSegments:               expandZPAAppSegmentSet(d, "zpa_app_segments"),
+		EndPointApplications:         expandEndpointApplications(d, "end_point_applications"),
+		EndPointApplicationGroups:    expandEndpointApplicationGroups(d, "end_point_application_groups"),
 	}
 	return result
 }

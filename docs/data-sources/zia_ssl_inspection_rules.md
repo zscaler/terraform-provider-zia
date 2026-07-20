@@ -195,3 +195,38 @@ In addition to all arguments above, the following attributes are exported:
 * `tag_type` - The tag type selected from a predefined list
 * `operator` - The operator (either AND or OR) used to create logical relationships among tag types
 * `tag_container` - Contains one or more tags and the logical operator used to combine the tags within a tag type
+
+* `end_point_applications` - (Block) The list of endpoint applications to which the DLP policy rule must be applied.
+  * `resource_id` - (Number) The unique identifier of the endpoint application.
+  * `application_name` - (String) The name of the endpoint application.
+  * `application_type` - (String) The type of the endpoint application.
+  * `zapp_id` - (String) The Zscaler Client Connector identifier of the endpoint application.
+  * `os_type` - (String) The operating system type associated with the endpoint application.
+  * `description` - (String) The description of the endpoint application.
+  * `bundle_id` - (String) The bundle identifier of the endpoint application.
+  * `filename` - (String) The file name of the endpoint application.
+  * `original_file_name` - (String) The original file name of the endpoint application.
+  * `digitally_signed` - (Boolean) Indicates whether the endpoint application is digitally signed.
+  * `deleted` - (Boolean) Indicates whether the endpoint application has been deleted.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application was last modified.
+  * `version` - (Block) The current version details of the endpoint application (see `version` block below).
+  * `versions` - (Block) The list of version details of the endpoint application (see `version` block below).
+
+* `end_point_application_groups` - (Block) The list of endpoint application groups to which the DLP policy rule must be applied.
+  * `group_id` - (Number) The unique identifier of the endpoint application group.
+  * `name` - (String) The name of the endpoint application group.
+  * `description` - (String) The description of the endpoint application group.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application group.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application group was last modified.
+  * `end_point_applications` - (Block) The endpoint applications belonging to the group (same structure as `end_point_applications` above).
+
+The `version`/`versions` blocks expose the following attributes:
+
+* `version` - (String) The version string of the endpoint application.
+* `z_ver_id_md32` - (Number) The internal version identifier.
+* `threat_type` - (Number) The threat type associated with the version.
+* `threat_level` - (String) The threat level associated with the version.
+* `bundle_id` - (String) The bundle identifier associated with the version.
+* `code_signing_certificate_status` - (Number) The code signing certificate status.
+* `threat_level_updated` - (Boolean) Indicates whether the threat level was updated.
