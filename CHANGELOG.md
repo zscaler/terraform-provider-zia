@@ -1,10 +1,10 @@
 # Changelog
 
-## 4.8.0 (July, 15 2026)
+## 4.8.0 (July, 20 2026)
 
 ### Notes
 
-- Release date: **(July, 15 2026)**
+- Release date: **(July, 20 2026)**
 - Supported Terraform version: **v1.x**
 
 ### NEW - RESOURCES AND DATA SOURCES
