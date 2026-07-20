@@ -48,8 +48,11 @@ In addition to all arguments above, the following attributes are exported:
 * `action` - (String) The action configured for the rule that must take place if the traffic matches the rule criteria, such as allowing or blocking the traffic or bypassing the rule. The following actions are accepted: `ALLOW`, `BLOCK`, `REDIR_REQ`, `REDIR_RES`, `REDIR_ZPA`, `REDIR_REQ_DOH`, `REDIR_REQ_KEEP_SENDER`, `REDIR_REQ_TCP`, `REDIR_REQ_UDP`, `BLOCK_WITH_RESPONSE`
 * `rank` - (Integer) By default, the admin ranking is disabled. To use this feature, you must enable admin rank. The default value is `7`.
 * `access_control` - (String) The admin’s access privilege to this rule based on the assigned role
-* `is_web_eun_enabled` - (Boolean) If set to true, Web EUN is enabled for the rule
+* `is_web_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `is_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule. To retrieve the list of End User Templates use the data source [zia_eun_user_confirmation_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_user_confirmation_template_product).
 * `default_dns_rule_name_used` - (Boolean) If set to true, the default DNS rule name is used for the rule
+* `exclude_context_shield_end_point` - (Boolean) If set to true, the context shield end point is excluded from the rule
 * `redirect_ip` - (String) The IP address to which the traffic will be redirected to when the DNAT rule is triggered. If not set, no redirection is done to specific IP addresses. Only supported when the `action` is `REDIR_REQ`
 * `dns_rule_request_types` - (Set of Strings) DNS request types to which the rule applies. Supportedn values are:
 `A`, `NS`, `MD`, `MF`, `CNAME`, `SOA`, `MB`, `MG`, `MR`, `NULL`, `WKS`, `PTR`, `HINFO`, `MINFO`, `MX`, `TXT`, `RP`, `AFSDB`,
@@ -75,7 +78,6 @@ data "zia_cloud_applications" "this" {
 * `capture_pcap` - (Boolean) Value that indicates whether packet capture (PCAP) is enabled or not
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud DNS Rule or not
-* `is_web_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
 * `default_dns_rule_name_used` - (Boolean) A Boolean value that indicates whether the default DNS rule name is used for the rule.
 
 `Devices`
@@ -157,3 +159,38 @@ data "zia_cloud_applications" "this" {
 * `zpa_ip_group` (Set) The ZPA IP pool specified when the rule action is to resolve domain names of ZPA applications to an ephemeral IP address from a preconfigured IP pool
       - `id` - (Integer) Identifier that uniquely identifies an entity
       - `name` - (string) The configured name of the entity
+
+* `end_point_applications` - (Block) The list of endpoint applications to which the DLP policy rule must be applied.
+  * `resource_id` - (Number) The unique identifier of the endpoint application.
+  * `application_name` - (String) The name of the endpoint application.
+  * `application_type` - (String) The type of the endpoint application.
+  * `zapp_id` - (String) The Zscaler Client Connector identifier of the endpoint application.
+  * `os_type` - (String) The operating system type associated with the endpoint application.
+  * `description` - (String) The description of the endpoint application.
+  * `bundle_id` - (String) The bundle identifier of the endpoint application.
+  * `filename` - (String) The file name of the endpoint application.
+  * `original_file_name` - (String) The original file name of the endpoint application.
+  * `digitally_signed` - (Boolean) Indicates whether the endpoint application is digitally signed.
+  * `deleted` - (Boolean) Indicates whether the endpoint application has been deleted.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application was last modified.
+  * `version` - (Block) The current version details of the endpoint application (see `version` block below).
+  * `versions` - (Block) The list of version details of the endpoint application (see `version` block below).
+
+* `end_point_application_groups` - (Block) The list of endpoint application groups to which the DLP policy rule must be applied.
+  * `group_id` - (Number) The unique identifier of the endpoint application group.
+  * `name` - (String) The name of the endpoint application group.
+  * `description` - (String) The description of the endpoint application group.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application group.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application group was last modified.
+  * `end_point_applications` - (Block) The endpoint applications belonging to the group (same structure as `end_point_applications` above).
+
+The `version`/`versions` blocks expose the following attributes:
+
+* `version` - (String) The version string of the endpoint application.
+* `z_ver_id_md32` - (Number) The internal version identifier.
+* `threat_type` - (Number) The threat type associated with the version.
+* `threat_level` - (String) The threat level associated with the version.
+* `bundle_id` - (String) The bundle identifier associated with the version.
+* `code_signing_certificate_status` - (Number) The code signing certificate status.
+* `threat_level_updated` - (Boolean) Indicates whether the threat level was updated.

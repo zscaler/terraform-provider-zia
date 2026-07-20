@@ -12,13 +12,15 @@ import (
 func TestAccDataSourceURLCategories_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.URLCategories)
 
+	initialName := "tf-acc-test-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckURLCategoriesDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, generatedName, variable.CustomCategory),
+				Config: testAccCheckURLCategoriesConfigure(resourceTypeAndName, initialName, variable.CustomCategory),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "configured_name", resourceTypeAndName, "configured_name"),

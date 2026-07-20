@@ -19,7 +19,15 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlp_web_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/dlp/dlpdictionaries"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/email_profiles"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_application_groups"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_custom_apps"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_dlp_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_dlp_sub_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_resource"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_resource_channel"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/endpoint_dlp/endpoint_resource_group"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewalldnscontrolpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/dns_application_groups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/filteringrules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/ipdestinationgroups"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/firewallpolicies/networkapplicationgroups"
@@ -113,6 +121,12 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestSandboxRule(testClient)
 	sweepTestURLFilteringRule(testClient)
 	sweepTestDLPWebRule(testClient)
+	sweepTestEndpointDLPSubRules(testClient)
+	sweepTestEndpointDLPRules(testClient)
+	sweepTestEndpointDLPResource(testClient)
+	sweepTestEndpointDLPResourceGroup(testClient)
+	sweepTestEndpointDLPApplicationGroup(testClient)
+	sweepTestEndpointDLPCustomApps(testClient)
 	sweepTestDLPEngines(testClient)
 	sweepTestDLPDictionary(testClient)
 	sweepTestDLPTemplates(testClient)
@@ -121,6 +135,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestVPNCredentials(testClient)
 	sweepTestAdminUser(testClient)
 	sweepTestUsers(testClient)
+	sweepTestDNSApplicationGroups(testClient)
 }
 
 // Sets up sweeper to clean up dangling resources
@@ -259,6 +274,39 @@ func sweepTestDestinationIPGroup(client *testClient) error {
 				continue
 			}
 			logSweptResource(resourcetype.FWFilteringDestinationGroup, fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestDNSApplicationGroups(client *testClient) error {
+	var errorList []error
+
+	// Instantiate the specific service for App Connector Group
+	service := &zscaler.Service{
+		Client: client.sdkV3Client, // Use the existing SDK client
+	}
+
+	dnsGroup, err := dns_application_groups.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	// Logging the number of identified resources before the deletion loop
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(dnsGroup)))
+	for _, b := range dnsGroup {
+		// Check if the resource name has the required prefix before deleting it
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := dns_application_groups.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.DNSApplicationGroup, fmt.Sprintf("%d", b.ID), b.Name)
 		}
 	}
 	// Log errors encountered during the deletion process
@@ -731,6 +779,210 @@ func sweepTestDLPWebRule(client *testClient) error {
 		}
 	}
 	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPResource(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	channels := []endpoint_resource_channel.Channel{
+		endpoint_resource_channel.ChannelPrinting,
+		endpoint_resource_channel.ChannelRemovableDriveTransfer,
+		endpoint_resource_channel.ChannelNetworkDriveTransfer,
+		endpoint_resource_channel.ChannelPersonalCloudStorage,
+	}
+
+	for _, channel := range channels {
+		resources, err := endpoint_resource_channel.GetChannelList(context.Background(), service, channel, nil)
+		if err != nil {
+			errorList = append(errorList, err)
+			continue
+		}
+		sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep in channel %s", len(resources), channel))
+		for _, b := range resources {
+			// Only sweep test-created resources; never touch predefined ones.
+			if b.IsPredefined {
+				continue
+			}
+			if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+				if _, err := endpoint_resource.Delete(context.Background(), service, b.ID); err != nil {
+					errorList = append(errorList, err)
+					continue
+				}
+				logSweptResource(resourcetype.DLPEndpointResource, fmt.Sprintf("%d", b.ID), b.Name)
+			}
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPResourceGroup(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	channels := []endpoint_resource_channel.Channel{
+		endpoint_resource_channel.ChannelPrinting,
+		endpoint_resource_channel.ChannelRemovableDriveTransfer,
+		endpoint_resource_channel.ChannelNetworkDriveTransfer,
+	}
+
+	for _, channel := range channels {
+		groups, err := endpoint_resource_group.GetResourceGroupTagsList(context.Background(), service, channel, nil)
+		if err != nil {
+			errorList = append(errorList, err)
+			continue
+		}
+		sweeperLogger.Warn(fmt.Sprintf("Found %d resource groups to sweep in channel %s", len(groups), channel))
+		for _, b := range groups {
+			if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+				if _, err := endpoint_resource_group.Delete(context.Background(), service, b.ID); err != nil {
+					errorList = append(errorList, err)
+					continue
+				}
+				logSweptResource(resourcetype.DLPEndpointResourceGroup, fmt.Sprintf("%d", b.ID), b.Name)
+			}
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPApplicationGroup(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	groups, err := endpoint_application_groups.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d endpoint application groups to sweep", len(groups)))
+	for _, b := range groups {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := endpoint_application_groups.Delete(context.Background(), service, b.GroupID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.DLPEndpointApplicationGroup, fmt.Sprintf("%d", b.GroupID), b.Name)
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPCustomApps(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	apps, err := endpoint_custom_apps.GetCustomApps(context.Background(), service, nil)
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(apps)))
+	for _, b := range apps {
+		if strings.HasPrefix(b.ApplicationName, testResourcePrefix) || strings.HasPrefix(b.ApplicationName, updateResourcePrefix) {
+			if _, err := endpoint_custom_apps.Delete(context.Background(), service, b.ResourceID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.DLPEndpointCustomApps, fmt.Sprintf("%d", b.ResourceID), b.ApplicationName)
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPSubRules(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	parents, err := endpoint_dlp_rules.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	for _, parent := range parents {
+		for _, sr := range parent.SubRules {
+			if strings.HasPrefix(sr.Name, testResourcePrefix) || strings.HasPrefix(sr.Name, updateResourcePrefix) {
+				if _, err := endpoint_dlp_sub_rules.Delete(context.Background(), service, parent.ID, sr.ID); err != nil {
+					errorList = append(errorList, err)
+					continue
+				}
+				logSweptResource(resourcetype.DLPEndpointSubRules, fmt.Sprintf("%d", sr.ID), sr.Name)
+			}
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestEndpointDLPRules(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	rules, err := endpoint_dlp_rules.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(rules)))
+	for _, b := range rules {
+		if strings.HasPrefix(b.Name, testResourcePrefix) || strings.HasPrefix(b.Name, updateResourcePrefix) {
+			if _, err := endpoint_dlp_rules.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource("zia_endpoint_dlp_rules", fmt.Sprintf("%d", b.ID), b.Name)
+		}
+	}
+
 	if len(errorList) > 0 {
 		for _, err := range errorList {
 			sweeperLogger.Error(err.Error())

@@ -202,6 +202,25 @@ const (
 	HTTPHeaderProfileDescription       = "testAcc_http_header_profile"
 )
 
+// Endpoint DLP Resource
+const (
+	DLPEndpointResourceChannel     = "PRINTING"
+	DLPEndpointResourceDescription = "testAcc_endpoint_dlp_resource"
+
+	DLPEndpointResourceGroupChannel     = "PRINTING"
+	DLPEndpointResourceGroupDescription = "testAcc_endpoint_dlp_resource_group"
+
+	DLPEndpointApplicationGroupDescription = "testAcc_endpoint_dlp_application_group"
+
+	DLPEndpointCustomAppDescription = "testAcc_endpoint_dlp_custom_app"
+	DLPEndpointCustomAppOsType      = "WINDOWS_OS"
+	DLPEndpointCustomAppFileName    = "custom_app.exe"
+
+	DLPEndpointSubRuleDescription = "testAcc_endpoint_dlp_sub_rule"
+	DLPEndpointSubRuleAction      = "ALLOW"
+	DLPEndpointSubRuleState       = "ENABLED"
+)
+
 // IPS Signature Rules
 const (
 	IPSSignatureRuleName        = "testAcc_ips_signature_rule"
@@ -334,4 +353,10 @@ const (
 	ExtranetIPPoolStart        = "192.168.1.1"
 	ExtranetIPPoolEnd          = "192.168.1.2"
 	ExtranetIPPoolUseAsDefault = true
+)
+
+// Firewall Filtering IP Source Group resource/datasource
+const (
+	DNSAppGroupName        = "this is an acceptance test"
+	DNSAppGroupDescription = "this is an acceptance test"
 )

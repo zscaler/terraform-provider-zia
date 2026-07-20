@@ -185,6 +185,12 @@ The following arguments are supported:
   * `enable_full_logging` (Boolean) `Aggregate`: The service groups together individual sessions based on { user, rule, network service, network application } and records them periodically. `Full`: The service logs all sessions of the rule individually, except HTTP(S). Only Block rules support full logging. Full logging on all other rules requires the Full Logging license.
   * `predefined` - (Boolean) If set to true, a predefined rule is applied
 
+* `end_point_applications` - (Block) The endpoint applications to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `zapp_id` - (List of String) The unique identifiers of the endpoint applications.
+
+* `end_point_application_groups` - (Block) The endpoint application groups to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `group_id` - (List of String) The unique identifiers of the endpoint application groups.
+
 ## Import
 
 Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.

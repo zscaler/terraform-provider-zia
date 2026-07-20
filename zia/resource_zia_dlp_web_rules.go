@@ -192,7 +192,6 @@ func resourceDlpWebRules() *schema.Resource {
 			"action": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Computed:    true,
 				Description: "The action taken when traffic matches the DLP policy rule criteria.",
 				ValidateFunc: validation.StringInSlice([]string{
 					"ANY",
@@ -851,80 +850,6 @@ func expandSubRules(set *schema.Set) []dlp_web_rules.WebDLPRules {
 		}
 	}
 	return subRules
-}
-
-func expandReceiver(d *schema.ResourceData, key string) *dlp_web_rules.Receiver {
-	receiverSet, ok := d.Get(key).(*schema.Set)
-	if !ok || receiverSet.Len() == 0 {
-		return nil
-	}
-
-	// Since receiver is a single item set, get the first (and only) item
-	receiverList := receiverSet.List()
-	if len(receiverList) == 0 {
-		return nil
-	}
-
-	item := receiverList[0].(map[string]interface{})
-
-	// Convert string ID to int for the SDK struct
-	idStr := item["id"].(string)
-	idInt, err := strconv.Atoi(idStr)
-	if err != nil {
-		// If conversion fails, use 0 as default
-		idInt = 0
-	}
-
-	receiver := &dlp_web_rules.Receiver{
-		ID:   idInt,
-		Name: item["name"].(string),
-		Type: item["type"].(string),
-	}
-
-	// Handle tenant if present
-	if tenantList, ok := item["tenant"].([]interface{}); ok && len(tenantList) > 0 {
-		if tenantMap, ok := tenantList[0].(map[string]interface{}); ok {
-			tenantIDStr := tenantMap["id"].(string)
-			tenantIDInt, err := strconv.Atoi(tenantIDStr)
-			if err != nil {
-				tenantIDInt = 0
-			}
-			receiver.Tenant = &common.IDNameExtensions{
-				ID:   tenantIDInt,
-				Name: tenantMap["name"].(string),
-			}
-		}
-	}
-
-	return receiver
-}
-
-func flattenReceiverResource(receiver *dlp_web_rules.Receiver) []interface{} {
-	if receiver == nil {
-		return nil
-	}
-
-	// Check if the receiver is actually empty (no meaningful data)
-	if receiver.ID == 0 && receiver.Name == "" && receiver.Type == "" && receiver.Tenant == nil {
-		return nil
-	}
-
-	result := map[string]interface{}{
-		"id":   strconv.Itoa(receiver.ID),
-		"name": receiver.Name,
-		"type": receiver.Type,
-	}
-
-	// Handle tenant if present
-	if receiver.Tenant != nil {
-		tenant := map[string]interface{}{
-			"id":   strconv.Itoa(receiver.Tenant.ID),
-			"name": receiver.Tenant.Name,
-		}
-		result["tenant"] = []interface{}{tenant}
-	}
-
-	return []interface{}{result}
 }
 
 func flattenIDListIDs(list []common.IDName) []interface{} {

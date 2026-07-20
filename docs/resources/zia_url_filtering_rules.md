@@ -225,6 +225,8 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the URL Filtering rule.
 * `action` - (Optional) Action taken when traffic matches rule criteria. Supported values: `BLOCK`, `CAUTION`, `ALLOW`, `ICAP_RESPONSE`
 
+* `browser_eun_template_id` - (Optional) Browser notification template to which the rule applies. To retrieve the list of End User Templates use the data source [zia_eun_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_template_product).
+
 * `devices` (list) - Specifies devices that are managed using Zscaler Client Connector.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 * `device_groups` (list) - This field is applicable for devices that are managed using Zscaler Client Connector.

@@ -1,5 +1,5 @@
 ---
-subcategory: "Data Loss Prevention"
+subcategory: "Outbound Email DLP Policy"
 layout: "zscaler"
 page_title: "ZIA: email_profile"
 description: |-
@@ -13,7 +13,7 @@ description: |-
 * [Official documentation](https://help.zscaler.com/zia/about-dlp-notification-templates)
 * [API documentation](https://help.zscaler.com/legacy-apis/data-loss-prevention-0#/emailRecipientProfile-post)
 
-The **zia_email_profile** resource allows the creation and management of email recipient profiles in the Zscaler Internet Access cloud. Email recipient profiles define sets of email addresses that can be referenced in DLP rules and notification configurations.
+The **zia_email_profile** resource allows the creation and management of email recipient profiles in the Zscaler Internet Access cloud. Email recipient profiles define sets of email addresses that can be referenced in DLP rules and notification configurations. This data source can be used in the attribute list `email_recipient_profiles` when configuring the resource `zia_outbound_email_dlp`
 
 ~> NOTE: This an Early Access feature.
 

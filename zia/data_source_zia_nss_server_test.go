@@ -12,13 +12,15 @@ import (
 func TestAccDataSourceNSSServer_Basic(t *testing.T) {
 	resourceTypeAndName, dataSourceTypeAndName, generatedName := method.GenerateRandomSourcesTypeAndName(resourcetype.NSSServer)
 
+	initialName := "tf-acc-test-" + generatedName
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNSSServerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckNSSServerConfigure(resourceTypeAndName, generatedName, variable.NSSStatus, variable.NSSType),
+				Config: testAccCheckNSSServerConfigure(resourceTypeAndName, initialName, variable.NSSStatus, variable.NSSType),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "id", resourceTypeAndName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceTypeAndName, "name", resourceTypeAndName, "name"),

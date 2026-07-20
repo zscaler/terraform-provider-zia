@@ -199,6 +199,9 @@ When `rule_id` or `name` resolves to exactly one rule, the following attributes 
 * `enable_full_logging` - Whether the rule logs the full session.
 * `default_rule` - Whether this is the per-tenant default rule.
 * `predefined` - Whether the rule is a Zscaler-predefined rule (cannot be deleted).
+* `exclude_context_shield_end_point` - (Boolean) If set to true, the context shield end point is excluded from the rule
+* `is_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule. To retrieve the list of End User Templates use the data source [zia_eun_user_confirmation_template_product](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_eun_user_confirmation_template_product).
 
 `Who, Where and When` attributes:
 
@@ -266,6 +269,41 @@ When `rule_id` or `name` resolves to exactly one rule, the following attributes 
   * `external_id` - (String)
 * `last_modified_by` - (Block) Identifier of the admin who last modified the rule.
   * Same nested shape as `locations`.
+
+* `end_point_applications` - (Block) The list of endpoint applications to which the DLP policy rule must be applied.
+  * `resource_id` - (Number) The unique identifier of the endpoint application.
+  * `application_name` - (String) The name of the endpoint application.
+  * `application_type` - (String) The type of the endpoint application.
+  * `zapp_id` - (String) The Zscaler Client Connector identifier of the endpoint application.
+  * `os_type` - (String) The operating system type associated with the endpoint application.
+  * `description` - (String) The description of the endpoint application.
+  * `bundle_id` - (String) The bundle identifier of the endpoint application.
+  * `filename` - (String) The file name of the endpoint application.
+  * `original_file_name` - (String) The original file name of the endpoint application.
+  * `digitally_signed` - (Boolean) Indicates whether the endpoint application is digitally signed.
+  * `deleted` - (Boolean) Indicates whether the endpoint application has been deleted.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application was last modified.
+  * `version` - (Block) The current version details of the endpoint application (see `version` block below).
+  * `versions` - (Block) The list of version details of the endpoint application (see `version` block below).
+
+* `end_point_application_groups` - (Block) The list of endpoint application groups to which the DLP policy rule must be applied.
+  * `group_id` - (Number) The unique identifier of the endpoint application group.
+  * `name` - (String) The name of the endpoint application group.
+  * `description` - (String) The description of the endpoint application group.
+  * `mod_uid` - (Number) The modification identifier of the endpoint application group.
+  * `last_modified_time` - (Number) Timestamp when the endpoint application group was last modified.
+  * `end_point_applications` - (Block) The endpoint applications belonging to the group (same structure as `end_point_applications` above).
+
+The `version`/`versions` blocks expose the following attributes:
+
+* `version` - (String) The version string of the endpoint application.
+* `z_ver_id_md32` - (Number) The internal version identifier.
+* `threat_type` - (Number) The threat type associated with the version.
+* `threat_level` - (String) The threat level associated with the version.
+* `bundle_id` - (String) The bundle identifier associated with the version.
+* `code_signing_certificate_status` - (Number) The code signing certificate status.
+* `threat_level_updated` - (Boolean) Indicates whether the threat level was updated.
 
 ### `rules` block (collection mode)
 

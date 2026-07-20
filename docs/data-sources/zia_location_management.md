@@ -51,12 +51,23 @@ data "zia_location_management" "branch" {
 }
 ```
 
+### Example Usage - Sub-Location
+
+```hcl
+# Look up a sub-location by name and its parent location
+data "zia_location_management" "this" {
+    name        = "USA-SJC37"
+    parent_name = "USA"
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name` - (Required) - The name of the location to be exported.
 * `id` - (Required) - The ID of the location to be exported.
+* `parent_name` - (Optional) - The name of the parent location. Use this when looking up a sub-location. If `parent_name` is not provided, the provider returns the first location matching the queried `name`; it is required when overlapping sub-location names exist across multiple parent locations.
 * `search` - (Optional) A [JMESPath](https://jmespath.org/) expression to filter results client-side after all pages have been retrieved from the API. The expression is applied to the list of locations before name or ID matching. This is useful in large environments to narrow down the candidate set. Field names in expressions must use the API's camelCase names (e.g., `name`, `country`, `sslScanEnabled`, `ofwEnabled`, `authRequired`, `profile`).
 
 ## Attribute Reference

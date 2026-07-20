@@ -390,3 +390,28 @@ In addition to all arguments above, the following attributes are supported:
 ### Workload Groups Attributes
 
 * `id` (Integer) - A unique identifier assigned to the workload group
+
+* `end_point_applications` - (Block) The endpoint applications to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `zapp_id` - (List of String) The unique identifiers of the endpoint applications.
+
+* `end_point_application_groups` - (Block) The endpoint application groups to which the DLP policy rule must be applied. Can only be set when `data_transfer_method` is `APPLICATION_FILE_ACCESS`.
+  * `group_id` - (List of String) The unique identifiers of the endpoint application groups.
+
+## Import
+
+Zscaler offers a dedicated tool called Zscaler-Terraformer to allow the automated import of ZIA configurations into Terraform-compliant HashiCorp Configuration Language.
+[Visit](https://github.com/zscaler/zscaler-terraformer)
+
+**zia_ssl_inspection_rules** can be imported by using `<RULE ID>` or `<RULE NAME>` as the import ID.
+
+For example:
+
+```shell
+terraform import zia_ssl_inspection_rules.example <rule_id>
+```
+
+or
+
+```shell
+terraform import zia_ssl_inspection_rules.example <rule_name>
+```
