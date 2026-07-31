@@ -27,22 +27,22 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 The following new resources and data sources have been introduced:
 
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Added the resource and data source `zia_ueba_alert_definitions` - Creates and retrieves alert definitions. [Configuring an Alert Rule](https://help.zscaler.com/zia/configuring-alert-rule)
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Added the resource and data source `zia_ueba_alert_definitions` - Creates and retrieves alert definitions. [Configuring an Alert Rule](https://help.zscaler.com/zia/configuring-alert-rule)
 
 
 ### Enhancements
 
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Removed an internal request-serialization layer that caused the resources `zia_url_categories`, `zia_auth_settings_urls`, and `zia_security_policy_settings` to be created and updated one at a time across an entire configuration. Deployments that create or update large numbers of URL categories now run concurrently and complete significantly faster.
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Removed an internal request-serialization layer that caused the resources `zia_url_categories`, `zia_auth_settings_urls`, and `zia_security_policy_settings` to be created and updated one at a time across an entire configuration. Deployments that create or update large numbers of URL categories now run concurrently and complete significantly faster.
 
 ### Deprecations
 
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Deprecated the `parallelism` provider attribute. The attribute has no effect and will be removed in a future major release; remove it from the provider block. Rate limiting requires no configuration: when a limit is exceeded, the API returns the interval to wait and the provider retries the request automatically.
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Deprecated the `parallelism` provider attribute. The attribute has no effect and will be removed in a future major release; remove it from the provider block. Rate limiting requires no configuration: when a limit is exceeded, the API returns the interval to wait and the provider retries the request automatically.
 
 ### Documentation
 
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Removed all guidance recommending that Terraform's `-parallelism` flag be lowered for bulk operations. The flag applies to an entire run and cannot be scoped to individual resource types, and lowering it severely slows deployments of rule-based resources, where rule placement is reconciled for each batch of concurrently created rules.
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Added a `Rate Limiting` section to the provider documentation describing how rate-limited requests are retried automatically.
-- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Corrected the documented default for the `max_retries` provider attribute, which is `100` and was previously documented as `5`.
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Removed all guidance recommending that Terraform's `-parallelism` flag be lowered for bulk operations. The flag applies to an entire run and cannot be scoped to individual resource types, and lowering it severely slows deployments of rule-based resources, where rule placement is reconciled for each batch of concurrently created rules.
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Added a `Rate Limiting` section to the provider documentation describing how rate-limited requests are retried automatically.
+- [PR #592](https://github.com/zscaler/terraform-provider-zia/pull/592) - Corrected the documented default for the `max_retries` provider attribute, which is `100` and was previously documented as `5`.
 
 ## 4.8.0 (July, 20 2026)
 
