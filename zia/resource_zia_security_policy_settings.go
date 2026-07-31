@@ -76,10 +76,6 @@ func expandSecurityPolicySettings(d *schema.ResourceData) security_policy_settin
 }
 
 func resourceSecurityPolicySettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 	listUrls := expandSecurityPolicySettings(d)
@@ -104,10 +100,6 @@ func resourceSecurityPolicySettingsCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceSecurityPolicySettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 	listUrls := expandSecurityPolicySettings(d)

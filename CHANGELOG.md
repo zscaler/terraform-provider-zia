@@ -1,5 +1,32 @@
 # Changelog
 
+## 4.8.1 (July, 30 2026)
+
+### Notes
+
+- Release date: **(July, 30 2026)**
+- Supported Terraform version: **v1.x**
+
+### NEW - RESOURCES AND DATA SOURCES
+
+The following new resources and data sources have been introduced:
+
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Added the resource and data source `zia_ueba_alert_definitions` - Creates and retrieves alert definitions. [Configuring an Alert Rule](https://help.zscaler.com/zia/configuring-alert-rule)
+
+### Enhancements
+
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Removed an internal request-serialization layer that caused the resources `zia_url_categories`, `zia_auth_settings_urls`, and `zia_security_policy_settings` to be created and updated one at a time across an entire configuration. Deployments that create or update large numbers of URL categories now run concurrently and complete significantly faster.
+
+### Deprecations
+
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Deprecated the `parallelism` provider attribute. The attribute has no effect and will be removed in a future major release; remove it from the provider block. Rate limiting requires no configuration: when a limit is exceeded, the API returns the interval to wait and the provider retries the request automatically.
+
+### Documentation
+
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Removed all guidance recommending that Terraform's `-parallelism` flag be lowered for bulk operations. The flag applies to an entire run and cannot be scoped to individual resource types, and lowering it severely slows deployments of rule-based resources, where rule placement is reconciled for each batch of concurrently created rules.
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Added a `Rate Limiting` section to the provider documentation describing how rate-limited requests are retried automatically.
+- [PR #588](https://github.com/zscaler/terraform-provider-zia/pull/588) - Corrected the documented default for the `max_retries` provider attribute, which is `100` and was previously documented as `5`.
+
 ## 4.8.0 (July, 20 2026)
 
 ### Notes
@@ -1825,14 +1852,6 @@ NEW - RESOURCES, DATA SOURCES
   - ``zia_url_filtering_rules``
   - ``zia_firewall_filtering_rule`
 
-⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests to ONE, when configuring the above resources.
-
-  This will allow the API to settle these resources in the correct order. Pushing large batches of security rules at once, may incur in Terraform to Timeout after 20 mins, as it will try to place the rules in the incorrect order. This issue will be addressed in future versions.
-
-In order to accomplish this, make sure you set the
-[parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or
-below this limit to prevent performance impacts.
-
 - [PR #195](https://github.com/zscaler/terraform-provider-zia/pull/195) Fixed ``zia_traffic_forwarding_gre_tunnel`` by removing unecessary computed values to prevent drifts.
 
 ## 2.4.3 (February, 28 2023)
@@ -1857,14 +1876,6 @@ below this limit to prevent performance impacts.
   - ``zia_dlp_web_rules``
   - ``zia_url_filtering_rules``
   - ``zia_firewall_filtering_rule`
-
-⚠️ **WARNING:** Due to API limitations, we recommend to limit the number of requests to ONE, when configuring the above resources.
-
-  This will allow the API to settle these resources in the correct order. Pushing large batches of security rules at once, may incur in Terraform to Timeout after 20 mins, as it will try to place the rules in the incorrect order. This issue will be addressed in future versions.
-
-In order to accomplish this, make sure you set the
-[parallelism](https://www.terraform.io/cli/commands/apply#parallelism-n) value at or
-below this limit to prevent performance impacts.
 
 - [PR #195](https://github.com/zscaler/terraform-provider-zia/pull/195) Fixed ``zia_traffic_forwarding_gre_tunnel`` by removing unecessary computed values to prevent drifts.
 

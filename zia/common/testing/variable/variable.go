@@ -38,6 +38,19 @@ const (
 	FileTypeControlRuleState        = "ENABLED"
 )
 
+// UEBA Alert Definitions
+const (
+	UEBAAlertName        = "OUTGOING_VIRUSES"
+	UEBAAlertStatus      = "ENABLED"
+	UEBAAlertScope       = "ORGANIZATION"
+	UEBAAlertSeverity    = "CRITICAL"
+	UEBAAlertSeverityUpd = "MAJOR"
+	UEBAAlertOccurrence  = "OCCURRENCE_1"
+	UEBAAlertInterval    = "INTERVAL_5_MINUTES"
+	UEBAAlertComments    = "tf-acc-test-UEBA alert definition"
+	UEBAAlertCommentsUpd = "tf-updated-UEBA alert definition"
+)
+
 // Sandbox rules
 const (
 	SandboxRuleResourceName = "testAcc_sandbox_rule"

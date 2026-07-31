@@ -17,6 +17,23 @@ Use the **forwarding_control_zpa_gateway** resource allows the creation and mana
 
 ⚠️ **IMPORTANT:**: To configure a ZPA Gateway you **MUST** use the ZPA Terraform Provider to configure a Server Group and Application Segment with the Source IP Anchoring feature enabled at the Application Segment resource. Please refer to the ZPA Terraform Provider documentation [here](https://registry.terraform.io/providers/zscaler/zpa/latest/docs)
 
+~> **NOTE:** This resource requires **both** the ZIA and ZPA providers in the same configuration. The `external_id` and `name` values inside `zpa_server_group` and `zpa_app_segments` identify objects that live in ZPA, not ZIA, so they must be read from the ZPA provider (as shown below) rather than entered by hand. Declare both providers in `required_providers` and let each authenticate to its own tenant:
+
+```hcl
+terraform {
+  required_providers {
+    zia = {
+      source  = "zscaler/zia"
+      version = "~> 4.0"
+    }
+    zpa = {
+      source  = "zscaler/zpa"
+      version = "~> 4.0"
+    }
+  }
+}
+```
+
 ## Example Usage
 
 ```hcl
@@ -39,7 +56,7 @@ resource "zia_forwarding_control_zpa_gateway" "this" {
     type = "ZPA"
     zpa_server_group {
       external_id = data.zpa_server_group.this.id
-      name = data.zpa_server_group.this.id
+      name = data.zpa_server_group.this.name
     }
     zpa_app_segments {
         external_id = data.zpa_application_segment.this1.id
@@ -57,19 +74,20 @@ resource "zia_forwarding_control_zpa_gateway" "this" {
 The following arguments are supported:
 
 * `name` (Required) The name of the forwarding control ZPA Gateway to be exported.
-* `zpa_server_group` (Required) - The ZPA Server Group that is configured for Source IP Anchoring
+* `zpa_server_group` (Required) - The ZPA Server Group that is configured for Source IP Anchoring. Populate from the ZPA provider, e.g. the `zpa_server_group` data source.
   * `external_id` (Required) - An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.
   * `name` (Required) - The configured name of the entity
-* `zpa_app_segments` - (Required) The ZPA Server Group that is configured for Source IP Anchoring
+* `zpa_app_segments` - (Optional) The Application Segments to associate with this ZPA Gateway. Populate from the ZPA provider, e.g. the `zpa_application_segment` data source. Repeat the block for each application segment.
   * `external_id` (Required) - An external identifier used for an entity that is managed outside of ZIA. Examples include zpaServerGroup and zpaAppSegments. This field is not applicable to ZIA-managed entities.
   * `name` (Required) - The configured name of the entity
+* `description` - (Optional) Additional details about the ZPA gateway
+* `type` - (Optional) Indicates whether the ZPA gateway is configured for Zscaler Internet Access (using option `ZPA`) or Zscaler Cloud Connector (using option `ECZPA`). Defaults to `ZPA` when not returned by the API.
 
 ## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `description` - (string) - Additional details about the ZPA gateway
-* `type` - (string) - Indicates whether the ZPA gateway is configured for Zscaler Internet Access (using option ZPA) or Zscaler Cloud Connector (using option ECZPA). Supported values: ``ZPA`` and ``ECZPA``
+* `id` - (string) The ID of the ZPA gateway.
 
 ## Import
 

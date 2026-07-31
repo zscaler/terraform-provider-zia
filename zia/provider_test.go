@@ -76,6 +76,7 @@ func TestMain(m *testing.M) {
 		setupSweeper(resourcetype.DLPEndpointSubRules, sweepTestEndpointDLPSubRules)
 		setupSweeper(resourcetype.DLPEndpointResourceGroup, sweepTestEndpointDLPResourceGroup)
 		setupSweeper(resourcetype.DLPEndpointApplicationGroup, sweepTestEndpointDLPApplicationGroup)
+		setupSweeper(resourcetype.UEBAAlertDefinitions, sweepTestUEBAAlertDefinitions)
 	}
 	resource.TestMain(m)
 }

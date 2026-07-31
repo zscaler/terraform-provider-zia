@@ -172,6 +172,8 @@ on-demand sync of newly created roles.
 
 - [API Session Timeout](https://help.zscaler.com/zia/release-upgrade-summary-2026#:~:text=Feature%20Available-,API%20Session%20Timeout,-When%20configuring%20advanced) - A new field, `api_session_timeout`, is available for the AdvancedSettings model in the /advancedSettings APIs. This configuration allows you to specify how long API-initiated sessions can be inactive before they are forced to reauthenticate. The timeout duration can range from 5 to 20 minutes. The attribute `api_session_timeout` is available via the resource `zia_advanced_settings`
 
+  ~> **NOTE:** This setting directly affects long-running Terraform applies, because the platform activates pending changes when a session ends. See [API Session Timeout and Long-Running Applies](#api-session-timeout-and-long-running-applies).
+
 ## Legacy API Framework
 
 ### ZIA native authentication
@@ -263,34 +265,103 @@ provider "zia" {}
 
 For details about how to retrieve your tenant Base URL and API key/token refer to the Zscaler help portal. <https://help.zscaler.com/zia/getting-started-zia-api>
 
-### ZIA Configuration Activation
+## ZIA Configuration Activation
 
-The ZIA platform requires every configuration to be activated. As of version [v2.8.0](https://github.com/zscaler/terraform-provider-zia/releases/tag/v2.8.0) the provider supports implicit activation. In order to make this process more flexible, we have implemented a dedicated environment variable `ZIA_ACTIVATION`, which when set to `true` will implicitly activate the changes as resources are configured.
-If the environment variable `ZIA_ACTIVATION` is not set, you must then use the out of band activation method described here [zia activator](guides/zia-activator-overview.md) or leverage the dedicated activation resource `zia_activation_status`.
+The ZIA platform saves configuration changes in a **pending** state. A successful `terraform apply` writes the configuration to the tenant but does not put it into effect for traffic — the changes must be **activated**. See [Saving and Activating Changes](https://help.zscaler.com/unified/saving-and-activating-changes-admin-console) for the platform's own description of this behaviour.
 
-### Rate Limiting and Parallelism
+Activation is a tenant-wide operation, not a per-resource one. **A single activation call publishes every pending change in the tenant**, regardless of how many resources Terraform created, updated, or deleted.
 
-The ZIA platform enforces API rate limits on a per-endpoint basis. Different endpoints have different thresholds — for example, some endpoints allow multiple POST requests per second, while others (such as `/staticIP`) are limited to 1 POST request per second. When a rate limit is exceeded, the API returns an HTTP `429 Too Many Requests` response with a `Retry-After` header indicating how long the client should wait before retrying. The Zscaler SDK automatically handles these responses by respecting the `Retry-After` value and retrying the request transparently.
+The provider supports three activation methods, described below in order of preference.
 
-In addition to server-side enforcement, the SDK includes a client-side rate limiter that provides a first-pass throttle to reduce unnecessary 429 responses. This client-side limiter allows up to **10 POST/PUT/DELETE requests per 10-second window** and **20 GET requests per 10-second window**. These limits are intentionally less restrictive than some individual endpoint limits, because server-side enforcement via `429` + `Retry-After` is the authoritative mechanism for per-endpoint rate limiting.
+### Method 1 — Out-of-band activation with the `ziaActivator` CLI (recommended)
 
-**Terraform Parallelism Considerations:**
+Compile the dedicated activation binary and run it once, after Terraform has finished:
 
-By default, Terraform applies changes to up to **10 resources concurrently** (`-parallelism=10`). For resources with strict per-endpoint rate limits, this default concurrency can cause a high volume of `429` retry responses, as multiple concurrent requests compete for the same endpoint's rate limit budget. While the SDK handles retries automatically, this retry cascading can increase overall execution time.
-
-For bulk operations on heavily rate-limited resources (e.g., creating hundreds of `zia_traffic_forwarding_static_ip` resources), consider reducing Terraform's parallelism to minimize retry overhead:
-
-```sh
-# Serialize resource creation to align with strict per-endpoint rate limits
-terraform apply -parallelism=1
-
-# Or use a moderate value for a balance between speed and retry efficiency
-terraform apply -parallelism=5
+```bash
+make build13 && sudo make ziaActivator
 ```
 
-~> **Note:** The `-parallelism` flag is a Terraform CLI option, not a provider setting. It controls how many resources Terraform creates, updates, or destroys concurrently across the entire configuration. The provider cannot override this value. Refer to the [Zscaler Rate Limiting Documentation](https://automate.zscaler.com/docs/api-reference-and-guides/guides/rate-limiting/zia) for details on per-endpoint limits.
+```bash
+terraform apply && ziaActivator
+```
 
-### Zscaler Sandbox Authentication
+This is the recommended method for CI/CD pipelines and for large configurations. It issues exactly one activation call for the entire run, keeps activation timing explicitly under your control, and adds no activation traffic to the apply itself. The activator reads the same credentials and environment variables as the provider, so no additional configuration is required.
+
+For build and usage details, see the [ZIA Activator](guides/zia-activator-overview.md) guide.
+
+### Method 2 — The `zia_activation_status` resource
+
+Declare the resource in your configuration and use the `depends_on` meta-argument so that it runs after the resources it should activate:
+
+```hcl
+resource "zia_activation_status" "this" {
+  status = "ACTIVE"
+
+  depends_on = [
+    zia_url_filtering_rules.block_gambling,
+    zia_firewall_filtering_rule.allow_engineering,
+  ]
+}
+```
+
+This keeps activation inside the Terraform run, but it carries an important limitation: `depends_on` cannot be inferred, so **every resource whose changes must be activated has to be listed explicitly**. Any resource you forget may be applied *after* activation and therefore left pending. In configurations built from reusable modules this list becomes difficult to maintain and easy to get wrong, because you must depend on whole modules and keep that list in step with every future change. Prefer Method 1 for module-based or large configurations.
+
+### Method 3 — The `ZIA_ACTIVATION` environment variable (discouraged)
+
+Setting `ZIA_ACTIVATION=true` makes the provider activate changes in-flight, as resources are configured:
+
+```bash
+export ZIA_ACTIVATION=true
+```
+
+~> **NOTE:** This method is discouraged and may be removed in a future major release. It triggers an activation call for **every** resource created, updated, or deleted, even though a single call at the end of the run would publish the same changes. The activation endpoint is one of the most tightly rate-limited endpoints in the platform, at **10 POST requests per minute and 40 per hour**. A configuration of any meaningful size therefore exhausts that budget quickly and spends the rest of the run waiting on retries. Refer to the [API Rate Limit Summary](https://help.zscaler.com/legacy-apis/api-rate-limit-summary) for the published limits.
+
+### API Session Timeout and Long-Running Applies
+
+API-initiated sessions have a maximum lifetime controlled by the API session timeout in Advanced Settings. The value can range from **5 to 20 minutes and defaults to 5**. See [Configuring Advanced Settings](https://help.zscaler.com/zia/configuring-advanced-settings#session-timeout) for the platform's description of this setting.
+
+This matters for Terraform because **the platform activates pending changes when a session ends**, including when it ends by reaching the session timeout. Two consequences follow for runs that last longer than the configured timeout:
+
+- Pending changes may be activated part-way through the run, before the apply has finished writing the rest of the configuration.
+- The provider must establish a new session and continue, so the run does not fail, but activation has already occurred at a point you did not choose.
+
+A run of 30 minutes against a 5-minute session timeout will therefore cross this boundary several times. **Raise the API session timeout to its maximum of 20 minutes** before running large configurations. This can be done in either of two ways.
+
+**In the ZIA Admin Portal** — navigate to **Administration > Advanced Settings** and set **API Session Timeout Duration (In Minutes)** under *Admin Portal Session Timeout*. Note that this is a separate field from the UI session timeout on the same page:
+
+![ZIA Admin Portal — Advanced Settings, Admin Portal Session Timeout](https://raw.githubusercontent.com/zscaler/terraform-provider-zia/master/docs/guides/media/advanced_settings.png)
+
+**With Terraform** — set the `api_session_timeout` attribute on the [`zia_advanced_settings`](resources/zia_advanced_settings.md) resource:
+
+```hcl
+resource "zia_advanced_settings" "this" {
+  api_session_timeout = 20
+  # … remaining advanced settings attributes
+}
+```
+
+~> **NOTE:** Raising the timeout reduces how often a long run crosses a session boundary, but it does not eliminate the behaviour. Activation on session end is native to the platform and cannot be disabled or overridden by the provider. 20 minutes is a ceiling, not a guarantee — for very large configurations, split the work across smaller states so that no single run needs to outlive a session.
+
+### Running Several Configurations Against One Tenant
+
+Splitting a large deployment across several Terraform configurations is fully supported. Two operational rules apply, because a ZIA tenant has a single configuration-change lock and a single activation queue regardless of how state is split:
+
+- **Apply one configuration at a time** against a given tenant. `terraform plan` can run in parallel — reads are unaffected. In CI, key the concurrency control on the tenant. Concurrent applies surface as `EDIT_LOCK_NOT_AVAILABLE` or `Failed during enter Org barrier`; the provider retries these, so the usual symptom is a slow run rather than an error.
+- **Activate once, after the last apply** — not once per configuration. Activation publishes every pending change in the tenant, so a per-configuration call is redundant and will queue behind any other session that still has unactivated changes.
+
+For the reasoning behind both rules, see the [ZIA Activator](guides/zia-activator-overview.md) guide.
+
+## Rate Limiting
+
+The ZIA platform enforces API rate limits on a per-endpoint basis. Different endpoints have different thresholds — for example, some endpoints allow multiple POST requests per second, while others (such as `/staticIP`) are limited to 1 POST request per second.
+
+**You do not need to configure anything to stay within these limits.** When a limit is exceeded, the API returns an HTTP `429 Too Many Requests` response with a `Retry-After` header, and the provider waits the indicated interval and retries the request transparently. Exceeding a rate limit therefore costs a short delay rather than a failed apply, including on large bulk deployments.
+
+Run Terraform with its default settings. Refer to the [Zscaler Rate Limiting Documentation](https://automate.zscaler.com/docs/api-reference-and-guides/guides/rate-limiting/zia) for details on per-endpoint limits.
+
+Note that rate limiting is distinct from the tenant-wide write lock. An `HTTP 409` response reporting `EDIT_LOCK_NOT_AVAILABLE` or `Failed during enter Org barrier` indicates that another session is modifying the configuration, not that a rate limit was exceeded. See [Running Several Configurations Against One Tenant](#running-several-configurations-against-one-tenant).
+
+## Zscaler Sandbox Authentication
 
 As of version v4.0.0, the ZIA Terraform provider the legacy sandbox authentication environment variables `ZIA_CLOUD` and `ZIA_SANDBOX_TOKEN` are no longer supported.
 
@@ -327,9 +398,7 @@ Before starting with this Terraform provider you must create an API Client in th
 
 - `http_proxy` - (Optional) This is a custom URL endpoint that can be used for unit testing or local caching proxies. Can also be sourced from the `ZSCALER_HTTP_PROXY` environment variable.
 
-- `parallelism` - (Optional) Number of concurrent requests to make within a resource where bulk operations are not possible. The provider creates a worker pool of this size to serialize API calls. The default is `1`. Note that this is separate from Terraform's CLI `-parallelism` flag, which controls how many resources are processed concurrently (default `10`). For bulk operations on rate-limited resources, consider reducing Terraform's CLI parallelism — see the [Rate Limiting and Parallelism](#rate-limiting-and-parallelism) section above. [Learn More](https://help.zscaler.com/oneapi/understanding-rate-limiting)
-
-- `max_retries` - (Optional) Maximum number of retries to attempt before returning an error, the default is `5`.
+- `max_retries` - (Optional) Maximum number of times a rate-limited request is retried before returning an error. The default is `100` and the maximum is `100`. Each retry waits out the interval reported by the API, so a high value costs nothing when rate limits are not being reached and allows large configurations to complete without manual intervention.
 
 - `request_timeout` - (Optional) Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.
 
