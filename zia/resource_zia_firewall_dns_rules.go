@@ -230,10 +230,11 @@ func resourceFirewallDNSRules() *schema.Resource {
 			"dns_rule_request_types":       getDnsRuleRequestTypes(),
 			"protocols":                    getDNSRuleProtocols(),
 		},
-		CustomizeDiff: firewallDNSCategoriesMirrorCustomizeDiff,
+		// CustomizeDiff: firewallDNSCategoriesMirrorCustomizeDiff,
 	}
 }
 
+/*
 // firewallDNSCategoriesMirrorCustomizeDiff enforces that res_categories and dest_ip_categories list the same
 // category IDs. The ZIA API requires Request (destIpCategories) and Response (resCategories) to match; otherwise
 // it returns INVALID_INPUT_ARGUMENT: "Requested IP-Categories and Resolved Domain Categories aren't matching".
@@ -292,17 +293,18 @@ func stringSlicesEqualAsSets(a, b []string) bool {
 	}
 	return true
 }
+*/
 
 func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
-	if err := firewallDNSCategorySetsMustMatch(
-		SetToStringList(d, "res_categories"),
-		SetToStringList(d, "dest_ip_categories"),
-	); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := firewallDNSCategorySetsMustMatch(
+	// 	SetToStringList(d, "res_categories"),
+	// 	SetToStringList(d, "dest_ip_categories"),
+	// ); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	req := expandFirewallDNSRules(d)
 	log.Printf("[INFO] Creating zia firewall dns rule\n%+v\n", req)
@@ -565,12 +567,12 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 	log.Printf("[INFO] Updating firewall dns rule ID: %v\n", id)
 
-	if err := firewallDNSCategorySetsMustMatch(
-		SetToStringList(d, "res_categories"),
-		SetToStringList(d, "dest_ip_categories"),
-	); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := firewallDNSCategorySetsMustMatch(
+	// 	SetToStringList(d, "res_categories"),
+	// 	SetToStringList(d, "dest_ip_categories"),
+	// ); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	req := expandFirewallDNSRules(d)
 
