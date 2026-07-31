@@ -249,10 +249,6 @@ func resourceURLCategories() *schema.Resource {
 }
 
 func resourceURLCategoriesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -376,10 +372,6 @@ func flattenScopesLite(scopes *urlcategories.URLCategory) []interface{} {
 }
 
 func resourceURLCategoriesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 

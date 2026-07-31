@@ -31,7 +31,6 @@ type (
 		privateKey         string
 		httpProxy          string
 		retryCount         int
-		parallelism        int
 		backoff            bool
 		minWait            int
 		maxWait            int
@@ -62,8 +61,7 @@ func NewConfig(d *schema.ResourceData) *Config {
 		backoff:        true,
 		minWait:        2,   // SDK default: 2 seconds
 		maxWait:        10,  // SDK default: 10 seconds
-		retryCount:     100, // SDK default: 100 retries
-		parallelism:    1,
+		retryCount:     100, // Deliberately above the SDK default so bulk applies survive sustained rate limiting.
 		logLevel:       int(hclog.Error),
 		requestTimeout: 1800, // 30 minutes - needed for GetAll() with 1000s of firewall rules
 	}
@@ -175,10 +173,6 @@ func NewConfig(d *schema.ResourceData) *Config {
 
 	if val, ok := d.GetOk("max_retries"); ok {
 		config.retryCount = val.(int)
-	}
-
-	if val, ok := d.GetOk("parallelism"); ok {
-		config.parallelism = val.(int)
 	}
 
 	if val, ok := d.GetOk("backoff"); ok {

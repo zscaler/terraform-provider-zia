@@ -813,14 +813,20 @@ func TestProviderConfigMatchesSDKConfig(t *testing.T) {
 		minWait:        2,
 		maxWait:        10,
 		retryCount:     100,
-		parallelism:    1,
 		requestTimeout: 1800,
 	}
 
-	// Verify provider defaults match SDK expectations
-	if providerDefaults.retryCount != int(zscaler.MaxNumOfRetries) {
-		t.Errorf("provider retryCount=%d should match SDK MaxNumOfRetries=%d",
+	// retryCount deliberately exceeds the SDK's own default so that large applies
+	// survive sustained rate limiting: each retry waits out the interval the API
+	// reports, so a high cap costs nothing when limits are not being hit. It must
+	// stay at or above the SDK default and within the schema's ceiling of 100.
+	if providerDefaults.retryCount < int(zscaler.MaxNumOfRetries) {
+		t.Errorf("provider retryCount=%d must be >= SDK MaxNumOfRetries=%d",
 			providerDefaults.retryCount, zscaler.MaxNumOfRetries)
+	}
+	if providerDefaults.retryCount > 100 {
+		t.Errorf("provider retryCount=%d exceeds the max_retries schema ceiling of 100",
+			providerDefaults.retryCount)
 	}
 	if providerDefaults.minWait != int(zscaler.RetryWaitMinSeconds) {
 		t.Errorf("provider minWait=%d should match SDK RetryWaitMinSeconds=%d",

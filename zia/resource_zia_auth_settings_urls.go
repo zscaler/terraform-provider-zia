@@ -70,10 +70,6 @@ func expandAuthSettingsUrls(d *schema.ResourceData) user_authentication_settings
 }
 
 func resourceAuthSettingsUrlsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -98,10 +94,6 @@ func resourceAuthSettingsUrlsCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceAuthSettingsUrlsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Acquire semaphore before making an API request
-	apiSemaphore <- struct{}{}
-	defer func() { <-apiSemaphore }() // Release semaphore after the request is done
-
 	zClient := meta.(*Client)
 	service := zClient.Service
 

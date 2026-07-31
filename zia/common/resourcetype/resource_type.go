@@ -55,4 +55,5 @@ const (
 	IPSSignatureRules               = "zia_ips_signature_rules"
 	HTTPHeaderActionProfile         = "zia_http_header_action_profile"
 	HTTPHeaderProfile               = "zia_http_header_profile"
+	UEBAAlertDefinitions            = "zia_ueba_alert_definitions"
 )

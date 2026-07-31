@@ -103,9 +103,11 @@ func ZIAProvider() *schema.Provider {
 				Description:      "maximum number of retries to attempt before erroring out.",
 			},
 			"parallelism": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				Description: "Number of concurrent requests to make within a resource where bulk operations are not possible. Take note of https://help.zscaler.com/oneapi/understanding-rate-limiting.",
+				Type:       schema.TypeInt,
+				Optional:   true,
+				Deprecated: "This attribute no longer has any effect and will be removed in a future major release. Remove it from the provider block. API rate limits are handled automatically: the provider honours the Retry-After header returned on a 429 response and retries transparently.",
+				Description: "Deprecated and ignored. Previously limited the number of concurrent API requests. " +
+					"Rate limiting is now handled automatically and this attribute has no effect.",
 			},
 			"request_timeout": {
 				Type:             schema.TypeInt,
@@ -199,6 +201,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_ips_signature_rules":                           resourceIPSSignatureRules(),
 			"zia_http_header_action_profile":                    resourceHttpHeaderActionProfile(),
 			"zia_http_header_profile":                           resourceHttpHeaderProfile(),
+			"zia_ueba_alert_definitions":                        resourceUEBAAlertDefinitions(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -317,6 +320,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_adaptive_access_profile":                       dataSourceAdaptiveAccessProfile(),
 			"zia_http_header_action_profile":                    dataSourceHttpHeaderActionProfile(),
 			"zia_http_header_profile":                           dataSourceHttpHeaderProfile(),
+			"zia_ueba_alert_definitions":                        dataSourceUEBAAlertDefinitions(),
 		},
 	}
 
@@ -360,13 +364,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	client, err := config.Client()
 	if err != nil {
 		return nil, diag.Errorf("failed to configure Zscaler client: %v", err)
-	}
-
-	// Initialize the global semaphore based on the configured parallelism
-	if config.parallelism > 0 {
-		apiSemaphore = make(chan struct{}, config.parallelism)
-	} else {
-		apiSemaphore = make(chan struct{}, 1)
 	}
 
 	return client, nil

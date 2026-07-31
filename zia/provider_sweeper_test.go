@@ -39,6 +39,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/security_ueba_alerts/alert_definitions"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/extranet"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/gretunnels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/trafficforwarding/staticips"
@@ -127,6 +128,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	sweepTestEndpointDLPResourceGroup(testClient)
 	sweepTestEndpointDLPApplicationGroup(testClient)
 	sweepTestEndpointDLPCustomApps(testClient)
+	sweepTestUEBAAlertDefinitions(testClient)
 	sweepTestDLPEngines(testClient)
 	sweepTestDLPDictionary(testClient)
 	sweepTestDLPTemplates(testClient)
@@ -889,6 +891,38 @@ func sweepTestEndpointDLPApplicationGroup(client *testClient) error {
 				continue
 			}
 			logSweptResource(resourcetype.DLPEndpointApplicationGroup, fmt.Sprintf("%d", b.GroupID), b.Name)
+		}
+	}
+
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestUEBAAlertDefinitions(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	defs, err := alert_definitions.GetAll(context.Background(), service)
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d UEBA alert definitions to sweep", len(defs)))
+	for _, b := range defs {
+		// Alert names are a fixed enum, so test resources are identified by the
+		// prefixed comment set during acceptance testing.
+		if strings.HasPrefix(b.Comments, testResourcePrefix) || strings.HasPrefix(b.Comments, updateResourcePrefix) {
+			if _, err := alert_definitions.Delete(context.Background(), service, b.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.UEBAAlertDefinitions, fmt.Sprintf("%d", b.ID), b.AlertName)
 		}
 	}
 
