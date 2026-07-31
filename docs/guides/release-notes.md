@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.1``
+``Last updated: v4.8.2``
 
 ---
+
+## 4.8.2 (July, 31 2026)
+
+### Notes
+
+- Release date: **(July, 30 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #593](https://github.com/zscaler/terraform-provider-zia/pull/593) - Removed local validation on resource `zia_firewall_dns_rule` that forced both attribute values `dest_ip_categories` and `res_categories` to match due to old API requirement.
+- [PR #593](https://github.com/zscaler/terraform-provider-zia/pull/593) - Upgraded to [Zscaler-SDK-GO v3.8.44](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.44) to fix mispelled attribute `isWebEunEnabled` to the expected API value `isWebEUNEnabled` in firewall dns control policies struct which is non-standard camelCase style to prevent payload error during POST/PUT requests.
 
 ## 4.8.1 (July, 30 2026)
 
