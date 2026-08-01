@@ -316,6 +316,7 @@ func ZIAProvider() *schema.Provider {
 			"zia_dc_exclusions":                                 dataSourceDCExclusions(),
 			"zia_email_profile":                                 dataSourceEmailProfile(),
 			"zia_ips_signature_rules":                           dataSourceIPSSignatureRules(),
+			"zia_ips_categories":                                dataSourceIPSCategories(),
 			"zia_supported_browser_version":                     dataSourceSupportedBrowserVersion(),
 			"zia_adaptive_access_profile":                       dataSourceAdaptiveAccessProfile(),
 			"zia_http_header_action_profile":                    dataSourceHttpHeaderActionProfile(),

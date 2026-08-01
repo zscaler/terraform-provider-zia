@@ -77,6 +77,72 @@ resource "zia_firewall_ips_rule" "example" {
 }
 ```
 
+## Example Usage - Dynamically Resolving `res_categories` and `dest_ip_categories`
+
+Category names can be resolved with the [`zia_ips_categories`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_ips_categories) data source instead of being hard-coded. An unfiltered query returns every category, so the selection can be made in `locals` and passed straight to the rule.
+
+```hcl
+data "zia_ips_categories" "all" {}
+
+locals {
+  dest_ip_categories = [
+    for c in data.zia_ips_categories.all.categories : c.name
+    if contains(["ADSPYWARE_SITES", "BOTNET", "DGA", "MALWARE_SITE", "PHISHING"], c.name)
+  ]
+
+  res_categories = [
+    for c in data.zia_ips_categories.all.categories : c.name
+    if contains(["ADSPYWARE_SITES", "BOTNET", "DGA", "MALWARE_SITE", "PHISHING"], c.name)
+  ]
+}
+
+resource "zia_firewall_ips_rule" "block_malicious_domains" {
+  name               = "Block Malicious Domains"
+  description        = "Block malicious domain categories"
+  action             = "BLOCK"
+  state              = "ENABLED"
+  order              = 1
+  rank               = 7
+  dest_ip_categories = local.dest_ip_categories
+  res_categories     = local.res_categories
+}
+```
+
+Note that a name misspelled inside the `contains` list is silently skipped rather than reported, because the filter simply does not match. To have an unknown name fail at plan time instead, resolve each category with its own named lookup, which errors when the category does not exist:
+
+```hcl
+data "zia_ips_categories" "phishing" {
+  name = "PHISHING"
+}
+
+data "zia_ips_categories" "botnet" {
+  name = "BOTNET"
+}
+
+resource "zia_firewall_ips_rule" "this" {
+  name   = "Block Malicious Domains"
+  action = "BLOCK"
+  state  = "ENABLED"
+  order  = 1
+  rank   = 7
+
+  res_categories = [
+    data.zia_ips_categories.phishing.name,
+    data.zia_ips_categories.botnet.name,
+  ]
+}
+```
+
+To discover which categories exist in your tenant, output the full list:
+
+```hcl
+data "zia_ips_categories" "all" {}
+
+output "category_names" {
+  value = sort([for c in data.zia_ips_categories.all.categories : c.name])
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -156,9 +222,9 @@ In addition to all arguments above, the following attributes are exported:
 * `dest_countries` (Set of String) Identify destinations based on the location of a server, select Any to apply the rule to all countries or select the countries to which you want to control traffic.
     **NOTE**: Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
 
-* `res_categories` (Set of String) URL categories associated with resolved IP addresses to which the rule applies. If not set, the rule is not restricted to a specific URL category.
+* `res_categories` (Set of String) URL categories associated with resolved IP addresses to which the rule applies. If not set, the rule is not restricted to a specific URL category. Use the [`zia_ips_categories`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_ips_categories) data source to look up valid category names instead of hard-coding them.
 
-* `dest_ip_categories` (Set of String)  identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control.
+* `dest_ip_categories` (Set of String)  identify destinations based on the URL category of the domain, select Any to apply the rule to all categories or select the specific categories you want to control. Use the [`zia_ips_categories`](https://registry.terraform.io/providers/zscaler/zia/latest/docs/data-sources/zia_ips_categories) data source to look up valid category names instead of hard-coding them.
 * `dest_ip_groups`** - (List of Objects) Any number of destination IP address groups that you want to control with this rule.
       - `id` - (Integer) Identifier that uniquely identifies an entity
 

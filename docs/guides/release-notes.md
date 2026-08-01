@@ -12,9 +12,19 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.2``
+``Last updated: v4.8.3``
 
 ---
+## 4.8.3 (July, 31 2026)
+
+### Notes
+
+- Release date: **(July, 30 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #594](https://github.com/zscaler/terraform-provider-zia/pull/594) - Added new Data source `zia_ips_categories` to retrive built-in IPS Categories. This resource can then be used within the following resources: `zia_firewall_dns_rule` and `zia_firewall_ips_rule` to fullfil the attributes: `res_categories` and `dest_ip_categories`
 
 ## 4.8.2 (July, 31 2026)
 
