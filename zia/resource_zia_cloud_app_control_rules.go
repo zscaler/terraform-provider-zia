@@ -18,9 +18,20 @@ import (
 )
 
 var (
-	cloudAppRuleLock          sync.Mutex
-	cloudAppRuleStartingOrder int
+	cloudAppRuleLock sync.Mutex
+	// Cloud App Control rules are ordered independently per rule type
+	// (each type has its own 1..N order sequence in the API), so the
+	// starting-order seed must be tracked per type as well.
+	cloudAppRuleStartingOrder = map[string]int{}
 )
+
+// cloudAppRuleResourceType returns the reorder-registry key for a Cloud App
+// Control rule type. The key is type-scoped because the API orders rules
+// independently per type; a single shared key would mix rule types in one
+// reorder cycle whose callbacks are scoped to a single type's endpoint.
+func cloudAppRuleResourceType(ruleType string) string {
+	return "cloud_app_control_rules:" + ruleType
+}
 
 func resourceCloudAppControlRules() *schema.Resource {
 	return &schema.Resource{
@@ -247,15 +258,15 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 
 	for {
 		cloudAppRuleLock.Lock()
-		if cloudAppRuleStartingOrder == 0 {
+		if cloudAppRuleStartingOrder[req.Type] == 0 {
 			rules, _ := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			for _, r := range rules {
-				if r.Order > cloudAppRuleStartingOrder {
-					cloudAppRuleStartingOrder = r.Order
+				if r.Order > cloudAppRuleStartingOrder[req.Type] {
+					cloudAppRuleStartingOrder[req.Type] = r.Order
 				}
 			}
-			if cloudAppRuleStartingOrder == 0 {
-				cloudAppRuleStartingOrder = 1
+			if cloudAppRuleStartingOrder[req.Type] == 0 {
+				cloudAppRuleStartingOrder[req.Type] = 1
 			}
 		}
 		cloudAppRuleLock.Unlock()
@@ -267,7 +278,7 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
-		req.Order = cloudAppRuleStartingOrder
+		req.Order = cloudAppRuleStartingOrder[req.Type]
 
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
 
@@ -288,8 +299,11 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[INFO] Created zia cloud app control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
-		resourceType := "cloud_app_control_rules"
+		// Key the reorder registry per rule type: the getCurrent/updateOrder
+		// callbacks below are scoped to req.Type's endpoint, so rules of a
+		// different type registered under the same key would never be visible
+		// to this cycle's GetByRuleType and would be skipped forever.
+		resourceType := cloudAppRuleResourceType(req.Type)
 
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
@@ -524,7 +538,8 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "cloud_app_control_rules",
+	resourceType := cloudAppRuleResourceType(req.Type)
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, resourceType,
 		func() (map[int]OrderRule, error) {
 			list, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 			if err != nil {
@@ -554,8 +569,8 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	markOrderRuleAsDone(req.ID, "cloud_app_control_rules")
-	waitForReorder("cloud_app_control_rules")
+	markOrderRuleAsDone(req.ID, resourceType)
+	waitForReorder(resourceType)
 
 	// Sleep for 2 seconds before potentially triggering the activation
 	time.Sleep(2 * time.Second)

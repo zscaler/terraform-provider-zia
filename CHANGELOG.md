@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.8.4 (August, 5 2026)
+
+### Notes
+
+- Release date: **(July, 30 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #598](https://github.com/zscaler/terraform-provider-zia/pull/598) - Upgraded to [Zscaler-SDK-GO v3.8.45](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.45)
+
+### Bug Fixes
+
+- [PR #599](https://github.com/zscaler/terraform-provider-zia/pull/599) - Fixed rule ordering in the resource `zia_cloud_app_control_rule` when rules with different `type` values are applied in the same configuration. Cloud App Control rules are ordered independently per rule type; previously, when rules of more than one type were created concurrently, only one type was guaranteed to converge to the declared `order`, and rules of the other type(s) could be left in an arbitrary order. Each rule type is now reordered independently, so the final order in ZIA and in the Terraform state matches the configured `order` for every type.
+
 ## 4.8.3 (July, 31 2026)
 
 ### Notes
