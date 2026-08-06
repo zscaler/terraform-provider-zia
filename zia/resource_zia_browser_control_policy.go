@@ -232,8 +232,11 @@ func resourceBrowserControlPolicyRead(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		if err := d.Set("smart_isolation_profile", flattenSmartIsolationProfile(&resp.SmartIsolationProfile)); err != nil {
-			return diag.FromErr(err)
+		profile := flattenSmartIsolationProfile(&resp.SmartIsolationProfile)
+		if shouldRecordSmartIsolationProfile(profile, d.Get("smart_isolation_profile")) {
+			if err := d.Set("smart_isolation_profile", profile); err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	} else {
 		return diag.FromErr(fmt.Errorf("couldn't read browser control policy"))
@@ -392,7 +395,7 @@ func shouldUpdateSmartIsolation(d *schema.ResourceData) bool {
 	if d.Get("enable_smart_browser_isolation").(bool) {
 		return true
 	}
-	if list, ok := d.Get("smart_isolation_profile").([]interface{}); ok && len(list) > 0 {
+	if smartIsolationProfileConfigured(d.Get("smart_isolation_profile")) {
 		return true
 	}
 	if set, ok := d.Get("smart_isolation_users").(*schema.Set); ok && set.Len() > 0 {
@@ -401,13 +404,65 @@ func shouldUpdateSmartIsolation(d *schema.ResourceData) bool {
 	if set, ok := d.Get("smart_isolation_groups").(*schema.Set); ok && set.Len() > 0 {
 		return true
 	}
-	if !d.IsNewResource() && d.HasChanges(
+	if d.IsNewResource() {
+		return false
+	}
+	if d.HasChanges(
 		"enable_smart_browser_isolation",
-		"smart_isolation_profile",
 		"smart_isolation_users",
 		"smart_isolation_groups",
 	) {
 		return true
+	}
+	// A profile change is only worth an update when one side holds a real
+	// profile. State written by earlier releases can contain an all-empty
+	// block, and dropping that is not a configuration change worth sending —
+	// tenants without a Cloud Browser Isolation subscription are answered
+	// with 403 NOT_SUBSCRIBED.
+	if d.HasChange("smart_isolation_profile") {
+		before, after := d.GetChange("smart_isolation_profile")
+		if smartIsolationProfileConfigured(before) || smartIsolationProfileConfigured(after) {
+			return true
+		}
+	}
+	return false
+}
+
+// shouldRecordSmartIsolationProfile reports whether the profile just read from
+// the service should replace what state holds.
+//
+// The service reported a profile, so record it. It reported none, so record
+// that too — an absent profile is a real answer here, and writing it through
+// is what clears an all-empty block left behind by an earlier release. The one
+// case to leave alone is state that holds a real profile the service did not
+// echo back, which would otherwise be dropped and show up as drift.
+func shouldRecordSmartIsolationProfile(apiProfile []interface{}, stateProfile interface{}) bool {
+	if len(apiProfile) > 0 {
+		return true
+	}
+	return !smartIsolationProfileConfigured(stateProfile)
+}
+
+// smartIsolationProfileConfigured reports whether a smart_isolation_profile
+// value holds an actual profile. The presence of the block is not sufficient:
+// the service reports an all-zero profile object on tenants that have none,
+// and a bare block in HCL flattens to empty strings.
+func smartIsolationProfileConfigured(raw interface{}) bool {
+	list, ok := raw.([]interface{})
+	if !ok {
+		return false
+	}
+	for _, item := range list {
+		profile, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		id, _ := profile["id"].(string)
+		name, _ := profile["name"].(string)
+		url, _ := profile["url"].(string)
+		if id != "" || name != "" || url != "" {
+			return true
+		}
 	}
 	return false
 }

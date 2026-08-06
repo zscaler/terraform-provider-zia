@@ -160,8 +160,18 @@ func dataSourceBrowserControlPolicyRead(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
+// flattenSmartIsolationProfile returns no block when the service did not
+// report an actual profile. The Browser Control response always carries a
+// smartIsolationProfile object, and on tenants without a Cloud Browser
+// Isolation profile every member comes back as its zero value. Emitting a
+// block for that would record an all-empty profile that the user never
+// declared, so treat "no id, name or url" as "no profile".
 func flattenSmartIsolationProfile(cbiProfile *browser_control_settings.SmartIsolationProfile) []interface{} {
 	if cbiProfile == nil {
+		return nil
+	}
+
+	if cbiProfile.ID == "" && cbiProfile.Name == "" && cbiProfile.URL == "" {
 		return nil
 	}
 

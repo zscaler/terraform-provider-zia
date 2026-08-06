@@ -619,3 +619,160 @@ func TestReorder_NoProgress_GivesUp(t *testing.T) {
 		t.Errorf("expected zero PUTs (order=100 always out of range); got %d", api.putsFor(700))
 	}
 }
+
+// =====================================================
+// Cloud App Control — per-rule-type reorder isolation
+// =====================================================
+//
+// The Cloud App Control API orders rules independently per rule type
+// (each type has its own 1..N sequence), and the resource's
+// getCurrent/updateOrder callbacks are scoped to a single type's
+// endpoint. The resource therefore registers rules under a
+// type-scoped registry key (cloudAppRuleResourceType) so each type
+// gets its own reorder cycle.
+
+func TestCloudAppRuleResourceType_DistinctKeysPerType(t *testing.T) {
+	a := cloudAppRuleResourceType("ENTERPRISE_COLLABORATION")
+	b := cloudAppRuleResourceType("HOSTING_PROVIDER")
+	if a == b {
+		t.Fatalf("expected distinct registry keys per rule type, both were %q", a)
+	}
+	if a != cloudAppRuleResourceType("ENTERPRISE_COLLABORATION") {
+		t.Error("expected the key to be stable for the same rule type")
+	}
+}
+
+// TestReorder_CloudAppControl_PerTypeIsolation mirrors the customer
+// scenario from the 4.8.x ordering report: two rule types applied in
+// one configuration, 5 rules each, created concurrently. Each type
+// has its own type-scoped API view (getCurrent only returns that
+// type's rules). With per-type registry keys, both types must
+// converge to their declared 1..5 order, with exactly one PUT per
+// drifted rule and no cross-type interference.
+func TestReorder_CloudAppControl_PerTypeIsolation(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	collabAPI := newFakeAPI()  // ENTERPRISE_COLLABORATION endpoint
+	hostingAPI := newFakeAPI() // HOSTING_PROVIDER endpoint
+	collabKey := cloudAppRuleResourceType("ENTERPRISE_COLLABORATION")
+	hostingKey := cloudAppRuleResourceType("HOSTING_PROVIDER")
+
+	// Every rule exists in its own type's collection at a wrong
+	// position, so each needs exactly one PUT to reach its target.
+	for i := 1; i <= 5; i++ {
+		collabAPI.preSeed(1000+i, 999, 7)
+		hostingAPI.preSeed(2000+i, 999, 7)
+	}
+
+	// Register both types concurrently, as terraform parallelism does.
+	var wg sync.WaitGroup
+	for i := 1; i <= 5; i++ {
+		wg.Add(2)
+		go func(idx int) {
+			defer wg.Done()
+			reorderWithBeforeReorder(
+				OrderRule{Order: idx, Rank: 7}, 1000+idx, collabKey,
+				collabAPI.getCurrent, collabAPI.updateOrder, nil,
+			)
+			markOrderRuleAsDone(1000+idx, collabKey)
+			waitForReorder(collabKey)
+		}(i)
+		go func(idx int) {
+			defer wg.Done()
+			reorderWithBeforeReorder(
+				OrderRule{Order: idx, Rank: 7}, 2000+idx, hostingKey,
+				hostingAPI.getCurrent, hostingAPI.updateOrder, nil,
+			)
+			markOrderRuleAsDone(2000+idx, hostingKey)
+			waitForReorder(hostingKey)
+		}(i)
+	}
+	wg.Wait()
+
+	// Both types converged to the declared order — this is what the
+	// Read path stores in state, so it also covers the state-file
+	// expectation.
+	for i := 1; i <= 5; i++ {
+		if got := collabAPI.state[1000+i]; got.Order != i {
+			t.Errorf("ENTERPRISE_COLLABORATION rule %d: expected final order %d, got %d", 1000+i, i, got.Order)
+		}
+		if got := hostingAPI.state[2000+i]; got.Order != i {
+			t.Errorf("HOSTING_PROVIDER rule %d: expected final order %d, got %d", 2000+i, i, got.Order)
+		}
+		if got := collabAPI.putsFor(1000 + i); got != 1 {
+			t.Errorf("ENTERPRISE_COLLABORATION rule %d: expected exactly 1 PUT, got %d", 1000+i, got)
+		}
+		if got := hostingAPI.putsFor(2000 + i); got != 1 {
+			t.Errorf("HOSTING_PROVIDER rule %d: expected exactly 1 PUT, got %d", 2000+i, got)
+		}
+	}
+	// No cross-type traffic: each endpoint saw only its own rules.
+	if collabAPI.putsTotal() != 5 || hostingAPI.putsTotal() != 5 {
+		t.Errorf("expected 5 PUTs per type endpoint, got collab=%d hosting=%d", collabAPI.putsTotal(), hostingAPI.putsTotal())
+	}
+}
+
+// TestReorder_CloudAppControl_SharedKeyMixesTypes_Characterization
+// documents the bug the per-type key fixes. Rules of two types are
+// registered under ONE shared key, but the cycle's getCurrent is
+// scoped to a single type's endpoint (as the resource's closures
+// are). The other type's rules are invisible to getCurrent, so they
+// are skipped every pass and never reordered; the loop bails via its
+// deadlock-breaker instead of hanging. If cloudAppRuleResourceType is
+// ever collapsed back to a shared key, this is the behavior users
+// get — do not wire the resource this way.
+func TestReorder_CloudAppControl_SharedKeyMixesTypes_Characterization(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	hostingAPI := newFakeAPI()
+	sharedKey := "test_shared_cac_key"
+
+	// 5 hosting rules visible to getCurrent, drifted.
+	for i := 1; i <= 5; i++ {
+		hostingAPI.preSeed(2000+i, 999, 7)
+	}
+
+	// Register the hosting rules AND 5 collaboration rules (ids
+	// 3001..3005) under the same key. The collaboration rules do not
+	// exist in hostingAPI — GetByRuleType on the hosting endpoint
+	// can't see them.
+	for i := 1; i <= 5; i++ {
+		reorderWithBeforeReorder(
+			OrderRule{Order: i, Rank: 7}, 2000+i, sharedKey,
+			hostingAPI.getCurrent, hostingAPI.updateOrder, nil,
+		)
+		reorderWithBeforeReorder(
+			OrderRule{Order: i, Rank: 7}, 3000+i, sharedKey,
+			hostingAPI.getCurrent, hostingAPI.updateOrder, nil,
+		)
+	}
+	for i := 1; i <= 5; i++ {
+		markOrderRuleAsDone(2000+i, sharedKey)
+		markOrderRuleAsDone(3000+i, sharedKey)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		waitForReorder(sharedKey)
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("reorder cycle with permanently invisible rules did not bail out within 5s")
+	}
+
+	// The visible type converged; the invisible type never got a PUT.
+	for i := 1; i <= 5; i++ {
+		if got := hostingAPI.state[2000+i]; got.Order != i {
+			t.Errorf("visible rule %d: expected final order %d, got %d", 2000+i, i, got.Order)
+		}
+		if got := hostingAPI.putsFor(3000 + i); got != 0 {
+			t.Errorf("invisible rule %d: expected 0 PUTs (not in getCurrent view), got %d", 3000+i, got)
+		}
+	}
+}
