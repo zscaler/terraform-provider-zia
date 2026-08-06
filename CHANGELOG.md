@@ -1,17 +1,31 @@
 # Changelog
 
+## 4.8.5 (August, 6 2026)
+
+### Notes
+
+- Release date: **(August, 6 2026)**
+- Supported Terraform version: **v1.x**
+-
+### Bug Fixes
+
+- [PR #600](https://github.com/zscaler/terraform-provider-zia/pull/600) - Fixed the resource `zia_url_filtering_and_cloud_app_settings`, which rejected updates with `Request body is invalid.` and could not turn a setting back off. Updates now carry every supported setting, so disabling one takes effect; the retired Skype attribute is no longer sent; and `safe_search_apps` is sent only when applications are specified. The `safe_search_apps` attribute also adopts the value returned by the service when it is not declared in the configuration, which removes a plan difference that reappeared on every run.
+
+- [PR #600](https://github.com/zscaler/terraform-provider-zia/pull/600) - Added new ZIA URL Filtering and Cloud App Sdettings attributes:
+  - `enable_google_ai_prompt` - Indicates whether the use of generative AI prompts with Google AI by users should be categorized and logged
+  - `enable_quillbot_ai_prompt` - Indicates whether the use of generative AI prompts with QuillBot by users should be categorized and logged
+
 ## 4.8.4 (August, 5 2026)
 
 ### Notes
 
-- Release date: **(July, 30 2026)**
+- Release date: **(August, 5 2026)**
 - Supported Terraform version: **v1.x**
-
-### Enhancements
-
-- [PR #598](https://github.com/zscaler/terraform-provider-zia/pull/598) - Upgraded to [Zscaler-SDK-GO v3.8.45](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.45)
-
+-
 ### Bug Fixes
+
+- [PR #599](https://github.com/zscaler/terraform-provider-zia/pull/599) - Fixed resource zia_browser_control_policy to support tenants without a Cloud Browser Isolation profile where the service still returns a smart_isolation_profile object with every member empty. That was recorded in state as a profile the user never declared, so the next plan tried to remove it and called
+the Smart Isolation endpoint, failing with 403 NOT_SUBSCRIBED. Fixes #597.
 
 - [PR #599](https://github.com/zscaler/terraform-provider-zia/pull/599) - Fixed rule ordering in the resource `zia_cloud_app_control_rule` when rules with different `type` values are applied in the same configuration. Cloud App Control rules are ordered independently per rule type; previously, when rules of more than one type were created concurrently, only one type was guaranteed to converge to the declared `order`, and rules of the other type(s) could be left in an arbitrary order. Each rule type is now reordered independently, so the final order in ZIA and in the Terraform state matches the configured `order` for every type.
 

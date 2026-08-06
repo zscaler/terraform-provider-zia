@@ -75,8 +75,9 @@ The following arguments are supported:
 * `enable_newly_registered_domains` - (Boolean) Indicates whether newly registered and observed domains identified within hours of going live are allowed or blocked.
 * `enable_block_override_for_non_auth_user` - (Boolean) Indicates if authorized users can temporarily override block action on websites by providing their authentication information.
 * `enable_cipa_compliance` - (Boolean) Indicates if the predefined CIPA Compliance Rule is enabled.
-* `zvelo_db_lookup_disabled` - (Boolean) Indicates if Zvelo database lookup is disabled.
-* `enable_creative_commons_search_results` - (Boolean) Indicates if Creative Commons search results are enabled.
+* `zvelo_db_lookup_disabled` - (Boolean) Indicates if Zvelo database lookup is disabled.enabled.
+* `enable_google_ai_prompt` - (Boolean) Indicates whether the use of generative AI prompts with Google AI by users should be categorized and logged
+* `enable_quillbot_ai_prompt` - (Boolean) Indicates whether the use of generative AI prompts with QuillBot by users should be categorized and logged
 
 ## Import
 

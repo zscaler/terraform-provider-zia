@@ -235,7 +235,6 @@ func resourceAdvancedSettings() *schema.Resource {
 			"enable_office365": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				Computed:    true,
 				Description: "Value indicating whether Microsoft Office 365 One Click Configuration is enabled or not",
 			},
 			"log_internal_ip": {
