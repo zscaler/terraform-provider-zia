@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.8.6 (August, 7 2026)
+
+### Notes
+
+- Release date: **(August, 7 2026)**
+- Supported Terraform version: **v1.x**
+
+### Enhancements
+
+- [PR #601](https://github.com/zscaler/terraform-provider-zia/pull/601) - Added new resource `zia_pac_files` to create and manage hosted PAC files, including PAC content validation, versioned content changes, and version status transitions (`DEPLOYED`, `STAGE`, `LKG`, `UNSTAGED`). The initial version of a PAC file is always deployed; content changes are saved as new versions of the same PAC file and transitioned to the declared status.
+- [PR #601](https://github.com/zscaler/terraform-provider-zia/pull/601) - Added new data source `zia_pac_files` to retrieve the list of hosted PAC files in deployed state, including default and custom PAC files. A single PAC file can be retrieved by `id` or `name`, and the PAC file content can be omitted from the results via the `filter` attribute.
+- [PR #601](https://github.com/zscaler/terraform-provider-zia/pull/601) - Enhanced the data source `zia_cloud_app_control_rule_actions` to return the complete set of actions supported for the specified applications and rule type. Previously, some newer actions (e.g., `ALLOW_FILE_SHARE_UPLOAD`, `ALLOW_FILE_SHARE_VIEW`) were missing from the results, requiring users to hard-code actions from the API documentation. On clouds where the complete action list is not yet available, the data source automatically falls back to the original action lookup. This addresses [issue #522](https://github.com/zscaler/terraform-provider-zia/issues/522)
+- [PR #601](https://github.com/zscaler/terraform-provider-zia/pull/601) - Upgraded to [Zscaler-SDK-GO v3.8.46](https://github.com/zscaler/zscaler-sdk-go/releases/tag/v3.8.46)
+
 ## 4.8.5 (August, 6 2026)
 
 ### Notes

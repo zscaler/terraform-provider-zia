@@ -38,6 +38,7 @@ const (
 	AdminUsers                      = "zia_admin_users"
 	Users                           = "zia_user_management"
 	RuleLabels                      = "zia_rule_labels"
+	PacFiles                        = "zia_pac_files"
 	Extranet                        = "zia_extranet"
 	DCExclusions                    = "zia_dc_exclusions"
 	SandboxRules                    = "zia_sandbox_rules"

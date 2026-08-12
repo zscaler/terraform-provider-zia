@@ -1,9 +1,13 @@
 package zia
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 )
 
 func TestAccDataSourceCloudAppControlRuleActions_Basic(t *testing.T) {
@@ -35,3 +39,29 @@ data "zia_cloud_app_control_rule_actions" "this2" {
   cloud_apps = ["GDRIVE"]
 }
 `
+
+func TestActionsEndpointUnavailable(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want bool
+	}{
+		{"nil error", nil, false},
+		{"plain error", errors.New("connection refused"), false},
+		{"405 method not allowed", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusMethodNotAllowed}}, true},
+		{"404 not found", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusNotFound}}, true},
+		{"405 via parsed status only", &errorx.ErrorResponse{Parsed: &errorx.ParsedAPIError{Status: http.StatusMethodNotAllowed}}, true},
+		{"wrapped 405", fmt.Errorf("calling actions: %w", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusMethodNotAllowed}}), true},
+		{"400 bad request is a real error", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusBadRequest}}, false},
+		{"401 unauthorized is a real error", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusUnauthorized}}, false},
+		{"403 forbidden is a real error", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusForbidden}}, false},
+		{"500 server error is a real error", &errorx.ErrorResponse{Response: &http.Response{StatusCode: http.StatusInternalServerError}}, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := actionsEndpointUnavailable(tc.err); got != tc.want {
+				t.Errorf("actionsEndpointUnavailable(%v) = %v, want %v", tc.err, got, tc.want)
+			}
+		})
+	}
+}
