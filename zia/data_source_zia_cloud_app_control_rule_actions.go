@@ -4,13 +4,41 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
 )
+
+// actionsEndpointUnavailable reports whether err means the complete-action-list
+// endpoint is not exposed on the tenant's cloud, so the caller should fall back
+// to the original action lookup. The gateway rejects an unprovisioned route
+// with 405 Method Not Allowed (some versions return 404). Any other failure —
+// bad payload (400), auth (401/403), server errors — is a real error and must
+// not trigger the fallback.
+func actionsEndpointUnavailable(err error) bool {
+	respErr, ok := errorx.AsErrorResponse(err)
+	if !ok {
+		return false
+	}
+	if respErr.Response != nil {
+		switch respErr.Response.StatusCode {
+		case http.StatusNotFound, http.StatusMethodNotAllowed:
+			return true
+		}
+	}
+	if respErr.Parsed != nil {
+		switch respErr.Parsed.Status {
+		case http.StatusNotFound, http.StatusMethodNotAllowed:
+			return true
+		}
+	}
+	return false
+}
 
 func dataSourceCloudAppControlRuleActions() *schema.Resource {
 	return &schema.Resource{
@@ -84,7 +112,14 @@ func dataSourceCloudAppControlRuleActionsRead(ctx context.Context, d *schema.Res
 		Type:      ruleType,
 	}
 
+	// Prefer the complete action list; some clouds do not expose that
+	// endpoint yet and reject the call outright (405, or 404 depending
+	// on the gateway), in which case fall back to the original lookup.
 	actions, err := cloudappcontrol.AllAvailableActions(ctx, service, ruleType, payload)
+	if err != nil && actionsEndpointUnavailable(err) {
+		log.Printf("[WARN] complete action list not available for ruleType %q (%v); falling back to the original action lookup", ruleType, err)
+		actions, err = cloudappcontrol.AvailableActions(ctx, service, ruleType, payload)
+	}
 	if err != nil {
 		return diag.FromErr(err)
 	}

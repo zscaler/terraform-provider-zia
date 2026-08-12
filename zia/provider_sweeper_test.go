@@ -37,6 +37,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_policies"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/ips_control_policies/ips_signature_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/location/locationmanagement"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/pacfiles"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/rule_labels"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/security_ueba_alerts/alert_definitions"
@@ -106,6 +107,7 @@ func TestRunForcedSweeper(t *testing.T) {
 	}
 
 	sweepTestRuleLabels(testClient)
+	sweepTestPacFiles(testClient)
 	sweepTestIPSSignatureRules(testClient)
 	// sweepTestSourceIPGroup(testClient)
 	sweepTestDestinationIPGroup(testClient)
@@ -182,6 +184,36 @@ func sweepTestRuleLabels(client *testClient) error {
 		}
 	}
 	// Log errors encountered during the deletion process
+	if len(errorList) > 0 {
+		for _, err := range errorList {
+			sweeperLogger.Error(err.Error())
+		}
+	}
+	return condenseError(errorList)
+}
+
+func sweepTestPacFiles(client *testClient) error {
+	var errorList []error
+
+	service := &zscaler.Service{
+		Client: client.sdkV3Client,
+	}
+
+	// Fetch without content: the sweeper only needs IDs and names.
+	files, err := pacfiles.GetPacFiles(context.Background(), service, "pac_content")
+	if err != nil {
+		return err
+	}
+	sweeperLogger.Warn(fmt.Sprintf("Found %d resources to sweep", len(files)))
+	for _, f := range files {
+		if strings.HasPrefix(f.Name, testResourcePrefix) || strings.HasPrefix(f.Name, updateResourcePrefix) {
+			if _, err := pacfiles.DeletePacFile(context.Background(), service, f.ID); err != nil {
+				errorList = append(errorList, err)
+				continue
+			}
+			logSweptResource(resourcetype.PacFiles, fmt.Sprintf("%d", f.ID), f.Name)
+		}
+	}
 	if len(errorList) > 0 {
 		for _, err := range errorList {
 			sweeperLogger.Error(err.Error())

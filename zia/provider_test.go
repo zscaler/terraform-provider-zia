@@ -47,6 +47,7 @@ func TestMain(m *testing.M) {
 	// going over the wire
 	if os.Getenv("ZIA_VCR_TF_ACC") != "play" {
 		setupSweeper(resourcetype.RuleLabels, sweepTestRuleLabels)
+		setupSweeper(resourcetype.PacFiles, sweepTestPacFiles)
 		setupSweeper(resourcetype.TrafficForwardingLocManagement, sweepTestLocationManagement)
 		setupSweeper(resourcetype.TrafficForwardingGRETunnel, sweepTestGRETunnels)
 		setupSweeper(resourcetype.TrafficForwardingStaticIP, sweepTestStaticIP)

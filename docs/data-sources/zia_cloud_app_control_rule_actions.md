@@ -15,7 +15,7 @@ description: |-
 
 Use the **zia_cloud_app_control_rule_actions** data source to retrieve the available actions for specific cloud applications and rule types. This data source automatically handles action intersections when multiple applications are specified, returning only actions supported by ALL applications.
 
-**NOTE**: Note that some new actions may not be returned in the API response. This is a known issue, and is being investigated via the following issue `ONEAPI-2421`. Please contact Zscaler support for an update if the action you're attempting ton configure isn't supported or returned in the response.
+**NOTE**: The data source returns the complete set of actions supported for the specified applications and rule type, including newer actions that earlier provider versions did not return. On clouds where the complete action list is not yet available, the data source automatically falls back to the original action lookup, which may omit some newer actions.
 
 The data source provides multiple output attributes for different use cases:
 

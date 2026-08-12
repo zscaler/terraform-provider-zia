@@ -209,6 +209,13 @@ const (
 	RuleLabelDescription = "testAcc_rule_label"
 )
 
+// PAC Files
+const (
+	PacFileDescription   = "testAcc_pac_file"
+	PacFileDomain        = "securitygeek.io"
+	PacFileCommitMessage = "testAcc_pac_file_commit"
+)
+
 // HTTP Header Control
 const (
 	HTTPHeaderActionProfileDescription = "testAcc_http_header_action_profile"
