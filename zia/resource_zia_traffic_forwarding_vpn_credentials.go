@@ -27,8 +27,10 @@ func resourceTrafficForwardingVPNCredentials() *schema.Resource {
 
 				id := d.Id()
 
-				// First, try to parse the ID as an integer.
-				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
+				// First, try to parse the ID as an integer. Parse with the
+				// platform's int size so the conversion to int below can
+				// never truncate.
+				idInt, parseIDErr := strconv.ParseInt(id, 10, strconv.IntSize)
 				if parseIDErr == nil {
 					d.SetId(strconv.Itoa(int(idInt)))
 					_ = d.Set("vpn_id", int(idInt))

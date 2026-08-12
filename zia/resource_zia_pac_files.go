@@ -62,7 +62,10 @@ func resourcePacFiles() *schema.Resource {
 				service := zClient.Service
 
 				id := d.Id()
-				idInt, parseIDErr := strconv.ParseInt(id, 10, 64)
+				// Parse with the platform's int size so the conversion to
+				// int below can never truncate; an oversized value fails
+				// parsing and is treated as a name lookup instead.
+				idInt, parseIDErr := strconv.ParseInt(id, 10, strconv.IntSize)
 				var foundFile *pacfiles.PACFileConfig
 				if parseIDErr == nil {
 					allFiles, err := pacfiles.GetPacFiles(ctx, service, "")
