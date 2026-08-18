@@ -402,6 +402,8 @@ Before starting with this Terraform provider you must create an API Client in th
 
 - `request_timeout` - (Optional) Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.
 
+- `skip_credentials_validation` - (Optional) When set to `true`, the provider skips credential validation and does not initialize the API client. Can also be sourced from the `ZSCALER_SKIP_CREDENTIALS_VALIDATION` environment variable. This is intended for configurations where the ZIA provider is declared but every `zia_*` resource and data source is conditionally disabled (e.g., `count = 0`) — such as multi-environment deployments where Zscaler is not present in every environment. With this flag enabled, `terraform plan`/`apply` succeeds with a warning even when no credentials are supplied; any resource or data source that does attempt an API call fails with an explanatory error. Default: `false`.
+
 - `username` - (Optional) Administrator account used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_USERNAME` environment variable.
 
 - `password` - (Optional) Administrator password used when authenticating to the legacy Zscaler API framework. Can also be sourced from the `ZIA_PASSWORD` environment variable.
