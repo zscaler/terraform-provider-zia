@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.8.7 (August,17 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #602](https://github.com/zscaler/terraform-provider-zia/pull/602) - Fixed a hang affecting all rule-based resources (e.g. `zia_firewall_filtering_rule`, `zia_cloud_app_control_rule`) when the configured rule orders cannot be satisfied by the service — for example when rules not managed by Terraform occupy positions inside the configured order range, or duplicate order values exist in the tenant. Previously the apply could run for hours repeatedly re-applying the same rule orders until the operation timed out; the provider now detects the situation, stops after a bounded number of attempts, and completes the apply with a warning naming the affected rules and their configured versus actual positions (visible with `TF_LOG=INFO` or higher). The remaining differences appear in the next `terraform plan`. Rule order updates are now also logged individually to simplify troubleshooting.
+
+### Features
+
+- [PR #602](https://github.com/zscaler/terraform-provider-zia/pull/602) - Added the provider attribute `skip_credentials_validation` (env var `ZSCALER_SKIP_CREDENTIALS_VALIDATION`). When enabled, the provider skips credential validation and API client initialization so that configurations where every `zia_*` resource and data source is conditionally disabled (e.g., `count = 0`) can plan and apply without credentials — e.g., multi-environment deployments where Zscaler is not present in every environment. A warning is emitted at configure time, and any resource or data source that does attempt an API call fails with an explanatory error instead of a panic. See ([ZPA Issue #684](https://github.com/zscaler/terraform-provider-zpa/issues/684)) for the motivating use case.
+
 ## 4.8.6 (August, 7 2026)
 
 ### Notes

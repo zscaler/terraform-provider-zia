@@ -1,9 +1,11 @@
 package zia
 
 import (
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -1306,6 +1308,19 @@ const maxNoProgressTicks = 6
 // catch up to in-flight PUTs before we declare "nothing more to do".
 const maxStuckOnSkippedTicks = 2
 
+// maxNonImprovingPutTicks is the oscillation breaker (SUP-4231). When the
+// declared orders are unsatisfiable — duplicate order values in the tenant,
+// or unmanaged rules interleaved with managed ones — every PUT displaces a
+// neighbouring rule, so each pass keeps issuing PUTs forever without the
+// at-target count ever surpassing its best. Because putsIssued > 0 counts
+// as progress for maxNoProgressTicks, no other exit condition can fire and
+// the cycle livelocks until terraform's own context deadline kills it
+// (observed as a 2.5h hang). After this many consecutive passes that issue
+// PUTs without improving on the best at-target count, the loop logs the
+// still-misplaced rules and returns so the apply can complete; the
+// unplaced rules surface as drift on the next plan.
+const maxNonImprovingPutTicks = 6
+
 // reorderAll runs as a background goroutine and reconciles the desired
 // order of every rule registered for resourceType against the API's
 // current state. It is intentionally diff-based:
@@ -1343,6 +1358,8 @@ func reorderAll(
 	cleanPasses := 0
 	noProgressTicks := 0
 	stuckOnSkippedTicks := 0
+	nonImprovingPutTicks := 0
+	bestAtTarget := -1
 	prevSkipped := -1
 	prevAtTarget := -1
 	for {
@@ -1388,6 +1405,7 @@ func reorderAll(
 			skipped := 0
 			putsIssued := 0
 			alreadyAtTarget := 0
+			var putDetails []string
 			for _, v := range sorted {
 				desired := v.Order
 				cur, exists := current[v.ID]
@@ -1419,11 +1437,13 @@ func reorderAll(
 					continue
 				}
 
+				log.Printf("[INFO] reorderAll: %s — moving rule %d from order %d (rank %d) to order %d (rank %d)", resourceType, v.ID, cur.Order, cur.Rank, desired.Order, desired.Rank)
 				if err := updateOrder(v.ID, desired); err != nil {
 					log.Printf("[ERROR] reorderAll: PUT for rule %d failed in %s: %v", v.ID, resourceType, err)
 					puterrs++
 					continue
 				}
+				putDetails = append(putDetails, fmt.Sprintf("rule %d (API order %d, declared order %d)", v.ID, cur.Order, desired.Order))
 				putsIssued++
 			}
 
@@ -1477,6 +1497,37 @@ func reorderAll(
 				}
 			} else {
 				stuckOnSkippedTicks = 0
+			}
+
+			// Oscillation breaker (SUP-4231). A PUT ping-pong — every pass
+			// issues PUTs for the same rules because each placement
+			// displaces a neighbour — never produces a clean pass and
+			// counts as "progress" for the no-progress net below, so
+			// without this check the loop runs until terraform's context
+			// deadline kills it. A pass "improves" only when its at-target
+			// count exceeds the best seen for the current registration set;
+			// after maxNonImprovingPutTicks consecutive PUT-issuing passes
+			// with no improvement, log the contested rules and return so
+			// the apply completes (the unplaced rules show as drift on the
+			// next plan).
+			improved := alreadyAtTarget > bestAtTarget
+			if improved {
+				bestAtTarget = alreadyAtTarget
+			}
+			switch {
+			case size != lastSize:
+				// New registrations legitimately reshuffle the target
+				// set; restart the oscillation window.
+				bestAtTarget = alreadyAtTarget
+				nonImprovingPutTicks = 0
+			case putsIssued > 0 && !improved && skipped == 0 && puterrs == 0:
+				nonImprovingPutTicks++
+				if nonImprovingPutTicks >= maxNonImprovingPutTicks {
+					log.Printf("[WARN] reorderAll: %s — %d pass(es) kept re-issuing order updates without converging (best %d/%d rules at target). The declared orders appear unsatisfiable (duplicate order values in the tenant, or rules not managed by Terraform occupying positions in the declared range). Giving up so the apply can complete; re-run terraform plan to see the remaining differences. Contested in the last pass: %s", resourceType, nonImprovingPutTicks, bestAtTarget, size, strings.Join(putDetails, "; "))
+					return
+				}
+			default:
+				nonImprovingPutTicks = 0
 			}
 
 			// Slower no-progress safety net for genuinely
@@ -1555,10 +1606,13 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 		rules.orders[resourceType] = map[int]orderWithState{}
 	}
 	rules.orders[resourceType][id] = orderWithState{order, false}
+	// Capture the done channel while still holding the lock: concurrent
+	// registrations write rules.reorderDone under the lock, so reading the
+	// map after Unlock races with them.
+	doneCh := rules.reorderDone[resourceType]
 	rules.Unlock()
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
-		doneCh := rules.reorderDone[resourceType]
 		go func() {
 			reorderAll(resourceType, getCurrent, updateOrder, beforeReorder)
 			close(doneCh)

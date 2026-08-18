@@ -621,6 +621,150 @@ func TestReorder_NoProgress_GivesUp(t *testing.T) {
 }
 
 // =====================================================
+// Oscillation breaker (SUP-4231)
+// =====================================================
+
+// pingPongAPI simulates unsatisfiable order data: every successful update
+// of a rule displaces a designated neighbour by one position, exactly like
+// the insert-shift behaviour observed when duplicate order values or
+// unmanaged interleaved rules make the declared orders unachievable. Two
+// mutually-displacing rules never settle, so without the oscillation
+// breaker the reorder loop runs forever.
+type pingPongAPI struct {
+	fakeAPI
+	displaces map[int]int // updating key displaces value by +1
+}
+
+func (p *pingPongAPI) updateOrder(id int, ord OrderRule) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.state[id] = ord
+	p.putsByID[id]++
+	if victim, ok := p.displaces[id]; ok {
+		cur := p.state[victim]
+		cur.Order++
+		p.state[victim] = cur
+	}
+	return nil
+}
+
+// TestReorder_OscillationBreaker_ExitsBoundedTime reproduces the SUP-4231
+// livelock in miniature: rules 901 and 902 displace each other on every
+// update, so every pass issues PUTs and no pass ever converges. The loop
+// must exit in bounded time via the oscillation breaker instead of running
+// until an external deadline kills it. Before the breaker existed, this
+// test hung until the safety timeout.
+func TestReorder_OscillationBreaker_ExitsBoundedTime(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	api := &pingPongAPI{fakeAPI: *newFakeAPI(), displaces: map[int]int{901: 902, 902: 901}}
+	// Unregistered filler rules so the orderable count covers the
+	// desired orders (5 and 6).
+	for i := 1; i <= 10; i++ {
+		api.preSeed(80000+i, i, 7)
+	}
+	api.preSeed(901, 999, 7)
+	api.preSeed(902, 999, 7)
+
+	reorderWithBeforeReorder(OrderRule{Order: 5, Rank: 7}, 901, "test_oscillation", api.getCurrent, api.updateOrder, nil)
+	reorderWithBeforeReorder(OrderRule{Order: 6, Rank: 7}, 902, "test_oscillation", api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(901, "test_oscillation")
+	markOrderRuleAsDone(902, "test_oscillation")
+
+	done := make(chan struct{})
+	go func() {
+		waitForReorder("test_oscillation")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("oscillating reorder did not exit in bounded time — the oscillation breaker did not fire")
+	}
+
+	// The livelock genuinely happened: the rules were re-PUT across at
+	// least maxNonImprovingPutTicks passes before the breaker gave up.
+	if api.putsTotal() < maxNonImprovingPutTicks {
+		t.Errorf("expected sustained oscillation before the breaker fired; got %d total puts (901=%d 902=%d)", api.putsTotal(), api.putsFor(901), api.putsFor(902))
+	}
+	// And the exit came from the breaker, not from convergence: at least
+	// one rule is still off target.
+	api.mu.Lock()
+	converged := api.state[901] == (OrderRule{Order: 5, Rank: 7}) && api.state[902] == (OrderRule{Order: 6, Rank: 7})
+	api.mu.Unlock()
+	if converged {
+		t.Error("expected the ping-pong to be unresolvable; both rules at target means the fake did not oscillate")
+	}
+}
+
+// transientDisplacementAPI displaces a victim rule a limited number of
+// times and then behaves normally — modelling ordinary insert-shift noise
+// during a converging apply. The breaker must NOT fire for this case; the
+// loop must fully converge exactly as it does today.
+type transientDisplacementAPI struct {
+	fakeAPI
+	displacer     int
+	victim        int
+	displacements int
+}
+
+func (a *transientDisplacementAPI) updateOrder(id int, ord OrderRule) error {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.state[id] = ord
+	a.putsByID[id]++
+	if id == a.displacer && a.displacements > 0 {
+		a.displacements--
+		cur := a.state[a.victim]
+		cur.Order++
+		a.state[a.victim] = cur
+	}
+	return nil
+}
+
+func TestReorder_TransientDisplacement_StillConverges(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	api := &transientDisplacementAPI{fakeAPI: *newFakeAPI(), displacer: 912, victim: 911, displacements: 2}
+	for i := 1; i <= 5; i++ {
+		api.preSeed(81000+i, i, 7)
+	}
+	api.preSeed(911, 999, 7)
+	api.preSeed(912, 999, 7)
+
+	reorderWithBeforeReorder(OrderRule{Order: 1, Rank: 7}, 911, "test_transient", api.getCurrent, api.updateOrder, nil)
+	reorderWithBeforeReorder(OrderRule{Order: 2, Rank: 7}, 912, "test_transient", api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(911, "test_transient")
+	markOrderRuleAsDone(912, "test_transient")
+
+	done := make(chan struct{})
+	go func() {
+		waitForReorder("test_transient")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("transient displacement did not converge in bounded time")
+	}
+
+	// Full convergence — the breaker must not have cut this run short.
+	api.mu.Lock()
+	got911, got912 := api.state[911], api.state[912]
+	api.mu.Unlock()
+	if got911 != (OrderRule{Order: 1, Rank: 7}) {
+		t.Errorf("rule 911: expected converged order {1 7}, got %+v — the oscillation breaker fired on a converging run", got911)
+	}
+	if got912 != (OrderRule{Order: 2, Rank: 7}) {
+		t.Errorf("rule 912: expected converged order {2 7}, got %+v — the oscillation breaker fired on a converging run", got912)
+	}
+}
+
+// =====================================================
 // Cloud App Control — per-rule-type reorder isolation
 // =====================================================
 //
