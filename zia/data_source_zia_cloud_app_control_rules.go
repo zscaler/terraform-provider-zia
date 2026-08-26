@@ -129,6 +129,10 @@ func dataSourceCloudAppControlRules() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"prompt_capture_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"user_agent_types": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -417,6 +421,7 @@ func dataSourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceD
 		_ = d.Set("last_modified_time", resp.LastModifiedTime)
 		_ = d.Set("enforce_time_validity", resp.EnforceTimeValidity)
 		_ = d.Set("user_agent_types", resp.UserAgentTypes)
+		_ = d.Set("prompt_capture_enabled", resp.PromptCaptureEnabled)
 		if err := d.Set("locations", flattenIDNameExtensions(resp.Locations)); err != nil {
 			return diag.FromErr(err)
 		}
