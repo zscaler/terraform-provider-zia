@@ -6,6 +6,15 @@ PKG_NAME=zia
 GOFMT:=gofumpt
 TFPROVIDERLINT=tfproviderlint
 STATICCHECK=staticcheck
+
+# Tool versions are pinned so `make tools` cannot pull a release that needs a
+# newer Go than the one this project builds with. staticcheck v0.8.x requires
+# Go 1.26; v0.7.0 is the newest that still builds on Go 1.25. Raise these
+# together with the Go version, not before it.
+GOFMT_VERSION=v0.9.2
+TFPROVIDERLINT_VERSION=v0.31.0
+STATICCHECK_VERSION=v0.7.0
+
 TF_PLUGIN_DIR=~/.terraform.d/plugins
 ZIA_PROVIDER_NAMESPACE=zscaler.com/zia/zia
 
@@ -200,14 +209,14 @@ test\:integration\:zscalertwo:
 build13: GOOS=$(shell go env GOOS)
 build13: GOARCH=$(shell go env GOARCH)
 ifeq ($(OS),Windows_NT)  # is Windows_NT on XP, 2000, 7, Vista, 10...
-build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.8.6/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(APPDATA)/terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.8.8/$(GOOS)_$(GOARCH)
 else
-build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.8.6/$(GOOS)_$(GOARCH)
+build13: DESTINATION=$(HOME)/.terraform.d/plugins/$(ZIA_PROVIDER_NAMESPACE)/4.8.8/$(GOOS)_$(GOARCH)
 endif
 build13: fmtcheck
 	@echo "==> Installing plugin to $(DESTINATION)"
 	@mkdir -p $(DESTINATION)
-	go build -o $(DESTINATION)/terraform-provider-zia_v4.8.6
+	go build -o $(DESTINATION)/terraform-provider-zia_v4.8.8
 
 coverage: test
 	@echo "✓ Opening coverage for unit tests ..."
@@ -272,14 +281,14 @@ lint:
 		./$(PKG_NAME)
 
 tools:
-	@which $(GOFMT) || go install mvdan.cc/gofumpt@v0.9.2
-	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
-	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@latest
+	@which $(GOFMT) || go install mvdan.cc/gofumpt@$(GOFMT_VERSION)
+	@which $(TFPROVIDERLINT) || go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@$(TFPROVIDERLINT_VERSION)
+	@which $(STATICCHECK) || go install honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION)
 
 tools-update:
-	@go install mvdan.cc/gofumpt@v0.9.2
-	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
-	@go install honnef.co/go/tools/cmd/staticcheck@latest
+	@go install mvdan.cc/gofumpt@$(GOFMT_VERSION)
+	@go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@$(TFPROVIDERLINT_VERSION)
+	@go install honnef.co/go/tools/cmd/staticcheck@$(STATICCHECK_VERSION)
 
 ziaActivator: GOOS=$(shell go env GOOS)
 ziaActivator: GOARCH=$(shell go env GOARCH)

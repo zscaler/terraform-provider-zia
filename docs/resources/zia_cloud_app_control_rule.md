@@ -376,6 +376,8 @@ The following arguments are supported:
 
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
 
+* `prompt_capture_enabled` (Boolean) Indicates whether the capture of end user prompts for generative AI (Gen AI) applications is allowed or blocked. Note: This field is applicable only when the Gen AI Applications Access field is set to Allow when configuring the rule.
+
 * `applications` - (List of Strings) The list of cloud applications to which the Cloud App Control rule must be applied. For the complete list of supported file types refer to the  [ZIA API documentation](https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-post). To retrieve the list of cloud applications, use the data source: `zia_cloud_applications`
 
 * `eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.

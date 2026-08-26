@@ -70,7 +70,10 @@ The following arguments are supported:
 
 * `validity_time_zone_id` - (Optional) If `enforce_time_validity` is set to true, the Cloud App Control Rules rule date and time will be valid based on this time zone ID. The attribute is validated against the official [IANA List](https://nodatime.org/TimeZones)
 
-* `last_modified_time` - (Optional) When the rule was last modified
+* `prompt_capture_enabled` (Boolean) Indicates whether the capture of end user prompts for generative AI (Gen AI) applications is allowed or blocked. Note: This field is applicable only when the Gen AI Applications Access field is set to Allow when configuring the rule.
+  
+
+* `last_modified_time` - (int) When the rule was last modified
 * `enforce_time_validity` - (Optional) Enforce a set a validity time period for the Cloud App Control Rules rule.
 * `number_of_applications` - (Number) Total number of applications assigned to the rule.
 

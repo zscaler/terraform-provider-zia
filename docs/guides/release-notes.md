@@ -12,10 +12,22 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.7``
+``Last updated: v4.8.8``
 
 ---
 
+## 4.8.8 (August, 26 2026)
+
+### Notes
+
+- Release date: **(August, 26 2026)**
+- Supported Terraform version: **v1.x**
+-
+### Bug Fixes
+
+- [PR #603](https://github.com/zscaler/terraform-provider-zia/pull/603) - Added new ZIA  attribute to resource and datasource `zia_cloud_app_control_rule`
+  - `prompt_capture_enabled` - Indicates whether the capture of end user prompts for generative AI (Gen AI) applications is allowed or blocked. Note: This field is applicable only when the Gen AI Applications Access field is set to Allow when configuring the rule.
+  
 ## 4.8.7 (August,17 2026)
 
 ### Notes

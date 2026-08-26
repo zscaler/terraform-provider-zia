@@ -196,6 +196,12 @@ func resourceCloudAppControlRules() *schema.Resource {
 				Optional:    true,
 				Description: "",
 			},
+			"prompt_capture_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Description: `"Indicates whether the capture of end user prompts for generative AI (Gen AI) applications is allowed or blocked.
+				 Note: This field is applicable only when the Gen AI Applications Access field is set to Allow when configuring the rule."`,
+			},
 			"eun_template_id": {
 				Type:        schema.TypeInt,
 				Optional:    true,
@@ -402,6 +408,7 @@ func resourceCloudAppControlRulesRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("user_agent_types", resp.UserAgentTypes)
 	_ = d.Set("device_trust_levels", resp.DeviceTrustLevels)
 	_ = d.Set("user_risk_score_levels", resp.UserRiskScoreLevels)
+	_ = d.Set("prompt_capture_enabled", resp.PromptCaptureEnabled)
 	_ = d.Set("time_quota", resp.TimeQuota)
 
 	// Convert size_quota from KB back to MB
@@ -685,6 +692,7 @@ func expandCloudAppControlRules(d *schema.ResourceData) cloudappcontrol.WebAppli
 		EnforceTimeValidity:  d.Get("enforce_time_validity").(bool),
 		CascadingEnabled:     d.Get("cascading_enabled").(bool),
 		EunEnabled:           d.Get("eun_enabled").(bool),
+		PromptCaptureEnabled: d.Get("prompt_capture_enabled").(bool),
 		EunTemplateID:        d.Get("eun_template_id").(int),
 		BrowserEunTemplateID: d.Get("browser_eun_template_id").(int),
 		Actions:              SetToStringList(d, "actions"),
