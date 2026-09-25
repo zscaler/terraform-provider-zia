@@ -229,7 +229,7 @@ func validateUserRiskScoreLevels() schema.SchemaValidateDiagFunc {
 }
 
 var supportedUserAgentTypes = []string{
-	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER",
+	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER", "BRAVE",
 }
 
 func validateUserAgentTypes() schema.SchemaValidateDiagFunc {
@@ -2061,7 +2061,7 @@ func validateURLFilteringActions(rule urlfilteringpolicies.URLFilteringRule) err
 		// Validation 2: Check user_agent_types does not contain "OTHER"
 		for _, userAgent := range rule.UserAgentTypes {
 			if userAgent == "OTHER" {
-				return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE")
+				return errors.New("user_agent_types should not contain 'OTHER' when action is ISOLATE. Valid options are: FIREFOX, MSIE, MSEDGE, CHROME, SAFARI, MSCHREDGE, BRAVE")
 			}
 		}
 
