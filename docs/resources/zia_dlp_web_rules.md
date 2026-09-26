@@ -37,14 +37,14 @@ resource "zia_dlp_web_rules" "this" {
   order                      = 1
   rank                       = 7
   state                      = "ENABLED"
-  protocols                  = [ "FTP_RULE", "HTTPS_RULE", "HTTP_RULE" ]
-  file_types                 = [ "FTCATEGORY_ALL_OUTBOUND" ]
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  file_types                 = ["FTCATEGORY_ALL_OUTBOUND"]
   zscaler_incident_receiver  = false
   without_content_inspection = true
-  user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
+  user_risk_score_levels     = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
   severity                   = "RULE_SEVERITY_HIGH"
   dlp_engines {
-    id = [ data.zia_dlp_engines.this.id ]
+    id = [data.zia_dlp_engines.this.id]
   }
 }
 ```
@@ -52,7 +52,7 @@ resource "zia_dlp_web_rules" "this" {
 ```hcl
 // Example 1: Using data source to reference existing URL category
 data "zia_url_categories" "existing_category" {
-    configured_name = "Example"
+  configured_name = "Example"
 }
 
 // Example 2: Creating new URL category and referencing it
@@ -70,17 +70,17 @@ data "zia_dlp_icap_servers" "this" {
 }
 
 resource "zia_dlp_web_rules" "this" {
-  name                      = "Terraform_Test"
-  description               = "Terraform_Test"
-  action                    = "BLOCK"
-  order                     = 1
-  protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-  rank                      = 7
-  state                     = "ENABLED"
-  zscaler_incident_receiver = true
+  name                       = "Terraform_Test"
+  description                = "Terraform_Test"
+  action                     = "BLOCK"
+  order                      = 1
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  rank                       = 7
+  state                      = "ENABLED"
+  zscaler_incident_receiver  = true
   without_content_inspection = false
   url_categories {
-    id = [ data.zia_url_categories.existing_category.val ]
+    id = [data.zia_url_categories.existing_category.val]
   }
   icap_server {
     id = data.zia_dlp_icap_servers.this.id
@@ -88,17 +88,17 @@ resource "zia_dlp_web_rules" "this" {
 }
 
 resource "zia_dlp_web_rules" "with_new_category" {
-  name                      = "Terraform_Test_New_Category"
-  description               = "Terraform_Test with new category"
-  action                    = "BLOCK"
-  order                     = 2
-  protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-  rank                      = 7
-  state                     = "ENABLED"
-  zscaler_incident_receiver = true
+  name                       = "Terraform_Test_New_Category"
+  description                = "Terraform_Test with new category"
+  action                     = "BLOCK"
+  order                      = 2
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  rank                       = 7
+  state                      = "ENABLED"
+  zscaler_incident_receiver  = true
   without_content_inspection = false
   url_categories {
-    id = [ zia_url_categories.new_category.val ]
+    id = [zia_url_categories.new_category.val]
   }
   icap_server {
     id = data.zia_dlp_icap_servers.this.id
@@ -114,7 +114,7 @@ data "zia_dlp_engines" "this" {
 }
 
 data "zia_file_type_categories" "this" {
-    name = "FileType01"
+  name = "FileType01"
 }
 
 resource "zia_dlp_web_rules" "this" {
@@ -124,16 +124,16 @@ resource "zia_dlp_web_rules" "this" {
   order                      = 1
   rank                       = 7
   state                      = "ENABLED"
-  protocols                  = [ "FTP_RULE", "HTTPS_RULE", "HTTP_RULE" ]
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
   zscaler_incident_receiver  = false
   without_content_inspection = true
-  user_risk_score_levels     = [ "LOW", "MEDIUM", "HIGH", "CRITICAL" ]
+  user_risk_score_levels     = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
   severity                   = "RULE_SEVERITY_HIGH"
   file_type_categories {
-    id = [ data.zia_file_type_categories.this.id ]
+    id = [data.zia_file_type_categories.this.id]
   }
   dlp_engines {
-    id = [ data.zia_dlp_engines.this.id ]
+    id = [data.zia_dlp_engines.this.id]
   }
 }
 ```
@@ -142,8 +142,8 @@ resource "zia_dlp_web_rules" "this" {
 
 ```hcl
 // Retrieve a custom URL Category by Name
-data "zia_url_categories" "this"{
-    configured_name = "Example"
+data "zia_url_categories" "this" {
+  configured_name = "Example"
 }
 
 // Retrieve a Incident Receiver by Name
@@ -152,17 +152,17 @@ data "zia_dlp_incident_receiver_servers" "this" {
 }
 
 resource "zia_dlp_web_rules" "this" {
-  name                      = "Terraform_Test"
-  description               = "Terraform_Test"
-  action                    = "BLOCK"
-  order                     = 1
-  protocols                 = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-  rank                      = 7
-  state                     = "ENABLED"
-  zscaler_incident_receiver = true
+  name                       = "Terraform_Test"
+  description                = "Terraform_Test"
+  action                     = "BLOCK"
+  order                      = 1
+  protocols                  = ["FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  rank                       = 7
+  state                      = "ENABLED"
+  zscaler_incident_receiver  = true
   without_content_inspection = false
   url_categories {
-    id = [ data.zia_url_categories.this.val ]
+    id = [data.zia_url_categories.this.val]
   }
   icap_server {
     id = data.zia_dlp_incident_receiver_servers.this.id
@@ -218,13 +218,13 @@ resource "zia_dlp_web_rules" "subrule1" {
 
 ```hcl
 resource "zia_dlp_web_rules" "with_receiver" {
-  name                       = "Terraform_Test_with_Receiver"
-  description                = "DLP rule with receiver configuration"
-  action                     = "ALLOW"
-  state                      = "ENABLED"
-  order                      = 1
-  rank                       = 0
-  protocols                  = [
+  name        = "Terraform_Test_with_Receiver"
+  description = "DLP rule with receiver configuration"
+  action      = "ALLOW"
+  state       = "ENABLED"
+  order       = 1
+  rank        = 0
+  protocols = [
     "WEBSOCKETSSL_RULE",
     "WEBSOCKET_RULE",
     "FTP_RULE",
@@ -254,19 +254,19 @@ output "zia_dlp_cloud_to_cloud_ir" {
 }
 
 resource "zia_dlp_web_rules" "this" {
-  name                       = "Terraform_Test_policy_prod_tf"
-  description                = "Terraform_Test_policy_prod_tf"
-  action                     = "ALLOW"
-  state                      = "ENABLED"
-  order                      = 1
-  rank                       = 0
-  protocols                  = [
-        "WEBSOCKETSSL_RULE",
-        "WEBSOCKET_RULE",
-        "FTP_RULE",
-        "HTTPS_RULE",
-        "HTTP_RULE"
-    ]
+  name        = "Terraform_Test_policy_prod_tf"
+  description = "Terraform_Test_policy_prod_tf"
+  action      = "ALLOW"
+  state       = "ENABLED"
+  order       = 1
+  rank        = 0
+  protocols = [
+    "WEBSOCKETSSL_RULE",
+    "WEBSOCKET_RULE",
+    "FTP_RULE",
+    "HTTPS_RULE",
+    "HTTP_RULE"
+  ]
   severity = "RULE_SEVERITY_HIGH"
 
   # Configure receiver using values from the C2CIR data source

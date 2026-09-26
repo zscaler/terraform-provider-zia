@@ -19,7 +19,7 @@ Use the **zia_security_settings** data source to get a list of URLs that were ad
 
 ```hcl
 # ZIA Security Policy Settings Data Source
-data "zia_security_settings" "example"{}
+data "zia_security_settings" "example" {}
 ```
 
 ## Argument Reference

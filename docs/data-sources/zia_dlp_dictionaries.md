@@ -17,8 +17,8 @@ Use the **zia_dlp_dictionaries** data source to get information about a DLP dict
 
 ```hcl
 # Retrieve a DLP Dictionary by name
-data "zia_dlp_dictionaries" "example"{
-    name = "SALESFORCE_REPORT_LEAKAGE"
+data "zia_dlp_dictionaries" "example" {
+  name = "SALESFORCE_REPORT_LEAKAGE"
 }
 ```
 

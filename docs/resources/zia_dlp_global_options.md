@@ -19,12 +19,12 @@ Use the **zia_dlp_global_options** resource allows the management of ZIA DLP Adv
 
 ```hcl
 resource "zia_url_categories" "this" {
-  super_category      = "USER_DEFINED"
-  configured_name     = "MCAS Unsanctioned Apps"
-  description         = "MCAS Unsanctioned Apps"
-  keywords            = ["microsoft"]
-  custom_category     = true
-  type                = "URL_CATEGORY"
+  super_category  = "USER_DEFINED"
+  configured_name = "MCAS Unsanctioned Apps"
+  description     = "MCAS Unsanctioned Apps"
+  keywords        = ["microsoft"]
+  custom_category = true
+  type            = "URL_CATEGORY"
   urls = [
     ".coupons.com",
     ".resource.alaskaair.net",
@@ -41,17 +41,17 @@ resource "zia_url_categories" "this" {
 }
 
 resource "zia_dlp_global_options" "this" {
-  applications = [ "ELEVENX_AI", "ONE_HUNDRED_NINE_AI"]
-  urls = [ "google.com", "yahoo.com", "bing.com" ]
-#   http_get_custom_url_categories = [ "Zscaler Cloud", "Zscaler Internet Access" ]
-  exempt_url_encoded_data = true
-  enable_npk_edm_templates = false
+  applications = ["ELEVENX_AI", "ONE_HUNDRED_NINE_AI"]
+  urls         = ["google.com", "yahoo.com", "bing.com"]
+  #   http_get_custom_url_categories = [ "Zscaler Cloud", "Zscaler Internet Access" ]
+  exempt_url_encoded_data          = true
+  enable_npk_edm_templates         = false
   enable_npk_edm_templates_for_org = false
-  enable_inline_dlp_ocr = true
-  enable_casb_ocr = true
-  enable_email_dlp_ocr = false
-  enable_evaluate_all_dlp_rules = true
-  enable_edm_popular_format = false
+  enable_inline_dlp_ocr            = true
+  enable_casb_ocr                  = true
+  enable_email_dlp_ocr             = false
+  enable_evaluate_all_dlp_rules    = true
+  enable_edm_popular_format        = false
   url_categories {
     id = [zia_url_categories.this.val]
   }

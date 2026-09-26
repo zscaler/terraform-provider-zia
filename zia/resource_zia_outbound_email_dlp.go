@@ -578,7 +578,7 @@ func resourceOutboundEmailDLPDelete(ctx context.Context, d *schema.ResourceData,
 	if !ok {
 		log.Printf("[ERROR] outbound email dlp rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting outbound email dlp rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting outbound email dlp rule ID: %v\n", d.Id())
 
 	if _, err := outbound_email_dlp.Delete(ctx, service, id); err != nil {
 		if strings.Contains(err.Error(), "RESOURCE_NOT_FOUND") {

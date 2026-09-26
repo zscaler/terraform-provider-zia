@@ -19,7 +19,7 @@ Use the **zia_email_profile** data source to get information about email recipie
 
 ```hcl
 data "zia_email_profile" "this" {
-    name = "EmailProfile01"
+  name = "EmailProfile01"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_email_profile" "this" {
 
 ```hcl
 data "zia_email_profile" "this" {
-    id = 1254674585
+  id = 1254674585
 }
 ```
 

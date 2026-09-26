@@ -131,8 +131,8 @@ data "zia_firewall_filtering_rule" "block_drops" {
 resource "some_module_thing" "per_block_rule" {
   for_each = { for r in data.zia_firewall_filtering_rule.block_drops.rules : r.id => r }
 
-  rule_id   = each.value.id
-  rule_name = each.value.name
+  rule_id    = each.value.id
+  rule_name  = each.value.name
   rule_order = each.value.order
 }
 ```

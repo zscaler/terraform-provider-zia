@@ -18,19 +18,19 @@ The **zia_dlp_dictionaries** resource allows the creation and management of ZIA 
 ## Example Usage
 
 ```hcl
-resource "zia_dlp_dictionaries" "example"{
-    name = "Your Dictionary Name"
-    description = "Your Description"
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "YourPhrase"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    patterns {
-        action = "PATTERN_COUNT_TYPE_UNIQUE"
-        pattern = "YourPattern"
-    }
-    dictionary_type = "PATTERNS_AND_PHRASES"
+resource "zia_dlp_dictionaries" "example" {
+  name        = "Your Dictionary Name"
+  description = "Your Description"
+  phrases {
+    action = "PHRASE_COUNT_TYPE_ALL"
+    phrase = "YourPhrase"
+  }
+  custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+  patterns {
+    action  = "PATTERN_COUNT_TYPE_UNIQUE"
+    pattern = "YourPattern"
+  }
+  dictionary_type = "PATTERNS_AND_PHRASES"
 }
 ```
 
@@ -45,40 +45,40 @@ data "zia_dlp_dictionaries" "this" {
   name = "EUIBAN_LEAKAGE"
 }
 
-resource "zia_dlp_dictionaries" "example"{
-    name                     = "Example Dictionary Clone"
-    description              = "Example Dictionary Clone"
-    confidence_level_for_predefined_dict = "CONFIDENCE_LEVEL_MEDIUM"
-    hierarchical_identifiers = [data.zia_dlp_dictionary_predefined_identifiers.this.predefined_identifiers]
-    confidence_threshold     = "CONFIDENCE_LEVEL_HIGH"
-    dict_template_id         = data.zia_dlp_dictionaries.this.id
-    phrases {
-        action = "PHRASE_COUNT_TYPE_ALL"
-        phrase = "YourPhrase1"
-    }
-    custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
-    dictionary_type          = "PATTERNS_AND_PHRASES"
+resource "zia_dlp_dictionaries" "example" {
+  name                                 = "Example Dictionary Clone"
+  description                          = "Example Dictionary Clone"
+  confidence_level_for_predefined_dict = "CONFIDENCE_LEVEL_MEDIUM"
+  hierarchical_identifiers             = [data.zia_dlp_dictionary_predefined_identifiers.this.predefined_identifiers]
+  confidence_threshold                 = "CONFIDENCE_LEVEL_HIGH"
+  dict_template_id                     = data.zia_dlp_dictionaries.this.id
+  phrases {
+    action = "PHRASE_COUNT_TYPE_ALL"
+    phrase = "YourPhrase1"
+  }
+  custom_phrase_match_type = "MATCH_ALL_CUSTOM_PHRASE_PATTERN_DICTIONARY"
+  dictionary_type          = "PATTERNS_AND_PHRASES"
 }
 ```
 
 ## Example Usage - With Exact Data Match (EDM)
 
 ```hcl
-data "zia_dlp_edm_schema" "this"{
-    project_name = "EDM_TEMPLATE01"
+data "zia_dlp_edm_schema" "this" {
+  project_name = "EDM_TEMPLATE01"
 }
 
 resource "zia_dlp_dictionaries" "dlp_dictionaries" {
-  name        = "edm_dic_tf"
-  description = "edm dictionary"
+  name            = "edm_dic_tf"
+  description     = "edm dictionary"
   dictionary_type = "EXACT_DATA_MATCH"
-  custom = true
+  custom          = true
 
   exact_data_match_details {
-    schema_id = data.zia_dlp_edm_schema.this.schema_id
-    primary_fields             = [3]
-    secondary_fields          = [1,2]
-    secondary_field_match_on  = "MATCHON_ALL"
+    schema_id                = data.zia_dlp_edm_schema.this.schema_id
+    primary_fields           = [3]
+    secondary_fields         = [1, 2]
+    secondary_field_match_on = "MATCHON_ALL"
 
   }
 }

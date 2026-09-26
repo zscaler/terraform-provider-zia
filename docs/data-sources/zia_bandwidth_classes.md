@@ -19,7 +19,7 @@ Use the **zia_bandwidth_classes** Retrieves all the available bandwidth control 
 
 ```hcl
 data "zia_bandwidth_classes" "this" {
-    name = "Gen_AI_Classes"
+  name = "Gen_AI_Classes"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_bandwidth_classes" "this" {
 
 ```hcl
 data "zia_bandwidth_classes" "this" {
-    id = 13
+  id = 13
 }
 ```
 

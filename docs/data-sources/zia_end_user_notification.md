@@ -18,7 +18,7 @@ Use the **zia_end_user_notification** data source to get information about brows
 ## Example Usage
 
 ```hcl
-data "zia_end_user_notification" "example"{}
+data "zia_end_user_notification" "example" {}
 ```
 
 ## Argument Reference

@@ -26,8 +26,8 @@ data "zia_dlp_incident_receiver_servers" "this" {
 
 ```hcl
 # Retrieve a DLP Incident Receiver Server by ID
-data "zia_dlp_incident_receiver_servers" "this"{
-    id = 1234567890
+data "zia_dlp_incident_receiver_servers" "this" {
+  id = 1234567890
 }
 ```
 

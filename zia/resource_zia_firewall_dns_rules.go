@@ -675,7 +675,7 @@ func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
-	log.Printf("[INFO] Deleting firewall dns rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting firewall dns rule ID: %v\n", d.Id())
 	if _, err := firewalldnscontrolpolicies.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}

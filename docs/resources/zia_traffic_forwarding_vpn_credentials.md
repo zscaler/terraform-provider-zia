@@ -25,32 +25,32 @@ The **zia_traffic_forwarding_vpn_credentials** creates and manages VPN credentia
 ```hcl
 ######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 # ZIA Traffic Forwarding - VPN Credentials (UFQDN)
-resource "zia_traffic_forwarding_vpn_credentials" "example"{
-    type            = "UFQDN"
-    fqdn            = "sjc-1-37@acme.com"
-    comments        = "Example"
-    pre_shared_key = "*********************"
+resource "zia_traffic_forwarding_vpn_credentials" "example" {
+  type           = "UFQDN"
+  fqdn           = "sjc-1-37@acme.com"
+  comments       = "Example"
+  pre_shared_key = "*********************"
 }
 ```
 
 ```hcl
 # ZIA Traffic Forwarding - VPN Credentials (IP)
 ######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
-resource "zia_traffic_forwarding_vpn_credentials" "example"{
-    type            = "IP"
-    ip_address      = zia_traffic_forwarding_static_ip.example.ip_address
-    comments        = "Example"
-    pre_shared_key  = "*********************"
-    depends_on = [ zia_traffic_forwarding_static_ip.example ]
+resource "zia_traffic_forwarding_vpn_credentials" "example" {
+  type           = "IP"
+  ip_address     = zia_traffic_forwarding_static_ip.example.ip_address
+  comments       = "Example"
+  pre_shared_key = "*********************"
+  depends_on     = [zia_traffic_forwarding_static_ip.example]
 }
 
-resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address      =  "1.1.1.1"
-    routable_ip     = true
-    comment         = "Example"
-    geo_override    = true
-    latitude        = -36.848461
-    longitude       = 174.763336
+resource "zia_traffic_forwarding_static_ip" "example" {
+  ip_address   = "1.1.1.1"
+  routable_ip  = true
+  comment      = "Example"
+  geo_override = true
+  latitude     = -36.848461
+  longitude    = 174.763336
 }
 ```
 

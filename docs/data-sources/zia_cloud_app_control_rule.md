@@ -19,9 +19,9 @@ Use the **zia_cloud_app_control_rule** data source to get information about a ZI
 
 ```hcl
 # Retrieve a Cloud App Control Policy by name
-data "zia_cloud_app_control_rule" "this"{
-    name = "Example"
-    type = "STREAMING_MEDIA"
+data "zia_cloud_app_control_rule" "this" {
+  name = "Example"
+  type = "STREAMING_MEDIA"
 }
 ```
 

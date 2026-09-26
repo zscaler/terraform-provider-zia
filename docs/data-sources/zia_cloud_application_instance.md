@@ -18,16 +18,16 @@ Use the **zia_cloud_application_instance** data source to get information about 
 ## Example Usage - By Name
 
 ```hcl
-data "zia_cloud_application_instance" "this"{
-    name = "SharePointOnline"
+data "zia_cloud_application_instance" "this" {
+  name = "SharePointOnline"
 }
 ```
 
 ## Example Usage - By ID
 
 ```hcl
-data "zia_cloud_application_instance" "this"{
-    id = "11743520"
+data "zia_cloud_application_instance" "this" {
+  id = "11743520"
 }
 ```
 

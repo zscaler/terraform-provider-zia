@@ -201,7 +201,7 @@ func resourceFWNetworkServiceGroupsDelete(ctx context.Context, d *schema.Resourc
 	if !ok {
 		log.Printf("[ERROR] network service groups ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting network service groups ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting network service groups ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

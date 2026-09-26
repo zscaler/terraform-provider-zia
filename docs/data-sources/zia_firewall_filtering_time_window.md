@@ -19,22 +19,22 @@ Use the **zia_firewall_filtering_time_window** data source to get information ab
 
 ```hcl
 # ZIA Time Window - Work Hours
-data "zia_firewall_filtering_time_window" "work_hours"{
-    name = "Work hours"
+data "zia_firewall_filtering_time_window" "work_hours" {
+  name = "Work hours"
 }
 ```
 
 ```hcl
 # ZIA Time Window - Weekends
-data "zia_firewall_filtering_time_window" "weekends"{
-    name = "Weekends"
+data "zia_firewall_filtering_time_window" "weekends" {
+  name = "Weekends"
 }
 ```
 
 ```hcl
 # ZIA Time Window - Off Hours
-data "zia_firewall_filtering_time_window" "off_hours"{
-    name = "Off hours"
+data "zia_firewall_filtering_time_window" "off_hours" {
+  name = "Off hours"
 }
 ```
 

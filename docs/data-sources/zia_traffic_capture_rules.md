@@ -19,7 +19,7 @@ Use the **zia_traffic_capture_rules** data source to get information about a tra
 
 ```hcl
 data "zia_traffic_capture_rules" "example" {
-    name = "Capture_Rule01"
+  name = "Capture_Rule01"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_traffic_capture_rules" "example" {
 
 ```hcl
 data "zia_traffic_capture_rules" "example" {
-    id = 1254674585
+  id = 1254674585
 }
 ```
 

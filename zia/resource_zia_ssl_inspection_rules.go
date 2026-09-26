@@ -674,7 +674,7 @@ func resourceSSLInspectionRulesDelete(ctx context.Context, d *schema.ResourceDat
 	if !ok {
 		log.Printf("[ERROR] ssl inspection rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting ssl inspection rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting ssl inspection rule ID: %v\n", d.Id())
 
 	if _, err := sslinspection.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

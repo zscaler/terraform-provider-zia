@@ -18,36 +18,36 @@ Use the **zia_location_groups** data source to get information about a location 
 
 ```hcl
 # Retrieve ZIA Location Group
-data "zia_location_groups" "example"{
-    name = "Corporate User Traffic Group"
+data "zia_location_groups" "example" {
+  name = "Corporate User Traffic Group"
 }
 ```
 
 ```hcl
 # Retrieve ZIA Location Group
-data "zia_location_groups" "example"{
-    name = "Guest Wifi Group"
+data "zia_location_groups" "example" {
+  name = "Guest Wifi Group"
 }
 ```
 
 ```hcl
 # Retrieve ZIA Location Group
-data "zia_location_groups" "example"{
-    name = "IoT Traffic Group"
+data "zia_location_groups" "example" {
+  name = "IoT Traffic Group"
 }
 ```
 
 ```hcl
 # Retrieve ZIA Location Group
-data "zia_location_groups" "example"{
-    name = "Server Traffic Group"
+data "zia_location_groups" "example" {
+  name = "Server Traffic Group"
 }
 ```
 
 ```hcl
 # Retrieve ZIA Location Group
-data "zia_location_groups" "example"{
-    name = "Server Traffic Group"
+data "zia_location_groups" "example" {
+  name = "Server Traffic Group"
 }
 ```
 
@@ -56,16 +56,16 @@ data "zia_location_groups" "example"{
 ```hcl
 # Use JMESPath to pre-filter location groups by type
 data "zia_location_groups" "dynamic_groups" {
-    name   = "Corporate User Traffic Group"
-    search = "[?groupType == 'Dynamic']"
+  name   = "Corporate User Traffic Group"
+  search = "[?groupType == 'Dynamic']"
 }
 ```
 
 ```hcl
 # Filter location groups by name pattern
 data "zia_location_groups" "traffic_groups" {
-    name   = "Server Traffic Group"
-    search = "[?contains(name, 'Traffic')]"
+  name   = "Server Traffic Group"
+  search = "[?contains(name, 'Traffic')]"
 }
 ```
 

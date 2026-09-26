@@ -710,7 +710,7 @@ func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData
 	if !ok {
 		log.Printf("[ERROR] url filtering rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting url filtering rule ID: %v\n", d.Id())
 
 	if _, err := urlfilteringpolicies.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

@@ -20,7 +20,7 @@ Use the **zia_bandwidth_classes_file_size** resource allows the creation and man
 ```hcl
 
 resource "zia_bandwidth_classes_file_size" "this1" {
-    file_size = "FILE_5MB"
+  file_size = "FILE_5MB"
 }
 ```
 

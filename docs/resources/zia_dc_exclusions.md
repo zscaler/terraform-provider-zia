@@ -27,9 +27,9 @@ data "zia_datacenters" "this" {
 # Using Unix timestamps
 resource "zia_dc_exclusions" "this" {
   datacenter_id = data.zia_datacenters.this.datacenter_id
-  start_time   = 1770422399
-  end_time     = 1770508799
-  description  = "Optional description"
+  start_time    = 1770422399
+  end_time      = 1770508799
+  description   = "Optional description"
 }
 
 # Using human-readable UTC date/time (same as zia_sub_cloud exclusions)

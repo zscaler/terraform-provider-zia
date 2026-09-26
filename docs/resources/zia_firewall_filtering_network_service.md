@@ -34,7 +34,7 @@ resource "zia_firewall_filtering_network_service" "example" {
   dest_tcp_ports {
     start = 5000
   }
-    dest_tcp_ports {
+  dest_tcp_ports {
     start = 5001
   }
   dest_tcp_ports {

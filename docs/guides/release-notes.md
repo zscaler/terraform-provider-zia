@@ -2183,7 +2183,7 @@ Administrators who used previous versions of the provider, and followed instruct
 terraform {
   required_providers {
     zia = {
-      source = "zscaler/zia"
+      source  = "zscaler/zia"
       version = "2.0.3"
     }
   }
@@ -2212,7 +2212,7 @@ Administrators who used previous versions of the provider, and followed instruct
 terraform {
   required_providers {
     zia = {
-      source = "zscaler/zia"
+      source  = "zscaler/zia"
       version = "2.0.3"
     }
   }

@@ -286,7 +286,7 @@ func resourceForwardingControlZPAGatewayDelete(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	log.Printf("[INFO] Deleting forwarding control zpa gateway ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting forwarding control zpa gateway ID: %v\n", d.Id())
 
 	if _, err := zpa_gateways.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

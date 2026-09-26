@@ -20,14 +20,14 @@ Use the **zia_ssl_inspection_rules** data source to get information about a ssl 
 ```hcl
 # ZIA SSL Inspection by name
 data "zia_ssl_inspection_rules" "this" {
-    name = "SSL_Inspection_Rule01"
+  name = "SSL_Inspection_Rule01"
 }
 ```
 
 ```hcl
 # ZIA SSL Inspection by ID
 data "zia_ssl_inspection_rules" "this" {
-    id = "12365478"
+  id = "12365478"
 }
 ```
 

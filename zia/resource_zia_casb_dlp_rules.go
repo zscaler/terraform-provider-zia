@@ -689,7 +689,7 @@ func resourceCasbDlpRulesDelete(ctx context.Context, d *schema.ResourceData, met
 	if !ok || ruleType == "" {
 		return diag.FromErr(fmt.Errorf("no rule type is set"))
 	}
-	log.Printf("[INFO] Deleting cloud application control rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting cloud application control rule ID: %v\n", d.Id())
 
 	if _, err := casb_dlp_rules.Delete(ctx, service, ruleType, id); err != nil {
 		return diag.FromErr(err)

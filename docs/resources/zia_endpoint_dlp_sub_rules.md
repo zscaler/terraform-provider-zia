@@ -243,7 +243,7 @@ The following arguments are supported:
       end_point_application_groups {
         group_id = ["366"]
       }
-
+    
       lifecycle {
         ignore_changes = [end_point_application_groups]
       }

@@ -659,7 +659,7 @@ func resourceLocationManagementDelete(ctx context.Context, d *schema.ResourceDat
 	if !ok {
 		log.Printf("[ERROR] gre tunnel ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting location management ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting location management ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

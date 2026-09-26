@@ -20,7 +20,7 @@ Use the **zia_rule_labels** data source to get information about a rule label re
 ```hcl
 # ZIA Rule Labels Data Source
 data "zia_rule_labels" "example" {
-    name = "Example"
+  name = "Example"
 }
 ```
 

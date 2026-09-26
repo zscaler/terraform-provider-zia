@@ -20,7 +20,7 @@ Use the **zia_firewall_filtering_application_services_group** data source to get
 ```hcl
 # ZIA Network Application Groups
 data "zia_firewall_filtering_application_services_group" "example" {
-    name = "example"
+  name = "example"
 }
 ```
 

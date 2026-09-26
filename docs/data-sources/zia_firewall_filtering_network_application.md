@@ -20,15 +20,15 @@ Use the **zia_firewall_filtering_network_application** data source to get inform
 
 ```hcl
 # ZIA Network Application Groups
-data "zia_firewall_filtering_network_application" "apns"{
-    id = "APNS"
-    locale="en-US"
+data "zia_firewall_filtering_network_application" "apns" {
+  id     = "APNS"
+  locale = "en-US"
 }
 ```
 
 ```hcl
-data "zia_firewall_filtering_network_application" "dict"{
-    id = "DICT"
+data "zia_firewall_filtering_network_application" "dict" {
+  id = "DICT"
 }
 ```
 

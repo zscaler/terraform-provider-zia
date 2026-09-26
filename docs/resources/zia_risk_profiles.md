@@ -20,42 +20,42 @@ See [About Cloud Application Risk Profile](https://help.zscaler.com/zia/about-cl
 
 ```hcl
 resource "zia_risk_profiles" "this" {
-    profile_name = "RiskProfile_12346"
-    status="SANCTIONED"
-    risk_index=[1, 2, 3, 4, 5]
-    certifications=["AICPA", "CCPA", "CISP"]
-    password_strength="GOOD"
-    poor_items_of_service="YES"
-    admin_audit_logs="YES"
-    data_breach="YES"
-    source_ip_restrictions="YES"
-    file_sharing="YES"
-    mfa_support="YES"
-    ssl_pinned="YES"
-    data_encryption_in_transit=[
-        "SSLV2", "SSLV3", "TLSV1_0", "TLSV1_1", "TLSV1_2", "TLSV1_3", "UN_KNOWN"
-    ]
-    http_security_headers="YES"
-    evasive="YES"
-    dns_caa_policy="YES"
-    ssl_cert_validity="YES"
-    weak_cipher_support="YES"
-    vulnerability="YES"
-    vulnerable_to_heart_bleed="YES"
-    ssl_cert_key_size="BITS_2048"
-    vulnerable_to_poodle="YES"
-    support_for_waf="YES"
-    vulnerability_disclosure="YES"
-    domain_keys_identified_mail="YES"
-    malware_scanning_for_content="YES"
-    domain_based_message_auth="YES"
-    sender_policy_framework="YES"
-    remote_screen_sharing="YES"
-    vulnerable_to_log_jam="YES"
-    profile_type="CLOUD_APPLICATIONS"
-    custom_tags {
-        id = [1, 2]
-    }
+  profile_name           = "RiskProfile_12346"
+  status                 = "SANCTIONED"
+  risk_index             = [1, 2, 3, 4, 5]
+  certifications         = ["AICPA", "CCPA", "CISP"]
+  password_strength      = "GOOD"
+  poor_items_of_service  = "YES"
+  admin_audit_logs       = "YES"
+  data_breach            = "YES"
+  source_ip_restrictions = "YES"
+  file_sharing           = "YES"
+  mfa_support            = "YES"
+  ssl_pinned             = "YES"
+  data_encryption_in_transit = [
+    "SSLV2", "SSLV3", "TLSV1_0", "TLSV1_1", "TLSV1_2", "TLSV1_3", "UN_KNOWN"
+  ]
+  http_security_headers        = "YES"
+  evasive                      = "YES"
+  dns_caa_policy               = "YES"
+  ssl_cert_validity            = "YES"
+  weak_cipher_support          = "YES"
+  vulnerability                = "YES"
+  vulnerable_to_heart_bleed    = "YES"
+  ssl_cert_key_size            = "BITS_2048"
+  vulnerable_to_poodle         = "YES"
+  support_for_waf              = "YES"
+  vulnerability_disclosure     = "YES"
+  domain_keys_identified_mail  = "YES"
+  malware_scanning_for_content = "YES"
+  domain_based_message_auth    = "YES"
+  sender_policy_framework      = "YES"
+  remote_screen_sharing        = "YES"
+  vulnerable_to_log_jam        = "YES"
+  profile_type                 = "CLOUD_APPLICATIONS"
+  custom_tags {
+    id = [1, 2]
+  }
 }
 ```
 

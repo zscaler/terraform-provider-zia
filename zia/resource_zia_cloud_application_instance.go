@@ -201,7 +201,7 @@ func resourceCloudApplicationInstanceDelete(ctx context.Context, d *schema.Resou
 	if !ok {
 		log.Printf("[ERROR] cloud application instance ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia cloud application instance ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia cloud application instance ID: %v\n", d.Id())
 
 	if _, err := cloud_app_instances.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

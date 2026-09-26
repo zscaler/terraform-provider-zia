@@ -18,8 +18,8 @@ Use the **zia_virtual_service_edge_cluster** data source to get information abou
 ## Example Usage
 
 ```hcl
-data "zia_virtual_service_edge_cluster" "this"{
-    name = "VSECluster01"
+data "zia_virtual_service_edge_cluster" "this" {
+  name = "VSECluster01"
 }
 ```
 

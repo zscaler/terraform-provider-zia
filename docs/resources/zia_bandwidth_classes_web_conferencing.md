@@ -20,9 +20,9 @@ Use the **zia_bandwidth_classes_web_conferencing** resource allows the creation 
 ```hcl
 
 resource "zia_bandwidth_classes_web_conferencing" "this" {
-    name = "BANDWIDTH_CAT_WEBCONF"
-    type = "BANDWIDTH_CAT_WEBCONF"
-    applications = ["WEBEX", "GOTOMEETING", "LIVEMEETING", "INTERCALL", "CONNECT"]
+  name         = "BANDWIDTH_CAT_WEBCONF"
+  type         = "BANDWIDTH_CAT_WEBCONF"
+  applications = ["WEBEX", "GOTOMEETING", "LIVEMEETING", "INTERCALL", "CONNECT"]
 }
 ```
 
@@ -31,9 +31,9 @@ resource "zia_bandwidth_classes_web_conferencing" "this" {
 ```hcl
 
 resource "zia_bandwidth_classes_web_conferencing" "this" {
-    name = "BANDWIDTH_CAT_VOIP"
-    type = "BANDWIDTH_CAT_VOIP"
-    applications = ["SKYPE"]
+  name         = "BANDWIDTH_CAT_VOIP"
+  type         = "BANDWIDTH_CAT_VOIP"
+  applications = ["SKYPE"]
 }
 ```
 

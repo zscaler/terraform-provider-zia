@@ -19,7 +19,7 @@ Use the **zia_workload_groups** resource allows the creation and management of W
 
 ```hcl
 resource "zia_workload_groups" "example" {
-  name = "Test Group"
+  name        = "Test Group"
   description = "Test Group"
 
   expression_json {

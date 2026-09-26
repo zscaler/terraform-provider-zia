@@ -500,7 +500,7 @@ func resourceRiskProfilesDelete(ctx context.Context, d *schema.ResourceData, met
 	if !ok {
 		log.Printf("[ERROR] risk profile ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia risk profile ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia risk profile ID: %v\n", d.Id())
 
 	if _, err := risk_profiles.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

@@ -23,8 +23,8 @@ The **zia_sandbox_behavioral_analysis** resource updates the custom list of MD5 
 # Add MD5 Hashes to Sandbox
 resource "zia_sandbox_behavioral_analysis" "this" {
   file_hashes_to_be_blocked = [
-        "42914d6d213a20a2684064be5c80ffa9",
-        "c0202cf6aeab8437c638533d14563d35",
+    "42914d6d213a20a2684064be5c80ffa9",
+    "c0202cf6aeab8437c638533d14563d35",
   ]
 }
 ```

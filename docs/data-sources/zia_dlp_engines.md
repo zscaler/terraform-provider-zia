@@ -19,28 +19,28 @@ Use the **zia_dlp_engines** data source to get information about a ZIA DLP Engin
 
 ```hcl
 #
-data "zia_dlp_engines" "this"{
-    name = "Example"
+data "zia_dlp_engines" "this" {
+  name = "Example"
 }
 ```
 
 ## Example Usage - Retrieve Custom DLP Engine by ID
 
 ```hcl
-data "zia_dlp_engines" "this"{
-    id = 1234567890
+data "zia_dlp_engines" "this" {
+  id = 1234567890
 }
 ```
 
 ## Example Usage - Retrieve Predefined DLP Engine by Name
 
 ```hcl
-data "zia_dlp_engines" "this"{
-    predefined_engine_name = "PCI"
+data "zia_dlp_engines" "this" {
+  predefined_engine_name = "PCI"
 }
 
-data "zia_dlp_engines" "this"{
-    predefined_engine_name = "EXTERNAL"
+data "zia_dlp_engines" "this" {
+  predefined_engine_name = "EXTERNAL"
 }
 ```
 

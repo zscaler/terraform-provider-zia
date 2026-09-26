@@ -22,42 +22,42 @@ The **zia_traffic_forwarding_gre_tunnel** resource allows the creation and manag
 ```hcl
 # Creates a numbered GRE Tunnel
 resource "zia_traffic_forwarding_gre_tunnel" "example" {
-  source_ip         = zia_traffic_forwarding_static_ip.example.ip_address
-  comment           = "Example"
-  within_country    = true
-  country_code      = "US"
-  ip_unnumbered     = true
-  depends_on        = [ zia_traffic_forwarding_static_ip.example ]
+  source_ip      = zia_traffic_forwarding_static_ip.example.ip_address
+  comment        = "Example"
+  within_country = true
+  country_code   = "US"
+  ip_unnumbered  = true
+  depends_on     = [zia_traffic_forwarding_static_ip.example]
 }
 
 # ZIA Traffic Forwarding - Static IP
-resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address      =  "1.1.1.1"
-    routable_ip     = true
-    comment         = "Example"
-    geo_override    = true
-    latitude        = 37.418171
-    longitude       = -121.953140
+resource "zia_traffic_forwarding_static_ip" "example" {
+  ip_address   = "1.1.1.1"
+  routable_ip  = true
+  comment      = "Example"
+  geo_override = true
+  latitude     = 37.418171
+  longitude    = -121.953140
 }
 ```
 
 ```hcl
-data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
-    source_ip = zia_traffic_forwarding_static_ip.this.ip_address
-    required_count = 2
+data "zia_traffic_forwarding_gre_vip_recommended_list" "this" {
+  source_ip      = zia_traffic_forwarding_static_ip.this.ip_address
+  required_count = 2
 }
 
-data "zia_gre_internal_ip_range_list" "this"{
-    required_count = 10
+data "zia_gre_internal_ip_range_list" "this" {
+  required_count = 10
 }
 
-resource "zia_traffic_forwarding_static_ip" "this"{
-    ip_address =  "50.98.112.169"
-    routable_ip = true
-    comment = "Created with Terraform"
-    geo_override = true
-    latitude = 49.0526
-    longitude = -122.8291
+resource "zia_traffic_forwarding_static_ip" "this" {
+  ip_address   = "50.98.112.169"
+  routable_ip  = true
+  comment      = "Created with Terraform"
+  geo_override = true
+  latitude     = 49.0526
+  longitude    = -122.8291
 }
 
 resource "zia_traffic_forwarding_gre_tunnel" "this" {
@@ -79,7 +79,7 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
       internal_ip_range,
     ]
   }
-  depends_on     = [zia_traffic_forwarding_static_ip.this]
+  depends_on = [zia_traffic_forwarding_static_ip.this]
 }
 ```
 
@@ -92,29 +92,29 @@ resource "zia_traffic_forwarding_gre_tunnel" "this" {
 ## Example Usage - Numbered
 
 ```hcl
-data "zia_gre_internal_ip_range_list" "this"{
-    required_count = 1
+data "zia_gre_internal_ip_range_list" "this" {
+  required_count = 1
 }
 
 # ZIA Traffic Forwarding - Static IP
-resource "zia_traffic_forwarding_static_ip" "this"{
-    ip_address      =  "1.1.1.1"
-    routable_ip     = true
-    comment         = "Example"
-    geo_override    = true
-    latitude        = 37.418171
-    longitude       = -121.953140
+resource "zia_traffic_forwarding_static_ip" "this" {
+  ip_address   = "1.1.1.1"
+  routable_ip  = true
+  comment      = "Example"
+  geo_override = true
+  latitude     = 37.418171
+  longitude    = -121.953140
 }
 
 # Creates a Numbered GRE Tunnel
 resource "zia_traffic_forwarding_gre_tunnel" "this" {
-  source_ip       = zia_traffic_forwarding_static_ip.this.ip_address
-  comment         = "Example"
+  source_ip         = zia_traffic_forwarding_static_ip.this.ip_address
+  comment           = "Example"
   internal_ip_range = data.zia_gre_internal_ip_range_list.this.list[0].start_ip_address
-  within_country  = true
-  country_code    = "US"
-  ip_unnumbered   = true
-  depends_on      = [ zia_traffic_forwarding_static_ip.this ]
+  within_country    = true
+  country_code      = "US"
+  ip_unnumbered     = true
+  depends_on        = [zia_traffic_forwarding_static_ip.this]
 
   lifecycle {
     ignore_changes = [

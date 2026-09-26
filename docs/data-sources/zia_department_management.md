@@ -20,14 +20,14 @@ Use the **zia_department_management** data source to get information about user 
 ```hcl
 # ZIA User Department Data Source
 data "zia_department_management" "engineering" {
- name = "Engineering"
+  name = "Engineering"
 }
 ```
 
 ```hcl
 # ZIA User Department Data Source
 data "zia_department_management" "finance" {
- name = "Finance"
+  name = "Finance"
 }
 ```
 
@@ -36,16 +36,16 @@ data "zia_department_management" "finance" {
 ```hcl
 # Use JMESPath to pre-filter departments by name pattern
 data "zia_department_management" "engineering" {
- name   = "Engineering"
- search = "[?contains(name, 'Eng')]"
+  name   = "Engineering"
+  search = "[?contains(name, 'Eng')]"
 }
 ```
 
 ```hcl
 # Filter out deleted departments
 data "zia_department_management" "active_dept" {
- name   = "Finance"
- search = "[?deleted == `false`]"
+  name   = "Finance"
+  search = "[?deleted == `false`]"
 }
 ```
 

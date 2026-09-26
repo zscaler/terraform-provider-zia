@@ -20,16 +20,16 @@ This resource can then be referenced within a `zia_virtual_service_edge_cluster`
 
 ```hcl
 resource "zia_virtual_service_edge_node" "this" {
-  name                              = "VSENode01"
-  status                            = "ENABLED"
-  type                              = "VZEN"
-  ip_address                        = "10.0.0.10"
-  subnet_mask                       = "255.255.255.0"
-  default_gateway                   = "10.0.0.1"
-  in_production                     = true
-  load_balancer_ip_address          = "10.0.0.20"
-  deployment_mode                   = "STANDALONE"
-  vzen_sku_type                     = "MEDIUM"
+  name                     = "VSENode01"
+  status                   = "ENABLED"
+  type                     = "VZEN"
+  ip_address               = "10.0.0.10"
+  subnet_mask              = "255.255.255.0"
+  default_gateway          = "10.0.0.1"
+  in_production            = true
+  load_balancer_ip_address = "10.0.0.20"
+  deployment_mode          = "STANDALONE"
+  vzen_sku_type            = "MEDIUM"
 }
 ```
 
@@ -37,29 +37,29 @@ resource "zia_virtual_service_edge_node" "this" {
 
 ```hcl
 resource "zia_virtual_service_edge_node" "this1" {
-  name                              = "VSENode01"
-  status                            = "ENABLED"
-  type                              = "VZEN"
-  ip_address                        = "10.0.0.10"
-  subnet_mask                       = "255.255.255.0"
-  default_gateway                   = "10.0.0.1"
-  in_production                     = true
-  load_balancer_ip_address          = "10.0.0.20"
-  deployment_mode                   = "CLUSTER"
-  vzen_sku_type                     = "LARGE"
+  name                     = "VSENode01"
+  status                   = "ENABLED"
+  type                     = "VZEN"
+  ip_address               = "10.0.0.10"
+  subnet_mask              = "255.255.255.0"
+  default_gateway          = "10.0.0.1"
+  in_production            = true
+  load_balancer_ip_address = "10.0.0.20"
+  deployment_mode          = "CLUSTER"
+  vzen_sku_type            = "LARGE"
 }
 
 resource "zia_virtual_service_edge_node" "this2" {
-  name                              = "VSENode02"
-  status                            = "ENABLED"
-  type                              = "VZEN"
-  ip_address                        = "10.0.0.11"
-  subnet_mask                       = "255.255.255.0"
-  default_gateway                   = "10.0.0.1"
-  in_production                     = true
-  load_balancer_ip_address          = "10.0.0.21"
-  deployment_mode                   = "CLUSTER"
-  vzen_sku_type                     = "LARGE"
+  name                     = "VSENode02"
+  status                   = "ENABLED"
+  type                     = "VZEN"
+  ip_address               = "10.0.0.11"
+  subnet_mask              = "255.255.255.0"
+  default_gateway          = "10.0.0.1"
+  in_production            = true
+  load_balancer_ip_address = "10.0.0.21"
+  deployment_mode          = "CLUSTER"
+  vzen_sku_type            = "LARGE"
 }
 ```
 

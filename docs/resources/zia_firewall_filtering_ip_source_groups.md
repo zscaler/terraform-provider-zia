@@ -20,27 +20,27 @@ The **zia_firewall_filtering_ip_source_groups** resource allows the creation and
 ```hcl
 # Add an IP address or addresses to a new IP Source Group
 resource "zia_firewall_filtering_ip_source_groups" "example" {
-  name        = "Example"
-  description = "Example"
-  ip_addresses = [ "192.168.100.1", "192.168.100.2", "192.168.100.3"]
+  name         = "Example"
+  description  = "Example"
+  ip_addresses = ["192.168.100.1", "192.168.100.2", "192.168.100.3"]
 }
 ```
 
 ```hcl
 # Add an IP address range(s) to a new IP Source Group
 resource "zia_firewall_filtering_ip_source_groups" "example" {
-  name        = "Example"
-  description = "Example"
-  ip_addresses = [ "192.0.2.1-192.0.2.10" ]
+  name         = "Example"
+  description  = "Example"
+  ip_addresses = ["192.0.2.1-192.0.2.10"]
 }
 ```
 
 ```hcl
 # Add subnet to a new IP Source Group
 resource "zia_firewall_filtering_ip_source_groups" "example" {
-  name        = "Example"
-  description = "Example"
-  ip_addresses = [ "203.0.113.0/24" ]
+  name         = "Example"
+  description  = "Example"
+  ip_addresses = ["203.0.113.0/24"]
 }
 ```
 

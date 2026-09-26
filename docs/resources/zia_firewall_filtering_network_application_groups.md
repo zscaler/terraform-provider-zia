@@ -20,9 +20,9 @@ The **zia_firewall_filtering_network_application_groups** resource allows the cr
 ```hcl
 # Add applications to a network application group
 resource "zia_firewall_filtering_network_application_groups" "example" {
-  name        = "Example"
-  description = "Example"
-  network_applications = [ "LDAP", "LDAPS", "SRVLOC"]
+  name                 = "Example"
+  description          = "Example"
+  network_applications = ["LDAP", "LDAPS", "SRVLOC"]
 }
 ```
 

@@ -18,7 +18,7 @@ Use the **zia_location_lite** data source to get information about a location in
 ```hcl
 # Retrieve ZIA Location Lite
 data "zia_location_lite" "this" {
- name = "Road Warrior"
+  name = "Road Warrior"
 }
 ```
 

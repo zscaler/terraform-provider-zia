@@ -58,9 +58,9 @@ resource "zia_admin_users" "john_smith" {
     id = data.zia_admin_roles.super_admin.id
   }
   admin_scope_type = "DEPARTMENT"
-    admin_scope_entities {
-        id = [ data.zia_department_management.engineering.id, data.zia_department_management.sales.id ]
-    }
+  admin_scope_entities {
+    id = [data.zia_department_management.engineering.id, data.zia_department_management.sales.id]
+  }
 }
 
 data "zia_admin_roles" "super_admin" {
@@ -90,9 +90,9 @@ resource "zia_admin_users" "john_smith" {
     id = data.zia_admin_roles.super_admin.id
   }
   admin_scope_type = "LOCATION"
-    admin_scope_entities {
-        id = [ data.zia_location_management.au_sydney_branch01.id ]
-    }
+  admin_scope_entities {
+    id = [data.zia_location_management.au_sydney_branch01.id]
+  }
 }
 
 data "zia_admin_roles" "super_admin" {
@@ -113,7 +113,7 @@ resource "zia_admin_users" "john_smith" {
   user_name                       = "John Smith"
   email                           = "john.smith@acme.com"
   is_password_login_allowed       = true
- password                         = "*********************"
+  password                        = "*********************"
   is_security_report_comm_enabled = true
   is_service_update_comm_enabled  = true
   is_product_update_comm_enabled  = true
@@ -122,9 +122,9 @@ resource "zia_admin_users" "john_smith" {
     id = data.zia_admin_roles.super_admin.id
   }
   admin_scope_type = "LOCATION_GROUP"
-    admin_scope_entities {
-        id = [ data.zia_location_groups.corporate_user_traffic_group.id ]
-    }
+  admin_scope_entities {
+    id = [data.zia_location_groups.corporate_user_traffic_group.id]
+  }
 }
 
 data "zia_admin_roles" "super_admin" {

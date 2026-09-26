@@ -19,17 +19,17 @@ The **zia_browser_control_policy** resource allows you to update the malware pro
 
 ```hcl
 resource "zia_browser_control_policy" "this" {
-    plugin_check_frequency = "DAILY"
-    bypass_plugins = ["ACROBAT", "FLASH", "SHOCKWAVE"]
-    bypass_applications = ["OUTLOOKEXP", "MSOFFICE"]
-    blocked_internet_explorer_versions = ["IE10", "MSE81", "MSE92"]
-    blocked_chrome_versions = ["CH143", "CH142"]
-    blocked_firefox_versions = ["MF145", "MF144"]
-    blocked_safari_versions = ["AS19", "AS18"]
-    blocked_opera_versions = ["O129X", "O130X"]
-    bypass_all_browsers = true
-    allow_all_browsers = true
-    enable_warnings = true
+  plugin_check_frequency             = "DAILY"
+  bypass_plugins                     = ["ACROBAT", "FLASH", "SHOCKWAVE"]
+  bypass_applications                = ["OUTLOOKEXP", "MSOFFICE"]
+  blocked_internet_explorer_versions = ["IE10", "MSE81", "MSE92"]
+  blocked_chrome_versions            = ["CH143", "CH142"]
+  blocked_firefox_versions           = ["MF145", "MF144"]
+  blocked_safari_versions            = ["AS19", "AS18"]
+  blocked_opera_versions             = ["O129X", "O130X"]
+  bypass_all_browsers                = true
+  allow_all_browsers                 = true
+  enable_warnings                    = true
 }
 ```
 
@@ -37,40 +37,40 @@ resource "zia_browser_control_policy" "this" {
 
 ```hcl
 data "zia_cloud_browser_isolation_profile" "this" {
-    name = "ZS_CBI_Profile1"
+  name = "ZS_CBI_Profile1"
 }
 
 data "zia_group_management" "this" {
- name = "Finance"
+  name = "Finance"
 }
 
 data "zia_user_management" "this" {
- email = "adam.ashcroft@acme.com"
+  email = "adam.ashcroft@acme.com"
 }
 
 resource "zia_browser_control_policy" "this" {
-    plugin_check_frequency = "DAILY"
-    bypass_plugins = ["ACROBAT", "FLASH", "SHOCKWAVE"]
-    bypass_applications = ["OUTLOOKEXP", "MSOFFICE"]
-    blocked_internet_explorer_versions = ["IE10", "MSE81", "MSE92"]
-    blocked_chrome_versions = ["CH143", "CH142"]
-    blocked_firefox_versions = ["MF145", "MF144"]
-    blocked_safari_versions = ["AS19", "AS18"]
-    blocked_opera_versions = ["O129X", "O130X"]
-    bypass_all_browsers = true
-    allow_all_browsers = true
-    enable_warnings = true
-    enable_smart_browser_isolation = true
+  plugin_check_frequency             = "DAILY"
+  bypass_plugins                     = ["ACROBAT", "FLASH", "SHOCKWAVE"]
+  bypass_applications                = ["OUTLOOKEXP", "MSOFFICE"]
+  blocked_internet_explorer_versions = ["IE10", "MSE81", "MSE92"]
+  blocked_chrome_versions            = ["CH143", "CH142"]
+  blocked_firefox_versions           = ["MF145", "MF144"]
+  blocked_safari_versions            = ["AS19", "AS18"]
+  blocked_opera_versions             = ["O129X", "O130X"]
+  bypass_all_browsers                = true
+  allow_all_browsers                 = true
+  enable_warnings                    = true
+  enable_smart_browser_isolation     = true
 
-    smart_isolation_profile {
-      id = data.zia_cloud_browser_isolation_profile.this.id
-    }
+  smart_isolation_profile {
+    id = data.zia_cloud_browser_isolation_profile.this.id
+  }
 
-    smart_isolation_groups {
-        id = [ data.zia_group_management.this.id ]
-    }
-    smart_isolation_users = {
-    id = [ data.zia_user_management.this.id ]
+  smart_isolation_groups {
+    id = [data.zia_group_management.this.id]
+  }
+  smart_isolation_users = {
+    id = [data.zia_user_management.this.id]
   }
 }
 ```

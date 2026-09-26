@@ -20,21 +20,21 @@ Use the **zia_user_management** data source to get information about a user acco
 ```hcl
 # Look up a user by display name (exact match)
 data "zia_user_management" "adam_ashcroft" {
- name = "Adam Ashcroft"
+  name = "Adam Ashcroft"
 }
 ```
 
 ```hcl
 # Look up a user by email address (exact match, case-insensitive)
 data "zia_user_management" "adam_ashcroft_by_email" {
- email = "adam.ashcroft@acme.com"
+  email = "adam.ashcroft@acme.com"
 }
 ```
 
 ```hcl
 # Look up a user by numeric ID
 data "zia_user_management" "adam_ashcroft_by_id" {
- id = 29309058
+  id = 29309058
 }
 ```
 
@@ -43,24 +43,24 @@ data "zia_user_management" "adam_ashcroft_by_id" {
 ```hcl
 # Use JMESPath to pre-filter users by department before matching by name
 data "zia_user_management" "adam_ashcroft" {
- name   = "Adam Ashcroft"
- search = "[?department.name == 'Engineering']"
+  name   = "Adam Ashcroft"
+  search = "[?department.name == 'Engineering']"
 }
 ```
 
 ```hcl
 # Filter to admin users only
 data "zia_user_management" "admin_user" {
- name   = "Jane Smith"
- search = "[?adminUser == `true`]"
+  name   = "Jane Smith"
+  search = "[?adminUser == `true`]"
 }
 ```
 
 ```hcl
 # Filter users whose name contains a specific string
 data "zia_user_management" "user" {
- name   = "Adam Ashcroft"
- search = "[?contains(name, 'Adam')]"
+  name   = "Adam Ashcroft"
+  search = "[?contains(name, 'Adam')]"
 }
 ```
 
@@ -68,8 +68,8 @@ data "zia_user_management" "user" {
 # Combine email lookup with a department guard — fails at plan time if the
 # user is moved out of Engineering, even though the email still resolves
 data "zia_user_management" "engineering_only" {
- email  = "adam.ashcroft@acme.com"
- search = "[?department.name == 'Engineering']"
+  email  = "adam.ashcroft@acme.com"
+  search = "[?department.name == 'Engineering']"
 }
 ```
 

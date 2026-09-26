@@ -213,7 +213,7 @@ func resourceForwardingControlProxiesDelete(ctx context.Context, d *schema.Resou
 	if !ok {
 		log.Printf("[ERROR] proxy ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia proxy ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia proxy ID: %v\n", d.Id())
 
 	if _, err := proxies.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

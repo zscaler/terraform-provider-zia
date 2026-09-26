@@ -242,7 +242,7 @@ func resourceTrafficForwardingVPNCredentialsDelete(ctx context.Context, d *schem
 	if !ok {
 		log.Printf("[ERROR] vpn credentials ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting vpn credentials ID: %v\n", d.Id())
 
 	if err := vpncredentials.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

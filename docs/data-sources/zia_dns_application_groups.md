@@ -20,7 +20,7 @@ Use the **zia_dns_application_groups** data source to get information about dns 
 
 ```hcl
 data "zia_dns_application_groups" "example" {
-    name = "DNSGroup01"
+  name = "DNSGroup01"
 }
 ```
 
@@ -28,7 +28,7 @@ data "zia_dns_application_groups" "example" {
 
 ```hcl
 data "zia_dns_application_groups" "example" {
-    id = 12113780
+  id = 12113780
 }
 ```
 

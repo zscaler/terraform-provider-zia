@@ -19,15 +19,15 @@ Use the **zia_dlp_edm_schema** data source to get information about a the list o
 
 ```hcl
 # Retrieve a DLP Exact Data Match (EDM) by name
-data "zia_dlp_edm_schema" "this"{
-    project_name = "Example"
+data "zia_dlp_edm_schema" "this" {
+  project_name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a DLP Exact Data Match (EDM) by ID
-data "zia_dlp_edm_schema" "example"{
-    schema_id = 1234567890
+data "zia_dlp_edm_schema" "example" {
+  schema_id = 1234567890
 }
 ```
 

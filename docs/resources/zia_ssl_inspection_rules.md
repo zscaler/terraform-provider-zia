@@ -44,21 +44,21 @@ Example: If there are 2 predefined rules in your tenant, you can still configure
 ```hcl
 
 data "zia_group_management" "this" {
-    name = "A000"
+  name = "A000"
 }
 
 resource "zia_ssl_inspection_rules" "this" {
-  name                         = "SSL_Inspection_Rule_Decrypt"
-  description                  = "SSL_Inspection_Rule_Decrypt"
-  state                        = "ENABLED"
-  order                        = 1
-  rank                         = 7
-  road_warrior_for_kerberos    = true
-  cloud_applications           = ["CHATGPT_AI", "ANDI"]
-  platforms                    = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
+  name                      = "SSL_Inspection_Rule_Decrypt"
+  description               = "SSL_Inspection_Rule_Decrypt"
+  state                     = "ENABLED"
+  order                     = 1
+  rank                      = 7
+  road_warrior_for_kerberos = true
+  cloud_applications        = ["CHATGPT_AI", "ANDI"]
+  platforms                 = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
 
   action {
-    type                         = "DECRYPT"
+    type = "DECRYPT"
     # show_eun                   = false
     # show_eunatp                = false
     override_default_certificate = false
@@ -80,8 +80,8 @@ resource "zia_ssl_inspection_rules" "this" {
     }
   }
   groups {
-        id = [ data.zia_group_management.this.id ]
-    }
+    id = [data.zia_group_management.this.id]
+  }
 }
 ```
 
@@ -90,21 +90,21 @@ resource "zia_ssl_inspection_rules" "this" {
 ```hcl
 
 data "zia_group_management" "this" {
-    name = "A000"
+  name = "A000"
 }
 
 resource "zia_ssl_inspection_rules" "this" {
-  name                         = "SSL_Rule_Do_Not_Decrypt"
-  description                  = "SSL_Rule_Do_Not_Decrypt"
-  state                        = "ENABLED"
-  order                        = 1
-  rank                         = 7
-  road_warrior_for_kerberos    = true
-  cloud_applications           = ["CHATGPT_AI", "ANDI"]
-  platforms                    = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
+  name                      = "SSL_Rule_Do_Not_Decrypt"
+  description               = "SSL_Rule_Do_Not_Decrypt"
+  state                     = "ENABLED"
+  order                     = 1
+  rank                      = 7
+  road_warrior_for_kerberos = true
+  cloud_applications        = ["CHATGPT_AI", "ANDI"]
+  platforms                 = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
 
   action {
-    type                                    = "DO_NOT_DECRYPT"
+    type = "DO_NOT_DECRYPT"
     do_not_decrypt_sub_actions {
       bypass_other_policies                 = false
       server_certificates                   = "ALLOW"
@@ -114,8 +114,8 @@ resource "zia_ssl_inspection_rules" "this" {
     }
   }
   groups {
-        id = [ data.zia_group_management.this.id ]
-    }
+    id = [data.zia_group_management.this.id]
+  }
 }
 ```
 
@@ -124,29 +124,29 @@ resource "zia_ssl_inspection_rules" "this" {
 ```hcl
 
 data "zia_group_management" "this" {
-    name = "A000"
+  name = "A000"
 }
 
 resource "zia_ssl_inspection_rules" "this" {
-  name                         = "SSL_Rule_Bypass_Rule"
-  description                  = "SSL_Rule_Bypass_Rule"
-  state                        = "ENABLED"
-  order                        = 1
-  rank                         = 7
-  road_warrior_for_kerberos    = true
-  cloud_applications           = ["CHATGPT_AI", "ANDI"]
-  platforms                    = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
+  name                      = "SSL_Rule_Bypass_Rule"
+  description               = "SSL_Rule_Bypass_Rule"
+  state                     = "ENABLED"
+  order                     = 1
+  rank                      = 7
+  road_warrior_for_kerberos = true
+  cloud_applications        = ["CHATGPT_AI", "ANDI"]
+  platforms                 = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
 
   action {
-    type                                    = "DO_NOT_DECRYPT"
+    type = "DO_NOT_DECRYPT"
     do_not_decrypt_sub_actions {
       bypass_other_policies                 = true
       block_ssl_traffic_with_no_sni_enabled = true
     }
   }
   groups {
-        id = [ data.zia_group_management.this.id ]
-    }
+    id = [data.zia_group_management.this.id]
+  }
 }
 ```
 
@@ -155,28 +155,28 @@ resource "zia_ssl_inspection_rules" "this" {
 ```hcl
 
 data "zia_group_management" "this" {
-    name = "A000"
+  name = "A000"
 }
 
 resource "zia_ssl_inspection_rules" "this" {
-  name                         = "SSL_Rule_BLOCK"
-  description                  = "SSL_Rule_BLOCK"
-  state                        = "ENABLED"
-  order                        = 1
-  rank                         = 7
-  road_warrior_for_kerberos    = true
-  cloud_applications           = ["CHATGPT_AI", "ANDI"]
-  platforms                    = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
+  name                      = "SSL_Rule_BLOCK"
+  description               = "SSL_Rule_BLOCK"
+  state                     = "ENABLED"
+  order                     = 1
+  rank                      = 7
+  road_warrior_for_kerberos = true
+  cloud_applications        = ["CHATGPT_AI", "ANDI"]
+  platforms                 = ["SCAN_IOS", "SCAN_ANDROID", "SCAN_MACOS", "SCAN_WINDOWS", "NO_CLIENT_CONNECTOR", "SCAN_LINUX"]
 
   action {
-    type                                    = "BLOCK"
+    type = "BLOCK"
     ssl_interception_cert {
-      id                                    = 1
+      id = 1
     }
   }
   groups {
-        id = [ data.zia_group_management.this.id ]
-    }
+    id = [data.zia_group_management.this.id]
+  }
 }
 ```
 

@@ -17,8 +17,8 @@ Use the **zia_url_filtering_rules** data source to get information about a URL f
 
 ```hcl
 # URL filtering rule
-data "zia_url_filtering_rules" "example"{
-    name = "Example"
+data "zia_url_filtering_rules" "example" {
+  name = "Example"
 }
 ```
 

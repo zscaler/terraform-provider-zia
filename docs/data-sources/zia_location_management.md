@@ -20,8 +20,8 @@ Use the **zia_location_management** data source to get information about a locat
 
 ```hcl
 # ZIA Location Managemeent
-data "zia_location_management" "example"{
-    name = "San Jose"
+data "zia_location_management" "example" {
+  name = "San Jose"
 }
 ```
 
@@ -30,24 +30,24 @@ data "zia_location_management" "example"{
 ```hcl
 # Use JMESPath to pre-filter locations by country
 data "zia_location_management" "us_location" {
-    name   = "San Jose"
-    search = "[?country == 'UNITED_STATES']"
+  name   = "San Jose"
+  search = "[?country == 'UNITED_STATES']"
 }
 ```
 
 ```hcl
 # Filter locations with SSL scan enabled
 data "zia_location_management" "ssl_location" {
-    name   = "Branch Office"
-    search = "[?sslScanEnabled == `true`]"
+  name   = "Branch Office"
+  search = "[?sslScanEnabled == `true`]"
 }
 ```
 
 ```hcl
 # Filter locations by name pattern
 data "zia_location_management" "branch" {
-    name   = "Branch Office - NYC"
-    search = "[?contains(name, 'Branch')]"
+  name   = "Branch Office - NYC"
+  search = "[?contains(name, 'Branch')]"
 }
 ```
 
@@ -56,8 +56,8 @@ data "zia_location_management" "branch" {
 ```hcl
 # Look up a sub-location by name and its parent location
 data "zia_location_management" "this" {
-    name        = "USA-SJC37"
-    parent_name = "USA"
+  name        = "USA-SJC37"
+  parent_name = "USA"
 }
 ```
 

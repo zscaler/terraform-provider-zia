@@ -20,22 +20,22 @@ Use the **zia_bandwidth_classes** resource allows the creation and management of
 ```hcl
 
 resource "zia_bandwidth_classes" "this" {
-    name = "Gen_AI_Classes"
-    web_applications = [
-        "ACADEMICGPT",
-        "AD_CREATIVES",
-        "AGENTGPT",
-        "AI_ART_GENERATOR",
-        "AI_CHAT_ROBOT",
-        "AI_COPYWRITING_TREASURE",
-        "AI_FOR_SEO",
-        "ONE_MIN_AI"
-    ]
-    urls = ["chatgpt.com", "chatgpt1.com"]
-    url_categories = [
-        "AI_ML_APPS",
-        "GENERAL_AI_ML"
-    ]
+  name = "Gen_AI_Classes"
+  web_applications = [
+    "ACADEMICGPT",
+    "AD_CREATIVES",
+    "AGENTGPT",
+    "AI_ART_GENERATOR",
+    "AI_CHAT_ROBOT",
+    "AI_COPYWRITING_TREASURE",
+    "AI_FOR_SEO",
+    "ONE_MIN_AI"
+  ]
+  urls = ["chatgpt.com", "chatgpt1.com"]
+  url_categories = [
+    "AI_ML_APPS",
+    "GENERAL_AI_ML"
+  ]
 }
 ```
 

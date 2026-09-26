@@ -1107,7 +1107,7 @@ func resourceCloudNSSFeedDelete(ctx context.Context, d *schema.ResourceData, met
 	if !ok {
 		log.Printf("[ERROR] cloud nss feed ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia cloud nss feed ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia cloud nss feed ID: %v\n", d.Id())
 
 	if _, err := cloudnss.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

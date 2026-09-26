@@ -292,7 +292,7 @@ func resourceVZENNodeDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if !ok {
 		log.Printf("[ERROR] vzen nodes ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia vzen nodes ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia vzen nodes ID: %v\n", d.Id())
 
 	if _, err := vzen_nodes.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

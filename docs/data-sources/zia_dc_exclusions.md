@@ -28,7 +28,7 @@ data "zia_dc_exclusions" "all" {
 
 ```hcl
 data "zia_dc_exclusions" "this" {
-    name = "ADL"
+  name = "ADL"
 }
 ```
 

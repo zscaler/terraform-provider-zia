@@ -27,55 +27,55 @@ The **zia_sandbox_rules** resource allows the creation and management of SAndbox
 
 ```hcl
 data "zia_department_management" "engineering" {
- name = "Engineering"
+  name = "Engineering"
 }
 
 data "zia_group_management" "normal_internet" {
-    name = "Normal_Internet"
+  name = "Normal_Internet"
 }
 
 resource "zia_sandbox_rules" "this" {
-    name                 = "SandboxRule01"
-    description          = "SandboxRule01"
-    rank                 = 7
-    order                = 1
-    first_time_enable    = true
-    ml_action_enabled    = true
-    first_time_operation = "ALLOW_SCAN"
-    ba_rule_action       = "BLOCK"
-    state                = "ENABLED"
-    ba_policy_categories = ["ADWARE_BLOCK", "BOTMAL_BLOCK", "ANONYP2P_BLOCK", "RANSOMWARE_BLOCK"]
-    file_types           = ["FTCATEGORY_P7Z",
-        "FTCATEGORY_MS_WORD",
-        "FTCATEGORY_PDF_DOCUMENT",
-        "FTCATEGORY_TAR",
-        "FTCATEGORY_SCZIP",
-        "FTCATEGORY_WINDOWS_EXECUTABLES",
-        "FTCATEGORY_HTA",
-        "FTCATEGORY_FLASH",
-        "FTCATEGORY_RAR",
-        "FTCATEGORY_MS_EXCEL",
-        "FTCATEGORY_VISUAL_BASIC_SCRIPT",
-        "FTCATEGORY_MS_POWERPOINT",
-        "FTCATEGORY_WINDOWS_LIBRARY",
-        "FTCATEGORY_POWERSHELL",
-        "FTCATEGORY_APK",
-        "FTCATEGORY_ZIP",
-        "FTCATEGORY_BZIP2",
-        "FTCATEGORY_JAVA_APPLET",
-        "FTCATEGORY_MS_RTF"]
-    protocols            = [
-        "FOHTTP_RULE",
-        "FTP_RULE",
-        "HTTPS_RULE",
-        "HTTP_RULE",
-    ]
-    departments {
-        id = [ data.zia_department_management.engineering.id ]
-    }
-    groups {
-        id = [ data.zia_group_management.normal_internet.id ]
-    }
+  name                 = "SandboxRule01"
+  description          = "SandboxRule01"
+  rank                 = 7
+  order                = 1
+  first_time_enable    = true
+  ml_action_enabled    = true
+  first_time_operation = "ALLOW_SCAN"
+  ba_rule_action       = "BLOCK"
+  state                = "ENABLED"
+  ba_policy_categories = ["ADWARE_BLOCK", "BOTMAL_BLOCK", "ANONYP2P_BLOCK", "RANSOMWARE_BLOCK"]
+  file_types = ["FTCATEGORY_P7Z",
+    "FTCATEGORY_MS_WORD",
+    "FTCATEGORY_PDF_DOCUMENT",
+    "FTCATEGORY_TAR",
+    "FTCATEGORY_SCZIP",
+    "FTCATEGORY_WINDOWS_EXECUTABLES",
+    "FTCATEGORY_HTA",
+    "FTCATEGORY_FLASH",
+    "FTCATEGORY_RAR",
+    "FTCATEGORY_MS_EXCEL",
+    "FTCATEGORY_VISUAL_BASIC_SCRIPT",
+    "FTCATEGORY_MS_POWERPOINT",
+    "FTCATEGORY_WINDOWS_LIBRARY",
+    "FTCATEGORY_POWERSHELL",
+    "FTCATEGORY_APK",
+    "FTCATEGORY_ZIP",
+    "FTCATEGORY_BZIP2",
+    "FTCATEGORY_JAVA_APPLET",
+  "FTCATEGORY_MS_RTF"]
+  protocols = [
+    "FOHTTP_RULE",
+    "FTP_RULE",
+    "HTTPS_RULE",
+    "HTTP_RULE",
+  ]
+  departments {
+    id = [data.zia_department_management.engineering.id]
+  }
+  groups {
+    id = [data.zia_group_management.normal_internet.id]
+  }
 }
 ```
 

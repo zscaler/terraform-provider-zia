@@ -19,8 +19,8 @@ Use the **zia_traffic_forwarding_static_ip** data source to get information abou
 
 ```hcl
 # ZIA Traffic Forwarding - Static IPs
-data "zia_traffic_forwarding_static_ip" "example"{
-    ip_address =  "1.1.1.1"
+data "zia_traffic_forwarding_static_ip" "example" {
+  ip_address = "1.1.1.1"
 }
 ```
 

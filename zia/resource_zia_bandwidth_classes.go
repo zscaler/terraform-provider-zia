@@ -178,7 +178,7 @@ func resourceBandwdithClassesDelete(ctx context.Context, d *schema.ResourceData,
 	if !ok {
 		log.Printf("[ERROR] bandwidth class ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia bandwidth class ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia bandwidth class ID: %v\n", d.Id())
 
 	if _, err := bandwidth_classes.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

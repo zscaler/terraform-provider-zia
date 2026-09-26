@@ -238,7 +238,7 @@ func resourceFWIPDestinationGroupsDelete(ctx context.Context, d *schema.Resource
 	if !ok {
 		log.Printf("[ERROR] ip destination groups ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia ip destination groups ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia ip destination groups ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

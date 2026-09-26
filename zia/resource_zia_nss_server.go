@@ -187,7 +187,7 @@ func resourceNSSServerDelete(ctx context.Context, d *schema.ResourceData, meta i
 	if !ok {
 		log.Printf("[ERROR] nss server ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia nss server ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia nss server ID: %v\n", d.Id())
 
 	if _, err := nss_servers.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

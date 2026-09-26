@@ -20,7 +20,7 @@ Use the **zia_firewall_filtering_destination_groups** data source to get informa
 ```hcl
 # ZIA Destination Groups
 data "zia_firewall_filtering_destination_groups" "example" {
-    name = "example"
+  name = "example"
 }
 ```
 

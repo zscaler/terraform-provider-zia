@@ -21,40 +21,40 @@ Use the **zia_sub_cloud** resource to update the subcloud and excluded data cent
 
 ```hcl
 data "zia_sub_cloud" "lookup" {
-    name = "BIZDevZSThree01"
+  name = "BIZDevZSThree01"
 }
 
 data "zia_datacenters" "this" {
-    name = "YVR1"
+  name = "YVR1"
 }
 
 data "zia_datacenters" "this1" {
-    name = "SEA1"
+  name = "SEA1"
 }
 
 resource "zia_sub_cloud" "this" {
-    cloud_id = data.zia_sub_cloud.lookup.id
-    name     = "BIZDevZSThree01"
+  cloud_id = data.zia_sub_cloud.lookup.id
+  name     = "BIZDevZSThree01"
 
-    # Using Unix timestamps
-    exclusions {
-        datacenter {
-            id   = data.zia_datacenters.this.datacenters[0].id
-            name = data.zia_datacenters.this.datacenters[0].name
-        }
-        country    = "CANADA"
-        end_time   = 1770422399
+  # Using Unix timestamps
+  exclusions {
+    datacenter {
+      id   = data.zia_datacenters.this.datacenters[0].id
+      name = data.zia_datacenters.this.datacenters[0].name
     }
+    country  = "CANADA"
+    end_time = 1770422399
+  }
 
-    # Using human-readable UTC date/time (same as UI "Data Center Disabled Until")
-    exclusions {
-        datacenter {
-            id   = data.zia_datacenters.this1.datacenters[0].id
-            name = data.zia_datacenters.this1.datacenters[0].name
-        }
-        country      = "UNITED_STATES"
-        end_time_utc = "02/19/2026 11:59:00 pm"
+  # Using human-readable UTC date/time (same as UI "Data Center Disabled Until")
+  exclusions {
+    datacenter {
+      id   = data.zia_datacenters.this1.datacenters[0].id
+      name = data.zia_datacenters.this1.datacenters[0].name
     }
+    country      = "UNITED_STATES"
+    end_time_utc = "02/19/2026 11:59:00 pm"
+  }
 }
 ```
 

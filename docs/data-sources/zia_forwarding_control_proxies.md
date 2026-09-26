@@ -19,7 +19,7 @@ Use the **zia_forwarding_control_proxies** data source to get information about 
 
 ```hcl
 data "zia_forwarding_control_proxies" "this" {
-    name = "Proxy01"
+  name = "Proxy01"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_forwarding_control_proxies" "this" {
 
 ```hcl
 data "zia_forwarding_control_proxies" "this" {
-    id = "18492370"
+  id = "18492370"
 }
 ```
 
