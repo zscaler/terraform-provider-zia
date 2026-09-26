@@ -27,7 +27,7 @@ resource "zia_url_filtering_rules" "block_rule" {
     validity_time_zone_id = "US/Pacific"
     url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
-    user_agent_types = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    user_agent_types = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
     time_quota = 15
     size_quota = 10
@@ -53,7 +53,7 @@ resource "zia_url_filtering_rules" "caution_rule" {
     url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
     end_user_notification_url = "https://caution.acme.com"
-    user_agent_types = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    user_agent_types = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
     request_methods = [ "CONNECT", "GET", "HEAD" ]
     time_quota = 15
     size_quota = 10

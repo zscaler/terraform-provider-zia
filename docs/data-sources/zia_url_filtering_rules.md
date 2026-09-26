@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `user_risk_score_levels` (List) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
-* `user_agent_types` (List) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `user_agent_types` (List) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`, `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`, `BRAVE`
 
 * `cbi_profile` - (List) The cloud browser isolation profile to which the ISOLATE action is applied in the URL Filtering Policy rules. This block is required when the attribute `action` is set to `ISOLATE`
   * `id` - (String) The universally unique identifier (UUID) for the browser isolation profile

@@ -40,7 +40,7 @@ resource "zia_url_filtering_rules" "this" {
     device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     protocols             = ["ANY_RULE"]
     request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
 }
 ```
 
@@ -63,7 +63,7 @@ resource "zia_url_filtering_rules" "this" {
     device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     protocols             = ["ANY_RULE"]
     request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
     block_override        = true
     override_users {
       id = [ 45513075 ]
@@ -93,7 +93,7 @@ resource "zia_url_filtering_rules" "this" {
     device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
     protocols             = ["ANY_RULE"]
     request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
     end_user_notification_url = "https://caution.acme.com"
 }
 ```
@@ -128,7 +128,7 @@ resource "zia_url_filtering_rules" "this" {
         name = data.zia_cloud_browser_isolation_profile.this.name
         url = data.zia_cloud_browser_isolation_profile.this.url
     }
-    user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE" ]
+    user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE" ]
 }
 ```
 ## Example Usage - URL Filtering with HTTP Header Control Profile
@@ -144,7 +144,7 @@ resource "zia_url_filtering_rules" "this" {
   url_categories    = [zia_url_categories.this.id]
   device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
   request_methods   = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-  user_agent_types  = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+  user_agent_types  = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
   http_header_profiles {
       id = [ zia_http_header_profile.this.id ]
     }
@@ -236,7 +236,7 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
-* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`, `BRAVE`
 
 * `cbi_profile` - (Optional) The cloud browser isolation profile to which the ISOLATE action is applied in the URL Filtering Policy rules. This block is required when the attribute `action` is set to `ISOLATE`
   * `id` - (Optional) The universally unique identifier (UUID) for the browser isolation profile
