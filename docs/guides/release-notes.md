@@ -12,9 +12,21 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.8``
+``Last updated: v4.8.9``
 
 ---
+
+## 4.8.9 (September, 25 2026)
+
+### Notes
+
+- Release date: **(September, 25 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #607](https://github.com/zscaler/terraform-provider-zia/pull/607) - Added BRAVE to `user_agent_types` and `browser_type`.
+  - Upgraded SDK to GO v1.26
 
 ## 4.8.8 (August, 26 2026)
 
@@ -22,7 +34,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 - Release date: **(August, 26 2026)**
 - Supported Terraform version: **v1.x**
--
+
 ### Bug Fixes
 
 - [PR #603](https://github.com/zscaler/terraform-provider-zia/pull/603) - Added new ZIA  attribute to resource and datasource `zia_cloud_app_control_rule`
