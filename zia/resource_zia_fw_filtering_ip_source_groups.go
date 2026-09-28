@@ -191,7 +191,7 @@ func resourceFWIPSourceGroupsDelete(ctx context.Context, d *schema.ResourceData,
 	if !ok {
 		log.Printf("[ERROR] ip source groups ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia ip source groups ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia ip source groups ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

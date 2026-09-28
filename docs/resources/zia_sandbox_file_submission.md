@@ -34,10 +34,10 @@ locals {
 }
 
 resource "zia_sandbox_file_submission" "this" {
-  for_each = local.files
-  file_path     = each.key
+  for_each          = local.files
+  file_path         = each.key
   submission_method = "submit"
-  force = true
+  force             = true
 }
 ```
 
@@ -52,10 +52,10 @@ locals {
 }
 
 resource "zia_sandbox_file_submission" "this" {
-  for_each = local.files
-  file_path     = each.key
+  for_each          = local.files
+  file_path         = each.key
   submission_method = "discan"
-  force = true
+  force             = true
 }
 ```
 

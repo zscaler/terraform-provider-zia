@@ -19,14 +19,14 @@ Use the **zia_tenant_restriction_profile** resource creates and manages tenant r
 
 ```hcl
 resource "zia_tenant_restriction_profile" "this" {
-  name = "ACME_MSFT_CA"
-  description = "ACME_MSFT_CA"
+  name                           = "ACME_MSFT_CA"
+  description                    = "ACME_MSFT_CA"
   restrict_personal_o365_domains = true
-  app_type = "MSLOGINSERVICES"
-  item_data_primary = ["11111111-1111-1111-1111-111111111111"]
-  item_data_secondary = ["acme.com"]
-  item_type_primary = "TENANT_RESTRICTION_TENANT_DIRECTORY"
-  item_type_secondary = "TENANT_RESTRICTION_TENANT_NAME"
+  app_type                       = "MSLOGINSERVICES"
+  item_data_primary              = ["11111111-1111-1111-1111-111111111111"]
+  item_data_secondary            = ["acme.com"]
+  item_type_primary              = "TENANT_RESTRICTION_TENANT_DIRECTORY"
+  item_type_secondary            = "TENANT_RESTRICTION_TENANT_NAME"
 }
 ```
 
@@ -34,12 +34,12 @@ resource "zia_tenant_restriction_profile" "this" {
 
 ```hcl
 resource "zia_tenant_restriction_profile" "this2" {
-  name = "ACME_MSFT_CA_v2"
-  description = "ACME_MSFT_CA_v2"
+  name                    = "ACME_MSFT_CA_v2"
+  description             = "ACME_MSFT_CA_v2"
   ms_login_services_tr_v2 = true
-  app_type = "MSLOGINSERVICES"
-  item_data_primary = ["11111111-1111-1111-1111-111111111111:quadsj"]
-  item_type_primary = "TENANT_RESTRICTION_TENANT_POLICY_ID"
+  app_type                = "MSLOGINSERVICES"
+  item_data_primary       = ["11111111-1111-1111-1111-111111111111:quadsj"]
+  item_type_primary       = "TENANT_RESTRICTION_TENANT_POLICY_ID"
 }
 ```
 
@@ -47,10 +47,10 @@ resource "zia_tenant_restriction_profile" "this2" {
 
 ```hcl
 resource "zia_tenant_restriction_profile" "this3" {
-  name = "YouTube01_Profile"
-  description = "YouTube01_Profile"
-  app_type = "YOUTUBE"
-  item_value = ["TENANT_RESTRICTION_ACTION_OR_ADVENTURE"]
+  name              = "YouTube01_Profile"
+  description       = "YouTube01_Profile"
+  app_type          = "YOUTUBE"
+  item_value        = ["TENANT_RESTRICTION_ACTION_OR_ADVENTURE"]
   item_type_primary = "TENANT_RESTRICTION_CATEGORY_ID"
 }
 ```
@@ -59,9 +59,9 @@ resource "zia_tenant_restriction_profile" "this3" {
 
 ```hcl
 resource "zia_tenant_restriction_profile" "this4" {
-  name = "Dropbox_Profile"
-  description = "Dropbox_Profile"
-  app_type = "DROPBOX"
+  name              = "Dropbox_Profile"
+  description       = "Dropbox_Profile"
+  app_type          = "DROPBOX"
   item_data_primary = [139732608]
   item_type_primary = "TENANT_RESTRICTION_TEAM_ID"
 }
@@ -71,13 +71,13 @@ resource "zia_tenant_restriction_profile" "this4" {
 
 ```hcl
 resource "zia_tenant_restriction_profile" "this5" {
-  name = "Google_Profile01"
-  description = "Google_Profile01"
+  name                   = "Google_Profile01"
+  description            = "Google_Profile01"
   allow_google_consumers = false
-  allow_google_visitors = false
-  app_type = "GOOGLE"
-  item_data_primary = ["acme.com"]
-  item_type_primary = "TENANT_RESTRICTION_DOMAIN"
+  allow_google_visitors  = false
+  app_type               = "GOOGLE"
+  item_data_primary      = ["acme.com"]
+  item_type_primary      = "TENANT_RESTRICTION_DOMAIN"
 }
 ```
 

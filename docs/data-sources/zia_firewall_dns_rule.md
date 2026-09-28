@@ -20,14 +20,14 @@ Use the **zia_firewall_dns_rule** data source to get information about a cloud f
 ```hcl
 # ZIA Firewall DNS Rule by name
 data "zia_firewall_dns_rule" "this" {
-    name = "Default Cloud IPS Rule"
+  name = "Default Cloud IPS Rule"
 }
 ```
 
 ```hcl
 # ZIA Firewall DNS Rule by ID
 data "zia_firewall_dns_rule" "this" {
-    id = "12365478"
+  id = "12365478"
 }
 ```
 
@@ -68,7 +68,7 @@ In addition to all arguments above, the following attributes are exported:
 ```hcl
 data "zia_cloud_applications" "this" {
   policy_type = "cloud_application_policy"
-  app_class = ["DNS_OVER_HTTPS"]
+  app_class   = ["DNS_OVER_HTTPS"]
 }
 ```
 

@@ -19,8 +19,8 @@ Use the **zia_dlp_web_rules** data source to get information about a ZIA DLP Web
 
 ```hcl
 # Retrieve a DLP Web Rule by name
-data "zia_dlp_web_rules" "example"{
-    name = "Example"
+data "zia_dlp_web_rules" "example" {
+  name = "Example"
 }
 ```
 

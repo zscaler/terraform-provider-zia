@@ -204,7 +204,7 @@ resource "%s" "%s" {
     order 					= 1
 	rank					= 7
 	device_trust_levels 	= [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
-	user_agent_types 		= [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER" ]
+	user_agent_types 		= [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER", "BRAVE" ]
 	user_risk_score_levels 	= ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
 	location_groups {
 		id = [data.zia_location_groups.sdwan_can.id]

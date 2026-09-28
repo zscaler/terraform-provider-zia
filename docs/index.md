@@ -39,12 +39,12 @@ The ZIA Terraform Provider now offers support for [OneAPI](https://help.zscaler.
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-    required_providers {
-        zia = {
-            version = "~> 4.0.0"
-            source = "zscaler/zia"
-        }
+  required_providers {
+    zia = {
+      version = "~> 4.0.0"
+      source  = "zscaler/zia"
     }
+  }
 }
 
 # Configure the ZIA Provider (OneAPI Authentication)
@@ -56,7 +56,7 @@ terraform {
 # corresponding variable name does not need to be set in the provider config
 # block.
 provider "zia" {
-  client_id = "[ZSCALER_CLIENT_ID]"
+  client_id     = "[ZSCALER_CLIENT_ID]"
   client_secret = "[ZSCALER_CLIENT_SECRET]"
   vanity_domain = "[ZSCALER_VANITY_DOMAIN]"
   zscaler_cloud = "[ZSCALER_CLOUD]"
@@ -68,12 +68,12 @@ provider "zia" {
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-    required_providers {
-        zia = {
-            version = "~> 4.0.0"
-            source = "zscaler/zia"
-        }
+  required_providers {
+    zia = {
+      version = "~> 4.0.0"
+      source  = "zscaler/zia"
     }
+  }
 }
 
 # Configure the ZIA Provider (OneAPI Authentication) - Private Key
@@ -185,12 +185,12 @@ on-demand sync of newly created roles.
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-    required_providers {
-        zia = {
-            version = "~> 4.0.0"
-            source = "zscaler/zia"
-        }
+  required_providers {
+    zia = {
+      version = "~> 4.0.0"
+      source  = "zscaler/zia"
     }
+  }
 }
 
 # Configure the ZIA Provider (Legacy Authentication)
@@ -202,11 +202,11 @@ terraform {
 # corresponding variable name does not need to be set in the provider config
 # block.
 provider "zia" {
-  username            = "[ZIA_USERNAME]"
-  password            = "[ZIA_PASSWORD]"
-  api_key             = "[ZIA_API_KEY]"
-  zia_cloud           = "[ZIA_CLOUD]"
-  use_legacy_client   = "[ZSCALER_USE_LEGACY_CLIENT]"
+  username          = "[ZIA_USERNAME]"
+  password          = "[ZIA_PASSWORD]"
+  api_key           = "[ZIA_API_KEY]"
+  zia_cloud         = "[ZIA_CLOUD]"
+  use_legacy_client = "[ZSCALER_USE_LEGACY_CLIENT]"
 }
 ```
 

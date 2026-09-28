@@ -20,14 +20,14 @@ Use the **zia_firewall_ips_rule** data source to get information about a cloud f
 ```hcl
 # ZIA Firewall IPS Rule by name
 data "zia_firewall_ips_rule" "this" {
-    name = "Default Cloud IPS Rule"
+  name = "Default Cloud IPS Rule"
 }
 ```
 
 ```hcl
 # ZIA Firewall IPS Rule by ID
 data "zia_firewall_ips_rule" "this" {
-    id = "12365478"
+  id = "12365478"
 }
 ```
 

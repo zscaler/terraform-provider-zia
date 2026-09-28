@@ -20,8 +20,8 @@ The **zia_rule_labels** resource allows the creation and management of rule labe
 ```hcl
 # ZIA Rule Labels Resource
 resource "zia_rule_labels" "example" {
-    name        = "Example"
-    description = "Example"
+  name        = "Example"
+  description = "Example"
 }
 ```
 

@@ -20,14 +20,14 @@ Use the **zia_custom_file_types** data source to retrieves File Type Control rul
 ```hcl
 # Retrieve a File Type Control Rule by name
 data "zia_custom_file_types" "this" {
-    name = "Example"
+  name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a File Type Control Rule by ID
 data "zia_custom_file_types" "this" {
-    id = "12134558"
+  id = "12134558"
 }
 ```
 

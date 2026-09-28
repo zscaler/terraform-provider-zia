@@ -20,7 +20,7 @@ Use the **zia_cloud_browser_isolation_profile** data source to get information a
 
 ```hcl
 data "zia_cloud_browser_isolation_profile" "this" {
-    name = "ZS_CBI_Profile1"
+  name = "ZS_CBI_Profile1"
 }
 ```
 

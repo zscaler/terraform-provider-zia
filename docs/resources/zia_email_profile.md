@@ -21,9 +21,9 @@ The **zia_email_profile** resource allows the creation and management of email r
 
 ```hcl
 resource "zia_email_profile" "this" {
-    name        = "EmailProfile01"
-    description = "Email recipient profile for DLP notifications"
-    emails      = ["admin@example.com", "security@example.com"]
+  name        = "EmailProfile01"
+  description = "Email recipient profile for DLP notifications"
+  emails      = ["admin@example.com", "security@example.com"]
 }
 ```
 

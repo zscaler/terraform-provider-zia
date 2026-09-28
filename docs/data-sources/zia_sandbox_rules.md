@@ -20,14 +20,14 @@ Use the **zia_sandbox_rules** data source to get information about a sandbox rul
 ```hcl
 # ZIA Sandbox Rule by name
 data "zia_sandbox_rules" "this" {
-    name = "Default BA Rule"
+  name = "Default BA Rule"
 }
 ```
 
 ```hcl
 # ZIA Sandbox Rule by ID
 data "zia_sandbox_rules" "this" {
-    id = "12365478"
+  id = "12365478"
 }
 ```
 

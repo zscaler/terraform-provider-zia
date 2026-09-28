@@ -192,7 +192,7 @@ func resourceSubscriptionAlertsDelete(ctx context.Context, d *schema.ResourceDat
 	if !ok {
 		log.Printf("[ERROR] subscription alert ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia subscription alert ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia subscription alert ID: %v\n", d.Id())
 
 	if _, err := alerts.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

@@ -176,7 +176,7 @@ func resourceDLPEnginesDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if !ok {
 		log.Printf("[ERROR] dlp engine ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia dlp engine ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia dlp engine ID: %v\n", d.Id())
 
 	if _, err := dlp_engines.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

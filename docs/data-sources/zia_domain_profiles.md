@@ -18,16 +18,16 @@ Use the **zia_domain_profiles** data source to get information about a ZIA Domai
 ## Example Usage - By Name
 
 ```hcl
-data "zia_domain_profiles" "this"{
-    profile_name = "Example"
+data "zia_domain_profiles" "this" {
+  profile_name = "Example"
 }
 ```
 
 ## Example Usage - By ID
 
 ```hcl
-data "zia_domain_profiles" "this"{
-    profile_id = "Example"
+data "zia_domain_profiles" "this" {
+  profile_id = "Example"
 }
 ```
 

@@ -19,7 +19,7 @@ Use the **zia_subscription_alert** data source to get information about a subscr
 
 ```hcl
 data "zia_subscription_alert" "this" {
-    email = "alert@acme.com"
+  email = "alert@acme.com"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_subscription_alert" "this" {
 
 ```hcl
 data "zia_subscription_alert" "this" {
-    id = 3271
+  id = 3271
 }
 ```
 

@@ -22,7 +22,7 @@ Use the **zia_bandwidth_control_rule** Retrieves all the rules in the Bandwidth 
 ```hcl
 
 data "zia_bandwidth_control_rule" "this" {
-    name = "Streaming Media Bandwidth"
+  name = "Streaming Media Bandwidth"
 }
 ```
 

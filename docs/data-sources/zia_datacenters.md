@@ -28,7 +28,7 @@ data "zia_datacenters" "all" {
 
 ```hcl
 data "zia_datacenters" "filtered" {
-    name = "CA Client Node DC"
+  name = "CA Client Node DC"
 }
 ```
 
@@ -36,11 +36,11 @@ data "zia_datacenters" "filtered" {
 
 ```hcl
 data "zia_datacenters" "filtered" {
-    city            = "San Jose"
-    dc_provider     = "Zscaler Internal"
-    gov_only        = false
-    third_party_cloud = false
-    virtual         = false
+  city              = "San Jose"
+  dc_provider       = "Zscaler Internal"
+  gov_only          = false
+  third_party_cloud = false
+  virtual           = false
 }
 ```
 

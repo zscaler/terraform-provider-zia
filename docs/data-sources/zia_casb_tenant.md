@@ -18,27 +18,27 @@ Use the **zia_casb_tenant** data source to get information about a ZIA SaaS Appl
 ## Example Usage - By Name
 
 ```hcl
-data "zia_casb_tenant" "this"{
-    tenant_name = "Bitbucket"
+data "zia_casb_tenant" "this" {
+  tenant_name = "Bitbucket"
 }
 ```
 
 ## Example Usage - By ID
 
 ```hcl
-data "zia_casb_tenant" "this"{
-    tenant_id = "11743520"
+data "zia_casb_tenant" "this" {
+  tenant_id = "11743520"
 }
 ```
 
 ## Example Usage - Use Optional Parameters
 
 ```hcl
-data "zia_casb_tenant" "this"{
-    tenant_name = "Bitbucket"
-    active_only = true
-    app = "BITBUCKET"
-    filter_by_feature = ["CASB", "SSPM"]
+data "zia_casb_tenant" "this" {
+  tenant_name       = "Bitbucket"
+  active_only       = true
+  app               = "BITBUCKET"
+  filter_by_feature = ["CASB", "SSPM"]
 }
 ```
 

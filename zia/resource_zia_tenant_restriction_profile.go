@@ -246,7 +246,7 @@ func resourceTenantRestrictionProfileDelete(ctx context.Context, d *schema.Resou
 	if !ok {
 		log.Printf("[ERROR] tenant restriction profile ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia tenant restriction profile ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia tenant restriction profile ID: %v\n", d.Id())
 
 	if _, err := tenancy_restriction.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

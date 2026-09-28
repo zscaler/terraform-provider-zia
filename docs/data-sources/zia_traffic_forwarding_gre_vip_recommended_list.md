@@ -19,9 +19,9 @@ Use the **zia_traffic_forwarding_gre_vip_recommended_list** data source to get i
 
 ```hcl
 # ZIA Traffic Forwarding - GRE VIP Recommended List
-data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
-    source_ip = "1.1.1.1"
-    required_count = 2
+data "zia_traffic_forwarding_gre_vip_recommended_list" "this" {
+  source_ip      = "1.1.1.1"
+  required_count = 2
 }
 ```
 
@@ -29,11 +29,11 @@ data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
 
 ```hcl
 # ZIA Traffic Forwarding - GRE VIP Recommended List
-data "zia_traffic_forwarding_gre_vip_recommended_list" "this"{
-    source_ip = "1.1.1.1"
-    required_count = 2
-    latitude     = 22.2914
-    longitude    = 114.1445
+data "zia_traffic_forwarding_gre_vip_recommended_list" "this" {
+  source_ip      = "1.1.1.1"
+  required_count = 2
+  latitude       = 22.2914
+  longitude      = 114.1445
 }
 ```
 

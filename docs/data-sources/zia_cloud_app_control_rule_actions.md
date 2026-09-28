@@ -117,7 +117,7 @@ Use `action_prefixes` to filter actions by type:
 data "zia_cloud_app_control_rule_actions" "allow_only" {
   type            = "AI_ML"
   cloud_apps      = ["CHATGPT_AI"]
-  action_prefixes = ["ALLOW"]  # Filter for ALLOW actions only
+  action_prefixes = ["ALLOW"] # Filter for ALLOW actions only
 }
 
 resource "zia_cloud_app_control_rule" "allow_rule" {
@@ -141,7 +141,7 @@ Filter for multiple action types simultaneously:
 data "zia_cloud_app_control_rule_actions" "allow_deny" {
   type            = "AI_ML"
   cloud_apps      = ["CHATGPT_AI"]
-  action_prefixes = ["ALLOW", "DENY"]  # Get both ALLOW and DENY actions
+  action_prefixes = ["ALLOW", "DENY"] # Get both ALLOW and DENY actions
 }
 
 resource "zia_cloud_app_control_rule" "mixed_rule" {
@@ -340,7 +340,7 @@ Cloud App Control rules support different action types based on the application 
 
 ```hcl
 resource "zia_cloud_app_control_rule" "example" {
-  actions = ["ALLOW_AI_ML_CHAT", "DENY_AI_ML_UPLOAD"]  # May become invalid
+  actions = ["ALLOW_AI_ML_CHAT", "DENY_AI_ML_UPLOAD"] # May become invalid
 }
 ```
 
@@ -363,11 +363,11 @@ resource "zia_cloud_app_control_rule" "example" {
 
 ```hcl
 data "zia_cloud_app_control_rule_actions" "actions" {
-  cloud_apps = ["CHATGPT_AI"]  # Only one app
+  cloud_apps = ["CHATGPT_AI"] # Only one app
 }
 
 resource "zia_cloud_app_control_rule" "example" {
-  applications = ["CHATGPT_AI", "GOOGLE_GEMINI"]  # Two apps
+  applications = ["CHATGPT_AI", "GOOGLE_GEMINI"] # Two apps
   actions      = data.zia_cloud_app_control_rule_actions.actions.available_actions_without_isolate
 }
 ```
@@ -376,11 +376,11 @@ resource "zia_cloud_app_control_rule" "example" {
 
 ```hcl
 data "zia_cloud_app_control_rule_actions" "actions" {
-  cloud_apps = ["CHATGPT_AI", "GOOGLE_GEMINI"]  # Same apps
+  cloud_apps = ["CHATGPT_AI", "GOOGLE_GEMINI"] # Same apps
 }
 
 resource "zia_cloud_app_control_rule" "example" {
-  applications = ["CHATGPT_AI", "GOOGLE_GEMINI"]  # Same apps
+  applications = ["CHATGPT_AI", "GOOGLE_GEMINI"] # Same apps
   actions      = data.zia_cloud_app_control_rule_actions.actions.available_actions_without_isolate
 }
 ```
@@ -521,7 +521,7 @@ resource "zia_cloud_app_control_rule" "caution_rule" {
 data "zia_cloud_app_control_rule_actions" "chatgpt" {
   type            = "AI_ML"
   cloud_apps      = ["CHATGPT_AI"]
-  action_prefixes = ["ALLOW", "DENY"]  # Optional filtering
+  action_prefixes = ["ALLOW", "DENY"] # Optional filtering
 }
 
 # View all output attributes

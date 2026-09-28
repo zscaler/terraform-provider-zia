@@ -393,7 +393,7 @@ func resourceBandwdithControlRulesDelete(ctx context.Context, d *schema.Resource
 	if !ok {
 		log.Printf("[ERROR] bandwidth control rule ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia bandwidth control rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia bandwidth control rule ID: %v\n", d.Id())
 
 	if _, err := bandwidth_control_rules.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

@@ -19,9 +19,9 @@ The **zia_dns_application_groups** resource allows the creation and management o
 
 ```hcl
 resource "zia_dns_application_groups" "this" {
-	name        = "DNSAppGroup01"
-	description = "DNSAppGroup01"
-    dns_applications = ["RACKSPACE", "MCAFEE", "SOPHOS", "BRIGHTSPCACE", "CSWG", "INTECH", "SECURESERVER", "FRANCETELECOM"]
+  name             = "DNSAppGroup01"
+  description      = "DNSAppGroup01"
+  dns_applications = ["RACKSPACE", "MCAFEE", "SOPHOS", "BRIGHTSPCACE", "CSWG", "INTECH", "SECURESERVER", "FRANCETELECOM"]
 }
 ```
 

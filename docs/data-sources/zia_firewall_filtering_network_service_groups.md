@@ -19,8 +19,8 @@ Use the **zia_firewall_filtering_network_service_groups** data source to get inf
 
 ```hcl
 # ZIA Network Service Groups
-data "zia_firewall_filtering_network_service_groups" "example"{
-    name = "Corporate Custom SSH TCP_10022"
+data "zia_firewall_filtering_network_service_groups" "example" {
+  name = "Corporate Custom SSH TCP_10022"
 }
 ```
 

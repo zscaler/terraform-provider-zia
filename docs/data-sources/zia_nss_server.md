@@ -20,7 +20,7 @@ See [Adding NSS Servers](https://help.zscaler.com/zia/adding-nss-servers) for mo
 
 ```hcl
 data "zia_nss_server" "this" {
-    name = "NSSServer01"
+  name = "NSSServer01"
 }
 ```
 
@@ -28,7 +28,7 @@ data "zia_nss_server" "this" {
 
 ```hcl
 data "zia_nss_server" "this" {
-    id = "5445585"
+  id = "5445585"
 }
 ```
 

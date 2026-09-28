@@ -24,15 +24,15 @@ Use the **zia_traffic_forwarding_vpn_credentials** data source to get informatio
 
 ```hcl
 # ZIA Traffic Forwarding - VPN Credentials of Type FQDN
-data "zia_traffic_forwarding_vpn_credentials" "example"{
-    fqdn = "sjc-1-37@acme.com"
+data "zia_traffic_forwarding_vpn_credentials" "example" {
+  fqdn = "sjc-1-37@acme.com"
 }
 ```
 
 ```hcl
 # ZIA Traffic Forwarding - VPN Credentials of Type IP
-data "zia_traffic_forwarding_vpn_credentials" "example"{
-    ip_address = "1.1.1.1"
+data "zia_traffic_forwarding_vpn_credentials" "example" {
+  ip_address = "1.1.1.1"
 }
 ```
 

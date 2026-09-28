@@ -436,7 +436,7 @@ func resourceDLPDictionariesDelete(ctx context.Context, d *schema.ResourceData, 
 	if !ok {
 		log.Printf("[ERROR] dlp dictionary ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting dlp dictionary ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting dlp dictionary ID: %v\n", d.Id())
 
 	if _, err := dlpdictionaries.DeleteDlpDictionary(ctx, service, id); err != nil {
 		return diag.FromErr(err)

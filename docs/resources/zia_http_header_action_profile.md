@@ -20,21 +20,21 @@ The **zia_http_header_action_profile** resource allows the creation and manageme
 ```hcl
 # ZIA HTTP Header Action Profile Resource
 resource "zia_http_header_action_profile" "this" {
-  name = "ActionProfile01"
+  name        = "ActionProfile01"
   description = "Example header action profile"
 
   http_header_action_profile_keys {
-    key = "X-Forwarded-For"
+    key   = "X-Forwarded-For"
     value = "10.0.0.1"
   }
 
   http_header_action_profile_keys {
-    key = "User-Agent"
+    key   = "User-Agent"
     value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
   }
 
   http_header_action_profile_keys {
-    key = "Accept"
+    key   = "Accept"
     value = "application/json"
   }
 }

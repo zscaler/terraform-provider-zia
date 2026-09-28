@@ -23,7 +23,7 @@ resource "zia_firewall_filtering_destination_groups" "dstn_fqdn" {
   name        = "Example Destination FQDN"
   description = "Example Destination FQDN"
   type        = "DSTN_FQDN"
-  addresses = [ "test1.acme.com", "test2.acme.com", "test3.acme.com" ]
+  addresses   = ["test1.acme.com", "test2.acme.com", "test3.acme.com"]
 }
 ```
 
@@ -36,17 +36,17 @@ resource "zia_firewall_filtering_destination_groups" "example_dstn_ip" {
   addresses = ["3.217.228.0-3.217.231.255",
     "3.235.112.0-3.235.119.255",
     "52.23.61.0-52.23.62.25",
-    "35.80.88.0-35.80.95.255"]
+  "35.80.88.0-35.80.95.255"]
 }
 ```
 
 ```hcl
 # IP Destination Group of Type DSTN_DOMAIN
 resource "zia_firewall_filtering_destination_groups" "example_dstn_domain" {
-  name          = "Example Destination Domain"
-  description   = "Example Destination Domain"
-  type          = "DSTN_DOMAIN"
-  addresses     = ["acme.com", "acme1.com"]
+  name        = "Example Destination Domain"
+  description = "Example Destination Domain"
+  type        = "DSTN_DOMAIN"
+  addresses   = ["acme.com", "acme1.com"]
 }
 ```
 

@@ -19,15 +19,15 @@ Use the **zia_dlp_idm_profile** data source to get information about a ZIA DLP I
 
 ```hcl
 # Retrieve a DLP IDM Profile by name
-data "zia_dlp_idm_profile" "example"{
-    name = "Example"
+data "zia_dlp_idm_profile" "example" {
+  name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a DLP IDM Profile by ID
-data "zia_dlp_idm_profile" "example"{
-    name = "Example"
+data "zia_dlp_idm_profile" "example" {
+  name = "Example"
 }
 ```
 

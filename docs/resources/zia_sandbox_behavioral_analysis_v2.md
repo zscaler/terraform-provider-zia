@@ -34,7 +34,7 @@ resource "zia_sandbox_behavioral_analysis_v2" "this" {
     url         = "8350dED6D39DF158E51D6CFBE36FB012"
     url_comment = "8350dED6D39DF158E51D6CFBE36FB012"
     type        = "CUSTOM_FILEHASH_DENY"
-   }
+  }
 }
 ```
 

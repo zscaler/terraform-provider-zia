@@ -30,10 +30,10 @@ resource "zia_endpoint_dlp_rules" "this" {
   data_transfer_method       = "APPLICATION_FILE_ACCESS"
   order                      = 1
   rank                       = 0
-  severity = "RULE_SEVERITY_HIGH"
-  file_types = ["FTCATEGORY_SCZIP", "FTCATEGORY_ACCDB"]
-  device_trust_levels = ["LOW_TRUST", "HIGH_TRUST"]
-  user_risk_score_levels = ["HIGH", "CRITICAL"]
+  severity                   = "RULE_SEVERITY_HIGH"
+  file_types                 = ["FTCATEGORY_SCZIP", "FTCATEGORY_ACCDB"]
+  device_trust_levels        = ["LOW_TRUST", "HIGH_TRUST"]
+  user_risk_score_levels     = ["HIGH", "CRITICAL"]
   without_content_inspection = false
   min_size                   = 10
 
@@ -81,8 +81,8 @@ resource "zia_endpoint_dlp_rules" "this" {
     id = 5855
   }
 
-  eun_enabled  = true
-  eun_template_id  = 11
+  eun_enabled     = true
+  eun_template_id = 11
   receiver {
     id = 1664
   }
@@ -104,10 +104,10 @@ resource "zia_endpoint_dlp_rules" "this" {
   data_transfer_method       = "APPLICATION_FILE_ACCESS"
   order                      = 1
   rank                       = 0
-  severity = "RULE_SEVERITY_HIGH"
-  file_types = ["FTCATEGORY_SCZIP", "FTCATEGORY_ACCDB"]
-  device_trust_levels = ["LOW_TRUST", "HIGH_TRUST"]
-  user_risk_score_levels = ["HIGH", "CRITICAL"]
+  severity                   = "RULE_SEVERITY_HIGH"
+  file_types                 = ["FTCATEGORY_SCZIP", "FTCATEGORY_ACCDB"]
+  device_trust_levels        = ["LOW_TRUST", "HIGH_TRUST"]
+  user_risk_score_levels     = ["HIGH", "CRITICAL"]
   without_content_inspection = false
   min_size                   = 10
   end_point_applications {
@@ -133,13 +133,13 @@ output "zia_dlp_cloud_to_cloud_ir" {
 }
 
 resource "zia_endpoint_dlp_rules" "this" {
-  name                       = "Rule_01"
-  description                = "Rule_01"
-  action                     = "ALLOW"
-  state                      = "ENABLED"
-  data_transfer_method       = "APPLICATION_FILE_ACCESS"
-  order                      = 1
-  rank                       = 0
+  name                 = "Rule_01"
+  description          = "Rule_01"
+  action               = "ALLOW"
+  state                = "ENABLED"
+  data_transfer_method = "APPLICATION_FILE_ACCESS"
+  order                = 1
+  rank                 = 0
   end_point_applications {
     zapp_id = ["500000085"]
   }
@@ -250,7 +250,7 @@ The following arguments are supported:
       end_point_application_groups {
         group_id = ["366"]
       }
-
+    
       lifecycle {
         ignore_changes = [end_point_application_groups]
       }

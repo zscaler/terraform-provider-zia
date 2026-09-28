@@ -291,7 +291,7 @@ func resourceAdminRolesDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if !ok {
 		log.Printf("[ERROR] role ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia role ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia role ID: %v\n", d.Id())
 
 	if _, err := roles.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

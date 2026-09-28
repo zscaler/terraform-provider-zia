@@ -19,12 +19,12 @@ The **zia_dlp_notification_templates** resource allows the creation and manageme
 
 ```hcl
 resource "zia_dlp_notification_templates" "example" {
-    name                = "DLP Auditor Template Test"
-    subject             = "DLP Violation: ${TRANSACTION_ID} ${ENGINES}"
-    attach_content      = true
-    tls_enabled         = true
-    html_message        = file("./index.html")
-    plain_text_message = file("./dlp.txt")
+  name               = "DLP Auditor Template Test"
+  subject            = "DLP Violation: ${TRANSACTION_ID} ${ENGINES}"
+  attach_content     = true
+  tls_enabled        = true
+  html_message       = file("./index.html")
+  plain_text_message = file("./dlp.txt")
 }
 ```
 

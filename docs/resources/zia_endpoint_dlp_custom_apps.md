@@ -36,14 +36,14 @@ resource "zia_endpoint_dlp_custom_apps" "app01" {
 
 ```hcl
 resource "zia_endpoint_dlp_custom_apps" "app02" {
-  channel            = "APPLICATION_FILE_ACCESS"
-  name               = "app02"
-  description        = "app02"
+  channel     = "APPLICATION_FILE_ACCESS"
+  name        = "app02"
+  description = "app02"
 
   application {
-    os_type = "MAC_OS"
-    file_name = "app02"
-    bundle_id = "12334567890"
+    os_type          = "MAC_OS"
+    file_name        = "app02"
+    bundle_id        = "12334567890"
     digitally_signed = true
   }
 }

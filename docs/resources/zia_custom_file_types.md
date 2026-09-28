@@ -19,9 +19,9 @@ The **zia_custom_file_types** resource allows the creation and management of ZIA
 
 ```hcl
 resource "zia_custom_file_types" "this" {
-  name = "FileType02"
+  name        = "FileType02"
   description = "FileType02"
-  extension = "tf"
+  extension   = "tf"
 }
 ```
 

@@ -24,8 +24,9 @@ func dataSourceSupportedBrowserVersion() *schema.Resource {
 					"SAFARI",
 					"OPERA",
 					"MSCHREDGE",
+					"BRAVE",
 				}, false),
-				Description: "Optional filter — return only the supported version entry for this browser type. One of: `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`.",
+				Description: "Optional filter — return only the supported version entry for this browser type. One of: `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`, `BRAVE`.",
 			},
 			"search": {
 				Type:        schema.TypeString,

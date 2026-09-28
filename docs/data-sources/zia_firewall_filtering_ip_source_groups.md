@@ -21,7 +21,7 @@ Use the **zia_firewall_filtering_ip_source_groups** data source to get informati
 ```hcl
 # ZIA IP Source Groups
 data "zia_firewall_filtering_ip_source_groups" "example" {
-    name = "example"
+  name = "example"
 }
 ```
 

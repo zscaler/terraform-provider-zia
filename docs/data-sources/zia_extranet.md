@@ -21,7 +21,7 @@ Use the **zia_extranet** data source to get information about extranets configur
 
 ```hcl
 data "zia_extranet" "this" {
-    name = "Extranet01"
+  name = "Extranet01"
 }
 ```
 
@@ -29,7 +29,7 @@ data "zia_extranet" "this" {
 
 ```hcl
 data "zia_extranet" "this" {
-    id = 1254674585
+  id = 1254674585
 }
 ```
 

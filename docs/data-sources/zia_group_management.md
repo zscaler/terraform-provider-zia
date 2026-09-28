@@ -19,7 +19,7 @@ Use the **zia_group_management** data source to get information about a user gro
 
 ```hcl
 data "zia_group_management" "devops" {
- name = "DevOps"
+  name = "DevOps"
 }
 ```
 
@@ -28,16 +28,16 @@ data "zia_group_management" "devops" {
 ```hcl
 # Use JMESPath to pre-filter groups before matching by name
 data "zia_group_management" "devops" {
- name   = "DevOps"
- search = "[?contains(name, 'Dev')]"
+  name   = "DevOps"
+  search = "[?contains(name, 'Dev')]"
 }
 ```
 
 ```hcl
 # Filter groups by IdP ID
 data "zia_group_management" "idp_group" {
- name   = "Engineering"
- search = "[?idpId == `0`]"
+  name   = "Engineering"
+  search = "[?idpId == `0`]"
 }
 ```
 

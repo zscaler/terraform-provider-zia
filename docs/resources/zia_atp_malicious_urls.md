@@ -19,11 +19,11 @@ The **zia_atp_malicious_urls** resource alows you to Updates the malicious URLs 
 
 ```hcl
 resource "zia_atp_malicious_urls" "this" {
-    malicious_urls = [
-        "test1.malicious.com",
-        "test2.malicious.com",
-        "test3.malicious.com",
-    ]
+  malicious_urls = [
+    "test1.malicious.com",
+    "test2.malicious.com",
+    "test3.malicious.com",
+  ]
 }
 ```
 

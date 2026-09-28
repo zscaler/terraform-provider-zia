@@ -33,19 +33,19 @@ data "zia_cloud_app_control_rule_actions" "webmail_actions" {
 }
 
 resource "zia_cloud_app_control_rule" "webmail_rule" {
-  name                = "WebMail Control Rule"
-  description         = "Control webmail access"
-  order               = 1
-  rank                = 7
-  state               = "ENABLED"
-  type                = "WEBMAIL"
+  name        = "WebMail Control Rule"
+  description = "Control webmail access"
+  order       = 1
+  rank        = 7
+  state       = "ENABLED"
+  type        = "WEBMAIL"
 
   # Use data source to get valid actions
-  actions             = data.zia_cloud_app_control_rule_actions.webmail_actions.available_actions_without_isolate
+  actions = data.zia_cloud_app_control_rule_actions.webmail_actions.available_actions_without_isolate
 
   applications        = ["GOOGLE_WEBMAIL", "YAHOO_WEBMAIL"]
   device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-  user_agent_types    = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+  user_agent_types    = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
 }
 ```
 
@@ -58,15 +58,15 @@ data "zia_cloud_app_control_rule_actions" "ai_actions" {
 }
 
 resource "zia_cloud_app_control_rule" "ai_control" {
-  name         = "ChatGPT Controls"
-  description  = "Control ChatGPT usage"
-  order        = 1
-  rank         = 7
-  state        = "ENABLED"
-  type         = "AI_ML"
+  name        = "ChatGPT Controls"
+  description = "Control ChatGPT usage"
+  order       = 1
+  rank        = 7
+  state       = "ENABLED"
+  type        = "AI_ML"
 
   # Automatically gets all valid actions except ISOLATE
-  actions      = data.zia_cloud_app_control_rule_actions.ai_actions.available_actions_without_isolate
+  actions = data.zia_cloud_app_control_rule_actions.ai_actions.available_actions_without_isolate
 
   applications = ["CHATGPT_AI"]
 }
@@ -81,15 +81,15 @@ data "zia_cloud_app_control_rule_actions" "file_share_actions" {
 }
 
 resource "zia_cloud_app_control_rule" "file_sharing" {
-  name         = "File Sharing Controls"
-  description  = "Control file sharing operations"
-  order        = 1
-  rank         = 7
-  state        = "ENABLED"
-  type         = "FILE_SHARE"
+  name        = "File Sharing Controls"
+  description = "Control file sharing operations"
+  order       = 1
+  rank        = 7
+  state       = "ENABLED"
+  type        = "FILE_SHARE"
 
   # Returns only actions supported by both Dropbox and OneDrive
-  actions      = data.zia_cloud_app_control_rule_actions.file_share_actions.available_actions_without_isolate
+  actions = data.zia_cloud_app_control_rule_actions.file_share_actions.available_actions_without_isolate
 
   applications = ["DROPBOX", "ONEDRIVE"]
 }
@@ -110,15 +110,15 @@ data "zia_cloud_browser_isolation_profile" "cbi_profile" {
 }
 
 resource "zia_cloud_app_control_rule" "isolate_chatgpt" {
-  name         = "ChatGPT Isolation"
-  description  = "Isolate ChatGPT using Cloud Browser Isolation"
-  order        = 1
-  rank         = 7
-  state        = "ENABLED"
-  type         = "AI_ML"
+  name        = "ChatGPT Isolation"
+  description = "Isolate ChatGPT using Cloud Browser Isolation"
+  order       = 1
+  rank        = 7
+  state       = "ENABLED"
+  type        = "AI_ML"
 
   # Use isolate_actions for CBI rules
-  actions      = data.zia_cloud_app_control_rule_actions.chatgpt_isolate.isolate_actions
+  actions = data.zia_cloud_app_control_rule_actions.chatgpt_isolate.isolate_actions
 
   applications = ["CHATGPT_AI"]
 
@@ -137,19 +137,19 @@ resource "zia_cloud_app_control_rule" "isolate_chatgpt" {
 data "zia_cloud_app_control_rule_actions" "slack_allow" {
   type            = "ENTERPRISE_COLLABORATION"
   cloud_apps      = ["SLACK"]
-  action_prefixes = ["ALLOW"]  # Only permissive actions
+  action_prefixes = ["ALLOW"] # Only permissive actions
 }
 
 resource "zia_cloud_app_control_rule" "slack_allow_only" {
-  name         = "Slack Allow Only"
-  description  = "Allow specific Slack operations"
-  order        = 1
-  rank         = 7
-  state        = "ENABLED"
-  type         = "ENTERPRISE_COLLABORATION"
+  name        = "Slack Allow Only"
+  description = "Allow specific Slack operations"
+  order       = 1
+  rank        = 7
+  state       = "ENABLED"
+  type        = "ENTERPRISE_COLLABORATION"
 
   # Only ALLOW_ actions
-  actions      = data.zia_cloud_app_control_rule_actions.slack_allow.filtered_actions
+  actions = data.zia_cloud_app_control_rule_actions.slack_allow.filtered_actions
 
   applications = ["SLACK"]
 }
@@ -183,17 +183,17 @@ data "zia_cloud_app_control_rule_actions" "ai_actions" {
 }
 
 resource "zia_cloud_app_control_rule" "ai_allow" {
-  name         = "Allow AI/ML Apps"
-  type         = "AI_ML"
-  order        = 1
-  rank         = 7
-  state        = "ENABLED"
+  name  = "Allow AI/ML Apps"
+  type  = "AI_ML"
+  order = 1
+  rank  = 7
+  state = "ENABLED"
 
   # Project the data source objects down to the enum string the API expects
   applications = [for app in data.zia_cloud_applications.ai_apps.applications : app["app"]]
 
   # filtered_actions already returns []string — no projection needed
-  actions      = data.zia_cloud_app_control_rule_actions.ai_actions.filtered_actions
+  actions = data.zia_cloud_app_control_rule_actions.ai_actions.filtered_actions
 }
 ```
 
@@ -314,23 +314,23 @@ data "zia_cloud_app_control_rule_actions" "social_media_actions" {
 }
 
 resource "zia_cloud_app_control_rule" "social_media_time_restricted" {
-  name                  = "Social Media Time Restricted"
-  description           = "Allow social media only during specified hours"
-  order                 = 1
-  rank                  = 7
-  state                 = "ENABLED"
-  type                  = "SOCIAL_NETWORKING"
-  actions               = data.zia_cloud_app_control_rule_actions.social_media_actions.available_actions_without_isolate
-  applications          = ["FACEBOOK"]
+  name         = "Social Media Time Restricted"
+  description  = "Allow social media only during specified hours"
+  order        = 1
+  rank         = 7
+  state        = "ENABLED"
+  type         = "SOCIAL_NETWORKING"
+  actions      = data.zia_cloud_app_control_rule_actions.social_media_actions.available_actions_without_isolate
+  applications = ["FACEBOOK"]
 
   enforce_time_validity = true
   validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
   validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
   validity_time_zone_id = "US/Pacific"
 
-  time_quota            = 15
-  size_quota            = 10
-  device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  time_quota          = 15
+  size_quota          = 10
+  device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
 }
 ```
 
@@ -364,7 +364,7 @@ The following arguments are supported:
 * `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 
 * `user_risk_score_levels` (List of String) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-* `user_agent_types` (List of String) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `user_agent_types` (List of String) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`, `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`, `BRAVE`
 * `time_quota` - (Number) Time quota in minutes, after which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `size_quota` - (Number) Size quota in MB beyond which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `validity_start_time` - (String) If enforce_time_validity is set to true, the Cloud App Control Rules rule will be valid starting on this date and time. The date and time must be provided in `RFC1123` format i.e `Sun, 16 Jun 2024 15:04:05 UTC`
@@ -471,13 +471,13 @@ resource "zia_cloud_app_control_rule" "github_granular" {
 
   # Manually specify a mix of ALLOW and BLOCK for granular control
   actions = [
-      "ALLOW_SYSTEM_DEVELOPMENT_UPLOAD",
-      "BLOCK_SYSTEM_DEVELOPMENT_CREATE",
-      "BLOCK_SYSTEM_DEVELOPMENT_EDIT",
-      "ALLOW_SYSTEM_DEVELOPMENT_SHARE",
-      "ALLOW_SYSTEM_DEVELOPMENT_COMMENT",
-      "BLOCK_SYSTEM_DEVELOPMENT_REACTION",
-      "ALLOW_SYSTEM_DEVELOPMENT_APPS"
+    "ALLOW_SYSTEM_DEVELOPMENT_UPLOAD",
+    "BLOCK_SYSTEM_DEVELOPMENT_CREATE",
+    "BLOCK_SYSTEM_DEVELOPMENT_EDIT",
+    "ALLOW_SYSTEM_DEVELOPMENT_SHARE",
+    "ALLOW_SYSTEM_DEVELOPMENT_COMMENT",
+    "BLOCK_SYSTEM_DEVELOPMENT_REACTION",
+    "ALLOW_SYSTEM_DEVELOPMENT_APPS"
   ]
 }
 ```

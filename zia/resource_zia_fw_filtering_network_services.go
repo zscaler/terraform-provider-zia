@@ -205,7 +205,7 @@ func resourceNetworkServicesDelete(ctx context.Context, d *schema.ResourceData, 
 	if !ok {
 		log.Printf("[ERROR] network service id ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting network service ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting network service ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

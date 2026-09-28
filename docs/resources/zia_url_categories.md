@@ -19,19 +19,19 @@ The **zia_url_categories** resource creates and manages a new custom URL categor
 
 ```hcl
 resource "zia_url_categories" "example" {
-  super_category      = "USER_DEFINED"
-  configured_name     = "MCAS Unsanctioned Apps"
-  description         = "MCAS Unsanctioned Apps"
-  keywords            = ["microsoft"]
-  custom_category     = true
-  type                = "URL_CATEGORY"
+  super_category  = "USER_DEFINED"
+  configured_name = "MCAS Unsanctioned Apps"
+  description     = "MCAS Unsanctioned Apps"
+  keywords        = ["microsoft"]
+  custom_category = true
+  type            = "URL_CATEGORY"
   scopes {
     type = "LOCATION"
     scope_entities {
-      id = [ data.zia_location_management.nyc_site.id ]
+      id = [data.zia_location_management.nyc_site.id]
     }
     scope_group_member_entities {
-      id = [ data.zia_group_management.engineering.id ]
+      id = [data.zia_group_management.engineering.id]
     }
   }
   urls = [

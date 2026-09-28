@@ -19,15 +19,15 @@ Use the **zia_endpoint_dlp_rules** data source to get information about a ZIA En
 
 ```hcl
 # Retrieve a DLP Web Rule by name
-data "zia_endpoint_dlp_rules" "example"{
-    name = "Rule01"
+data "zia_endpoint_dlp_rules" "example" {
+  name = "Rule01"
 }
 ```
 
 ```hcl
 # Retrieve a DLP Web Rule by ID
-data "zia_endpoint_dlp_rules" "example"{
-    name = "4522856946"
+data "zia_endpoint_dlp_rules" "example" {
+  name = "4522856946"
 }
 ```
 

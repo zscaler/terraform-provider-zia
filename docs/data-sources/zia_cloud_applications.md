@@ -38,12 +38,12 @@ output "app_ids" {
 # Retrieves specific application by name and category
 data "zia_cloud_applications" "this" {
   policy_type = "cloud_application_ssl_policy"
-  app_class = ["SOCIAL_NETWORKING"]
-  app_name = "Nebenan"
+  app_class   = ["SOCIAL_NETWORKING"]
+  app_name    = "Nebenan"
 }
 
 output "zia_cloud_applications" {
-    value = data.zia_cloud_applications.this
+  value = data.zia_cloud_applications.this
 }
 
 
@@ -69,12 +69,12 @@ output "app_ids" {
 # Retrieves specific application associated with a SSL inspection rule by name and category
 data "zia_cloud_applications" "this" {
   policy_type = "cloud_application_ssl_policy"
-  app_class = ["SOCIAL_NETWORKING"]
-  app_name = "Nebenan"
+  app_class   = ["SOCIAL_NETWORKING"]
+  app_name    = "Nebenan"
 }
 
 output "zia_cloud_applications" {
-    value = data.zia_cloud_applications.this
+  value = data.zia_cloud_applications.this
 }
 ```
 

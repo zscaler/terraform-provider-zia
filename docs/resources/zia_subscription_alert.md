@@ -19,9 +19,9 @@ Use the **zia_subscription_alert** resource allows the creation and management o
 
 ```hcl
 resource "zia_subscription_alert" "this" {
-  email  = "alert@acme.com"
-  description = "Terraform Alert"
-  pt0_severities = ["CRITICAL"]
+  email             = "alert@acme.com"
+  description       = "Terraform Alert"
+  pt0_severities    = ["CRITICAL"]
   secure_severities = ["CRITICAL", "MAJOR", "MINOR", "INFO", "DEBUG"]
   manage_severities = ["CRITICAL", "MAJOR", "MINOR", "INFO", "DEBUG"]
   comply_severities = ["CRITICAL", "MAJOR", "MINOR", "INFO", "DEBUG"]

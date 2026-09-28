@@ -19,8 +19,8 @@ Use the **zia_workload_groups** data source to get information about Workload Gr
 
 ```hcl
 # ZIA Admin User Data Source
-data "zia_workload_groups" "ios"{
-    name = "Example"
+data "zia_workload_groups" "ios" {
+  name = "Example"
 }
 ```
 

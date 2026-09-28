@@ -182,7 +182,7 @@ func resourceCustomFileTypesDelete(ctx context.Context, d *schema.ResourceData, 
 	if !ok {
 		log.Printf("[ERROR] custom file type ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia custom file type ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia custom file type ID: %v\n", d.Id())
 
 	if _, err := custom_file_types.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

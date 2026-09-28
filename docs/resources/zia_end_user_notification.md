@@ -57,14 +57,14 @@ resource "zia_end_user_notification" "this" {
 ```hcl
 # END USER NOTIFICATION TYPE - CUSTOM
 resource "zia_end_user_notification" "this" {
-  aup_frequency     = "ON_WEEKDAY"
-  aup_day_offset    = "1"
-  aup_message       = "Please review and accept the terms."
-  notification_type = "CUSTOM"
-  display_reason    = true
+  aup_frequency        = "ON_WEEKDAY"
+  aup_day_offset       = "1"
+  aup_message          = "Please review and accept the terms."
+  notification_type    = "CUSTOM"
+  display_reason       = true
   display_company_name = true
   display_company_logo = true
-  custom_text       = "Website blocked"
+  custom_text          = "Website blocked"
 
   url_cat_review_enabled                  = true
   url_cat_review_submit_to_security_cloud = true
@@ -143,7 +143,7 @@ The following arguments are supported:
 ```hcl
 resource "zia_end_user_notification" "this" {
   notification_type = "CUSTOM"
-  custom_text = <<EOT
+  custom_text       = <<EOT
     <div style="background-color: #f0f0f0; padding: 20px; border-radius: 5px;">
       <h2 style="color: #333;">Access Blocked</h2>
       <p style="color: #666;">This website has been blocked for security reasons.</p>

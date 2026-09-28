@@ -53,40 +53,40 @@ Example: If there are predefined rules in your tenant, you can still configure y
 
 ```hcl
 data "zia_firewall_filtering_network_service" "zscaler_proxy_nw_services" {
-    name = "ZSCALER_PROXY_NW_SERVICES"
+  name = "ZSCALER_PROXY_NW_SERVICES"
 }
 
 data "zia_department_management" "engineering" {
- name = "Engineering"
+  name = "Engineering"
 }
 
 data "zia_group_management" "normal_internet" {
-    name = "Normal_Internet"
+  name = "Normal_Internet"
 }
 
 data "zia_firewall_filtering_time_window" "work_hours" {
-    name = "Work hours"
+  name = "Work hours"
 }
 
 resource "zia_firewall_filtering_rule" "example" {
-    name                = "Example"
-    description         = "Example"
-    action              = "ALLOW"
-    state               = "ENABLED"
-    order               = 1
-    enable_full_logging = true
-    nw_services {
-        id = [ data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id ]
-    }
-    departments {
-        id = [ data.zia_department_management.engineering.id ]
-    }
-    groups {
-        id = [ data.zia_group_management.normal_internet.id ]
-    }
-    time_windows {
-        id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
-    }
+  name                = "Example"
+  description         = "Example"
+  action              = "ALLOW"
+  state               = "ENABLED"
+  order               = 1
+  enable_full_logging = true
+  nw_services {
+    id = [data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id]
+  }
+  departments {
+    id = [data.zia_department_management.engineering.id]
+  }
+  groups {
+    id = [data.zia_group_management.normal_internet.id]
+  }
+  time_windows {
+    id = [data.zia_firewall_filtering_time_window.work_hours.id]
+  }
 }
 ```
 

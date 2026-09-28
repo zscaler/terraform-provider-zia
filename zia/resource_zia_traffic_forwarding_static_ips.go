@@ -344,7 +344,7 @@ func resourceTrafficForwardingStaticIPDelete(ctx context.Context, d *schema.Reso
 	if !ok {
 		log.Printf("[ERROR] static ip ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting static ip ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting static ip ID: %v\n", d.Id())
 
 	if _, err := staticips.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

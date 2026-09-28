@@ -19,12 +19,12 @@ Use the **zia_traffic_forwarding_public_node_vips** data source to retrieve a pa
 
 ```hcl
 # ZIA Traffic Forwarding - Virtual IP Addresses (VIPs)
-data "zia_traffic_forwarding_public_node_vips" "yvr1"{
-    datacenter = "YVR1"
+data "zia_traffic_forwarding_public_node_vips" "yvr1" {
+  datacenter = "YVR1"
 }
 
-output "zia_traffic_forwarding_public_node_vips_yvr1"{
-    value = data.zia_traffic_forwarding_public_node_vips.yvr1
+output "zia_traffic_forwarding_public_node_vips_yvr1" {
+  value = data.zia_traffic_forwarding_public_node_vips.yvr1
 }
 ```
 

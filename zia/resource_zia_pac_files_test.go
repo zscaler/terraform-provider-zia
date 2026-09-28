@@ -16,8 +16,10 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/pacfiles"
 )
 
-const testAccPacContentV1 = `function FindProxyForURL(url, host) { return "DIRECT"; }`
-const testAccPacContentV2 = `function FindProxyForURL(url, host) { /* updated */ return "DIRECT"; }`
+const (
+	testAccPacContentV1 = `function FindProxyForURL(url, host) { return "DIRECT"; }`
+	testAccPacContentV2 = `function FindProxyForURL(url, host) { /* updated */ return "DIRECT"; }`
+)
 
 func TestAccResourcePacFilesBasic(t *testing.T) {
 	var pacFile pacfiles.PACFileConfig

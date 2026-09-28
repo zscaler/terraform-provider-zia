@@ -38,15 +38,15 @@ resource "zia_cloud_nss_feed" "this" {
   nss_type           = "NSS_FOR_WEB"
 
   feed_output_format = "\\{ \"sourcetype\" : \"zscalernss-web\", \"event\" : \\{\"datetime\":\"%d{yy}-%02d{mth}-%02d{dd} %02d{hh}:%02d{mm}:%02d{ss}\",\"reason\":\"%s{reason}\",\"event_id\":\"%d{recordid}\",\"protocol\":\"%s{proto}\",\"action\":\"%s{action}\",\"transactionsize\":\"%d{totalsize}\",\"responsesize\":\"%d{respsize}\",\"requestsize\":\"%d{reqsize}\",\"urlcategory\":\"%s{urlcat}\",\"serverip\":\"%s{sip}\",\"requestmethod\":\"%s{reqmethod}\",\"refererURL\":\"%s{ereferer}\",\"useragent\":\"%s{eua}\",\"product\":\"NSS\",\"location\":\"%s{elocation}\",\"ClientIP\":\"%s{cip}\",\"status\":\"%s{respcode}\",\"user\":\"%s{elogin}\",\"url\":\"%s{eurl}\",\"vendor\":\"Zscaler\",\"hostname\":\"%s{ehost}\",\"clientpublicIP\":\"%s{cintip}\",\"threatcategory\":\"%s{malwarecat}\",\"threatname\":\"%s{threatname}\",\"filetype\":\"%s{filetype}\",\"appname\":\"%s{appname}\",\"app_status\":\"%s{app_status}\",\"pagerisk\":\"%d{riskscore}\",\"threatseverity\":\"%s{threatseverity}\",\"department\":\"%s{edepartment}\",\"urlsupercategory\":\"%s{urlsupercat}\",\"appclass\":\"%s{appclass}\",\"dlpengine\":\"%s{dlpeng}\",\"urlclass\":\"%s{urlclass}\",\"threatclass\":\"%s{malwareclass}\",\"dlpdictionaries\":\"%s{dlpdict}\",\"fileclass\":\"%s{fileclass}\",\"bwthrottle\":\"%s{bwthrottle}\",\"contenttype\":\"%s{contenttype}\",\"unscannabletype\":\"%s{unscannabletype}\",\"deviceowner\":\"%s{deviceowner}\",\"devicehostname\":\"%s{devicehostname}\",\"keyprotectiontype\":\"%s{keyprotectiontype}\"\\}\\}\n"
-    departments {
-        id = [ 4451590 ]
-    }
-    users {
-        id = [ 6438644 ]
-    }
-    url_categories {
-        id = [ data.zia_url_categories.this.val ]
-    }
+  departments {
+    id = [4451590]
+  }
+  users {
+    id = [6438644]
+  }
+  url_categories {
+    id = [data.zia_url_categories.this.val]
+  }
 }
 ```
 
@@ -65,27 +65,27 @@ resource "zia_cloud_nss_feed" "this" {
     "ASCII_34"
   ]
   # eps_rate_limit     = 0
-  max_batch_size     = 512
-  json_array_toggle  = true
-  siem_type          = "SPLUNK"
-  connection_url     = "https://us-chronicle.googleapis.com/v1alpha/projects/xxxxxxx/locations/us/instances/xxxxxxxxxxx/feeds/xxxx-xxxx-xxxx-xxxx-xxxxxxxx:importPushLogs"
+  max_batch_size    = 512
+  json_array_toggle = true
+  siem_type         = "SPLUNK"
+  connection_url    = "https://us-chronicle.googleapis.com/v1alpha/projects/xxxxxxx/locations/us/instances/xxxxxxxxxxx/feeds/xxxx-xxxx-xxxx-xxxx-xxxxxxxx:importPushLogs"
   connection_headers = [
     "X-goog-api-key: <Your API Key>",
     "X-Webhook-Access-Key:<Your Webhook API Key>"
-    ]
-  nss_type           = "NSS_FOR_FIREWALL"
+  ]
+  nss_type              = "NSS_FOR_FIREWALL"
   firewall_logging_mode = "ALL"
-  feed_output_format = "\\{ \"sourcetype\" : \"zscalernss-fw\", \"event\" :\\{\"datetime\":\"%s{time}\",\"user\":\"%s{elogin}\",\"department\":\"%s{dept}\",\"locationname\":\"%s{location}\",\"cdport\":\"%d{cdport}\",\"csport\":\"%d{csport}\",\"sdport\":\"%d{sdport}\",\"ssport\":\"%d{ssport}\",\"csip\":\"%s{csip}\",\"cdip\":\"%s{cdip}\",\"ssip\":\"%s{ssip}\",\"sdip\":\"%s{sdip}\",\"tsip\":\"%s{tsip}\",\"tunsport\":\"%d{tsport}\",\"tuntype\":\"%s{ttype}\",\"action\":\"%s{action}\",\"dnat\":\"%s{dnat}\",\"stateful\":\"%s{stateful}\",\"aggregate\":\"%s{aggregate}\",\"nwsvc\":\"%s{nwsvc}\",\"nwapp\":\"%s{nwapp}\",\"proto\":\"%s{ipproto}\",\"ipcat\":\"%s{ipcat}\",\"destcountry\":\"%s{destcountry}\",\"avgduration\":\"%d{avgduration}\",\"rulelabel\":\"%s{erulelabel}\",\"inbytes\":\"%ld{inbytes}\",\"outbytes\":\"%ld{outbytes}\",\"duration\":\"%d{duration}\",\"durationms\":\"%d{durationms}\",\"numsessions\":\"%d{numsessions}\",\"ipsrulelabel\":\"%s{ipsrulelabel}\",\"threatcat\":\"%s{threatcat}\",\"threatname\":\"%s{ethreatname}\",\"deviceowner\":\"%s{deviceowner}\",\"devicehostname\":\"%s{devicehostname}\",\"threat_score\":\"%d{threat_score}\",\"threat_severity\":\"%s{threat_severity}\"\\}\\}\n"
+  feed_output_format    = "\\{ \"sourcetype\" : \"zscalernss-fw\", \"event\" :\\{\"datetime\":\"%s{time}\",\"user\":\"%s{elogin}\",\"department\":\"%s{dept}\",\"locationname\":\"%s{location}\",\"cdport\":\"%d{cdport}\",\"csport\":\"%d{csport}\",\"sdport\":\"%d{sdport}\",\"ssport\":\"%d{ssport}\",\"csip\":\"%s{csip}\",\"cdip\":\"%s{cdip}\",\"ssip\":\"%s{ssip}\",\"sdip\":\"%s{sdip}\",\"tsip\":\"%s{tsip}\",\"tunsport\":\"%d{tsport}\",\"tuntype\":\"%s{ttype}\",\"action\":\"%s{action}\",\"dnat\":\"%s{dnat}\",\"stateful\":\"%s{stateful}\",\"aggregate\":\"%s{aggregate}\",\"nwsvc\":\"%s{nwsvc}\",\"nwapp\":\"%s{nwapp}\",\"proto\":\"%s{ipproto}\",\"ipcat\":\"%s{ipcat}\",\"destcountry\":\"%s{destcountry}\",\"avgduration\":\"%d{avgduration}\",\"rulelabel\":\"%s{erulelabel}\",\"inbytes\":\"%ld{inbytes}\",\"outbytes\":\"%ld{outbytes}\",\"duration\":\"%d{duration}\",\"durationms\":\"%d{durationms}\",\"numsessions\":\"%d{numsessions}\",\"ipsrulelabel\":\"%s{ipsrulelabel}\",\"threatcat\":\"%s{threatcat}\",\"threatname\":\"%s{ethreatname}\",\"deviceowner\":\"%s{deviceowner}\",\"devicehostname\":\"%s{devicehostname}\",\"threat_score\":\"%d{threat_score}\",\"threat_severity\":\"%s{threat_severity}\"\\}\\}\n"
 
-    departments {
-        id = [ 4451590 ]
-    }
-    users {
-        id = [ 6438644 ]
-    }
-    url_categories {
-        id = [ data.zia_url_categories.this.val ]
-    }
+  departments {
+    id = [4451590]
+  }
+  users {
+    id = [6438644]
+  }
+  url_categories {
+    id = [data.zia_url_categories.this.val]
+  }
 }
 ```
 

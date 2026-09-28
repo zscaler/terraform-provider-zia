@@ -471,7 +471,7 @@ func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, met
 	if !ok {
 		log.Printf("[ERROR] sandbox rules not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting sandbox rules ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting sandbox rules ID: %v\n", d.Id())
 
 	if _, err := sandbox_rules.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

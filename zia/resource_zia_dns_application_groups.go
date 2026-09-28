@@ -191,7 +191,7 @@ func resourceDNSApplicationGroupsDelete(ctx context.Context, d *schema.ResourceD
 	if !ok {
 		log.Printf("[ERROR] dns application groups ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia dns application groups ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia dns application groups ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

@@ -24,11 +24,11 @@ The data source supports two modes:
 
 ```hcl
 data "zia_file_type_categories" "javascript" {
-    name = "FTCATEGORY_JAVASCRIPT"
+  name = "FTCATEGORY_JAVASCRIPT"
 }
 
 output "file_type_id" {
-    value = data.zia_file_type_categories.javascript.id
+  value = data.zia_file_type_categories.javascript.id
 }
 ```
 
@@ -36,11 +36,11 @@ output "file_type_id" {
 
 ```hcl
 data "zia_file_type_categories" "by_id" {
-    id = 10
+  id = 10
 }
 
 output "file_type_name" {
-    value = data.zia_file_type_categories.by_id.name
+  value = data.zia_file_type_categories.by_id.name
 }
 ```
 
@@ -48,8 +48,8 @@ output "file_type_name" {
 
 ```hcl
 data "zia_file_type_categories" "javascript_in_file_control" {
-    enums = "FILETYPECATEGORYFORFILETYPECONTROL"
-    name  = "FTCATEGORY_JAVASCRIPT"
+  enums = "FILETYPECATEGORYFORFILETYPECONTROL"
+  name  = "FTCATEGORY_JAVASCRIPT"
 }
 ```
 
@@ -58,17 +58,17 @@ data "zia_file_type_categories" "javascript_in_file_control" {
 ```hcl
 # Get all file types for File Type Control policy
 data "zia_file_type_categories" "all_file_control" {
-    enums = "FILETYPECATEGORYFORFILETYPECONTROL"
+  enums = "FILETYPECATEGORYFORFILETYPECONTROL"
 }
 
 # Access all categories
 output "all_file_types" {
-    value = data.zia_file_type_categories.all_file_control.categories
+  value = data.zia_file_type_categories.all_file_control.categories
 }
 
 # Get just the names
 output "file_type_names" {
-    value = data.zia_file_type_categories.all_file_control.categories[*].name
+  value = data.zia_file_type_categories.all_file_control.categories[*].name
 }
 ```
 
@@ -76,12 +76,12 @@ output "file_type_names" {
 
 ```hcl
 data "zia_file_type_categories" "predefined_only" {
-    enums = "FILETYPECATEGORYFORFILETYPECONTROL"
-    exclude_custom_file_types = true
+  enums                     = "FILETYPECATEGORYFORFILETYPECONTROL"
+  exclude_custom_file_types = true
 }
 
 output "predefined_file_types" {
-    value = data.zia_file_type_categories.predefined_only.categories
+  value = data.zia_file_type_categories.predefined_only.categories
 }
 ```
 
@@ -89,14 +89,14 @@ output "predefined_file_types" {
 
 ```hcl
 data "zia_file_type_categories" "dlp_types" {
-    enums = "ZSCALERDLP"
+  enums = "ZSCALERDLP"
 }
 
 # Use in a DLP rule
 resource "zia_dlp_web_rules" "example" {
-    name = "Example DLP Rule"
-    file_types = data.zia_file_type_categories.dlp_types.categories[*].name
-    # ... other configuration
+  name       = "Example DLP Rule"
+  file_types = data.zia_file_type_categories.dlp_types.categories[*].name
+  # ... other configuration
 }
 ```
 

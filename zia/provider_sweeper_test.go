@@ -1276,7 +1276,7 @@ func sweepTestURLCategories(client *testClient) error {
 				errorList = append(errorList, err)
 				continue
 			}
-			logSweptResource(resourcetype.URLCategories, (b.ID), b.ConfiguredName)
+			logSweptResource(resourcetype.URLCategories, b.ID, b.ConfiguredName)
 		}
 	}
 	// Log errors encountered during the deletion process

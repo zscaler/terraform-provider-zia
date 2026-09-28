@@ -25,11 +25,11 @@ The **zia_file_type_control_rules** resource allows the creation and management 
 
 ```hcl
 data "zia_department_management" "engineering" {
- name = "Engineering"
+  name = "Engineering"
 }
 
 data "zia_group_management" "normal_internet" {
-    name = "Normal_Internet"
+  name = "Normal_Internet"
 }
 
 data "zia_cloud_applications" "this" {
@@ -38,26 +38,26 @@ data "zia_cloud_applications" "this" {
 }
 
 resource "zia_file_type_control_rules" "this" {
-    name               = "Terraform_File_Type01"
-    description        = "Terraform_File_Type01"
-    state              = "ENABLED"
-    order              = 1
-    rank               = 7
-    filtering_action   = "BLOCK"
-    operation          = "DOWNLOAD"
-    active_content     = true
-    unscannable        = false
-    device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    file_types         = ["FTCATEGORY_MS_WORD", "FTCATEGORY_MS_POWERPOINT", "FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_EXCEL"]
-    protocols          = ["FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
-    cloud_applications = tolist([for app in data.zia_cloud_applications.this.applications : app["app"]])
+  name                = "Terraform_File_Type01"
+  description         = "Terraform_File_Type01"
+  state               = "ENABLED"
+  order               = 1
+  rank                = 7
+  filtering_action    = "BLOCK"
+  operation           = "DOWNLOAD"
+  active_content      = true
+  unscannable         = false
+  device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  file_types          = ["FTCATEGORY_MS_WORD", "FTCATEGORY_MS_POWERPOINT", "FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_EXCEL"]
+  protocols           = ["FOHTTP_RULE", "FTP_RULE", "HTTPS_RULE", "HTTP_RULE"]
+  cloud_applications  = tolist([for app in data.zia_cloud_applications.this.applications : app["app"]])
 
-    departments {
-        id = [ data.zia_department_management.engineering.id ]
-    }
-    groups {
-        id = [ data.zia_group_management.normal_internet.id ]
-    }
+  departments {
+    id = [data.zia_department_management.engineering.id]
+  }
+  groups {
+    id = [data.zia_group_management.normal_internet.id]
+  }
 }
 ```
 
@@ -73,14 +73,14 @@ data "zia_cloud_applications" "chatgpt_family" {
 }
 
 resource "zia_file_type_control_rules" "block_chatgpt_downloads" {
-  name               = "Block ChatGPT Downloads"
-  state              = "ENABLED"
-  order              = 1
-  rank               = 7
-  filtering_action   = "BLOCK"
-  operation          = "DOWNLOAD"
-  protocols          = ["HTTPS_RULE", "HTTP_RULE"]
-  file_types         = ["FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_WORD"]
+  name             = "Block ChatGPT Downloads"
+  state            = "ENABLED"
+  order            = 1
+  rank             = 7
+  filtering_action = "BLOCK"
+  operation        = "DOWNLOAD"
+  protocols        = ["HTTPS_RULE", "HTTP_RULE"]
+  file_types       = ["FTCATEGORY_PDF_DOCUMENT", "FTCATEGORY_MS_WORD"]
 
   cloud_applications = data.zia_cloud_applications.chatgpt_family.applications[*].app
 }
@@ -95,14 +95,14 @@ data "zia_cloud_applications" "ai_anthropic" {
 }
 
 resource "zia_file_type_control_rules" "block_anthropic_uploads" {
-  name               = "Block Anthropic Uploads"
-  state              = "ENABLED"
-  order              = 1
-  rank               = 7
-  filtering_action   = "BLOCK"
-  operation          = "UPLOAD"
-  protocols          = ["HTTPS_RULE", "HTTP_RULE"]
-  file_types         = ["FTCATEGORY_PDF_DOCUMENT"]
+  name             = "Block Anthropic Uploads"
+  state            = "ENABLED"
+  order            = 1
+  rank             = 7
+  filtering_action = "BLOCK"
+  operation        = "UPLOAD"
+  protocols        = ["HTTPS_RULE", "HTTP_RULE"]
+  file_types       = ["FTCATEGORY_PDF_DOCUMENT"]
 
   cloud_applications = [for app in data.zia_cloud_applications.ai_anthropic.applications : app["app"]]
 }

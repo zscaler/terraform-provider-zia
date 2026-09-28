@@ -19,8 +19,8 @@ Use the **zia_devices** data source to get information about a device in the Zsc
 
 ```hcl
 # ZIA Admin User Data Source
-data "zia_devices" "device"{
-    name = "administrator"
+data "zia_devices" "device" {
+  name = "administrator"
 }
 ```
 
@@ -29,16 +29,16 @@ data "zia_devices" "device"{
 ```hcl
 # Use JMESPath to pre-filter devices by OS type
 data "zia_devices" "windows_device" {
-    name   = "workstation-01"
-    search = "[?osType == 'WINDOWS_OS']"
+  name   = "workstation-01"
+  search = "[?osType == 'WINDOWS_OS']"
 }
 ```
 
 ```hcl
 # Filter devices by model
 data "zia_devices" "device" {
-    name   = "administrator"
-    search = "[?contains(deviceModel, 'MacBook')]"
+  name   = "administrator"
+  search = "[?contains(deviceModel, 'MacBook')]"
 }
 ```
 

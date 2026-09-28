@@ -21,7 +21,7 @@ Use the **zia_sub_cloud** data source to get information about a subcloud availa
 
 ```hcl
 data "zia_sub_cloud" "this" {
-    name = "SubCloud01"
+  name = "SubCloud01"
 }
 ```
 
@@ -29,7 +29,7 @@ data "zia_sub_cloud" "this" {
 
 ```hcl
 data "zia_sub_cloud" "this" {
-    id = 1254674585
+  id = 1254674585
 }
 ```
 

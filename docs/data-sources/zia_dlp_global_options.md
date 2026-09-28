@@ -19,7 +19,7 @@ Use the **zia_dlp_global_options** data source to get information about a ZIA DL
 
 ```hcl
 #
-data "zia_dlp_global_options" "this"{
+data "zia_dlp_global_options" "this" {
 }
 ```
 

@@ -24,19 +24,19 @@ resource "zia_http_header_profile" "this" {
   description = "Example header profile"
 
   http_header_profile_criteria {
-    header   = "ORIGIN"
+    header           = "ORIGIN"
     cloud_app_bitmap = ["CHATGPT_AI"]
-    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
   }
   http_header_profile_criteria {
-    header   = "REFERER"
+    header           = "REFERER"
     cloud_app_bitmap = ["CHATGPT_AI"]
-    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
   }
   http_header_profile_criteria {
-    header   = "USERAGENT"
-    user_agent_bitmap = "FIREFOX"
-    operator = "UAVERSIONEQ"
+    header             = "USERAGENT"
+    user_agent_bitmap  = "FIREFOX"
+    operator           = "UAVERSIONEQ"
     user_agent_version = "123.0"
   }
 }

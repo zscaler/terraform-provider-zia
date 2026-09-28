@@ -18,16 +18,16 @@ Use the **zia_tenant_restriction_profile** data source to get information about 
 ## Example Usage - By Name
 
 ```hcl
-data "zia_tenant_restriction_profile" "this"{
-    name = "MiicrosoftO365Login"
+data "zia_tenant_restriction_profile" "this" {
+  name = "MiicrosoftO365Login"
 }
 ```
 
 ## Example Usage - By ID
 
 ```hcl
-data "zia_tenant_restriction_profile" "this"{
-    id = "5421656"
+data "zia_tenant_restriction_profile" "this" {
+  id = "5421656"
 }
 ```
 

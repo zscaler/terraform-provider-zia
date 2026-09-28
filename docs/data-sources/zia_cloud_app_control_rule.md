@@ -19,9 +19,9 @@ Use the **zia_cloud_app_control_rule** data source to get information about a ZI
 
 ```hcl
 # Retrieve a Cloud App Control Policy by name
-data "zia_cloud_app_control_rule" "this"{
-    name = "Example"
-    type = "STREAMING_MEDIA"
+data "zia_cloud_app_control_rule" "this" {
+  name = "Example"
+  type = "STREAMING_MEDIA"
 }
 ```
 
@@ -59,7 +59,7 @@ The following arguments are supported:
 
 * `device_trust_levels` - (Optional) List of device trust levels for which the rule must be applied. This field is applicable for devices that are managed using Zscaler Client Connector. The trust levels are assigned to the devices based on your posture configurations in the Zscaler Client Connector Portal. If no value is set, this field is ignored during the policy evaluation. Supported values: `ANY`, `UNKNOWN_DEVICETRUSTLEVEL`, `LOW_TRUST`, `MEDIUM_TRUST`, `HIGH_TRUST`
 * `user_risk_score_levels` (List) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
-* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`, `BRAVE`
 * `time_quota` - (Number) Time quota in minutes, after which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `size_quota` - (Number) Size quota in MB beyond which the Cloud App Control Rules rule is applied. If not set, no quota is enforced. If a policy rule action is set to `BLOCK`, this field is not applicable.
 * `description` - (String) Additional information about the rule

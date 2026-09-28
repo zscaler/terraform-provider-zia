@@ -19,15 +19,15 @@ Use the **zia_dlp_engines** data source to get information about a the list of D
 
 ```hcl
 # Retrieve a DLP ICAP Server by name
-data "zia_dlp_icap_servers" "example"{
-    name = "Example"
+data "zia_dlp_icap_servers" "example" {
+  name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a DLP ICAP Server by ID
-data "zia_dlp_icap_servers" "example"{
-    id = 1234567890
+data "zia_dlp_icap_servers" "example" {
+  id = 1234567890
 }
 ```
 

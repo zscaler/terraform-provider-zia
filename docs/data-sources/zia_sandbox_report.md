@@ -20,7 +20,7 @@ Use the **zia_sandbox_report** data source gets a full (i.e., complete) or summa
 ```hcl
 data "zia_sandbox_report" "this" {
   md5_hash = "F69CA01D65E6C8F9E3540029E5F6AB92"
-  details = "full"
+  details  = "full"
 }
 ```
 
@@ -29,7 +29,7 @@ data "zia_sandbox_report" "this" {
 ```hcl
 data "zia_sandbox_report" "this" {
   md5_hash = "F69CA01D65E6C8F9E3540029E5F6AB92"
-  details = "summary"
+  details  = "summary"
 }
 ```
 

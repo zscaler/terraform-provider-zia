@@ -543,7 +543,7 @@ func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("deletion of predefined rule '%s' is not allowed", rule.Name))
 	}
 
-	log.Printf("[INFO] Deleting traffic capture rules rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting traffic capture rules rule ID: %v\n", d.Id())
 	if _, err := traffic_capture.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}

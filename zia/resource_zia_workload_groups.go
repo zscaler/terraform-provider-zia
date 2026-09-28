@@ -246,7 +246,7 @@ func resourceWorkloadGroupsDelete(ctx context.Context, d *schema.ResourceData, m
 	if !ok {
 		log.Printf("[ERROR] workload group ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia workload group ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia workload group ID: %v\n", d.Id())
 
 	if _, err := workloadgroups.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

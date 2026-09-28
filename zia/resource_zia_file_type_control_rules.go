@@ -521,7 +521,7 @@ func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceD
 	if !ok {
 		log.Printf("[ERROR] file type control rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting file type control rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting file type control rule ID: %v\n", d.Id())
 
 	if _, err := filetypecontrol.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

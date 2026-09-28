@@ -20,14 +20,14 @@ Use the **zia_gre_internal_ip_range_list** data source to get information about 
 ```hcl
 # Retrieve GRE available Internal IP Ranges
 # By default it will return the first 10 available internal ip ranges
-data "zia_gre_internal_ip_range_list" "example"{
+data "zia_gre_internal_ip_range_list" "example" {
 }
 ```
 
 ```hcl
 # Retrieve GRE available Internal IP Ranges
 # By using the `required_count` parameter it will return the indicated number of IP ranges.
-data "zia_gre_internal_ip_range_list" "example"{
+data "zia_gre_internal_ip_range_list" "example" {
   required_count = 20
 }
 ```

@@ -174,7 +174,7 @@ func resourceFWNetworkApplicationGroupsDelete(ctx context.Context, d *schema.Res
 	if !ok {
 		log.Printf("[ERROR] network application groups ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting network application groups ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting network application groups ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

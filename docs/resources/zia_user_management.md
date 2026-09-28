@@ -20,25 +20,25 @@ The **zia_user_management** resource allows the creation and management of local
 ```hcl
 
 data "zia_group_management" "normal_internet" {
- name = "Normal_Internet"
+  name = "Normal_Internet"
 }
 
 data "zia_department_management" "engineering" {
- name = "Engineering"
+  name = "Engineering"
 }
 
 # ZIA Local User Account
 ######### PASSWORDS IN THIS FILE ARE FAKE AND NOT USED IN PRODUCTION SYSTEMS #########
 resource "zia_user_management" "john_ashcroft" {
- name         = "John Ashcroft"
- email        = "john.ashcroft@acme.com"
- password     = "*********************"
- auth_methods = ["BASIC"]
- groups {
-  id = data.zia_group_management.normal_internet.id
+  name         = "John Ashcroft"
+  email        = "john.ashcroft@acme.com"
+  password     = "*********************"
+  auth_methods = ["BASIC"]
+  groups {
+    id = data.zia_group_management.normal_internet.id
   }
- department {
-  id = data.zia_department_management.engineering.id
+  department {
+    id = data.zia_department_management.engineering.id
   }
 }
 ```

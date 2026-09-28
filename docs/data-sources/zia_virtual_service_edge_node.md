@@ -18,8 +18,8 @@ Use the **zia_virtual_service_edge_node** data source to get information about a
 ## Example Usage
 
 ```hcl
-data "zia_virtual_service_edge_node" "this"{
-    name = "VSENode01"
+data "zia_virtual_service_edge_node" "this" {
+  name = "VSENode01"
 }
 ```
 

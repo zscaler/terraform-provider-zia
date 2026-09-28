@@ -21,7 +21,7 @@ Use the **zia_firewall_filtering_network_application_groups** data source to get
 ```hcl
 # ZIA IP Source Groups
 data "zia_firewall_filtering_network_application_groups" "example" {
-    name = "example"
+  name = "example"
 }
 ```
 

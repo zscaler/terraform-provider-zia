@@ -19,21 +19,21 @@ Use the **zia_device_groups** data source to get information about a device grou
 
 ```hcl
 # ZIA Admin User Data Source
-data "zia_device_groups" "ios"{
-    name = "IOS"
+data "zia_device_groups" "ios" {
+  name = "IOS"
 }
 ```
 
 ```hcl
-data "zia_device_groups" "android"{
-    name = "Android"
+data "zia_device_groups" "android" {
+  name = "Android"
 }
 ```
 
 ## Example Usage - Return All Groups
 
 ```hcl
-data "zia_device_groups" "all"{
+data "zia_device_groups" "all" {
 }
 ```
 

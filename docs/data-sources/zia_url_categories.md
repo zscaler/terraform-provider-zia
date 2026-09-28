@@ -19,7 +19,7 @@ Use the **zia_url_categories** data source to get information about all or custo
 
 ```hcl
 data "zia_url_categories" "this" {
-    configured_name = "Example"
+  configured_name = "Example"
 }
 ```
 
@@ -27,7 +27,7 @@ data "zia_url_categories" "this" {
 
 ```hcl
 data "zia_url_categories" "this" {
-    id = "CUSTOM_08"
+  id = "CUSTOM_08"
 }
 ```
 
@@ -35,8 +35,8 @@ data "zia_url_categories" "this" {
 
 ```hcl
 data "zia_url_categories" "url_category_example" {
-    configured_name = "My URL Category"
-    type            = "URL_CATEGORY"
+  configured_name = "My URL Category"
+  type            = "URL_CATEGORY"
 }
 ```
 
@@ -44,8 +44,8 @@ data "zia_url_categories" "url_category_example" {
 
 ```hcl
 data "zia_url_categories" "tld_category_example" {
-    configured_name = "tld_russia"
-    type            = "TLD_CATEGORY"
+  configured_name = "tld_russia"
+  type            = "TLD_CATEGORY"
 }
 ```
 
@@ -53,8 +53,8 @@ data "zia_url_categories" "tld_category_example" {
 
 ```hcl
 data "zia_url_categories" "all_types_example" {
-    configured_name = "Example"
-    type            = "ALL"
+  configured_name = "Example"
+  type            = "ALL"
 }
 ```
 
@@ -62,7 +62,7 @@ data "zia_url_categories" "all_types_example" {
 
 ```hcl
 data "zia_url_categories" "this" {
-    id = "CORPORATE_MARKETING"
+  id = "CORPORATE_MARKETING"
 }
 ```
 

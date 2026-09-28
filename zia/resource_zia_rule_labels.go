@@ -173,7 +173,7 @@ func resourceRuleLabelsDelete(ctx context.Context, d *schema.ResourceData, meta 
 	if !ok {
 		log.Printf("[ERROR] rule label ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting zia rule label ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting zia rule label ID: %v\n", d.Id())
 	err := DetachRuleIDNameExtensions(
 		ctx,
 		zClient,

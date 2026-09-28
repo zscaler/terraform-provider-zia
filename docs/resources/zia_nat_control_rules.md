@@ -27,16 +27,16 @@ The **zia_nat_control_rules** resource allows the creation and management of NAT
 
 ```hcl
 resource "zia_nat_control_rules" "this" {
-    name = "DNAT_02"
-    description = "DNAT_02"
-    order=1
-    rank=7
-    state = "ENABLED"
-    redirect_port="2000"
-    redirect_ip="1.1.1.1"
-    src_ips=["192.168.100.0/24", "192.168.200.1"]
-    dest_addresses=["3.217.228.0-3.217.231.255", "3.235.112.0-3.235.119.255", "35.80.88.0-35.80.95.255", "server1.acme.com", "*.acme.com"]
-    dest_countries=["BR", "CA", "GB"]
+  name           = "DNAT_02"
+  description    = "DNAT_02"
+  order          = 1
+  rank           = 7
+  state          = "ENABLED"
+  redirect_port  = "2000"
+  redirect_ip    = "1.1.1.1"
+  src_ips        = ["192.168.100.0/24", "192.168.200.1"]
+  dest_addresses = ["3.217.228.0-3.217.231.255", "3.235.112.0-3.235.119.255", "35.80.88.0-35.80.95.255", "server1.acme.com", "*.acme.com"]
+  dest_countries = ["BR", "CA", "GB"]
   departments {
     id = [8061246]
   }

@@ -37,13 +37,13 @@ Starting with **version 4.6.2**, the provider automatically determines latitude 
 ```hcl
 # ZIA Traffic Forwarding - Static IP
 # The provider automatically determines latitude and longitude from the IP address
-resource "zia_traffic_forwarding_static_ip" "example"{
-    ip_address   = "122.164.82.249"
-    routable_ip  = true
-    comment      = "Static IP with auto-determined coordinates"
-    geo_override = true
-    # latitude and longitude are omitted - provider will auto-determine them
-    # State will be populated with exact API values (e.g., latitude=13.0895, longitude=80.2739)
+resource "zia_traffic_forwarding_static_ip" "example" {
+  ip_address   = "122.164.82.249"
+  routable_ip  = true
+  comment      = "Static IP with auto-determined coordinates"
+  geo_override = true
+  # latitude and longitude are omitted - provider will auto-determine them
+  # State will be populated with exact API values (e.g., latitude=13.0895, longitude=80.2739)
 }
 ```
 
@@ -51,13 +51,13 @@ resource "zia_traffic_forwarding_static_ip" "example"{
 
 ```hcl
 # You can still explicitly provide coordinates if needed
-resource "zia_traffic_forwarding_static_ip" "custom_location"{
-    ip_address   = "1.1.1.1"
-    routable_ip  = true
-    comment      = "Static IP with custom coordinates"
-    geo_override = true
-    latitude     = -36.848461
-    longitude    = 174.763336
+resource "zia_traffic_forwarding_static_ip" "custom_location" {
+  ip_address   = "1.1.1.1"
+  routable_ip  = true
+  comment      = "Static IP with custom coordinates"
+  geo_override = true
+  latitude     = -36.848461
+  longitude    = 174.763336
 }
 ```
 
@@ -65,12 +65,12 @@ resource "zia_traffic_forwarding_static_ip" "custom_location"{
 
 ```hcl
 # When geo_override is false or omitted, all geo information is auto-determined
-resource "zia_traffic_forwarding_static_ip" "auto_geo"{
-    ip_address  = "8.8.8.8"
-    routable_ip = true
-    comment     = "Fully automatic geolocation"
-    # geo_override defaults to false
-    # latitude and longitude auto-determined and populated in state
+resource "zia_traffic_forwarding_static_ip" "auto_geo" {
+  ip_address  = "8.8.8.8"
+  routable_ip = true
+  comment     = "Fully automatic geolocation"
+  # geo_override defaults to false
+  # latitude and longitude auto-determined and populated in state
 }
 ```
 
@@ -138,45 +138,45 @@ The provider handles coordinates intelligently based on your configuration:
 ```hcl
 # Create static IP without specifying coordinates
 resource "zia_traffic_forwarding_static_ip" "gre_endpoint" {
-    ip_address   = "203.0.113.10"
-    routable_ip  = true
-    comment      = "GRE tunnel endpoint"
-    geo_override = true
+  ip_address   = "203.0.113.10"
+  routable_ip  = true
+  comment      = "GRE tunnel endpoint"
+  geo_override = true
 }
 
 # Use the static IP with GRE VIP recommendation
 data "zia_traffic_forwarding_gre_vip_recommended_list" "vips" {
-    source_ip      = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
-    required_count = 2
+  source_ip      = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
+  required_count = 2
 }
 
 # Create GRE tunnel
 resource "zia_traffic_forwarding_gre_tunnel" "main" {
-    source_ip      = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
-    comment        = "Main GRE tunnel"
-    within_country = false
-    ip_unnumbered  = false
+  source_ip      = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
+  comment        = "Main GRE tunnel"
+  within_country = false
+  ip_unnumbered  = false
 
-    primary_dest_vip {
-        datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].datacenter
-        id         = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].id
-        virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].virtual_ip
-    }
+  primary_dest_vip {
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].datacenter
+    id         = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].id
+    virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[0].virtual_ip
+  }
 
-    secondary_dest_vip {
-        datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].datacenter
-        id         = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].id
-        virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].virtual_ip
-    }
+  secondary_dest_vip {
+    datacenter = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].datacenter
+    id         = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].id
+    virtual_ip = data.zia_traffic_forwarding_gre_vip_recommended_list.vips.list[1].virtual_ip
+  }
 }
 
 # Output showing auto-determined coordinates
 output "static_ip_coordinates" {
-    value = {
-        ip        = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
-        latitude  = zia_traffic_forwarding_static_ip.gre_endpoint.latitude
-        longitude = zia_traffic_forwarding_static_ip.gre_endpoint.longitude
-    }
+  value = {
+    ip        = zia_traffic_forwarding_static_ip.gre_endpoint.ip_address
+    latitude  = zia_traffic_forwarding_static_ip.gre_endpoint.latitude
+    longitude = zia_traffic_forwarding_static_ip.gre_endpoint.longitude
+  }
 }
 ```
 
@@ -184,36 +184,36 @@ output "static_ip_coordinates" {
 
 ```hcl
 locals {
-    office_ips = {
-        mumbai     = "103.21.244.1"
-        chennai    = "122.164.82.249"
-        singapore  = "203.0.113.50"
-        tokyo      = "203.0.113.100"
-    }
+  office_ips = {
+    mumbai    = "103.21.244.1"
+    chennai   = "122.164.82.249"
+    singapore = "203.0.113.50"
+    tokyo     = "203.0.113.100"
+  }
 }
 
 # Create multiple static IPs without specifying coordinates
 resource "zia_traffic_forwarding_static_ip" "offices" {
-    for_each = local.office_ips
+  for_each = local.office_ips
 
-    ip_address   = each.value
-    routable_ip  = true
-    comment      = "Office in ${each.key}"
-    geo_override = true
-    # No coordinates specified for any of them!
-    # Provider auto-determines all coordinates
+  ip_address   = each.value
+  routable_ip  = true
+  comment      = "Office in ${each.key}"
+  geo_override = true
+  # No coordinates specified for any of them!
+  # Provider auto-determines all coordinates
 }
 
 # Output all coordinates
 output "office_coordinates" {
-    value = {
-        for name, ip in zia_traffic_forwarding_static_ip.offices :
-        name => {
-            ip_address = ip.ip_address
-            latitude   = ip.latitude
-            longitude  = ip.longitude
-        }
+  value = {
+    for name, ip in zia_traffic_forwarding_static_ip.offices :
+    name => {
+      ip_address = ip.ip_address
+      latitude   = ip.latitude
+      longitude  = ip.longitude
     }
+  }
 }
 ```
 
@@ -222,17 +222,17 @@ output "office_coordinates" {
 ```hcl
 # Static IP with auto-determined coordinates
 resource "zia_traffic_forwarding_static_ip" "vpn_endpoint" {
-    ip_address   = "198.51.100.25"
-    routable_ip  = true
-    comment      = "VPN endpoint"
-    geo_override = true
+  ip_address   = "198.51.100.25"
+  routable_ip  = true
+  comment      = "VPN endpoint"
+  geo_override = true
 }
 
 # VPN credentials using the static IP
 resource "zia_traffic_forwarding_vpn_credentials" "branch_office" {
-    type        = "IP"
-    ip_address  = zia_traffic_forwarding_static_ip.vpn_endpoint.ip_address
-    comments    = "Branch office VPN"
+  type       = "IP"
+  ip_address = zia_traffic_forwarding_static_ip.vpn_endpoint.ip_address
+  comments   = "Branch office VPN"
 }
 ```
 
@@ -299,13 +299,13 @@ The coordinates reflect the IP address's actual geolocation as determined by Zsc
 
 ```hcl
 resource "zia_traffic_forwarding_static_ip" "best_practice" {
-    ip_address   = "203.0.113.10"
-    routable_ip  = true
-    comment      = "Production endpoint"
-    geo_override = true
-    # Omit latitude and longitude
-    # Provider will auto-determine accurate coordinates
-    # No drift, no manual lookups, always accurate
+  ip_address   = "203.0.113.10"
+  routable_ip  = true
+  comment      = "Production endpoint"
+  geo_override = true
+  # Omit latitude and longitude
+  # Provider will auto-determine accurate coordinates
+  # No drift, no manual lookups, always accurate
 }
 ```
 
@@ -322,12 +322,12 @@ Only provide explicit coordinates if you have a specific requirement:
 
 ```hcl
 resource "zia_traffic_forwarding_static_ip" "custom" {
-    ip_address   = "203.0.113.10"
-    routable_ip  = true
-    comment      = "Custom location for testing"
-    geo_override = true
-    latitude     = 40.7128   # Only if you need specific coordinates
-    longitude    = -74.0060  # Only if you need specific coordinates
+  ip_address   = "203.0.113.10"
+  routable_ip  = true
+  comment      = "Custom location for testing"
+  geo_override = true
+  latitude     = 40.7128  # Only if you need specific coordinates
+  longitude    = -74.0060 # Only if you need specific coordinates
 }
 ```
 
@@ -345,12 +345,12 @@ If you're upgrading from an older provider version (< 4.6.2), you may have confi
 
 ```hcl
 resource "zia_traffic_forwarding_static_ip" "old_style" {
-    ip_address   = "122.164.82.249"
-    routable_ip  = true
-    comment      = "Old configuration"
-    geo_override = true
-    latitude     = 13.0895   # Manually specified
-    longitude    = 80.2739   # Manually specified
+  ip_address   = "122.164.82.249"
+  routable_ip  = true
+  comment      = "Old configuration"
+  geo_override = true
+  latitude     = 13.0895 # Manually specified
+  longitude    = 80.2739 # Manually specified
 }
 ```
 
@@ -360,11 +360,11 @@ resource "zia_traffic_forwarding_static_ip" "old_style" {
 
 ```hcl
 resource "zia_traffic_forwarding_static_ip" "old_style" {
-    ip_address   = "122.164.82.249"
-    routable_ip  = true
-    comment      = "Migrated configuration"
-    geo_override = true
-    # Removed: latitude and longitude
+  ip_address   = "122.164.82.249"
+  routable_ip  = true
+  comment      = "Migrated configuration"
+  geo_override = true
+  # Removed: latitude and longitude
 }
 ```
 
@@ -403,21 +403,21 @@ terraform plan
 ```hcl
 # ❌ Old way - manual coordinates required
 resource "zia_traffic_forwarding_static_ip" "chennai" {
-    ip_address   = "122.164.82.249"
-    routable_ip  = true
-    comment      = "Chennai office"
-    geo_override = true
-    latitude     = 13.0895   # Had to look this up
-    longitude    = 80.2739   # Had to look this up
+  ip_address   = "122.164.82.249"
+  routable_ip  = true
+  comment      = "Chennai office"
+  geo_override = true
+  latitude     = 13.0895 # Had to look this up
+  longitude    = 80.2739 # Had to look this up
 }
 
 resource "zia_traffic_forwarding_static_ip" "mumbai" {
-    ip_address   = "103.21.244.1"
-    routable_ip  = true
-    comment      = "Mumbai office"
-    geo_override = true
-    latitude     = 19.0760   # Had to look this up
-    longitude    = 72.8777   # Had to look this up
+  ip_address   = "103.21.244.1"
+  routable_ip  = true
+  comment      = "Mumbai office"
+  geo_override = true
+  latitude     = 19.0760 # Had to look this up
+  longitude    = 72.8777 # Had to look this up
 }
 ```
 
@@ -426,19 +426,19 @@ resource "zia_traffic_forwarding_static_ip" "mumbai" {
 ```hcl
 # ✅ New way - auto-determined coordinates
 resource "zia_traffic_forwarding_static_ip" "chennai" {
-    ip_address   = "122.164.82.249"
-    routable_ip  = true
-    comment      = "Chennai office"
-    geo_override = true
-    # No coordinates needed!
+  ip_address   = "122.164.82.249"
+  routable_ip  = true
+  comment      = "Chennai office"
+  geo_override = true
+  # No coordinates needed!
 }
 
 resource "zia_traffic_forwarding_static_ip" "mumbai" {
-    ip_address   = "103.21.244.1"
-    routable_ip  = true
-    comment      = "Mumbai office"
-    geo_override = true
-    # No coordinates needed!
+  ip_address   = "103.21.244.1"
+  routable_ip  = true
+  comment      = "Mumbai office"
+  geo_override = true
+  # No coordinates needed!
 }
 ```
 

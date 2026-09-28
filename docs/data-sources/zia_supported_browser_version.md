@@ -185,7 +185,7 @@ data "zia_supported_browser_version" "chrome_with_c100x" {
 
 The following arguments are supported:
 
-* `browser_type` - (Optional, String) Return only the supported version entry for this browser type. Must be one of: `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`. Omit to return every browser type.
+* `browser_type` - (Optional, String) Return only the supported version entry for this browser type. Must be one of: `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`, `BRAVE`. Omit to return every browser type.
 
 * `search` - (Optional, String) A [JMESPath](https://jmespath.org/) expression applied to the response client-side after all data has been retrieved from the API. Useful for content-based filtering (e.g. "browsers whose older versions contain X") and for reshaping the result set. Field names in expressions must use the API's camelCase names (`browserType`, `versions`, `olderVersions`). When combined with `browser_type`, the JMESPath expression runs first and the enum filter is applied afterwards.
 
@@ -197,7 +197,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `browsers` - (List of Object) The (optionally filtered) list of supported browser entries. Each element exposes the following attributes:
 
-    * `browser_type` - (String) The browser type. One of `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`.
+    * `browser_type` - (String) The browser type. One of `CHROME`, `FIREFOX`, `SAFARI`, `OPERA`, `MSCHREDGE`, `BRAVE`.
 
     * `versions` - (List of String) The currently supported version identifiers for this browser type.
 

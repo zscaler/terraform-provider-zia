@@ -169,7 +169,7 @@ resource "%s" "%s" {
 	url_categories = ["ANY"]
     protocols = ["ANY_RULE"]
 	device_trust_levels = [	"UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST" ]
-	user_agent_types = [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER" ]
+	user_agent_types = [	"OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "OTHER", "BRAVE" ]
 	user_risk_score_levels = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     request_methods = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
 

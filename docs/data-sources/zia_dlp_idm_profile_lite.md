@@ -19,15 +19,15 @@ Use the **zia_dlp_idm_profile_lite** data source to get summarized information a
 
 ```hcl
 # Retrieve a DLP IDM Profile Lite by name
-data "zia_dlp_idm_profile_lite" "example"{
-    name = "Example"
+data "zia_dlp_idm_profile_lite" "example" {
+  name = "Example"
 }
 ```
 
 ```hcl
 # Retrieve a DLP IDM Profile Lite by ID
-data "zia_dlp_idm_profile_lite" "example"{
-    name = "Example"
+data "zia_dlp_idm_profile_lite" "example" {
+  name = "Example"
 }
 ```
 

@@ -756,7 +756,7 @@ func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta
 	if !ok {
 		log.Printf("[ERROR] web dlp rule not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting dlp rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting dlp rule ID: %v\n", d.Id())
 
 	if _, err := dlp_web_rules.Delete(ctx, service, id); err != nil {
 		if strings.Contains(err.Error(), "RESOURCE_NOT_FOUND") {

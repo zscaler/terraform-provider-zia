@@ -19,8 +19,8 @@ Use the **zia_dlp_notification_templates** data source to get information about 
 
 ```hcl
 # Retrieve a DLP Template by name
-data "zia_dlp_notification_templates" "example"{
-    name = "DLP Auditor Template Test"
+data "zia_dlp_notification_templates" "example" {
+  name = "DLP Auditor Template Test"
 }
 ```
 

@@ -20,7 +20,7 @@ See [About Cloud Application Risk Profile](https://help.zscaler.com/zia/about-cl
 
 ```hcl
 data "zia_risk_profiles" "this" {
-    name = "RiskProfile01"
+  name = "RiskProfile01"
 }
 ```
 
@@ -28,7 +28,7 @@ data "zia_risk_profiles" "this" {
 
 ```hcl
 data "zia_risk_profiles" "this" {
-    id = "5445585"
+  id = "5445585"
 }
 ```
 

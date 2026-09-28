@@ -20,9 +20,9 @@ See [Adding NSS Servers](https://help.zscaler.com/zia/adding-nss-servers) for mo
 
 ```hcl
 resource "zia_nss_server" "this" {
-    name = "NSSServer01"
-    status = "ENABLED"
-    type = "NSS_FOR_FIREWALL"
+  name   = "NSSServer01"
+  status = "ENABLED"
+  type   = "NSS_FOR_FIREWALL"
 }
 ```
 

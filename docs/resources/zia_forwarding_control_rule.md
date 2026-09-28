@@ -47,7 +47,7 @@ resource "zia_forwarding_control_rule" "this" {
 
 ```hcl
 data "zia_firewall_filtering_network_service" "this" {
-    name = "DNS"
+  name = "DNS"
 }
 
 resource "zia_forwarding_control_rule" "this" {
@@ -63,16 +63,16 @@ resource "zia_forwarding_control_rule" "this" {
   dest_ip_categories = ["ZSPROXY_IPS", "CUSTOM_01"]
   dest_countries     = ["CA", "US"]
   nw_services {
-      id = [ data.zia_firewall_filtering_network_service.this.id ]
+    id = [data.zia_firewall_filtering_network_service.this.id]
   }
   departments {
-      id = [ data.zia_department_management.engineering.id ]
-    }
+    id = [data.zia_department_management.engineering.id]
+  }
   groups {
-      id = [ data.zia_group_management.normal_internet.id ]
+    id = [data.zia_group_management.normal_internet.id]
   }
   time_windows {
-      id = [ data.zia_firewall_filtering_time_window.work_hours.id ]
+    id = [data.zia_firewall_filtering_time_window.work_hours.id]
   }
 }
 ```
@@ -93,17 +93,17 @@ data "zpa_application_segment" "this" {
 }
 
 resource "zia_forwarding_control_zpa_gateway" "this" {
-    name = "ZPA_GW01"
-    description = "ZPA_GW01"
-    type = "ZPA"
-    zpa_server_group {
-      external_id = data.zpa_server_group.this.id
-      name = data.zpa_server_group.this.id
-    }
-    zpa_app_segments {
-        external_id = data.zpa_application_segment.this.id
-        name = data.zpa_application_segment.this.name
-    }
+  name        = "ZPA_GW01"
+  description = "ZPA_GW01"
+  type        = "ZPA"
+  zpa_server_group {
+    external_id = data.zpa_server_group.this.id
+    name        = data.zpa_server_group.this.id
+  }
+  zpa_app_segments {
+    external_id = data.zpa_application_segment.this.id
+    name        = data.zpa_application_segment.this.name
+  }
 }
 
 resource "zia_forwarding_control_rule" "this" {
@@ -129,7 +129,7 @@ resource "zia_forwarding_control_rule" "this" {
 
 ```hcl
 data "zia_forwarding_control_proxies" "this" {
-    name                 = "GW01"
+  name = "GW01"
 }
 
 resource "zia_forwarding_control_rule" "this" {

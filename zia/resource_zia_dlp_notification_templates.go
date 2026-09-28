@@ -201,7 +201,7 @@ func resourceDLPNotificationTemplatesDelete(ctx context.Context, d *schema.Resou
 	if !ok {
 		log.Printf("[ERROR] dlp notification template ID not set: %v\n", id)
 	}
-	log.Printf("[INFO] Deleting dlp notification template ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting dlp notification template ID: %v\n", d.Id())
 
 	if _, err := dlp_notification_templates.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)

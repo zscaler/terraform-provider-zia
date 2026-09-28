@@ -1,12 +1,24 @@
 # Changelog
 
+## 4.8.9 (September, 25 2026)
+
+### Notes
+
+- Release date: **(September, 25 2026)**
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #607](https://github.com/zscaler/terraform-provider-zia/pull/607) - Added BRAVE to `user_agent_types` and `browser_type`.
+  - Upgraded SDK to GO v1.26
+
 ## 4.8.8 (August, 26 2026)
 
 ### Notes
 
 - Release date: **(August, 26 2026)**
 - Supported Terraform version: **v1.x**
--
+
 ### Bug Fixes
 
 - [PR #603](https://github.com/zscaler/terraform-provider-zia/pull/603) - Added new ZIA  attribute to resource and datasource `zia_cloud_app_control_rule`
@@ -2212,7 +2224,7 @@ Administrators who used previous versions of the provider, and followed instruct
 terraform {
   required_providers {
     zia = {
-      source = "zscaler/zia"
+      source  = "zscaler/zia"
       version = "2.0.3"
     }
   }

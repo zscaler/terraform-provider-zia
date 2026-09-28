@@ -22,8 +22,8 @@ Use the **zia_dlp_engines** resource allows the creation and management of ZIA D
 ```hcl
 # Retrieve a DLP Engine by name
 resource "zia_dlp_engines" "this" {
-  name = "Example"
-  description = "Example"
+  name              = "Example"
+  description       = "Example"
   engine_expression = "((D63.S > 1))"
   custom_dlp_engine = true
 }

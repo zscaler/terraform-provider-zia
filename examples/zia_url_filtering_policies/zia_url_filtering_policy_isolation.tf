@@ -23,6 +23,7 @@ resource "zia_url_filtering_rules" "this" {
         "MSEDGE",
         "CHROME",
         "SAFARI",
-        "MSCHREDGE"
+        "MSCHREDGE",
+        "BRAVE"
     ]
 }

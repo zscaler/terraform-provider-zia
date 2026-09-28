@@ -51,21 +51,21 @@ data "zpa_application_segment" "this2" {
 }
 
 resource "zia_forwarding_control_zpa_gateway" "this" {
-    name = "ZPA_GW01"
-    description = "ZPA_GW01"
-    type = "ZPA"
-    zpa_server_group {
-      external_id = data.zpa_server_group.this.id
-      name = data.zpa_server_group.this.name
-    }
-    zpa_app_segments {
-        external_id = data.zpa_application_segment.this1.id
-        name = data.zpa_application_segment.this1.name
-    }
-    zpa_app_segments {
-        external_id = data.zpa_application_segment.this2.id
-        name = data.zpa_application_segment.this2.name
-    }
+  name        = "ZPA_GW01"
+  description = "ZPA_GW01"
+  type        = "ZPA"
+  zpa_server_group {
+    external_id = data.zpa_server_group.this.id
+    name        = data.zpa_server_group.this.name
+  }
+  zpa_app_segments {
+    external_id = data.zpa_application_segment.this1.id
+    name        = data.zpa_application_segment.this1.name
+  }
+  zpa_app_segments {
+    external_id = data.zpa_application_segment.this2.id
+    name        = data.zpa_application_segment.this2.name
+  }
 }
 ```
 

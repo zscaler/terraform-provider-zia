@@ -25,22 +25,22 @@ The **zia_url_filtering_rules** resource creates and manages a URL filtering rul
 
 ```hcl
 resource "zia_url_filtering_rules" "this" {
-    name                  = "Example"
-    description           = "Example"
-    state                 = "ENABLED"
-    action                = "ALLOW"
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota            = 15
-    size_quota            = 10
-    url_categories        = ["ANY"]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols             = ["ANY_RULE"]
-    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+  name                  = "Example"
+  description           = "Example"
+  state                 = "ENABLED"
+  action                = "ALLOW"
+  order                 = 1
+  enforce_time_validity = true
+  validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+  validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+  validity_time_zone_id = "US/Pacific"
+  time_quota            = 15
+  size_quota            = 10
+  url_categories        = ["ANY"]
+  device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  protocols             = ["ANY_RULE"]
+  request_methods       = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
 }
 ```
 
@@ -48,29 +48,29 @@ resource "zia_url_filtering_rules" "this" {
 
 ```hcl
 resource "zia_url_filtering_rules" "this" {
-    name                  = "Example"
-    description           = "Example"
-    state                 = "ENABLED"
-    action                = "BLOCK"
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota = 15
-    size_quota = 10
-    url_categories        = ["ANY"]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols             = ["ANY_RULE"]
-    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
-    block_override        = true
-    override_users {
-      id = [ 45513075 ]
-    }
-    override_groups {
-      id = [ 76662385 ]
-    }
+  name                  = "Example"
+  description           = "Example"
+  state                 = "ENABLED"
+  action                = "BLOCK"
+  order                 = 1
+  enforce_time_validity = true
+  validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+  validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+  validity_time_zone_id = "US/Pacific"
+  time_quota            = 15
+  size_quota            = 10
+  url_categories        = ["ANY"]
+  device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  protocols             = ["ANY_RULE"]
+  request_methods       = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
+  block_override        = true
+  override_users {
+    id = [45513075]
+  }
+  override_groups {
+    id = [76662385]
+  }
 }
 ```
 
@@ -78,23 +78,23 @@ resource "zia_url_filtering_rules" "this" {
 
 ```hcl
 resource "zia_url_filtering_rules" "this" {
-    name                  = "Example"
-    description           = "Example"
-    state                 = "ENABLED"
-    action                = "CAUTION"
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota            = 15
-    size_quota            = 10
-    url_categories        = ["ANY"]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols             = ["ANY_RULE"]
-    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-    user_agent_types      = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
-    end_user_notification_url = "https://caution.acme.com"
+  name                      = "Example"
+  description               = "Example"
+  state                     = "ENABLED"
+  action                    = "CAUTION"
+  order                     = 1
+  enforce_time_validity     = true
+  validity_start_time       = "Mon, 17 Jun 2024 23:30:00 UTC"
+  validity_end_time         = "Tue, 17 Jun 2025 23:00:00 UTC"
+  validity_time_zone_id     = "US/Pacific"
+  time_quota                = 15
+  size_quota                = 10
+  url_categories            = ["ANY"]
+  device_trust_levels       = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  protocols                 = ["ANY_RULE"]
+  request_methods           = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  user_agent_types          = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
+  end_user_notification_url = "https://caution.acme.com"
 }
 ```
 
@@ -104,53 +104,53 @@ resource "zia_url_filtering_rules" "this" {
 
 ```hcl
 data "zia_cloud_browser_isolation_profile" "this" {
-    name = "BD_SA_Profile1_ZIA"
+  name = "BD_SA_Profile1_ZIA"
 }
 
 resource "zia_url_filtering_rules" "this" {
-    name                  = "Example"
-    description           = "Example"
-    state                 = "ENABLED"
-    action                = "ISOLATE"
-    order                 = 1
-    enforce_time_validity = true
-    validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
-    validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
-    validity_time_zone_id = "US/Pacific"
-    time_quota            = 15
-    size_quota            = 10
-    url_categories        = ["ANY"]
-    device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-    protocols             = [ "HTTPS_RULE", "HTTP_RULE" ]
-    request_methods       = [ "CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE" ]
-    cbi_profile {
-        id = data.zia_cloud_browser_isolation_profile.this.id
-        name = data.zia_cloud_browser_isolation_profile.this.name
-        url = data.zia_cloud_browser_isolation_profile.this.url
-    }
-    user_agent_types = [ "OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE" ]
+  name                  = "Example"
+  description           = "Example"
+  state                 = "ENABLED"
+  action                = "ISOLATE"
+  order                 = 1
+  enforce_time_validity = true
+  validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
+  validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
+  validity_time_zone_id = "US/Pacific"
+  time_quota            = 15
+  size_quota            = 10
+  url_categories        = ["ANY"]
+  device_trust_levels   = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
+  protocols             = ["HTTPS_RULE", "HTTP_RULE"]
+  request_methods       = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  cbi_profile {
+    id   = data.zia_cloud_browser_isolation_profile.this.id
+    name = data.zia_cloud_browser_isolation_profile.this.name
+    url  = data.zia_cloud_browser_isolation_profile.this.url
+  }
+  user_agent_types = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
 }
 ```
 ## Example Usage - URL Filtering with HTTP Header Control Profile
 ```hcl
 resource "zia_url_filtering_rules" "this" {
-  name              = "Rule01"
-  description       = "Rule01"
-  state             = "ENABLED"
-  action            = "ALLOW"
-  order             = 1
-  rank              = 7
-  protocols         = ["ANY_RULE"]
-  url_categories    = [zia_url_categories.this.id]
+  name                = "Rule01"
+  description         = "Rule01"
+  state               = "ENABLED"
+  action              = "ALLOW"
+  order               = 1
+  rank                = 7
+  protocols           = ["ANY_RULE"]
+  url_categories      = [zia_url_categories.this.id]
   device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]
-  request_methods   = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
-  user_agent_types  = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE"]
+  request_methods     = ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "OTHER", "POST", "PUT", "TRACE"]
+  user_agent_types    = ["OPERA", "FIREFOX", "MSIE", "MSEDGE", "CHROME", "SAFARI", "MSCHREDGE", "BRAVE"]
   http_header_profiles {
-      id = [ zia_http_header_profile.this.id ]
-    }
+    id = [zia_http_header_profile.this.id]
+  }
   http_header_action_profiles {
-      id = [ zia_http_header_action_profile.this.id ]
-    }
+    id = [zia_http_header_action_profile.this.id]
+  }
 }
 
 resource "zia_http_header_profile" "this" {
@@ -158,39 +158,39 @@ resource "zia_http_header_profile" "this" {
   description = "Example header profile"
 
   http_header_profile_criteria {
-    header   = "ORIGIN"
+    header           = "ORIGIN"
     cloud_app_bitmap = ["CHATGPT_AI"]
-    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
   }
   http_header_profile_criteria {
-    header   = "REFERER"
+    header           = "REFERER"
     cloud_app_bitmap = ["CHATGPT_AI"]
-    category_bitmap = ["GENERAL_AI_ML", "AI_ML_APPS"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
   }
   http_header_profile_criteria {
-    header   = "USERAGENT"
-    user_agent_bitmap = "FIREFOX"
-    operator = "UAVERSIONEQ"
+    header             = "USERAGENT"
+    user_agent_bitmap  = "FIREFOX"
+    operator           = "UAVERSIONEQ"
     user_agent_version = "123.0"
   }
 }
 
 resource "zia_http_header_action_profile" "this" {
-  name = "ActionProfile01"
+  name        = "ActionProfile01"
   description = "Example header action profile"
 
   http_header_action_profile_keys {
-    key = "X-Forwarded-For"
+    key   = "X-Forwarded-For"
     value = "10.0.0.1"
   }
 
   http_header_action_profile_keys {
-    key = "User-Agent"
+    key   = "User-Agent"
     value = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
   }
 
   http_header_action_profile_keys {
-    key = "Accept"
+    key   = "Accept"
     value = "application/json"
   }
 }
@@ -236,7 +236,7 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `user_risk_score_levels` (Optional) - Indicates the user risk score level selectedd for the DLP rule violation: Returned values are: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
 
-* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`
+* `user_agent_types` (Optional) - User Agent types on which this rule will be applied: Returned values are: `CHROME`, `FIREFOX`, `MSIE`, `MSEDGE`,   `MSCHREDGE`, `OPERA`, `OTHER`, `SAFARI`, `BRAVE`
 
 * `cbi_profile` - (Optional) The cloud browser isolation profile to which the ISOLATE action is applied in the URL Filtering Policy rules. This block is required when the attribute `action` is set to `ISOLATE`
   * `id` - (Optional) The universally unique identifier (UUID) for the browser isolation profile

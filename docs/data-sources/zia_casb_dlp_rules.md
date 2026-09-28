@@ -30,7 +30,7 @@ data "zia_casb_dlp_rules" "this" {
 ```hcl
 
 data "zia_casb_dlp_rules" "this" {
-  id = 154658
+  id   = 154658
   type = "OFLCASB_DLP_ITSM"
 }
 ```

@@ -605,7 +605,7 @@ func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceD
 	if !ok || ruleType == "" {
 		return diag.FromErr(fmt.Errorf("no rule type is set"))
 	}
-	log.Printf("[INFO] Deleting cloud application control rule ID: %v\n", (d.Id()))
+	log.Printf("[INFO] Deleting cloud application control rule ID: %v\n", d.Id())
 
 	if _, err := cloudappcontrol.Delete(ctx, service, ruleType, id); err != nil {
 		return diag.FromErr(err)
