@@ -31,7 +31,6 @@ type (
 		privateKey      string
 		httpProxy       string
 		retryCount      int
-		backoff         bool
 		minWait         int
 		maxWait         int
 		logLevel        int
@@ -68,8 +67,10 @@ type Client struct {
 
 func NewConfig(d *schema.ResourceData) *Config {
 	// defaults
+	// minWait/maxWait match the SDK's own retry back-off defaults and are
+	// deliberately not user-configurable: the SDK honours the API's Retry-After
+	// interval and grows the wait on its own.
 	config := Config{
-		backoff:        true,
 		minWait:        2,   // SDK default: 2 seconds
 		maxWait:        10,  // SDK default: 10 seconds
 		retryCount:     100, // Deliberately above the SDK default so bulk applies survive sustained rate limiting.
@@ -190,22 +191,6 @@ func NewConfig(d *schema.ResourceData) *Config {
 
 	if val, ok := d.GetOk("max_retries"); ok {
 		config.retryCount = val.(int)
-	}
-
-	if val, ok := d.GetOk("backoff"); ok {
-		config.backoff = val.(bool)
-	}
-
-	if val, ok := d.GetOk("min_wait_seconds"); ok {
-		config.minWait = val.(int)
-	}
-
-	if val, ok := d.GetOk("max_wait_seconds"); ok {
-		config.maxWait = val.(int)
-	}
-
-	if val, ok := d.GetOk("log_level"); ok {
-		config.logLevel = val.(int)
 	}
 
 	if val, ok := d.GetOk("request_timeout"); ok {

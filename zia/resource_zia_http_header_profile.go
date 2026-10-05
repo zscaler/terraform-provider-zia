@@ -129,6 +129,17 @@ func resourceHttpHeaderProfile() *schema.Resource {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: "The user agent bitmap evaluated by the criteria.",
+							ValidateFunc: validation.StringInSlice([]string{
+								"OPERA",
+								"FIREFOX",
+								"MSIE",
+								"MSEDGE",
+								"CHROME",
+								"SAFARI",
+								"OTHER",
+								"MSCHREDGE",
+								"BRAVE",
+							}, false),
 						},
 						"user_agent_version": {
 							Type:        schema.TypeString,

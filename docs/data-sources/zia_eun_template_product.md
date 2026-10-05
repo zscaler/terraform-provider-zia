@@ -70,17 +70,7 @@ In addition to all arguments above, the following attributes are exported:
 * `caution_interval` - (String) The interval used for caution notifications.
 * `default` - (Boolean) Indicates whether this is the default notification template for the policy type.
 * `notification_details` - (List of String) The list of notification details associated with the template.
-* `recommended_cloud_app` - (List) The recommended cloud application associated with the notification template.
-  * `val` - (Integer) The identifier of the recommended cloud application.
-  * `name` - (String) The name of the recommended cloud application.
-  * `channel` - (String) The channel of the recommended cloud application.
-  * `product` - (String) The product of the recommended cloud application.
-  * `type` - (String) The type of the recommended cloud application.
-  * `misc` - (String) The caution interval associated with the recommended cloud application.
-  * `app_not_ready` - (Boolean) Indicates whether the recommended cloud application is not yet ready.
-  * `under_migration` - (Boolean) Indicates whether the recommended cloud application is under migration.
-  * `app_cat_modified` - (Boolean) Indicates whether the recommended cloud application category has been modified.
-  * `deprecated` - (Boolean) Indicates whether the recommended cloud application is deprecated.
+* `recommended_cloud_app` - (String) The recommended cloud application associated with the notification template (for example, `CHATGPT_AI`).
 * `language_templates` - (List) The list of per-language notification messages associated with the template.
   * `language` - (String) The language of the notification message.
   * `allow_message` - (String) The message displayed when access is allowed.

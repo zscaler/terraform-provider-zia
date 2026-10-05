@@ -110,7 +110,7 @@ func ZIAProvider() *schema.Provider {
 				Type:             schema.TypeInt,
 				Optional:         true,
 				ValidateDiagFunc: intAtMost(100),
-				Description:      "maximum number of retries to attempt before erroring out.",
+				Description:      "Maximum number of times a rate-limited or transiently failing request is retried before the operation fails. Default and maximum: 100. Does not affect request throughput; lowering it only makes runs fail sooner under sustained rate limiting.",
 			},
 			"parallelism": {
 				Type:       schema.TypeInt,
@@ -122,8 +122,8 @@ func ZIAProvider() *schema.Provider {
 			"request_timeout": {
 				Type:             schema.TypeInt,
 				Optional:         true,
-				ValidateDiagFunc: intBetween(0, 300),
-				Description:      "Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.",
+				ValidateDiagFunc: intBetween(0, 1800),
+				Description:      "Timeout in seconds for a single HTTP request to the Zscaler API. Default: 1800, sized for large list operations such as reading thousands of firewall rules. Accepted values: 0-1800, where 0 selects the SDK's built-in 60-second timeout. Does not affect request throughput.",
 			},
 		},
 

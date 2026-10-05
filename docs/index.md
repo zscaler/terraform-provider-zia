@@ -39,12 +39,12 @@ The ZIA Terraform Provider now offers support for [OneAPI](https://help.zscaler.
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-  required_providers {
-    zia = {
-      version = "~> 4.0.0"
-      source  = "zscaler/zia"
+    required_providers {
+        zia = {
+            version = "~> 4.0.0"
+            source = "zscaler/zia"
+        }
     }
-  }
 }
 
 # Configure the ZIA Provider (OneAPI Authentication)
@@ -56,7 +56,7 @@ terraform {
 # corresponding variable name does not need to be set in the provider config
 # block.
 provider "zia" {
-  client_id     = "[ZSCALER_CLIENT_ID]"
+  client_id = "[ZSCALER_CLIENT_ID]"
   client_secret = "[ZSCALER_CLIENT_SECRET]"
   vanity_domain = "[ZSCALER_VANITY_DOMAIN]"
   zscaler_cloud = "[ZSCALER_CLOUD]"
@@ -68,12 +68,12 @@ provider "zia" {
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-  required_providers {
-    zia = {
-      version = "~> 4.0.0"
-      source  = "zscaler/zia"
+    required_providers {
+        zia = {
+            version = "~> 4.0.0"
+            source = "zscaler/zia"
+        }
     }
-  }
 }
 
 # Configure the ZIA Provider (OneAPI Authentication) - Private Key
@@ -185,12 +185,12 @@ on-demand sync of newly created roles.
 ```hcl
 # Configure the Zscaler Internet Access Provider
 terraform {
-  required_providers {
-    zia = {
-      version = "~> 4.0.0"
-      source  = "zscaler/zia"
+    required_providers {
+        zia = {
+            version = "~> 4.0.0"
+            source = "zscaler/zia"
+        }
     }
-  }
 }
 
 # Configure the ZIA Provider (Legacy Authentication)
@@ -202,11 +202,11 @@ terraform {
 # corresponding variable name does not need to be set in the provider config
 # block.
 provider "zia" {
-  username          = "[ZIA_USERNAME]"
-  password          = "[ZIA_PASSWORD]"
-  api_key           = "[ZIA_API_KEY]"
-  zia_cloud         = "[ZIA_CLOUD]"
-  use_legacy_client = "[ZSCALER_USE_LEGACY_CLIENT]"
+  username            = "[ZIA_USERNAME]"
+  password            = "[ZIA_PASSWORD]"
+  api_key             = "[ZIA_API_KEY]"
+  zia_cloud           = "[ZIA_CLOUD]"
+  use_legacy_client   = "[ZSCALER_USE_LEGACY_CLIENT]"
 }
 ```
 
@@ -398,9 +398,11 @@ Before starting with this Terraform provider you must create an API Client in th
 
 - `http_proxy` - (Optional) This is a custom URL endpoint that can be used for unit testing or local caching proxies. Can also be sourced from the `ZSCALER_HTTP_PROXY` environment variable.
 
-- `max_retries` - (Optional) Maximum number of times a rate-limited request is retried before returning an error. The default is `100` and the maximum is `100`. Each retry waits out the interval reported by the API, so a high value costs nothing when rate limits are not being reached and allows large configurations to complete without manual intervention.
+~> **Rate limiting requires no configuration.** The provider enforces the documented ZIA API rate limits on the client side and, when a limit is reached, waits out the `Retry-After` interval returned by the API before retrying automatically. `max_retries` and `request_timeout` are the only tuning attributes the provider supports: they bound how long a failing request is retried and how long a single request may take. Neither changes request throughput, so lowering them cannot make `plan` or `apply` faster. Environment variables belonging to the Zscaler Go SDK (for example `ZSCALER_CLIENT_RATE_LIMIT_MAX_RETRIES` or `ZSCALER_CLIENT_REQUEST_TIMEOUT`) are **not** part of the provider's configuration and are ignored.
 
-- `request_timeout` - (Optional) Timeout for single request (in seconds) which is made to Zscaler, the default is `0` (means no limit is set). The maximum value can be `300`.
+- `max_retries` - (Optional) Maximum number of times a rate-limited or transiently failing request is retried before the operation fails. Default and maximum: `100`. Each retry waits out the interval reported by the API, so the default costs nothing when rate limits are not being reached and lets large configurations complete without manual intervention; lowering it only makes runs fail sooner under sustained rate limiting.
+
+- `request_timeout` - (Optional) Timeout in seconds for a single HTTP request to the ZIA API. Default: `1800`, sized so that very large list operations (for example reading thousands of firewall rules) complete. Accepted values: `0`-`1800`, where `0` selects the SDK's built-in 60-second timeout.
 
 - `skip_credentials_validation` - (Optional) When set to `true`, the provider skips credential validation and does not initialize the API client. Can also be sourced from the `ZSCALER_SKIP_CREDENTIALS_VALIDATION` environment variable. This is intended for configurations where the ZIA provider is declared but every `zia_*` resource and data source is conditionally disabled (e.g., `count = 0`) — such as multi-environment deployments where Zscaler is not present in every environment. With this flag enabled, `terraform plan`/`apply` succeeds with a warning even when no credentials are supplied; any resource or data source that does attempt an API call fails with an explanatory error. Default: `false`.
 
