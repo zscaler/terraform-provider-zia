@@ -24,15 +24,15 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fixes
 
-- [PR #608](https://github.com/zscaler/terraform-provider-zia/pull/608) - Fixed the `request_timeout` provider attribute rejecting values above `300` even though its default is `1800`; explicit values up to `1800` are now accepted, so users can lower the timeout from the default without also being prevented from choosing anything between the two.
+- [PR #609](https://github.com/zscaler/terraform-provider-zia/pull/609) - Fixed the `request_timeout` provider attribute rejecting values above `300` even though its default is `1800`; explicit values up to `1800` are now accepted, so users can lower the timeout from the default without also being prevented from choosing anything between the two.
 
-- [PR #608](https://github.com/zscaler/terraform-provider-zia/pull/608) - Added missing eun template attributes to `zia_firewall_filtering_rule` resource
+- [PR #609](https://github.com/zscaler/terraform-provider-zia/pull/609) - Added missing eun template attributes to `zia_firewall_filtering_rule` resource
 
-- [PR #608](https://github.com/zscaler/terraform-provider-zia/pull/608) - Added `BRAVE` to `user_agent_bitmap` and `user_agent` attributes in the resource `zia_http_header_profile`
+- [PR #609](https://github.com/zscaler/terraform-provider-zia/pull/609) - Added `BRAVE` to `user_agent_bitmap` and `user_agent` attributes in the resource `zia_http_header_profile`
 
 ### Documentation
 
-- [PR #608](https://github.com/zscaler/terraform-provider-zia/pull/608) - Corrected the provider argument reference for `request_timeout` (the default is `1800` seconds; `0` selects the SDK's built-in 60-second timeout rather than disabling the timeout), and added a note explaining that rate limiting requires no configuration, that `max_retries` and `request_timeout` are the only supported tuning attributes, that neither affects request throughput, and that Zscaler Go SDK environment variables such as `ZSCALER_CLIENT_RATE_LIMIT_MAX_RETRIES` are not part of the provider's configuration and are ignored.
+- [PR #609](https://github.com/zscaler/terraform-provider-zia/pull/609) - Corrected the provider argument reference for `request_timeout` (the default is `1800` seconds; `0` selects the SDK's built-in 60-second timeout rather than disabling the timeout), and added a note explaining that rate limiting requires no configuration, that `max_retries` and `request_timeout` are the only supported tuning attributes, that neither affects request throughput, and that Zscaler Go SDK environment variables such as `ZSCALER_CLIENT_RATE_LIMIT_MAX_RETRIES` are not part of the provider's configuration and are ignored.
 
 ## 4.8.9 (September, 25 2026)
 
