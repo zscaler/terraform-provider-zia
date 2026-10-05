@@ -66,53 +66,9 @@ func dataSourceEUNTemplateProduct() *schema.Resource {
 				Description: "The list of notification details associated with the template.",
 			},
 			"recommended_cloud_app": {
-				Type:        schema.TypeList,
+				Type:        schema.TypeString,
 				Computed:    true,
-				Description: "The recommended cloud application associated with the notification template.",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"val": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"channel": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"misc": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"app_not_ready": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"under_migration": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"app_cat_modified": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"deprecated": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
+				Description: "The recommended cloud application associated with the notification template (for example, `CHATGPT_AI`).",
 			},
 			"language_templates": {
 				Type:        schema.TypeList,
@@ -222,30 +178,10 @@ func dataSourceEUNTemplateProductRead(ctx context.Context, d *schema.ResourceDat
 	_ = d.Set("caution_interval", match.CautionInterval)
 	_ = d.Set("default", match.Default)
 	_ = d.Set("notification_details", match.NotificationDetails)
-	_ = d.Set("recommended_cloud_app", flattenEUNRecommendedCloudApp(match.RecommendedCloudApp))
+	_ = d.Set("recommended_cloud_app", match.RecommendedCloudApp)
 	_ = d.Set("language_templates", flattenEUNLanguageTemplates(match.LanguageTemplates))
 
 	return nil
-}
-
-func flattenEUNRecommendedCloudApp(app end_user_notification.RecommendedCloudApp) []interface{} {
-	if (app == end_user_notification.RecommendedCloudApp{}) {
-		return []interface{}{}
-	}
-	return []interface{}{
-		map[string]interface{}{
-			"val":              app.Val,
-			"name":             app.Name,
-			"channel":          app.Channel,
-			"product":          app.Product,
-			"type":             app.Type,
-			"misc":             app.CautionMiscInterval,
-			"app_not_ready":    app.AppNotReady,
-			"under_migration":  app.UnderMigration,
-			"app_cat_modified": app.AppCatModified,
-			"deprecated":       app.Deprecated,
-		},
-	}
 }
 
 func flattenEUNLanguageTemplates(templates []end_user_notification.LanguageTemplates) []interface{} {

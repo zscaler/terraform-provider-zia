@@ -56,8 +56,7 @@ The following arguments are supported:
 * `http_header_profile_criteria` - (Block List) The list of matching criteria evaluated by the HTTP header profile.
   * `header` - (String) The header evaluated by the criteria. Supported Values: `USERAGENT`, `REFERER`, `ORIGIN`
   * `operator` - (String) The operator applied to the header criteria. Supported Values: `UAVERSIONGT`, `UAVERSIONLT`, `UAVERSIONEQ`, `UAVERSIONNEQ`, `UAVERSIONANY`
-  * `user_agent` - (String) The user agent evaluated by the criteria.
-  * `user_agent_bitmap` - (String) The user agent bitmap evaluated by the criteria. Supportee Values: `OPERA`, `FIREFOX`, `MSIE`, `MSEDGE`, `CHROME`, `SAFARI`, `OTHER`, `MSCHREDGE`, `BRAVE`
+  * `user_agent_bitmap` - (String) The user agent bitmap evaluated by the criteria. Supported Values: `OPERA`, `FIREFOX`, `MSIE`, `MSEDGE`, `CHROME`, `SAFARI`, `OTHER`, `MSCHREDGE`, `BRAVE`
   * `user_agent_version` - (String) The user agent version evaluated by the criteria.
   * `id` - (Number) Identifier that uniquely identifies the criteria entry.
   * `category_bitmap` - (List of String) The URL category bitmap evaluated by the criteria.

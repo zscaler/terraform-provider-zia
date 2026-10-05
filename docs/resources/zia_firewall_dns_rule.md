@@ -55,6 +55,12 @@ data "zia_firewall_filtering_time_window" "work_hours" {
   name = "Work hours"
 }
 
+data "zia_eun_template_product" "this" {
+  template_type = "ZCC"
+  product       = "DNS"
+  name          = "Default"
+}
+
 resource "zia_firewall_dns_rule" "this" {
   name             = "Example_DNS_Rule01"
   description      = "Example_DNS_Rule01"
@@ -66,6 +72,9 @@ resource "zia_firewall_dns_rule" "this" {
   dest_countries   = ["CA", "US"]
   source_countries = ["CA", "US"]
   protocols        = ["ANY_RULE"]
+  is_web_eun_enabled = true
+  is_eun_enabled     = true
+  eun_template_id    = data.zia_eun_template_product.this.id
   departments {
     id = [data.zia_department_management.engineering.id]
   }
@@ -278,6 +287,8 @@ data "zia_cloud_applications" "this" {
 * `predefined` - (Boolean) A Boolean field that indicates that the rule is predefined by using a true value
 * `default_rule` - (Boolean) Value that indicates whether the rule is the Default Cloud DNS Rule or not
 * `is_web_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `is_eun_enabled` - (Boolean) A Boolean value that indicates whether ZCC-based Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule. If not set, the ZIA API assigns its default EUN template and the provider records that value without reporting drift. Use the `zia_eun_template_product` data source to look up a template ID.
 * `default_dns_rule_name_used` - (Boolean) A Boolean value that indicates whether the default DNS rule name is used for the rule.
 
 `Devices`

@@ -68,6 +68,12 @@ data "zia_firewall_filtering_time_window" "work_hours" {
   name = "Work hours"
 }
 
+data "zia_eun_template_product" "this" {
+  template_type = "ZCC"
+  product       = "FIREWALL"
+  name          = "Default"
+}
+
 resource "zia_firewall_filtering_rule" "example" {
   name                = "Example"
   description         = "Example"
@@ -75,6 +81,8 @@ resource "zia_firewall_filtering_rule" "example" {
   state               = "ENABLED"
   order               = 1
   enable_full_logging = true
+  is_eun_enabled     = true
+  eun_template_id    = data.zia_eun_template_product.this.id
   nw_services {
     id = [data.zia_firewall_filtering_network_service.zscaler_proxy_nw_services.id]
   }
@@ -106,6 +114,8 @@ The following arguments are supported:
 * `description` - (Optional) Enter additional notes or information. The description cannot exceed 10,240 characters.
 * `state` - (Optional) An enabled rule is actively enforced. A disabled rule is not actively enforced but does not lose its place in the Rule Order. The service skips it and moves to the next rule. Supported Values: `ENABLED`, `DISABLED`
 * `order` - (Integer) Policy rules are evaluated in ascending numerical order (Rule 1 before Rule 2, and so on), and the Rule Order reflects this rule's place in the order.
+* `is_eun_enabled` - (Boolean) A Boolean value that indicates whether Enhanced User Notification (EUN) is enabled for the rule.
+* `eun_template_id` - (Integer) The ID of the Enhanced User Notification (EUN) template associated with the rule. If not set, the ZIA API assigns its default EUN template and the provider records that value without reporting drift. Use the `zia_eun_template_product` data source to look up a template ID.
 * `labels` (list) - Labels that are applicable to the rule.
       * `id` - (Integer) Identifier that uniquely identifies an entity
 

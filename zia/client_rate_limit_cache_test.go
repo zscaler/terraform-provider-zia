@@ -809,7 +809,6 @@ func TestSDKConfigurationCacheDisabled(t *testing.T) {
 func TestProviderConfigMatchesSDKConfig(t *testing.T) {
 	// These are the provider defaults from config.go NewConfig
 	providerDefaults := Config{
-		backoff:        true,
 		minWait:        2,
 		maxWait:        10,
 		retryCount:     100,

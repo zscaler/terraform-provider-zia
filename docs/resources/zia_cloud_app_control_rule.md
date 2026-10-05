@@ -294,6 +294,12 @@ data "zia_cloud_applications" "ai" {
   app_class   = ["AI_ML"]
 }
 
+data "zia_eun_template_product" "this" {
+  template_type = "BROWSER"
+  product       = "CLOUDAPP"
+  name          = "Default"
+}
+
 resource "zia_cloud_app_control_rule" "ai_audit" {
   name         = "Audit AI/ML"
   type         = "AI_ML"
@@ -302,6 +308,8 @@ resource "zia_cloud_app_control_rule" "ai_audit" {
   state        = "ENABLED"
   applications = data.zia_cloud_applications.ai.applications[*].app
   actions      = ["CAUTION_AI_ML_WEB_USE"]
+  eun_enabled                = true
+  browser_eun_template_id    = data.zia_eun_template_product.this.id
 }
 ```
 
@@ -311,6 +319,12 @@ resource "zia_cloud_app_control_rule" "ai_audit" {
 data "zia_cloud_app_control_rule_actions" "social_media_actions" {
   type       = "SOCIAL_NETWORKING"
   cloud_apps = ["FACEBOOK"]
+}
+
+data "zia_eun_template_product" "this" {
+  template_type = "ZCC"
+  product       = "CLOUDAPP"
+  name          = "Default"
 }
 
 resource "zia_cloud_app_control_rule" "social_media_time_restricted" {
@@ -327,7 +341,8 @@ resource "zia_cloud_app_control_rule" "social_media_time_restricted" {
   validity_start_time   = "Mon, 17 Jun 2024 23:30:00 UTC"
   validity_end_time     = "Tue, 17 Jun 2025 23:00:00 UTC"
   validity_time_zone_id = "US/Pacific"
-
+  eun_enabled     = true
+  eun_template_id    = data.zia_eun_template_product.this.id
   time_quota          = 15
   size_quota          = 10
   device_trust_levels = ["UNKNOWN_DEVICETRUSTLEVEL", "LOW_TRUST", "MEDIUM_TRUST", "HIGH_TRUST"]

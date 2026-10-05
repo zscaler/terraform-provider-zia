@@ -161,8 +161,11 @@ func resourceFirewallFilteringRules() *schema.Resource {
 				Description: "If set to true, Web EUN is enabled for the rule",
 			},
 			"eun_template_id": {
-				Type:        schema.TypeInt,
-				Optional:    true,
+				Type:     schema.TypeInt,
+				Optional: true,
+				// Computed: the API assigns its default EUN template to every rule
+				// when the template is not set, regardless of is_eun_enabled.
+				Computed:    true,
 				Description: "The EUN template ID associated with the rule",
 			},
 			"exclude_context_shield_end_point": {
