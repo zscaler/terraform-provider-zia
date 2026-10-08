@@ -445,7 +445,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 
 	existingRules, err := filetypecontrol.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all file type control rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all file type control rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

@@ -451,7 +451,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 	}
 	existingRules, err := traffic_capture.GetAll(ctx, service, nil)
 	if err != nil {
-		log.Printf("[ERROR] error getting all filtering rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all traffic capture rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

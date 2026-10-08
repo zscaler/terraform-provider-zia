@@ -1,6 +1,7 @@
 package zia
 
 import (
+	"errors"
 	"sort"
 	"sync"
 	"testing"
@@ -696,6 +697,88 @@ func TestReorder_OscillationBreaker_ExitsBoundedTime(t *testing.T) {
 	api.mu.Unlock()
 	if converged {
 		t.Error("expected the ping-pong to be unresolvable; both rules at target means the fake did not oscillate")
+	}
+}
+
+// failingReadAPI fails getCurrent for the first `failures` calls (or for
+// every call when failures < 0) and then behaves like fakeAPI.
+type failingReadAPI struct {
+	fakeAPI
+	failures int
+	reads    int
+}
+
+func (a *failingReadAPI) getCurrent() (map[int]OrderRule, error) {
+	a.mu.Lock()
+	a.reads++
+	fail := a.failures < 0 || a.reads <= a.failures
+	a.mu.Unlock()
+	if fail {
+		return nil, errors.New("403 Resource Access Blocked")
+	}
+	return a.fakeAPI.getCurrent()
+}
+
+func TestReorder_GetCurrentAlwaysFails_ExitsBounded(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	api := &failingReadAPI{fakeAPI: *newFakeAPI(), failures: -1}
+	api.preSeed(701, 2, 7)
+	reorderWithBeforeReorder(OrderRule{Order: 1, Rank: 7}, 701, "test_read_fails", api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(701, "test_read_fails")
+
+	done := make(chan struct{})
+	go func() {
+		waitForReorder("test_read_fails")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("reorder did not exit when every read failed")
+	}
+	api.mu.Lock()
+	reads := api.reads
+	api.mu.Unlock()
+	if reads < maxNoProgressTicks {
+		t.Errorf("expected at least %d read attempts before giving up, got %d", maxNoProgressTicks, reads)
+	}
+	if api.putsTotal() != 0 {
+		t.Errorf("no order update should be sent without a successful read, got %d", api.putsTotal())
+	}
+}
+
+func TestReorder_GetCurrentTransientFailures_StillConverges(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	// Fewer consecutive failures than the limit: the loop must keep going
+	// and converge exactly as it does without failures.
+	api := &failingReadAPI{fakeAPI: *newFakeAPI(), failures: maxNoProgressTicks - 1}
+	api.preSeed(711, 2, 7)
+	api.preSeed(712, 1, 7)
+	reorderWithBeforeReorder(OrderRule{Order: 1, Rank: 7}, 711, "test_read_transient", api.getCurrent, api.updateOrder, nil)
+	reorderWithBeforeReorder(OrderRule{Order: 2, Rank: 7}, 712, "test_read_transient", api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(711, "test_read_transient")
+	markOrderRuleAsDone(712, "test_read_transient")
+
+	done := make(chan struct{})
+	go func() {
+		waitForReorder("test_read_transient")
+		close(done)
+	}()
+	select {
+	case <-done:
+	case <-time.After(30 * time.Second):
+		t.Fatal("reorder did not complete after transient read failures")
+	}
+	api.mu.Lock()
+	defer api.mu.Unlock()
+	if api.state[711] != (OrderRule{Order: 1, Rank: 7}) || api.state[712] != (OrderRule{Order: 2, Rank: 7}) {
+		t.Errorf("rules did not converge after transient read failures: 711=%+v 712=%+v", api.state[711], api.state[712])
 	}
 }
 

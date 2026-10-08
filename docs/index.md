@@ -34,6 +34,17 @@ The ZIA Terraform Provider now offers support for [OneAPI](https://help.zscaler.
 
 **NOTE**: Attention Government customers. OneAPI and Zidentity now support the government (FedRAMP) clouds via the unified `cloud=gov` and `cloud=govus` values. See the [OneAPI Government (FedRAMP) Cloud Environments](#oneapi-government-fedramp-cloud-environments) section below for details.
 
+## Before You Start: Extend the API Session Timeout
+
+~> **Recommended:** Before using the provider, set the ZIA **API Session Timeout** to its maximum of **20 minutes**. The default is 5 minutes, and ZIA activates pending changes whenever an API session ends, so a Terraform run that lasts longer than the timeout can have part of its changes activated before it finishes.
+
+Set it in either of two ways:
+
+- **With Terraform:** set `api_session_timeout = 20` on the [`zia_advanced_settings`](resources/zia_advanced_settings.md) resource.
+- **In the ZIA Admin Portal:** go to **Administration > Advanced Settings** and set **API Session Timeout Duration (In Minutes)**. See [API Session Timeout](https://help.zscaler.com/zia/release-upgrade-summary-2026?applicable_category=zscaler.net&deployment_date=2026-04-03&id=1539485#:~:text=Feature%20Available-,API%20Session%20Timeout,-When%20configuring%20advanced) in the ZIA release notes.
+
+See [API Session Timeout and Long-Running Applies](#api-session-timeout-and-long-running-applies) for details.
+
 ## Examples Usage - Client Secret Authentication
 
 ```hcl
@@ -360,6 +371,30 @@ The ZIA platform enforces API rate limits on a per-endpoint basis. Different end
 Run Terraform with its default settings. Refer to the [Zscaler Rate Limiting Documentation](https://automate.zscaler.com/docs/api-reference-and-guides/guides/rate-limiting/zia) for details on per-endpoint limits.
 
 Note that rate limiting is distinct from the tenant-wide write lock. An `HTTP 409` response reporting `EDIT_LOCK_NOT_AVAILABLE` or `Failed during enter Org barrier` indicates that another session is modifying the configuration, not that a rate limit was exceeded. See [Running Several Configurations Against One Tenant](#running-several-configurations-against-one-tenant).
+
+## Terraform Parallelism and Concurrent Runs
+
+~> **Recommended:** Run Terraform with its default parallelism, and run one Terraform process at a time against a tenant.
+
+- **Do not change Terraform's `-parallelism` flag.** Raising it sends more concurrent requests than the ZIA APIs are designed for, which leads to rate limiting, edit-lock conflicts, failed rule placement and longer runs. Lowering it slows rule placement and makes runs long enough to cross the API session timeout, which can activate changes part-way through a run.
+- **Do not run several Terraform processes against the same tenant at the same time**, for example parallel CI jobs, several workspaces, or Terragrunt `run-all` over many modules. Each process sends its own requests and holds its own API session, so together they compete for the same rate limits and the tenant-wide write lock. See [Running Several Configurations Against One Tenant](#running-several-configurations-against-one-tenant).
+
+## Troubleshooting and Log Collection
+
+When raising a Zscaler support case or a [GitHub issue](https://github.com/zscaler/terraform-provider-zia/issues/new/choose) about an error or unexpected behavior, **a debug log (`terraform.log`) of the failing run must be provided.** It contains every API request and response, which is required for a detailed analysis.
+
+Enable logging before reproducing the problem:
+
+```sh
+export ZSCALER_SDK_LOG=true
+export ZSCALER_SDK_VERBOSE=true
+export TF_LOG="DEBUG"
+export TF_LOG_PATH="terraform.log"
+```
+
+~> **IMPORTANT:** Sanitize the log before sharing it. From provider version 4.8.11, access tokens and session cookies are masked in the log automatically; earlier versions log the OAuth access token in clear text in every `Authorization: Bearer` header (valid for up to one hour). The log also contains tenant identifiers, object names and other values from your configuration. Remove or mask these values before attaching the log to a GitHub issue, which is public. When the log cannot be sanitized, provide it through a formal Zscaler support case instead.
+
+See the [Troubleshooting Guide](guides/troubleshooting.md) for common errors and their solutions.
 
 ## Zscaler Sandbox Authentication
 

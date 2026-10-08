@@ -21,6 +21,8 @@ The **zia_url_filtering_rules** resource creates and manages a URL filtering rul
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
+~> **NOTE:** Creating or updating rules takes longer than for most other resources. The ZIA API does not provide a way to set the position of several rules in one request, so after a rule is created or updated the provider sends additional requests to move the rules into the order declared in your configuration, and waits until all rules of this type are in place. While this happens, Terraform reports the resource as still creating or modifying; the provider is working in the background. Do not interrupt the run, as cancelling it can leave the rules partially reordered.
+
 ## Example Usage - ALLOW ACTION
 
 ```hcl

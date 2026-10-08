@@ -1362,6 +1362,7 @@ func reorderAll(
 	bestAtTarget := -1
 	prevSkipped := -1
 	prevAtTarget := -1
+	readFailures := 0
 	for {
 		select {
 		case <-ticker.C:
@@ -1388,8 +1389,20 @@ func reorderAll(
 			current, err := getCurrent()
 			if err != nil {
 				log.Printf("[ERROR] reorderAll: getCurrent failed for %s: %v", resourceType, err)
+				// A failed read skips every exit condition below, so a read
+				// that keeps failing would loop forever. Give up after
+				// maxNoProgressTicks consecutive failures; any successful read
+				// resets the count, so transient failures behave as before.
+				// The waiting Create/Update then reads the rule back and
+				// reports the API error to Terraform.
+				readFailures++
+				if readFailures >= maxNoProgressTicks {
+					log.Printf("[WARN] reorderAll: %s — could not read the current rule order for %d consecutive passes, giving up. Last error: %v", resourceType, readFailures, err)
+					return
+				}
 				continue
 			}
+			readFailures = 0
 			count := 0
 			for _, c := range current {
 				if c.Order >= 1 {

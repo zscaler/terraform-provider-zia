@@ -12,9 +12,35 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.10``
+``Last updated: v4.8.11``
 
 ---
+
+## 4.8.11 (October 7, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Fixed runs failing with `403 Resource Access Blocked` once the ZIA API session ends part-way through a long apply (API Session Timeout, 5 to 20 minutes). The provider now obtains a new session and retries the request automatically. Other `403` errors, such as missing permissions, still fail immediately.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Debug logs no longer contain credentials: access tokens and session cookies are masked in logged requests and responses.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Fixed rule-based resources hanging indefinitely while placing rules in their declared order when the current rule order could not be read from the API. After repeated failed reads the provider now stops waiting and reports the API error.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Fixed a provider crash when updating rule-based resources (`zia_firewall_filtering_rule`, `zia_firewall_dns_rule`, `zia_firewall_ips_rule`, `zia_url_filtering_rules`, `zia_ssl_inspection_rules`, `zia_file_type_control_rules`, `zia_sandbox_rules`, `zia_forwarding_control_rule`, `zia_traffic_capture_rules`, `zia_cloud_app_control_rule`) if the list of existing rules could not be retrieved. The API error is now reported instead.
+
+### Documentation
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Added an "API Errors During Plan or Apply" section to the troubleshooting guide covering `403 Resource Access Blocked` (API client role or an ended API session), intermittent `401` errors with an empty code and message, activation hangs caused by `ZIA_ACTIVATION`, requests that stall until the operation timeout, and `Rule is not allowed at order N` after deleting a rule.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Added a recommendation to the provider documentation and the `zia_advanced_settings` resource to set the ZIA API Session Timeout to its maximum of 20 minutes before using the provider, since ZIA activates pending changes whenever an API session ends.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Added guidance to run Terraform with its default parallelism and one process at a time per tenant, and a Troubleshooting and Log Collection section describing how to collect `terraform.log`, which is required when opening a GitHub issue or support case, and how to sanitize it before sharing.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Added a note to all rule-based resources that use rule ordering explaining that creating or updating rules takes longer than for other resources, because the provider sends additional requests to place each rule in its declared order, and that the run should not be interrupted while this happens.
 
 ## 4.8.10 (October 5, 2026)
 

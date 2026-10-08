@@ -524,7 +524,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 
 	existingRules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
 	if err != nil {
-		log.Printf("[ERROR] error getting all cloud app control rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all cloud app control rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

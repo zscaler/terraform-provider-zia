@@ -588,7 +588,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 	existingRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all firewall dns rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all firewall dns rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

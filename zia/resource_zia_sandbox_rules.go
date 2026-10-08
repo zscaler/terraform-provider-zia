@@ -391,7 +391,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	existingRules, err := sandbox_rules.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all sandbox rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all sandbox rules: %w", err))
 	}
 	// Filter out Default BA Rule before sorting
 	existingRules = filterOutDefaultRule(existingRules)
