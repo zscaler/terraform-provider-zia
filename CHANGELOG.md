@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.8.11 (October 7, 2026)
+## 4.8.11 (October 8, 2026)
 
 ### Notes
 
