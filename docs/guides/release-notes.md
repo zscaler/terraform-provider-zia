@@ -16,7 +16,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 4.8.11 (October 7, 2026)
+## 4.8.11 (October 8, 2026)
 
 ### Notes
 
