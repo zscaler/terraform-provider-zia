@@ -15,6 +15,8 @@ description: |-
 
 The **zia_advanced_settings** resource alows you to updates the advanced settings configuration in the ZIA Admin Portal. To learn more see [Configuring Advanced Settings](https://help.zscaler.com/zia/configuring-advanced-settings)
 
+~> **Recommended:** Set `api_session_timeout` to its maximum of `20` minutes before running other Terraform configurations against the tenant. The default is 5 minutes, and ZIA activates pending changes whenever an API session ends, so a run that outlasts the timeout can have part of its changes activated before it finishes. See [API Session Timeout](https://help.zscaler.com/zia/release-upgrade-summary-2026?applicable_category=zscaler.net&deployment_date=2026-04-03&id=1539485#:~:text=Feature%20Available-,API%20Session%20Timeout,-When%20configuring%20advanced).
+
 ## Example Usage
 
 ```hcl
@@ -47,6 +49,7 @@ resource "zia_advanced_settings" "this" {
   sipa_xff_header_enabled                                     = false
   block_non_http_on_http_port_enabled                         = true
   ui_session_timeout                                          = 300
+  api_session_timeout                                         = 20
 }
 
 ```

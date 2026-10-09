@@ -23,6 +23,8 @@ The **zia_dlp_web_rules** resource allows the creation and management of ZIA DLP
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
+~> **NOTE:** Creating or updating rules takes longer than for most other resources. The ZIA API does not provide a way to set the position of several rules in one request, so after a rule is created or updated the provider sends additional requests to move the rules into the order declared in your configuration, and waits until all rules of this type are in place. While this happens, Terraform reports the resource as still creating or modifying; the provider is working in the background. Do not interrupt the run, as cancelling it can leave the rules partially reordered.
+
 ## Example Usage - "FTCATEGORY_ALL_OUTBOUND" File Type"
 
 ```hcl
@@ -481,7 +483,7 @@ The following arguments are supported:
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
-* `file_type_categories` - (Optional) File type categories to which the rule applies (IDs from `zia_file_type_categories`). Zscaler recommends this over legacy `file_types` where possible. The API allows either `fileTypes` or `fileTypeCategories`, but **not both** in the same request; use only one of `file_types` or `file_type_categories` in configuration.
+* `file_type_categories` - (Optional) File type categories to which the rule applies (IDs from `zia_file_type_categories`). Zscaler recommends this over legacy `file_types` where possible. Use only one of `file_types` or `file_type_categories`; setting both is rejected at plan time. The API returns the other attribute derived from the one you set (for example, `file_types = ["FTCATEGORY_ALL_OUTBOUND"]` is returned with file type category `55`); the provider records that value without reporting drift and never sends it back. `file_types` remains supported for existing rules.
   * `id` - (Optional) File type category ID.
     **NOTE** Use the data source `zia_file_type_categories` to retrieve file type categories.
 

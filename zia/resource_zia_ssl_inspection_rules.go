@@ -595,7 +595,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 
 	existingRules, err := sslinspection.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all ssl inspection rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all ssl inspection rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

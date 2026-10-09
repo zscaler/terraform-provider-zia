@@ -21,6 +21,8 @@ The **zia_url_filtering_rules** resource creates and manages a URL filtering rul
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
+~> **NOTE:** Creating or updating rules takes longer than for most other resources. The ZIA API does not provide a way to set the position of several rules in one request, so after a rule is created or updated the provider sends additional requests to move the rules into the order declared in your configuration, and waits until all rules of this type are in place. While this happens, Terraform reports the resource as still creating or modifying; the provider is working in the background. Do not interrupt the run, as cancelling it can leave the rules partially reordered.
+
 ## Example Usage - ALLOW ACTION
 
 ```hcl
@@ -202,6 +204,7 @@ The following arguments are supported:
 
 * `name` - (Required) Name of the Firewall Filtering policy rule
 * `order` - (Required) Order of execution of rule with respect to other URL Filtering rules
+* `url_categories` - (Required) The list of URL categories to which the URL Filtering rule must be applied. At least one value is required; use `["ANY"]` to apply the rule to all categories. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 * `protocols` - (List of Object) Protocol criteria. Supported values: `SMRULEF_ZPA_BROKERS_RULE`, `ANY_RULE`, `TCP_RULE`, `UDP_RULE`, `DOHTTPS_RULE`, `TUNNELSSL_RULE`, `HTTP_PROXY`, `FOHTTP_RULE`, `FTP_RULE`, `HTTPS_RULE`, `HTTP_RULE`, `SSL_RULE`, `TUNNEL_RULE`, `WEBSOCKETSSL_RULE`, `WEBSOCKET_RULE`,
 
 ### Optional
@@ -245,7 +248,6 @@ Supported values: `OPTIONS`, `GET`, `HEAD`, `POST`, `PUT`, `DELETE`, `TRACE`, `C
 
 * `cipa_rule` - (Optional) If set to true, the CIPA Compliance rule is enabled
 
-* `url_categories` - (List of Strings) The list of URL categories to which the URL Filtering rule must be applied. See the [URL Categories API](https://help.zscaler.com/zia/url-categories#/urlCategories-get) for the list of available categories or use the data source `zia_url_categories` to retrieve the list of URL categories.
 
 * `source_countries`** - (List of String) Identify destinations based on the location of a server. Provide a 2 letter [ISO3166 Alpha2 Country code](https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes). i.e ``"US"``, ``"CA"``
 

@@ -312,10 +312,14 @@ func resourceURLFilteringRules() *schema.Resource {
 				},
 			},
 			"url_categories": {
-				Type:     schema.TypeSet,
-				Optional: true,
+				Type: schema.TypeSet,
+				// The API rejects URL filtering rules without URL categories
+				// ("URL filtering rule cannot be created without url categories"),
+				// so require at least one at plan time. Use ["ANY"] for all categories.
+				Required: true,
+				MinItems: 1,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Description: `The list of URL Categories to which the SSL inspection rule must be applied.
+				Description: `The list of URL Categories to which the URL Filtering rule must be applied. Use ["ANY"] to apply the rule to all categories.
 				See the URL Categories API for the list of available categories:
 				https://help.zscaler.com/zia/url-categories#/urlCategories-get`,
 			},
@@ -633,7 +637,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 
 	existingRules, err := urlfilteringpolicies.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all url filtering rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all url filtering rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)

@@ -362,6 +362,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		log.Printf("[INFO] Created zia firewall dns rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		rememberDNSRedirectIP(resp.ID, req.RedirectIP)
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "firewall_dns_rule"
 
@@ -393,6 +394,13 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 				rule.Predefined = false
 				rule.DefaultRule = false
 				rule.AccessControl = ""
+				// API defect: GET omits redirectIp after the rule has been updated,
+				// but PUT requires it. Restore the configured value (see dnsRedirectIPs).
+				if rule.RedirectIP == "" {
+					if ip, ok := configuredDNSRedirectIP(id); ok {
+						rule.RedirectIP = ip
+					}
+				}
 				rule.Order = order.Order
 				rule.Rank = order.Rank
 				_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)
@@ -454,6 +462,17 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Getting firewall dns rule:\n%+v\n", resp)
 
+	// API defect: GET omits redirectIp after the rule has been updated. When it
+	// does, keep the value already known for this rule (configuration during
+	// create/update, prior state during refresh) as long as the action has not
+	// changed outside Terraform; otherwise report what the API returns.
+	redirectIP := resp.RedirectIP
+	if redirectIP == "" {
+		if known, _ := d.Get("redirect_ip").(string); known != "" && d.Get("action").(string) == resp.Action {
+			redirectIP = known
+		}
+	}
+
 	d.SetId(fmt.Sprintf("%d", resp.ID))
 	_ = d.Set("rule_id", resp.ID)
 	_ = d.Set("name", resp.Name)
@@ -465,7 +484,7 @@ func resourceFirewallDNSRulesRead(ctx context.Context, d *schema.ResourceData, m
 	_ = d.Set("block_response_code", resp.BlockResponseCode)
 	_ = d.Set("dns_rule_request_types", resp.DNSRuleRequestTypes)
 	_ = d.Set("res_categories", resp.ResCategories)
-	_ = d.Set("redirect_ip", resp.RedirectIP)
+	_ = d.Set("redirect_ip", redirectIP)
 	_ = d.Set("applications", resp.Applications)
 	_ = d.Set("src_ips", resp.SrcIps)
 	_ = d.Set("dest_addresses", resp.DestAddresses)
@@ -578,6 +597,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	// }
 
 	req := expandFirewallDNSRules(d)
+	rememberDNSRedirectIP(id, req.RedirectIP)
 
 	if _, err := firewalldnscontrolpolicies.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
@@ -588,7 +608,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 	existingRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all firewall dns rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all firewall dns rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
@@ -633,6 +653,13 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			rule.Predefined = false
 			rule.DefaultRule = false
 			rule.AccessControl = ""
+			// API defect: GET omits redirectIp after the rule has been updated,
+			// but PUT requires it. Restore the configured value (see dnsRedirectIPs).
+			if rule.RedirectIP == "" {
+				if ip, ok := configuredDNSRedirectIP(id); ok {
+					rule.RedirectIP = ip
+				}
+			}
 			rule.Order = order.Order
 			rule.Rank = order.Rank
 			_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)

@@ -8,14 +8,20 @@ If you have problems with code that uses ZPA Terraform provider, follow these st
 
 * Check symptoms and solutions in the [Typical problems](#typical-problems) section below.
 * Upgrade provider to the latest version. The bug might have already been fixed.
+* Make sure the tenant's API Session Timeout is set to its maximum of 20 minutes. See [Before You Start: Extend the API Session Timeout](https://registry.terraform.io/providers/zscaler/zia/latest/docs#before-you-start-extend-the-api-session-timeout).
 * In case of authentication problems, see the [Authentication Issues](#authentication-issues) below.
-* Collect debug information using following command:
+* Run Terraform with its default parallelism, one process at a time per tenant. See [Terraform Parallelism and Concurrent Runs](https://registry.terraform.io/providers/zscaler/zia/latest/docs#terraform-parallelism-and-concurrent-runs).
+* Collect a debug log of the failing run:
 
 ```sh
-TF_LOG=DEBUG ZSCALER_SDK_VERBOSE=true ZSCALER_SDK_LOG=true terraform apply -no-color 2>&1 |tee tf-debug.log
+export ZSCALER_SDK_LOG=true
+export ZSCALER_SDK_VERBOSE=true
+export TF_LOG="DEBUG"
+export TF_LOG_PATH="terraform.log"
 ```
 
-* Open a [new GitHub issue](https://github.com/zscaler/terraform-provider-zia/issues/new/choose) providing all information described in the issue template - debug logs, your Terraform code, Terraform & plugin versions, etc.
+* Sanitize `terraform.log` before sharing it. It contains tenant identifiers, object names and other values from your configuration, and in provider versions before 4.8.11 the OAuth access token in every `Authorization: Bearer` header. Remove or mask them, or provide the log through a formal Zscaler support case instead.
+* Open a [new GitHub issue](https://github.com/zscaler/terraform-provider-zia/issues/new/choose) or a Zscaler support case. **The sanitized `terraform.log` is required**, together with your Terraform code and the Terraform and provider versions.
 
 ## Typical problems
 
@@ -167,3 +173,81 @@ This error occurs when attempting to delete a predefined firewall filtering rule
 ```sh
 │ Error: deletion of the predefined rule 'Office 365 One Click Rule' is not allowed
 ```
+
+## API Errors During Plan or Apply
+
+When a run fails with an API error, collect and sanitize a debug log as described at the top of this page before opening a support case. The log contains the full API response for every request, including the `x-oneapi-request-id` and `x-oneapi-host` response headers that Zscaler Support needs to trace a request.
+
+### Error: 403 `Resource Access Blocked`
+
+```sh
+│ Error: {
+│   "code": null,
+│   "message": "Resource Access Blocked",
+│   "status": 403
+│ }
+```
+
+This error has two common causes. Check when it appears:
+
+* **From the first request, or always on the same resource types:** the role assigned to the API client does not grant access to those resources (permissions or functional scope), or the tenant is missing a required subscription. Review the role assigned to the API client in the ZIA Admin Portal.
+* **Several minutes into a run, after which every request fails, and a re-run succeeds:** the API session ended. ZIA ends API-initiated sessions after the **API Session Timeout** configured in Advanced Settings (5 to 20 minutes, default 5), even though the OAuth token itself has not expired. Starting with provider version 4.8.11, the provider obtains a new session and retries the request automatically. To keep long applies within a single session, increase the timeout to 20 minutes with the `api_session_timeout` attribute of the `zia_advanced_settings` resource or in the Admin Portal.
+
+~> **NOTE:** ZIA activates pending changes when an API session ends. A run that outlasts the session may therefore have part of its changes activated before it finishes. See [API Session Timeout and Long-Running Applies](https://registry.terraform.io/providers/zscaler/zia/latest/docs#api-session-timeout-and-long-running-applies).
+
+### Intermittent 401 errors with an empty `code` and `message`
+
+```sh
+│ Error: {
+│   "code": null,
+│   "message": "",
+│   "status": 401
+│ }
+```
+
+The error appears in the middle of a run, on different resources each time, and re-running the same configuration succeeds. It is returned by the API, not by the provider configuration, so validating the credentials outside Terraform will succeed.
+
+* Capture a debug log of a failing run and open a support case with the `x-oneapi-request-id` and `x-oneapi-host` headers and the UTC time of the failing request.
+* Avoid running many Terraform processes against the same tenant with the same API client at the same time (for example, Terragrunt `run-all` over many modules). Each process sends its own requests, so together they can exceed the tenant's API limits.
+* If a create request failed this way, check whether the object was created anyway before re-running. If it was, import it with `terraform import` instead of letting Terraform create it again.
+
+### Apply hangs, then fails with `/status/activate: context deadline exceeded`
+
+```sh
+│ Error: Post "https://api.zsapi.net/zia/api/v1/status/activate": context deadline exceeded
+```
+
+This happens when the `ZIA_ACTIVATION` environment variable is set to `true`. The provider then requests an activation after every resource it creates, updates, or deletes, and the activation endpoint allows only 10 requests per minute and 40 per hour. Once that budget is used, activations wait until Terraform's operation timeout ends the run, even though the resource itself was saved.
+
+**Solution**: Unset `ZIA_ACTIVATION` and activate once at the end of the run. See [ZIA Configuration Activation](https://registry.terraform.io/providers/zscaler/zia/latest/docs#zia-configuration-activation) for the supported methods.
+
+### A single request takes many minutes before the run fails
+
+If a run stalls on one resource (for example, an update to `zia_dlp_web_rules`) until Terraform's operation timeout, the API is not responding to that request. By default the provider waits up to 30 minutes for a single request. Set `request_timeout` in the provider block (in seconds, up to `1800`) to fail such a request sooner:
+
+```hcl
+provider "zia" {
+  request_timeout = 300
+}
+```
+
+### Error: `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N` after deleting a rule
+
+```sh
+│ Error: {
+│   "code": "INVALID_INPUT_ARGUMENT",
+│   "message": "Rule with rank 7 is not allowed at order 14",
+│   "status": 400
+│ }
+```
+
+This happens when a rule is deleted and the order of the remaining rules is changed in the same apply. Deleting a rule shifts the rules below it, so order updates that run at the same time can target a position that no longer exists.
+
+**Solution**: Delete the rule on its own first, then adjust the remaining orders in a separate apply:
+
+```sh
+terraform apply -target=zia_firewall_filtering_rule.example
+terraform apply
+```
+
+Rule orders must stay contiguous (no gaps) after the deletion. Each rule resource's documentation describes this in its notes.

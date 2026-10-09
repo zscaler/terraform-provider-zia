@@ -531,7 +531,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 
 	existingRules, err := forwarding_rules.GetAll(ctx, service)
 	if err != nil {
-		log.Printf("[ERROR] error getting all forwarding control rules: %v", err)
+		return diag.FromErr(fmt.Errorf("error getting all forwarding control rules: %w", err))
 	}
 	sort.Slice(existingRules, func(i, j int) bool {
 		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
