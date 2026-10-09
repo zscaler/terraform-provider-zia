@@ -11,9 +11,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/activation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/bandwidth_control/bandwidth_classes"
@@ -754,6 +756,62 @@ func processCountries(countries []string) []string {
 
 // 	return nil
 // }
+
+// dnsRedirectIPs holds the configured redirect_ip of each zia_firewall_dns_rule
+// managed in this run, keyed by rule ID.
+//
+// Workaround for an API defect: once a DNS rule has been updated,
+// GET /firewallDnsRules/{id} stops returning redirectIp, yet PUT still rejects
+// the rule without it ("Redirect IP address must be provided."). The reorder
+// update sends back the rule as returned by that GET, so it uses this map to
+// restore the configured value. Remove once the API returns redirectIp again.
+var dnsRedirectIPs = struct {
+	sync.Mutex
+	byID map[int]string
+}{byID: map[int]string{}}
+
+// rememberDNSRedirectIP records the configured redirect_ip for a DNS rule, or
+// forgets it when the rule has none configured.
+func rememberDNSRedirectIP(id int, redirectIP string) {
+	dnsRedirectIPs.Lock()
+	defer dnsRedirectIPs.Unlock()
+	if redirectIP == "" {
+		delete(dnsRedirectIPs.byID, id)
+		return
+	}
+	dnsRedirectIPs.byID[id] = redirectIP
+}
+
+// configuredDNSRedirectIP returns the redirect_ip configured for a DNS rule in
+// this run, if any.
+func configuredDNSRedirectIP(id int) (string, bool) {
+	dnsRedirectIPs.Lock()
+	defer dnsRedirectIPs.Unlock()
+	ip, ok := dnsRedirectIPs.byID[id]
+	return ip, ok
+}
+
+// dlpWebRuleStoredRank returns the rank the API actually stored for a DLP web
+// rule, falling back to the requested rank if the rule cannot be read.
+//
+// The DLP web rules API can store a different rank from the one sent (observed:
+// rank 7 sent, rank 0 stored, with Admin Ranking disabled), while other rule
+// types keep it. The reorder loop treats a rule as placed only when both its
+// order and rank match the registered target, so registering a rank the API does
+// not keep means the rule is never "at target" and the loop never finishes.
+// Registering the stored rank makes the loop compare against what the API keeps;
+// when the API keeps the requested rank, nothing changes.
+func dlpWebRuleStoredRank(ctx context.Context, service *zscaler.Service, id, requested int) int {
+	rule, err := dlp_web_rules.Get(ctx, service, id)
+	if err != nil || rule == nil {
+		log.Printf("[WARN] could not read DLP web rule %d to confirm its stored rank, using requested rank %d: %v", id, requested, err)
+		return requested
+	}
+	if rule.Rank != requested {
+		log.Printf("[INFO] DLP web rule %d: API stored rank %d instead of requested rank %d; placing the rule using the stored rank", id, rule.Rank, requested)
+	}
+	return rule.Rank
+}
 
 var failFastErrorCodes = []string{
 	"INVALID_INPUT_ARGUMENT",

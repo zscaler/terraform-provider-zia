@@ -277,6 +277,14 @@ Symptom of regressing the diff-based reorder. Confirm `reorderAll` in `common.go
 
 The `maxStuckOnSkippedTicks` deadlock-breaker may have been removed or its predicate broken. The fast-exit must trigger when `skipped > 0`, all in-range rules are at target, and no PUTs/progress occurred this pass — otherwise the slower `maxNoProgressTicks` safety net runs and each `Create` batch waits ~3 min for it to time out.
 
+### `zia_firewall_dns_rule`: `Redirect IP address must be provided.` / `redirect_ip` drift (API defect workaround)
+
+After a DNS rule has been updated, `GET /firewallDnsRules/{id}` stops returning `redirectIp`, while `PUT` still rejects the rule without it (and the list endpoint can return an older version of the rule that still has it). The provider works around this in `resource_zia_firewall_dns_rules.go`: Create/Update record the configured `redirect_ip` per rule ID (`rememberDNSRedirectIP` in `utils.go`), the reorder `updateOrder` callbacks restore it when the GET omits it, and Read keeps the known value when the API omits it and the action is unchanged. Do not "simplify" this away; remove it only once the API returns `redirectIp` again.
+
+### `zia_dlp_web_rules`: apply never finishes; reorder log shows `from order N (rank 0) to order N (rank 7)` every pass
+
+The DLP web rules API can store a different rank from the one sent (observed: rank 7 sent, rank 0 stored, with Admin Ranking disabled), while other rule types keep it. Because `reorderAll` only treats a rule as placed when order AND rank match, registering the configured rank made DLP rules never reach target, and the deadlock-breaker never released deferred rules. Create/Update therefore register the rank the API stored (`dlpWebRuleStoredRank` in `utils.go`). Do not change them back to `req.Rank`.
+
 ## JMESPath Client-Side Filtering
 
 The provider supports an optional `search` attribute on select data sources that enables client-side filtering via [JMESPath](https://jmespath.org/) expressions. This feature is powered by the `zscaler-sdk-go` JMESPath integration — the SDK applies the expression after all pages have been fetched from the API, before results are returned to the provider.

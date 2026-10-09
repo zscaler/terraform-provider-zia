@@ -483,7 +483,7 @@ The following arguments are supported:
   * `id` - (Optional) A unique identifier assigned to the workload group
   * `name` - (Optional) The name of the workload group
 
-* `file_type_categories` - (Optional) File type categories to which the rule applies (IDs from `zia_file_type_categories`). Zscaler recommends this over legacy `file_types` where possible. The API allows either `fileTypes` or `fileTypeCategories`, but **not both** in the same request; use only one of `file_types` or `file_type_categories` in configuration.
+* `file_type_categories` - (Optional) File type categories to which the rule applies (IDs from `zia_file_type_categories`). Zscaler recommends this over legacy `file_types` where possible. Use only one of `file_types` or `file_type_categories`; setting both is rejected at plan time. The API returns the other attribute derived from the one you set (for example, `file_types = ["FTCATEGORY_ALL_OUTBOUND"]` is returned with file type category `55`); the provider records that value without reporting drift and never sends it back. `file_types` remains supported for existing rules.
   * `id` - (Optional) File type category ID.
     **NOTE** Use the data source `zia_file_type_categories` to retrieve file type categories.
 

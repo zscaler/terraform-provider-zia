@@ -24,6 +24,14 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ### Bug Fixes
 
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - `zia_dlp_web_rules`: Fixed `file_type_categories` drift on rules configured with `file_types`. The API returns the file type category derived from the configured file types, which the provider previously planned to remove on every run. `file_type_categories` is now computed when not configured, only the attribute set in the configuration is sent to the API, and setting both `file_types` and `file_type_categories` is rejected at plan time.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - `zia_dlp_web_rules`: Fixed applies never finishing when the API stores a different rank for DLP rules than the one configured (observed with Admin Ranking disabled: rank `7` configured, rank `0` stored). Rule placement now uses the rank stored by the API, so DLP rules reach their declared order.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - `zia_firewall_dns_rule`: Fixed rules with a redirect IP (for example `action = "REDIR_REQ"`) failing to be placed in their declared order with `Redirect IP address must be provided.`, and showing `redirect_ip` drift on every plan. After a rule has been updated, the API stops returning its redirect IP while still requiring it on updates; the provider now uses the configured `redirect_ip` in both cases.
+
+- [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - `zia_url_filtering_rules`: `url_categories` is now required and must contain at least one value (use `["ANY"]` for all categories). The API rejects URL filtering rules without URL categories, so the error is now reported at plan time instead of during apply.
+
 - [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Fixed runs failing with `403 Resource Access Blocked` once the ZIA API session ends part-way through a long apply (API Session Timeout, 5 to 20 minutes). The provider now obtains a new session and retries the request automatically. Other `403` errors, such as missing permissions, still fail immediately.
 
 - [PR #610](https://github.com/zscaler/terraform-provider-zia/pull/610) - Debug logs no longer contain credentials: access tokens and session cookies are masked in logged requests and responses.

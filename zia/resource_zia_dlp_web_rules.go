@@ -174,10 +174,11 @@ func resourceDlpWebRules() *schema.Resource {
 				`,
 			},
 			"file_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"file_type_categories"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
 				Description: `The list of file types for which the DLP policy rule must be applied,
 				See the Web DLP Rules API for the list of available File types:
 				https://help.zscaler.com/zia/data-loss-prevention#/webDlpRules-get`,
@@ -269,7 +270,7 @@ func resourceDlpWebRules() *schema.Resource {
 			"workload_groups":          setIdNameSchemaCustom(255, "The list of preconfigured workload groups to which the policy must be applied"),
 			"dlp_engines":              setIDsSchemaTypeCustom(intPtr(4), "The list of DLP engines to which the DLP policy rule must be applied"),
 			"time_windows":             setIDsSchemaTypeCustom(intPtr(2), "list of source ip groups"),
-			"file_type_categories":     setIDsSchemaTypeCustom(nil, "The list of file types to which the rule applies"),
+			"file_type_categories":     dlpFileTypeCategoriesSchema(),
 			"labels":                   setIDsSchemaTypeCustom(intPtr(1), "list of Labels that are applicable to the rule"),
 			"source_ip_groups":         setIDsSchemaTypeCustom(nil, "list of source ip groups"),
 			"url_categories":           setIDsSchemaTypeCustom(nil, "The list of URL categories to which the DLP policy rule must be applied"),
@@ -413,7 +414,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		reorderWithBeforeReorder(
-			OrderRule{Order: order, Rank: req.Rank},
+			OrderRule{Order: order, Rank: dlpWebRuleStoredRank(ctx, service, resp.ID, req.Rank)},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
@@ -685,7 +686,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, id, resourceType,
+	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: dlpWebRuleStoredRank(ctx, service, id, req.Rank)}, id, resourceType,
 		func() (map[int]OrderRule, error) {
 			if isSubRule {
 				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)
@@ -812,7 +813,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		ParentRule:               d.Get("parent_rule").(int),
 		EUNTemplateID:            d.Get("eun_template_id").(int),
 		Protocols:                SetToStringList(d, "protocols"),
-		FileTypes:                SetToStringList(d, "file_types"),
+		FileTypes:                dlpConfiguredFileTypes(d),
 		CloudApplications:        SetToStringList(d, "cloud_applications"),
 		UserRiskScoreLevels:      SetToStringList(d, "user_risk_score_levels"),
 		SubRules:                 expandSubRules(d.Get("sub_rules").(*schema.Set)),
@@ -836,7 +837,7 @@ func expandDlpWebRules(d *schema.ResourceData) dlp_web_rules.WebDLPRules {
 		IncludedDomainProfiles:   expandIDNameExtensionsSet(d, "included_domain_profiles"),
 		ExcludedDomainProfiles:   expandIDNameExtensionsSet(d, "excluded_domain_profiles"),
 		WorkloadGroups:           expandWorkloadGroupsIDName(d, "workload_groups"),
-		FileTypeCategories:       expandIDSet(d, "file_type_categories"),
+		FileTypeCategories:       dlpConfiguredFileTypeCategories(d),
 	}
 	return result
 }
@@ -877,6 +878,54 @@ func flattenIDListIDs(list []common.IDName) []interface{} {
 			"id": ids,
 		},
 	}
+}
+
+// dlpFileTypeCategoriesSchema is the shared IDs block schema made Computed and
+// mutually exclusive with file_types. The API accepts either fileTypes (legacy)
+// or fileTypeCategories, never both, and returns the other one derived from
+// whichever was sent (e.g. file_types FTCATEGORY_ALL_OUTBOUND is returned with
+// file type category 55). Computed keeps that derived value from showing as
+// drift, as file_types already does.
+func dlpFileTypeCategoriesSchema() *schema.Schema {
+	s := setIDsSchemaTypeCustom(nil, "The list of file type categories to which the rule applies. Use either `file_type_categories` or `file_types`, not both.")
+	s.Computed = true
+	s.ConflictsWith = []string{"file_types"}
+	return s
+}
+
+// dlpFileTypeAttrConfigured reports whether key is set in the configuration
+// itself, ignoring values the API derived into state. An absent attribute is
+// null, an absent block is an empty set; both mean "not configured".
+func dlpFileTypeAttrConfigured(d *schema.ResourceData, key string) bool {
+	raw := d.GetRawConfig()
+	if raw.IsNull() || !raw.IsKnown() {
+		return true // no raw config available: keep the previous behaviour
+	}
+	v := raw.GetAttr(key)
+	if v.IsNull() || !v.IsKnown() {
+		return !v.IsKnown()
+	}
+	return v.LengthInt() > 0
+}
+
+// dlpConfiguredFileTypes returns file_types only when it is set in the
+// configuration, so a value the API derived from file_type_categories is never
+// sent back alongside them.
+func dlpConfiguredFileTypes(d *schema.ResourceData) []string {
+	if !dlpFileTypeAttrConfigured(d, "file_types") {
+		return nil
+	}
+	return SetToStringList(d, "file_types")
+}
+
+// dlpConfiguredFileTypeCategories returns file_type_categories only when it is
+// set in the configuration, so a value the API derived from file_types is never
+// sent back alongside them.
+func dlpConfiguredFileTypeCategories(d *schema.ResourceData) []common.IDName {
+	if !dlpFileTypeAttrConfigured(d, "file_type_categories") {
+		return nil
+	}
+	return expandIDSet(d, "file_type_categories")
 }
 
 func expandIDSet(d *schema.ResourceData, key string) []common.IDName {
