@@ -12,9 +12,19 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.11``
+``Last updated: v4.8.12``
 
 ---
+
+## 4.8.12 (October 8, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #611](https://github.com/zscaler/terraform-provider-zia/pull/611) - `zia_dlp_web_rules`, `zia_endpoint_dlp_rules`, `zia_endpoint_dlp_sub_rules`, `zia_outbound_email_dlp`: Updates rejected by the API (for example `500 UNEXPECTED_ERROR` for an invalid `cloud_applications` value) now fail immediately with the API error. Previously every error was retried every 5 seconds until the update timeout, so an apply could run for 20 minutes or more and end with `context deadline exceeded` instead of the actual error. Updates now retry the same errors as creates.
 
 ## 4.8.11 (October 8, 2026)
 

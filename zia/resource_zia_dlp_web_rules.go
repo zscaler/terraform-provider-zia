@@ -668,10 +668,14 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if err != nil {
-			log.Printf("[INFO] Retrying due to API error: %s", err)
-			if time.Since(start) < timeout {
-				time.Sleep(5 * time.Second)
-				continue
+			// Retry only what Create retries; any other error (e.g. a 500) fails now
+			// instead of being retried until the update timeout.
+			if strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && !strings.Contains(err.Error(), "ICAP Receiver with id") {
+				if time.Since(start) < timeout {
+					log.Printf("[INFO] Retrying due to API error: %s", err)
+					time.Sleep(5 * time.Second)
+					continue
+				}
 			}
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
