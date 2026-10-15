@@ -12,9 +12,27 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.12``
+``Last updated: v4.8.13``
 
 ---
+
+## 4.8.13 (October 15, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #613](https://github.com/zscaler/terraform-provider-zia/pull/613) - Fixed deleting objects that are first detached from the rules that reference them (for example `zia_url_categories`, which is detached from URL filtering, SSL inspection, Sandbox, File Type Control, Bandwidth Classes, Firewall DNS, Firewall IPS, FTP control and DLP web rules) failing on tenants without a subscription to one of those rule types. When reading a rule type returns `403` (missing subscription such as `NOT_SUBSCRIBED`, or no access for the admin role), that rule type is now skipped, since nothing in it can reference the object. Other errors still fail the delete.
+
+- [PR #613](https://github.com/zscaler/terraform-provider-zia/pull/613) - `zia_http_header_profile`: `user_agent` in `http_header_profile_criteria` accepted only the predefined browser values (`OPERA`, `FIREFOX`, ...), so a custom user agent string could not be set. It now accepts any string, for use with `user_agent_bitmap = "OTHER"`.
+
+### Documentation
+
+- [PR #613](https://github.com/zscaler/terraform-provider-zia/pull/613) - `zia_http_header_profile`: Added the missing arguments and attributes to the data source documentation, clarified that `user_agent` is the custom user agent string used with `user_agent_bitmap = "OTHER"`, and added a custom user agent example to the resource documentation.
+
+- [PR #613](https://github.com/zscaler/terraform-provider-zia/pull/613) - Added the [Best Practices](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/best-practices) guide, covering general Terraform practices for this provider and ZIA-specific practices (activation, API session timeout, rule ordering and deletion, one Terraform process per tenant), and linked it from the provider documentation index.
 
 ## 4.8.12 (October 8, 2026)
 

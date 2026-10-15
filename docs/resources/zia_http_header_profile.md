@@ -42,6 +42,34 @@ resource "zia_http_header_profile" "this" {
 }
 ```
 
+## Example Usage - Custom User Agent
+
+```hcl
+# ZIA HTTP Header Profile Resource
+resource "zia_http_header_profile" "this" {
+  name        = "Profile01"
+  description = "Example header profile"
+
+  http_header_profile_criteria {
+    header           = "ORIGIN"
+    cloud_app_bitmap = ["CHATGPT_AI"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
+  }
+  http_header_profile_criteria {
+    header           = "REFERER"
+    cloud_app_bitmap = ["CHATGPT_AI"]
+    category_bitmap  = ["GENERAL_AI_ML", "AI_ML_APPS"]
+  }
+  http_header_profile_criteria {
+    header             = "USERAGENT"
+    user_agent_bitmap  = "OTHER"
+    operator           = "UAVERSIONEQ"
+    user_agent         = "Test_User_Agent"
+    user_agent_version = "123.0"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -56,7 +84,8 @@ The following arguments are supported:
 * `http_header_profile_criteria` - (Block List) The list of matching criteria evaluated by the HTTP header profile.
   * `header` - (String) The header evaluated by the criteria. Supported Values: `USERAGENT`, `REFERER`, `ORIGIN`
   * `operator` - (String) The operator applied to the header criteria. Supported Values: `UAVERSIONGT`, `UAVERSIONLT`, `UAVERSIONEQ`, `UAVERSIONNEQ`, `UAVERSIONANY`
-  * `user_agent_bitmap` - (String) The user agent bitmap evaluated by the criteria. Supported Values: `OPERA`, `FIREFOX`, `MSIE`, `MSEDGE`, `CHROME`, `SAFARI`, `OTHER`, `MSCHREDGE`, `BRAVE`
+  * `user_agent_bitmap` - (String) The user agent (browser) evaluated by the criteria. Supported Values: `OPERA`, `FIREFOX`, `MSIE`, `MSEDGE`, `CHROME`, `SAFARI`, `OTHER`, `MSCHREDGE`, `BRAVE`. Set to `OTHER` to match a custom user agent string defined in `user_agent`.
+  * `user_agent` - (String) A custom user agent string to match. Use it when `user_agent_bitmap` is set to `OTHER`, to match a user agent that is not in the predefined list (see [Example Usage - Custom User Agent](#example-usage---custom-user-agent)).
   * `user_agent_version` - (String) The user agent version evaluated by the criteria.
   * `id` - (Number) Identifier that uniquely identifies the criteria entry.
   * `category_bitmap` - (List of String) The URL category bitmap evaluated by the criteria.
