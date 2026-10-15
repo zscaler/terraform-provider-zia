@@ -70,7 +70,7 @@ func dataSourceHttpHeaderProfile() *schema.Resource {
 						"user_agent": {
 							Type:        schema.TypeString,
 							Computed:    true,
-							Description: "The user agent evaluated by the criteria.",
+							Description: "The custom user agent string evaluated by the criteria. Set when user_agent_bitmap is OTHER.",
 						},
 						"user_agent_bitmap": {
 							Type:        schema.TypeString,

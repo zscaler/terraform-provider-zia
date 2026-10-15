@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"net/http"
 	"os"
 	"sort"
 	"strconv"
@@ -120,6 +121,37 @@ func getBoolFromResourceData(d *schema.ResourceData, key string) bool {
 	return isBool && val
 }
 
+// skipUnavailableDetachRead reports whether a failed read of a rule type during
+// a detach sweep means that rule type is not available to the tenant or admin,
+// and logs the skip. The API answers 403 when a required SKU subscription is
+// missing (e.g. NOT_SUBSCRIBED) or the admin role has no access to that
+// functional scope. Nothing can reference the object in a rule type that
+// cannot be used, so the sweep skips it instead of failing. A 403 for an ended
+// API session ("Resource Access Blocked") says nothing about the rule type and
+// is not skipped; the SDK already re-authenticates and retries it.
+func skipUnavailableDetachRead(ruleType string, err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	if strings.Contains(msg, "Resource Access Blocked") {
+		return false
+	}
+	forbidden := strings.Contains(msg, "NOT_SUBSCRIBED")
+	if respErr, ok := errorx.AsErrorResponse(err); ok {
+		if respErr.Response != nil && respErr.Response.StatusCode == http.StatusForbidden {
+			forbidden = true
+		}
+		if respErr.Parsed != nil && respErr.Parsed.Status == http.StatusForbidden {
+			forbidden = true
+		}
+	}
+	if forbidden {
+		log.Printf("[WARN] Skipping %s during detach: not available to this tenant or admin role: %v", ruleType, err)
+	}
+	return forbidden
+}
+
 // avoid {"code":"RESOURCE_IN_USE","message":"GROUP is associated with 1 rule(s). Deletion of this group is not allowed."}
 func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, resource string, getResources func(*filteringrules.FirewallFilteringRules) []common.IDNameExtensions, setResources func(*filteringrules.FirewallFilteringRules, []common.IDNameExtensions)) error {
 	service := client.Service
@@ -127,6 +159,9 @@ func DetachRuleIDNameExtensions(ctx context.Context, client *Client, id int, res
 	log.Printf("[INFO] Detaching filtering rule from %s: %d\n", resource, id)
 	rules, err := filteringrules.GetAll(ctx, service, nil)
 	if err != nil {
+		if skipUnavailableDetachRead("firewall filtering rules", err) {
+			return nil
+		}
 		log.Printf("[error] Error while getting filtering rule")
 		return err
 	}
@@ -168,6 +203,9 @@ func DetachURLFilteringRuleRef(ctx context.Context, client *Client, id int, reso
 	log.Printf("[INFO] Detaching %s reference from URL filtering rules: %d\n", resource, id)
 	rules, err := urlfilteringpolicies.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("URL filtering rules", err) {
+			return nil
+		}
 		log.Printf("[ERROR] Error while getting URL filtering rules for detach: %v", err)
 		return err
 	}
@@ -224,6 +262,9 @@ func DetachDLPEngineIDNameExtensions(ctx context.Context, client *Client, id int
 	log.Printf("[INFO] Detaching dlp engine from %s: %d\n", resource, id)
 	rules, err := dlp_web_rules.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("DLP web rules", err) {
+			return nil
+		}
 		log.Printf("[error] Error while getting filtering rule")
 		return err
 	}
@@ -315,6 +356,9 @@ func detachCategoryFromURLFilteringRules(ctx context.Context, client *Client, ca
 	service := client.Service
 	rules, err := urlfilteringpolicies.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("URL filtering rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting URL filtering rules for category detach: %w", err)
 	}
 	updated := false
@@ -340,6 +384,9 @@ func detachCategoryFromSSLInspectionRules(ctx context.Context, client *Client, c
 	service := client.Service
 	rules, err := sslinspection.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("SSL inspection rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting SSL inspection rules for category detach: %w", err)
 	}
 	updated := false
@@ -363,6 +410,9 @@ func detachCategoryFromSandboxRules(ctx context.Context, client *Client, categor
 	service := client.Service
 	rules, err := sandbox_rules.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("sandbox rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting sandbox rules for category detach: %w", err)
 	}
 	updated := false
@@ -386,6 +436,9 @@ func detachCategoryFromFileTypeControlRules(ctx context.Context, client *Client,
 	service := client.Service
 	rules, err := filetypecontrol.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("file type control rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting file type control rules for category detach: %w", err)
 	}
 	updated := false
@@ -409,6 +462,9 @@ func detachCategoryFromBandwidthClasses(ctx context.Context, client *Client, cat
 	service := client.Service
 	classes, err := bandwidth_classes.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("bandwidth classes", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting bandwidth classes for category detach: %w", err)
 	}
 	updated := false
@@ -435,6 +491,9 @@ func detachCategoryFromFirewallDNSRules(ctx context.Context, client *Client, cat
 	service := client.Service
 	rules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("firewall DNS rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting firewall DNS rules for category detach: %w", err)
 	}
 	updated := false
@@ -463,6 +522,9 @@ func detachCategoryFromFirewallIPSRules(ctx context.Context, client *Client, cat
 	service := client.Service
 	rules, err := ips_policies.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("firewall IPS rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting firewall IPS rules for category detach: %w", err)
 	}
 	updated := false
@@ -491,6 +553,9 @@ func detachCategoryFromFTPControlPolicy(ctx context.Context, client *Client, cat
 	service := client.Service
 	policy, err := ftp_control_policy.GetFTPControlPolicy(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("FTP control policy", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting FTP control policy for category detach: %w", err)
 	}
 	if policy == nil {
@@ -516,6 +581,9 @@ func detachCategoryFromDLPWebRules(ctx context.Context, client *Client, category
 	service := client.Service
 	rules, err := dlp_web_rules.GetAll(ctx, service)
 	if err != nil {
+		if skipUnavailableDetachRead("DLP web rules", err) {
+			return false, nil
+		}
 		return false, fmt.Errorf("error getting DLP web rules for category detach: %w", err)
 	}
 	updated := false
