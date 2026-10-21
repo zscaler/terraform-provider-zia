@@ -1,5 +1,25 @@
 # Changelog
 
+## 4.8.14 (October 21, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #614](https://github.com/zscaler/terraform-provider-zia/pull/614) - Rule resources: deleting a rule and renumbering the remaining rules in the same apply no longer fails with `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N`, so deleting the rule with `-target` first is no longer needed. Rules whose only change is `order` are no longer rewritten, and a write rejected because the rule list changed during the apply, including rules deleted outside Terraform, is retried. Applies to `zia_bandwidth_control_rule`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`, `zia_cloud_app_control_rule`, `zia_dlp_web_rules`, `zia_endpoint_dlp_rules`, `zia_endpoint_dlp_sub_rules`, `zia_file_type_control_rules`, `zia_firewall_dns_rule`, `zia_firewall_filtering_rule`, `zia_firewall_ips_rule`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_outbound_email_dlp`, `zia_sandbox_rules`, `zia_ssl_inspection_rules`, `zia_traffic_capture_rules` and `zia_url_filtering_rules`.
+
+- [PR #614](https://github.com/zscaler/terraform-provider-zia/pull/614) - Rule resources: applies in which the rules are already in their declared order, such as the renumbering after a delete, finish faster.
+
+### Documentation
+
+- [PR #614](https://github.com/zscaler/terraform-provider-zia/pull/614) - Updated the rule resource pages, the "Deleting a rule" section of the [Best Practices](https://registry.terraform.io/providers/zscaler/zia/latest/docs/guides/best-practices) guide and the troubleshooting guide: a rule can be deleted and the remaining rules renumbered in one apply.
+
+### Internal Changes
+
+- [PR #614](https://github.com/zscaler/terraform-provider-zia/pull/614) - Added unit tests for rule ordering that run the rule resources against a mock of the ZIA API, including a rule deleted and the remaining rules renumbered in one apply.
+
 ## 4.8.13 (October 15, 2026)
 
 ### Notes

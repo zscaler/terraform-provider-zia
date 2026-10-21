@@ -236,14 +236,14 @@ provider "zia" {
 ```sh
 │ Error: {
 │   "code": "INVALID_INPUT_ARGUMENT",
-│   "message": "Rule with rank 7 is not allowed at order 14",
+│   "message": "Rule is not allowed at order 14",
 │   "status": 400
 │ }
 ```
 
-This happens when a rule is deleted and the order of the remaining rules is changed in the same apply. Deleting a rule shifts the rules below it, so order updates that run at the same time can target a position that no longer exists.
+Before v4.8.14, this happened when a rule was deleted and the order of the remaining rules was changed in the same apply. Each order update first moved its rule to the last position of a rule list read before the delete completed; once the delete closed the gap, that position no longer existed.
 
-**Solution**: Delete the rule on its own first, then adjust the remaining orders in a separate apply:
+**Solution**: Upgrade to v4.8.14 or later, where the delete and the renumbering can run in one apply. On earlier versions, delete the rule on its own first, then adjust the remaining orders in a separate apply:
 
 ```sh
 terraform apply -target=zia_firewall_filtering_rule.example

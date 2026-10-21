@@ -19,7 +19,7 @@ The **zia_endpoint_dlp_sub_rules** resource allows the creation and management o
 
 ~> **NOTE:** Changing `parent_rule` forces the sub-rule to be recreated under the new parent, because the service binds each sub-rule to its parent through the request path.
 
-~> **NOTE:** Sub-rule orders must always be contiguous (no gaps) within a parent. Deleting a sub-rule must be followed by order number re-adjustment of the remaining sub-rules of that parent to ensure the API honours the required order.
+~> **NOTE:** Sub-rule orders must always be contiguous (no gaps) within a parent. When you delete a sub-rule, renumber the remaining sub-rules of that parent so the orders stay contiguous. From v4.8.14, the deletion and the renumbering can be applied together in one `terraform apply`.
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 

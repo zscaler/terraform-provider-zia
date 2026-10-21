@@ -1,11 +1,16 @@
 package zia
 
 import (
+	"context"
 	"errors"
 	"sort"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // resetReorderState clears the global reorder state between tests.
@@ -1001,5 +1006,200 @@ func TestReorder_CloudAppControl_SharedKeyMixesTypes_Characterization(t *testing
 		if got := hostingAPI.putsFor(3000 + i); got != 0 {
 			t.Errorf("invisible rule %d: expected 0 PUTs (not in getCurrent view), got %d", 3000+i, got)
 		}
+	}
+}
+
+// =====================================================
+// Placement of rule writes (PR #614)
+// =====================================================
+
+// countingReads wraps getCurrent and counts the reorder passes that read the list.
+func countingReads(f func() (map[int]OrderRule, error)) (func() (map[int]OrderRule, error), func() int) {
+	var mu sync.Mutex
+	n := 0
+	return func() (map[int]OrderRule, error) {
+			mu.Lock()
+			n++
+			mu.Unlock()
+			return f()
+		}, func() int {
+			mu.Lock()
+			defer mu.Unlock()
+			return n
+		}
+}
+
+// TestReorder_AllInPlace_CompletesAfterOnePass: a cycle in which every rule is
+// already in place (order-only updates after a delete closed the gap) has no
+// PUT in flight, so it completes after a single pass.
+func TestReorder_AllInPlace_CompletesAfterOnePass(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	api := newFakeAPI()
+	for i := 1; i <= 10; i++ {
+		api.preSeed(1100+i, i, 7)
+	}
+	getCurrent, reads := countingReads(api.getCurrent)
+	for i := 1; i <= 10; i++ {
+		reorderWithBeforeReorder(OrderRule{Order: i, Rank: 7}, 1100+i, "test_one_pass", getCurrent, api.updateOrder, nil)
+	}
+	for i := 1; i <= 10; i++ {
+		markOrderRuleAsDone(1100+i, "test_one_pass")
+	}
+	waitForReorder("test_one_pass")
+
+	if api.putsTotal() != 0 {
+		t.Errorf("expected 0 PUTs, got %d", api.putsTotal())
+	}
+	if n := reads(); n != 1 {
+		t.Errorf("expected the cycle to complete after 1 pass, got %d passes", n)
+	}
+}
+
+// TestReorder_CycleWithPuts_StillNeedsTwoCleanPasses: once a cycle has moved a
+// rule, it still waits for two clean passes so the PUT can settle.
+func TestReorder_CycleWithPuts_StillNeedsTwoCleanPasses(t *testing.T) {
+	resetReorderState()
+	reorderTickInterval = 50 * time.Millisecond
+	defer func() { reorderTickInterval = 30 * time.Second }()
+
+	api := newFakeAPI()
+	for i := 1; i <= 5; i++ {
+		api.preSeed(1200+i, i, 7)
+	}
+	api.preSeed(1203, 5, 7) // drifted
+	api.preSeed(1205, 3, 7)
+	getCurrent, reads := countingReads(api.getCurrent)
+	for i := 1; i <= 5; i++ {
+		reorderWithBeforeReorder(OrderRule{Order: i, Rank: 7}, 1200+i, "test_two_passes", getCurrent, api.updateOrder, nil)
+	}
+	for i := 1; i <= 5; i++ {
+		markOrderRuleAsDone(1200+i, "test_two_passes")
+	}
+	waitForReorder("test_two_passes")
+
+	if api.putsTotal() == 0 {
+		t.Fatalf("expected the drifted rules to be PUT")
+	}
+	if n := reads(); n < 3 {
+		t.Errorf("expected at least 3 passes (one with PUTs, then two clean), got %d", n)
+	}
+}
+
+func staleErr(order int) error {
+	return errors.New(`{"code":"INVALID_INPUT_ARGUMENT","message":"Rule is not allowed at order ` + strconv.Itoa(order) + `"}`)
+}
+
+// TestWriteAtFreshPosition_RetriesStalePosition: a write rejected because the
+// list changed is retried at a position read again; the first attempt reuses
+// the position the caller already has.
+func TestWriteAtFreshPosition_RetriesStalePosition(t *testing.T) {
+	var fresh []bool
+	var written []int
+	err := writeAtFreshPosition(
+		func(f bool) (OrderRule, error) {
+			fresh = append(fresh, f)
+			if !f {
+				return OrderRule{Order: 20, Rank: 7}, nil // read before a delete
+			}
+			return OrderRule{Order: 19, Rank: 7}, nil
+		},
+		func(pos OrderRule) error {
+			written = append(written, pos.Order)
+			if pos.Order > 19 {
+				return staleErr(pos.Order)
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(fresh) != 2 || fresh[0] || !fresh[1] {
+		t.Errorf("position reads (fresh flags) = %v, want [false true]", fresh)
+	}
+	if len(written) != 2 || written[0] != 20 || written[1] != 19 {
+		t.Errorf("writes = %v, want [20 19]", written)
+	}
+}
+
+// TestWriteAtFreshPosition_BoundedAndOtherErrors: retries stop after
+// maxStaleOrderRetries, and any other error is returned on the first attempt.
+func TestWriteAtFreshPosition_BoundedAndOtherErrors(t *testing.T) {
+	attempts := 0
+	err := writeAtFreshPosition(
+		func(bool) (OrderRule, error) { return OrderRule{Order: 5}, nil },
+		func(OrderRule) error { attempts++; return staleErr(5) },
+	)
+	if !isStaleOrderError(err) || attempts != maxStaleOrderRetries+1 {
+		t.Errorf("got err %v after %d attempts, want the stale error after %d", err, attempts, maxStaleOrderRetries+1)
+	}
+
+	attempts = 0
+	other := errors.New(`{"code":"INVALID_INPUT_ARGUMENT","message":"Invalid url category"}`)
+	err = writeAtFreshPosition(
+		func(bool) (OrderRule, error) { return OrderRule{Order: 5}, nil },
+		func(OrderRule) error { attempts++; return other },
+	)
+	if err != other || attempts != 1 {
+		t.Errorf("got err %v after %d attempts, want the error after 1", err, attempts)
+	}
+}
+
+// TestOrderedRuleUpdateMode: the mode follows the planned changes; a schema
+// without rank never reports a rank change.
+func TestOrderedRuleUpdateMode(t *testing.T) {
+	withRank := &schema.Resource{Schema: map[string]*schema.Schema{
+		"name":  {Type: schema.TypeString, Optional: true},
+		"order": {Type: schema.TypeInt, Optional: true},
+		"rank":  {Type: schema.TypeInt, Optional: true},
+	}}
+	noRank := &schema.Resource{Schema: map[string]*schema.Schema{
+		"name":  {Type: schema.TypeString, Optional: true},
+		"order": {Type: schema.TypeInt, Optional: true},
+	}}
+	plan := func(r *schema.Resource, state, config map[string]any) *schema.ResourceData {
+		t.Helper()
+		existing := schema.TestResourceDataRaw(t, r.Schema, state)
+		existing.SetId("1009") // an existing rule: without an ID the plan is a create
+		instance := existing.State()
+		diff, err := r.Diff(context.Background(), instance, terraform.NewResourceConfigRaw(config), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		d, err := schema.InternalMap(r.Schema).Data(instance, diff)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return d
+	}
+	state := map[string]any{"name": "a", "order": 9, "rank": 7}
+	for _, tc := range []struct {
+		name   string
+		r      *schema.Resource
+		state  map[string]any
+		config map[string]any
+		want   ruleUpdateMode
+	}{
+		{"order only", withRank, state, map[string]any{"name": "a", "order": 8, "rank": 7}, ruleUpdateOrderOnly},
+		{"other attribute", withRank, state, map[string]any{"name": "b", "order": 9, "rank": 7}, ruleUpdateInPlace},
+		{"other attribute and order", withRank, state, map[string]any{"name": "b", "order": 8, "rank": 7}, ruleUpdateInPlace},
+		{"rank", withRank, state, map[string]any{"name": "a", "order": 9, "rank": 6}, ruleUpdateMoveToEnd},
+		{"no rank in schema", noRank, map[string]any{"name": "a", "order": 9}, map[string]any{"name": "b", "order": 9}, ruleUpdateInPlace},
+	} {
+		if got := orderedRuleUpdateMode(plan(tc.r, tc.state, tc.config)); got != tc.want {
+			t.Errorf("%s: mode %d, want %d", tc.name, got, tc.want)
+		}
+	}
+}
+
+func TestEndOfList(t *testing.T) {
+	if got := endOfList([]int{3, 1, 7, 2}); got != (OrderRule{Order: 7, Rank: 7}) {
+		t.Errorf("got %+v, want order 7 rank 7", got)
+	}
+	if got := endOfList(nil); got.Order != 1 {
+		t.Errorf("empty list: got order %d, want 1", got.Order)
 	}
 }

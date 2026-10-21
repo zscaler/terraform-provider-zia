@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -262,6 +261,7 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
+	staleOrderRetries := 0
 	for {
 		cloudAppRuleLock.Lock()
 		if cloudAppRuleStartingOrder[req.Type] == 0 {
@@ -287,6 +287,16 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		req.Order = cloudAppRuleStartingOrder[req.Type]
 
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			cloudAppRuleLock.Lock()
+			cloudAppRuleStartingOrder[req.Type] = 0
+			cloudAppRuleLock.Unlock()
+			req.Order, req.Rank = intendedOrder, intendedRank
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -515,33 +525,47 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 	log.Printf("[INFO] Updating zia cloud application control rule ID: %v\n", id)
 	req := expandCloudAppControlRules(d)
 
-	if _, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id); err != nil {
+	var known *OrderRule
+	if existing, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	existingRules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all cloud app control rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
 
-	req.Order = nextAvailableOrder
-
-	_, err = cloudappcontrol.Update(ctx, service, ruleType, id, &req)
-	if customErr := failFastOnErrorCodes(err); customErr != nil {
-		return diag.Errorf("%v", customErr)
-	}
-	if err != nil {
+	if err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := cloudappcontrol.GetByRuleID(ctx, service, ruleType, id)
+			if err != nil {
+				return OrderRule{}, err
+			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) {
+			rules, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+			if err != nil {
+				return OrderRule{}, fmt.Errorf("error getting all cloud app control rules: %w", err)
+			}
+			orders := make([]int, 0, len(rules))
+			for _, r := range rules {
+				orders = append(orders, r.Order)
+			}
+			return endOfList(orders), nil
+		},
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			_, err := cloudappcontrol.Update(ctx, service, ruleType, id, &req)
+			return err
+		},
+	); err != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
+		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

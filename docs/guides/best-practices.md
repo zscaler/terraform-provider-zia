@@ -672,32 +672,24 @@ On Terraform older than 1.7, `terraform state rm` is the fallback for a predefin
 
 ### Deleting a rule
 
-**The most common self-inflicted ordering problem. The documentation gives a two-step procedure — follow it.**
-
 - Deleting any rule other than the last leaves a gap that the API closes on its own: every rule below it moves up one
-- **DO** delete the rule **on its own first**, with `-target` — the rule pages: "When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed"
-- **DO** then re-adjust the orders of the remaining rules **in a separate apply**, so they stay contiguous — "Deleting a rule must be followed by order number re-adjustment of the remaining rules"
-- **DON'T** delete a rule and change the remaining orders in the same apply — that is the documented cause of `INVALID_INPUT_ARGUMENT` `Rule with rank 7 is not allowed at order 14`
+- **DO** renumber the remaining rules so the orders stay contiguous — the rule pages: "When you delete a rule, renumber the remaining rules so the orders stay contiguous"
+- **DO** delete the rule and renumber the others **in the same apply** (v4.8.14+)
 - **DON'T** delete and leave the gap — the configuration no longer reflects the tenant and every plan shows drift
-- **DO** activate once, after the second apply
+- **DO** activate once, after the apply
 
-#### Why the order matters
+#### What the provider does
 
-The troubleshooting guide explains it: "Deleting a rule shifts the rules below it, so order updates that run at the same time can target a position that no longer exists." A single apply that both destroys a rule and rewrites the orders below it races the API's own renumbering. Splitting it into a targeted destroy followed by a normal apply removes the race: by the time the second apply runs, the API has already closed the gap, and the renumbered HCL matches the tenant.
+Once the API has closed the gap, every rule below the deleted one is already at its renumbered position, so the order updates in the plan change nothing. From v4.8.14, a rule whose only change is `order` is not rewritten when it is already in place, an update of other attributes keeps the rule at its current position, and a write the API rejects because the rule list changed during the apply (`Rule is not allowed at order N`) is retried. This applies to all [rule resources sharing the ordering semantics](#zia-rule-resources-sharing-ordering-semantics), and also covers rules deleted outside Terraform during an apply.
 
-The exception is the last rule. Delete order 20 of 20 and rules 1–19 keep their positions, with nothing to renumber.
+**Do**
 
-**Step 1 — remove the block and destroy only that rule**
-
-```sh
+```hcl
 # rule at order 12 removed from the configuration
-terraform apply -target=zia_firewall_filtering_rule.example
+# order = 13 -> 12, 14 -> 13, … (contiguous, no gaps)
 ```
 
-**Step 2 — renumber the survivors, apply, then activate once**
-
 ```sh
-# order = 13 -> 12, 14 -> 13, … (contiguous, no gaps)
 terraform apply
 ziaActivator
 ```
@@ -709,6 +701,10 @@ ziaActivator
 order = 11
 order = 13   # gap -> API closes it -> HCL no longer matches -> drift
 ```
+
+#### Earlier versions
+
+Before v4.8.14, a delete and the renumbering in one apply could fail with `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N`: each order update first moved its rule to a position read before the delete completed. Upgrade, or destroy the rule on its own with `-target` first and renumber the others in a second apply.
 
 ### Country codes
 
@@ -900,7 +896,7 @@ Rows marked † are quoted from the troubleshooting guide.
 | † Intermittent `401` with empty `code` and `message` | Returned by the API mid-run; many processes with one API client | Support case with `x-oneapi-request-id`; avoid concurrent runs; import objects the failed create made |
 | † Apply hangs, then `/status/activate: context deadline exceeded` | `ZIA_ACTIVATION=true` exhausting 10/min, 40/hr | Unset it; activate once at the end |
 | † A single request takes many minutes before the run fails | The API is not answering that request | Set `request_timeout` (for example 300) to fail sooner |
-| † `INVALID_INPUT_ARGUMENT` `Rule with rank 7 is not allowed at order 14` | A rule deleted and orders changed in the same apply | Delete with `-target` first, then re-order in a separate apply |
+| † `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N` | Before v4.8.14: a rule deleted and orders changed in the same apply | Upgrade to v4.8.14 or later; on earlier versions, delete with `-target` first, then re-order in a separate apply |
 | `EDIT_LOCK_NOT_AVAILABLE` / `Failed during enter Org barrier` (409) | Concurrent writes to one tenant — not a rate limit | One Terraform process per tenant; don't lower `-parallelism` |
 | Activation ran but nothing went live | Another session still editing — activation **queued** | Wait; check *Queued Activations* in the portal |
 | Apply completes with a warning naming rules and "configured vs actual" positions | Unmanaged rules in your order range, or duplicate orders (v4.8.7+) | Import the out-of-band rules or move your range; re-plan |
@@ -925,7 +921,7 @@ Rows marked † are quoted from the troubleshooting guide.
 
 ## ZIA rule resources sharing ordering semantics
 
-All 18 resources validate `order >= 1` at plan time, carry the contiguous-order and -target deletion notes on their pages, and follow [Rule ordering](#rule-ordering) and [Deleting a rule](#deleting-a-rule).
+All 18 resources validate `order >= 1` at plan time, carry the contiguous-order note on their pages, and follow [Rule ordering](#rule-ordering) and [Deleting a rule](#deleting-a-rule).
 
 | Group | Resources |
 |---|---|

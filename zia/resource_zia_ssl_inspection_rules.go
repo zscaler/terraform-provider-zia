@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -379,19 +378,28 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 
 	start := time.Now()
 
-	sslInspectionLock.Lock()
-	if sslInspectionStartingOrder == 0 {
-		list, _ := sslinspection.GetAll(ctx, service)
-		for _, r := range list {
-			if r.Order > sslInspectionStartingOrder {
-				sslInspectionStartingOrder = r.Order
-			}
+	// startingOrder returns the cached starting order, reading it from the
+	// API when it is not set yet or refresh is true.
+	startingOrder := func(refresh bool) int {
+		sslInspectionLock.Lock()
+		defer sslInspectionLock.Unlock()
+		if refresh {
+			sslInspectionStartingOrder = 0
 		}
 		if sslInspectionStartingOrder == 0 {
-			sslInspectionStartingOrder = 1
+			list, _ := sslinspection.GetAll(ctx, service)
+			for _, r := range list {
+				if r.Order > sslInspectionStartingOrder {
+					sslInspectionStartingOrder = r.Order
+				}
+			}
+			if sslInspectionStartingOrder == 0 {
+				sslInspectionStartingOrder = 1
+			}
 		}
+		return sslInspectionStartingOrder
 	}
-	sslInspectionLock.Unlock()
+	startingOrder(false)
 	startWithoutLocking := time.Now()
 
 	intendedOrder := req.Order
@@ -401,6 +409,12 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 	}
 	req.Order = sslInspectionStartingOrder
 	resp, err := sslinspection.Create(ctx, service, &req)
+	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
+		// The cached starting order was read before rules of this type were
+		// deleted (in this apply or outside Terraform): read it again.
+		req.Order = startingOrder(true)
+		resp, err = sslinspection.Create(ctx, service, &req)
+	}
 
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
 		return diag.Errorf("%v", customErr)
@@ -586,33 +600,47 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[INFO] Updating ssl inspection rule ID: %v\n", id)
 	req := expandSSLInspectionRules(d)
 
-	if _, err := sslinspection.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := sslinspection.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	existingRules, err := sslinspection.GetAll(ctx, service)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all ssl inspection rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
 
-	req.Order = nextAvailableOrder
-
-	_, err = sslinspection.Update(ctx, service, id, &req)
-	if customErr := failFastOnErrorCodes(err); customErr != nil {
-		return diag.Errorf("%v", customErr)
-	}
-	if err != nil {
+	if err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := sslinspection.Get(ctx, service, id)
+			if err != nil {
+				return OrderRule{}, err
+			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) {
+			rules, err := sslinspection.GetAll(ctx, service)
+			if err != nil {
+				return OrderRule{}, fmt.Errorf("error getting all ssl inspection rules: %w", err)
+			}
+			orders := make([]int, 0, len(rules))
+			for _, r := range rules {
+				orders = append(orders, r.Order)
+			}
+			return endOfList(orders), nil
+		},
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			_, err := sslinspection.Update(ctx, service, id, &req)
+			return err
+		},
+	); err != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
+		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
