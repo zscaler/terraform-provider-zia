@@ -3,6 +3,7 @@ package zia
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -1363,6 +1364,7 @@ func reorderAll(
 	prevSkipped := -1
 	prevAtTarget := -1
 	readFailures := 0
+	cyclePuts := 0
 	for {
 		select {
 		case <-ticker.C:
@@ -1461,6 +1463,16 @@ func reorderAll(
 			}
 
 			log.Printf("[INFO] reorderAll: %s pass — registered=%d apiOrderable=%d alreadyAtTarget=%d putsIssued=%d skipped=%d errors=%d", resourceType, size, count, alreadyAtTarget, putsIssued, skipped, puterrs)
+
+			// A cycle that has not moved any rule has no PUT in
+			// flight, so one pass with every rule in place is
+			// enough (for example order-only updates after a rule
+			// above them was deleted).
+			cyclePuts += putsIssued
+			if putsIssued == 0 && skipped == 0 && puterrs == 0 && cyclePuts == 0 {
+				log.Printf("[INFO] reorder complete for %s: %d rules, all already in place", resourceType, size)
+				return
+			}
 
 			// Convergence: a clean pass = nothing to do AND no
 			// errors AND size didn't grow. We require two
@@ -1647,4 +1659,103 @@ func waitForReorder(resourceType string) {
 
 func reorder(order OrderRule, id int, resourceType string, getCurrent func() (map[int]OrderRule, error), updateOrder func(id int, order OrderRule) error) {
 	reorderWithBeforeReorder(order, id, resourceType, getCurrent, updateOrder, nil)
+}
+
+// ruleUpdateMode is how an update of an ordered rule writes the rule before
+// handing its declared position to the reorder engine.
+type ruleUpdateMode int
+
+const (
+	// ruleUpdateOrderOnly: only `order` changed. Nothing is written; the
+	// reorder engine moves the rule (and skips it when it is already in place,
+	// for example after a rule above it was deleted).
+	ruleUpdateOrderOnly ruleUpdateMode = iota
+	// ruleUpdateInPlace: other attributes changed, rank did not. They are
+	// written with the rule left at its current position.
+	ruleUpdateInPlace
+	// ruleUpdateMoveToEnd: rank changed. The rule is written at the end of the
+	// list with rank 7, where any rank is allowed, and the reorder engine then
+	// places it.
+	ruleUpdateMoveToEnd
+)
+
+// orderedRuleUpdateMode picks the update mode from the planned changes.
+func orderedRuleUpdateMode(d *schema.ResourceData) ruleUpdateMode {
+	if !d.HasChangesExcept("order") {
+		return ruleUpdateOrderOnly
+	}
+	if !d.HasChange("rank") {
+		return ruleUpdateInPlace
+	}
+	return ruleUpdateMoveToEnd
+}
+
+// updateOrderedRule writes an update of an ordered rule according to its
+// update mode, before the caller hands the declared position to the reorder
+// engine. An order-only update writes nothing.
+//
+// known is the rule's position as already read by the caller (nil when not
+// available); current reads it again, and is used when known is nil or the API
+// rejected the position. end reads the end of the rule list (see endOfList).
+// write sends the update at a position.
+func updateOrderedRule(d *schema.ResourceData, known *OrderRule, current, end func() (OrderRule, error), write func(OrderRule) error) error {
+	switch orderedRuleUpdateMode(d) {
+	case ruleUpdateOrderOnly:
+		log.Printf("[INFO] rule %s: only the order changed; leaving the move to the reorder engine", d.Id())
+		return nil
+	case ruleUpdateMoveToEnd:
+		return writeAtFreshPosition(func(bool) (OrderRule, error) { return end() }, write)
+	default:
+		return writeAtFreshPosition(func(fresh bool) (OrderRule, error) {
+			if known != nil && !fresh {
+				return *known, nil
+			}
+			return current()
+		}, write)
+	}
+}
+
+// endOfList is the last position of a rule list, given the orders of its rules,
+// with rank 7: a rule written there is allowed whatever the ranks of the rules
+// above it.
+func endOfList(orders []int) OrderRule {
+	last := 1
+	for _, o := range orders {
+		if o > last {
+			last = o
+		}
+	}
+	return OrderRule{Order: last, Rank: 7}
+}
+
+// maxStaleOrderRetries bounds writeAtFreshPosition's retries.
+const maxStaleOrderRetries = 3
+
+var staleOrderPattern = regexp.MustCompile(`not allowed at order [0-9]+`)
+
+// isStaleOrderError reports the API rejecting a position that does not exist
+// in the rule list, e.g. "Rule is not allowed at order 20" after a rule of the
+// same type was deleted while the request was in flight.
+func isStaleOrderError(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "INVALID_INPUT_ARGUMENT") && staleOrderPattern.MatchString(err.Error())
+}
+
+// writeAtFreshPosition writes a rule at a position read just before the write.
+// position is called with fresh=false first and may reuse a value it already
+// has; when the API rejects the position because the list changed in between,
+// it is called again with fresh=true and the write is retried, up to
+// maxStaleOrderRetries times. Other errors are returned as they are.
+func writeAtFreshPosition(position func(fresh bool) (OrderRule, error), write func(OrderRule) error) error {
+	var err error
+	for attempt := 0; attempt <= maxStaleOrderRetries; attempt++ {
+		var pos OrderRule
+		if pos, err = position(attempt > 0); err != nil {
+			return err
+		}
+		if err = write(pos); !isStaleOrderError(err) {
+			return err
+		}
+		log.Printf("[WARN] order %d is no longer valid (the rule list changed during the request); reading the position again (attempt %d of %d)", pos.Order, attempt+1, maxStaleOrderRetries)
+	}
+	return err
 }

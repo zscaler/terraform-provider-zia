@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -265,6 +264,7 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		time.Sleep(60 * time.Second)
 	}
 
+	staleOrderRetries := 0
 	for {
 		forwardingControlLock.Lock()
 		if forwardingControlStartingOrder == 0 {
@@ -294,7 +294,7 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 		var err error
 		for i := 0; i < 3; i++ {
 			resp, err = forwarding_rules.Create(ctx, service, &req)
-			if err == nil {
+			if err == nil || isStaleOrderError(err) {
 				break
 			}
 
@@ -307,6 +307,17 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 				}
 			}
 			return diag.FromErr(err)
+		}
+
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			forwardingControlLock.Lock()
+			forwardingControlStartingOrder = 0
+			forwardingControlLock.Unlock()
+			req.Order, req.Rank = intendedOrder, intendedRank
+			continue
 		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
@@ -522,56 +533,70 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	if _, err := forwarding_rules.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := forwarding_rules.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	existingRules, err := forwarding_rules.GetAll(ctx, service)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all forwarding control rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
-
-	req.Order = nextAvailableOrder
 
 	forwardMethod := d.Get("forward_method").(string)
-	if forwardMethod == "ZPA" {
-		// Sleep for 60 seconds before invoking Update
-		time.Sleep(60 * time.Second)
-	}
+	waitedForZPA := false
 
-	// Retry logic in case of specific error
-	for i := 0; i < 3; i++ {
-		_, err = forwarding_rules.Update(ctx, service, id, &req)
-		if err == nil {
-			break
-		}
-
-		if forwardMethod == "ZPA" {
-			if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
-				strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
-				log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
-				time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
-				continue
+	if err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := forwarding_rules.Get(ctx, service, id)
+			if err != nil {
+				return OrderRule{}, err
 			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) {
+			rules, err := forwarding_rules.GetAll(ctx, service)
+			if err != nil {
+				return OrderRule{}, fmt.Errorf("error getting all forwarding control rules: %w", err)
+			}
+			orders := make([]int, 0, len(rules))
+			for _, r := range rules {
+				orders = append(orders, r.Order)
+			}
+			return endOfList(orders), nil
+		},
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			if forwardMethod == "ZPA" && !waitedForZPA {
+				// Sleep for 60 seconds before invoking Update
+				time.Sleep(60 * time.Second)
+				waitedForZPA = true
+			}
+			// Retry logic in case of specific error
+			var err error
+			for i := 0; i < 3; i++ {
+				if _, err = forwarding_rules.Update(ctx, service, id, &req); err == nil {
+					return nil
+				}
+				if forwardMethod == "ZPA" {
+					if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.Response.StatusCode == 400 &&
+						strings.Contains(respErr.Message, "is no longer an active Source IP Anchored App Segment") {
+						log.Printf("[WARN] Received error indicating resource is no longer active. Retrying...\n")
+						time.Sleep(30 * time.Second) // Wait for 30 seconds before retrying
+						continue
+					}
+				}
+				return err
+			}
+			return err
+		},
+	); err != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
 		}
-		return diag.FromErr(err)
-	}
-
-	if customErr := failFastOnErrorCodes(err); customErr != nil {
-		return diag.Errorf("%v", customErr)
-	}
-	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

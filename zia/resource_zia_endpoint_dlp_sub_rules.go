@@ -294,6 +294,7 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 	start := time.Now()
 	resourceType := fmt.Sprintf("endpoint_dlp_sub_rules_%d", parentID)
 
+	staleOrderRetries := 0
 	for {
 		endpointDlpSubRulesLock.Lock()
 		if endpointDlpSubRulesStartingOrder[parentID] == 0 {
@@ -315,6 +316,16 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 		req.Order = endpointDlpSubRulesStartingOrder[parentID]
 
 		resp, _, err := endpoint_dlp_sub_rules.Create(ctx, service, parentID, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			endpointDlpSubRulesLock.Lock()
+			endpointDlpSubRulesStartingOrder[parentID] = 0
+			endpointDlpSubRulesLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		// If the sub-rule already exists upstream (typically because an earlier
 		// apply created it but failed to persist it to state), adopt the
@@ -539,11 +550,33 @@ func resourceEndpointDLPSubRulesUpdate(ctx context.Context, d *schema.ResourceDa
 	req := expandEndpointDLPSubRules(d)
 	req.ID = subID
 
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, _, err := endpoint_dlp_sub_rules.Update(ctx, service, parentID, subID, &req)
+		// A rank change is written at the declared position, as before.
+		err := updateOrderedRule(d, nil,
+			func() (OrderRule, error) {
+				current, err := endpointDLPSubRulesGetCurrent(ctx, service, parentID)()
+				if err != nil {
+					return OrderRule{}, err
+				}
+				pos, ok := current[subID]
+				if !ok {
+					return OrderRule{}, fmt.Errorf("sub-rule %d not found under parent rule %d", subID, parentID)
+				}
+				return pos, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder, Rank: intendedRank}, nil },
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, _, err := endpoint_dlp_sub_rules.Update(ctx, service, parentID, subID, &req)
+				return err
+			},
+		)
 
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
 			return diag.Errorf("%v", customErr)
@@ -569,7 +602,7 @@ func resourceEndpointDLPSubRulesUpdate(ctx context.Context, d *schema.ResourceDa
 	// the update, mirroring the other rule-based resources.
 	resourceType := fmt.Sprintf("endpoint_dlp_sub_rules_%d", parentID)
 	reorderWithBeforeReorder(
-		OrderRule{Order: req.Order, Rank: req.Rank},
+		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		subID,
 		resourceType,
 		endpointDLPSubRulesGetCurrent(ctx, service, parentID),

@@ -15,7 +15,7 @@ description: |-
 
 The **zia_dlp_web_rules** resource allows the creation and management of ZIA Endpoint DLP Rules in the Zscaler Internet Access cloud or via the API.
 
-~> **NOTE:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+~> **NOTE:** Rule orders must always be contiguous (no gaps). When you delete a rule, renumber the remaining rules so the orders stay contiguous. From v4.8.14, the deletion and the renumbering can be applied together in one `terraform apply`.
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/errorx"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/common"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
@@ -364,19 +364,6 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 	start := time.Now()
 
 	for {
-		urlFilteringLock.Lock()
-		if urlFilteringStartingOrder == 0 {
-			list, _ := urlfilteringpolicies.GetAll(ctx, service)
-			for _, r := range list {
-				if r.Order > urlFilteringStartingOrder {
-					urlFilteringStartingOrder = r.Order
-				}
-			}
-			if urlFilteringStartingOrder == 0 {
-				urlFilteringStartingOrder = 1
-			}
-		}
-		urlFilteringLock.Unlock()
 		startWithoutLocking := time.Now()
 
 		intendedOrder := req.Order
@@ -385,8 +372,29 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
-		req.Order = urlFilteringStartingOrder
-		resp, err := urlfilteringpolicies.Create(ctx, service, &req)
+		// The starting order is cached for the apply; it is read again when the
+		// API rejects it because rules were deleted since it was read.
+		var resp *urlfilteringpolicies.URLFilteringRule
+		err := writeAtFreshPosition(
+			func(fresh bool) (OrderRule, error) {
+				urlFilteringLock.Lock()
+				defer urlFilteringLock.Unlock()
+				if urlFilteringStartingOrder == 0 || fresh {
+					end, err := urlFilteringEndPosition(ctx, service)
+					if err != nil {
+						return OrderRule{}, err
+					}
+					urlFilteringStartingOrder = end.Order
+				}
+				return OrderRule{Order: urlFilteringStartingOrder, Rank: req.Rank}, nil
+			},
+			func(pos OrderRule) error {
+				req.Order = pos.Order
+				var err error
+				resp, err = urlfilteringpolicies.Create(ctx, service, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -464,6 +472,21 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 
 		return resourceURLFilteringRulesRead(ctx, d, meta)
 	}
+}
+
+// urlFilteringEndPosition is the last position of the URL filtering rule list,
+// read now, with rank 7: a rule written there is allowed whatever the ranks of
+// the rules above it.
+func urlFilteringEndPosition(ctx context.Context, service *zscaler.Service) (OrderRule, error) {
+	rules, err := urlfilteringpolicies.GetAll(ctx, service)
+	if err != nil {
+		return OrderRule{}, fmt.Errorf("error getting all url filtering rules: %w", err)
+	}
+	orders := make([]int, 0, len(rules))
+	for _, r := range rules {
+		orders = append(orders, r.Order)
+	}
+	return endOfList(orders), nil
 }
 
 func resourceURLFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -628,29 +651,34 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if _, err := urlfilteringpolicies.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := urlfilteringpolicies.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	existingRules, err := urlfilteringpolicies.GetAll(ctx, service)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all url filtering rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
 
-	req.Order = nextAvailableOrder
-
-	_, err = urlfilteringpolicies.Update(ctx, service, id, &req)
+	err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := urlfilteringpolicies.Get(ctx, service, id)
+			if err != nil {
+				return OrderRule{}, err
+			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) { return urlFilteringEndPosition(ctx, service) },
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			_, err := urlfilteringpolicies.Update(ctx, service, id, &req)
+			return err
+		},
+	)
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -661,7 +689,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "url_filtering_rules",
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, id, "url_filtering_rules",
 		func() (map[int]OrderRule, error) {
 			allRules, err := urlfilteringpolicies.GetAll(ctx, service)
 			if err != nil {
@@ -689,7 +717,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
 	)
 
-	markOrderRuleAsDone(req.ID, "url_filtering_rules")
+	markOrderRuleAsDone(id, "url_filtering_rules")
 	waitForReorder("url_filtering_rules")
 
 	// Sleep for 2 seconds before potentially triggering the activation

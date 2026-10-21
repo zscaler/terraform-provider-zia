@@ -79,7 +79,7 @@ Conventions".
 
 ## Rule-Based Resources — Critical Conventions
 
-Rule-based resources include: `zia_ssl_inspection_rules`, `zia_firewall_filtering_rule`, `zia_firewall_dns_rules`, `zia_firewall_ips_rules`, `zia_cloud_app_control_rules`, `zia_url_filtering_rules`, `zia_dlp_web_rules`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_sandbox_rules`, `zia_bandwidth_control_rules`, `zia_traffic_capture_rules`, `zia_file_type_control_rules`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`.
+Rule-based resources (18, all on the shared reorder engine): `zia_ssl_inspection_rules`, `zia_firewall_filtering_rule`, `zia_firewall_dns_rule`, `zia_firewall_ips_rule`, `zia_cloud_app_control_rule`, `zia_url_filtering_rules`, `zia_dlp_web_rules`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_sandbox_rules`, `zia_bandwidth_control_rule`, `zia_traffic_capture_rules`, `zia_file_type_control_rules`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`, `zia_endpoint_dlp_rules`, `zia_endpoint_dlp_sub_rules`, `zia_outbound_email_dlp`.
 
 ### Order Field Validation
 
@@ -165,7 +165,7 @@ The ZIA API does not provide a native bulk-reorder endpoint, so the provider run
 
    Returning here unblocks `waitForReorder` so the next `Create` batch can extend the range. The skipped rules remain registered and are reconciled on the next reorder cycle triggered by the new registration.
 
-4. **Convergence requires two clean passes.** A pass with `putsIssued == 0`, `skipped == 0`, `puterrs == 0`, and a stable `size` counts as one clean pass. The loop exits only after **two** consecutive clean passes, so in-flight PUTs from the previous pass have time to settle in the SDK's `GetAll` view (the OneAPI cache invalidates parent collections on non-GET — see SDK ≥ v3.8.32 — but the API still has its own propagation lag).
+4. **Convergence requires two clean passes — unless the cycle never moved a rule.** A pass with `putsIssued == 0`, `skipped == 0`, `puterrs == 0`, and a stable `size` counts as one clean pass. The loop exits only after **two** consecutive clean passes, so in-flight PUTs from the previous pass have time to settle in the SDK's `GetAll` view (the OneAPI cache invalidates parent collections on non-GET — see SDK ≥ v3.8.32 — but the API still has its own propagation lag). Exception (PR #614): when the cycle has issued **no** PUT at all (`cyclePuts == 0`) and the pass finds every registered rule in place, nothing is in flight, so the loop exits after that single pass. This is the common case for order-only updates after a delete closed the gap, and it halves the wait (~30s per cycle). Do not extend the shortcut to cycles that issued PUTs.
 
 5. **`updateOrder` reset on PUT error.** If any `PUT` in a pass fails (transient 429/5xx), the loop resets its stability counters so the next tick re-evaluates from scratch. This is what lets the deadlock-breaker stay aggressive without prematurely exiting on transient failures.
 
@@ -173,9 +173,31 @@ The ZIA API does not provide a native bulk-reorder endpoint, so the provider run
 
 7. **Bounded read failures.** A failed `getCurrent()` skips every exit condition of the pass, so `reorderAll` counts consecutive read failures separately (`readFailures`) and returns after `maxNoProgressTicks` of them; any successful read resets the count, so transient failures behave exactly as before and no other counter is touched. The waiting Create/Update then reads the rule back and surfaces the API error. Tests: `TestReorder_GetCurrentAlwaysFails_ExitsBounded` and `TestReorder_GetCurrentTransientFailures_StillConverges`.
 
-   The rule `Update` paths must also return the error from the rule list call used to compute the parking order, never just log it: indexing `existingRules[len(existingRules)-1]` on a failed (empty) result panics the provider.
+   The `end` closure passed to `updateOrderedRule` (the end-of-list position, see below) must return the error from its rule list call, never just log it and index an empty result.
 
 When adding a new rule resource, register `reorderWithBeforeReorder(resourceType, getCurrent, updateOrder, beforeReorder)` from the resource's `Create`/`Update` paths. The shared loop handles everything above — do not write a per-resource reorder loop.
+
+### Create/Update Placement (`updateOrderedRule` in `common.go`, PR #614)
+
+**Invariant: never write a position computed from a rule list read earlier.** A rule of the same type deleted while the request is in flight — by the same apply or outside Terraform — shrinks the list, so an absolute position read before the delete (typically "the last order") no longer exists and the API rejects the write with `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N`. This was the Bridgewater failure: a mid-stack rule deleted and the rules below renumbered in one apply; every Update moved its rule to the last order from a list read before the 5–12s DELETE completed, and all of them failed. The delete alone had already produced the renumbered positions.
+
+Every rule `Update` writes through `updateOrderedRule(d, known, current, end, write)` before registering with `reorderWithBeforeReorder`. It picks the mode from the planned diff (`orderedRuleUpdateMode`, which uses `d.HasChangesExcept("order")` — it reads the plan, so unit tests must build the update from a real plan, see Build and Test):
+
+| Mode | When | Write |
+|---|---|---|
+| `ruleUpdateOrderOnly` | only `order` changed | **none** — the reorder engine places the rule and skips it if already in place |
+| `ruleUpdateInPlace` | other attributes changed, `rank` did not | the attributes, at the rule's **current** position (`known` from the existence-check GET, re-read via `current` only on retry) |
+| `ruleUpdateMoveToEnd` | `rank` changed | at `end()` |
+
+- `end` for the 10 resources that historically parked rules (url_filtering, firewall_filtering, firewall_dns, firewall_ips, ssl_inspection, file_type_control, sandbox, cloud_app_control, forwarding_control, traffic_capture): `endOfList(orders)` from a fresh list (last order, rank 7 — allowed whatever the ranks above; the reason the PR #514 park existed). Apply the resource's default-rule filter first (e.g. sandbox `filterOutDefaultRule`).
+- `end` for the 8 resources that write the declared order (bandwidth, nat, casb_dlp, casb_malware, dlp_web, endpoint_dlp, endpoint_dlp_sub, outbound_email_dlp): the **declared** order and rank. Do not move these to the end: some of their `updateOrder` callbacks write only `Order` (bandwidth), so a parked rank 7 would never be corrected. endpoint_dlp parks at the tail with its declared rank.
+- Resources without `rank` (casb_malware, outbound_email_dlp) never hit the rank path; their `write` sets only `Order`.
+- Capture `intendedOrder`/`intendedRank` **before** calling `updateOrderedRule` and register those with the reorder engine — `write` mutates `req.Order`/`req.Rank`.
+- `writeAtFreshPosition` retries a write rejected by `isStaleOrderError` (INVALID_INPUT_ARGUMENT + `not allowed at order N`) up to `maxStaleOrderRetries` (3), re-reading the position each time. It must run **before** `failFastOnErrorCodes`, which treats every INVALID_INPUT_ARGUMENT as fatal (so the old in-loop INVALID_INPUT_ARGUMENT retries never ran).
+
+**Create:** creates post at a starting order cached per apply (`<resource>StartingOrder`, per rule type / per parent where scoped). On `isStaleOrderError`, reset the cache and read it again (loop-based creates: reset + restore `req.Order`/`req.Rank` to the declared values + `continue`, bounded by `staleOrderRetries`; loop-free creates: a `startingOrder(refresh bool)` closure and a bounded retry after the POST; url_filtering uses `writeAtFreshPosition`). One concurrent delete is tolerated anyway (a create may use count+1); two or more are not.
+
+**Delete** needs no ordering logic: once nothing writes a stale position, there is nothing to race.
 
 ### Predefined Rules — User-Facing Guidance
 
@@ -183,16 +205,16 @@ When adding a new rule resource, register `reorderWithBeforeReorder(resourceType
 - `destroy` operations are NOT supported for predefined rules
 - Not all attributes available on custom rules apply to predefined rules
 - Rule orders must always be contiguous (no gaps)
-- When deleting custom rules, use `terraform apply -target=<resource>` then re-adjust remaining order numbers
+- When deleting a custom rule, renumber the remaining rules; from v4.8.14 the delete and the renumbering can run in the same apply (before v4.8.14: `terraform apply -target=<resource>` first, then renumber in a second apply)
 
 ### Rule Documentation Requirements
 
 All rule-based resource docs (`docs/resources/zia_*_rule*.md`) MUST include these four notes before "Example Usage":
 
 ```markdown
-~> **NOTE:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them. When deleting existing custom rules, use the Terraform `-target` flag to target the specific rule to be removed.
+~> **NOTE:** Predefined rules can be managed via the Terraform provider for reordering purposes; however, `destroy` operations are not supported for predefined rules, and not all attributes available on custom rules apply to them.
 
-~> **NOTE:** Rule orders must always be contiguous (no gaps). Deleting a rule must be followed by order number re-adjustment of the remaining rules to ensure the API honours the required order.
+~> **NOTE:** Rule orders must always be contiguous (no gaps). When you delete a rule, renumber the remaining rules so the orders stay contiguous. From v4.8.14, the deletion and the renumbering can be applied together in one `terraform apply`.
 
 ~> **NOTE:** The `order` attribute must always be a positive whole number starting at 1. Negative numbers and zero are **not supported** and will result in an error.
 
@@ -265,7 +287,7 @@ Rule orders must be sequential with no gaps. If a rule at order 5 is deleted, ru
 
 ### `INVALID_INPUT_ARGUMENT: Rule is not allowed at order N`
 
-The provider attempted a `PUT` whose `Order` exceeded the API's currently orderable count. Root cause is almost always either (a) `countOrderable` was bypassed in a new resource's reorder wiring, or (b) `getCurrent()` returned a stale `GetAll` view. Verify:
+The provider attempted a `PUT` whose `Order` exceeded the API's currently orderable count. Root cause is one of (a) a write at a position computed from a rule list read before a concurrent delete completed — the Bridgewater delete-and-renumber case; a resource's Create/Update not going through `updateOrderedRule` / the stale-order retry (see "Create/Update Placement"), (b) `countOrderable` was bypassed in a new resource's reorder wiring, or (c) `getCurrent()` returned a stale `GetAll` view. A customer trace for (a) shows the PUTs carrying the old last order sent before `rule deleted` is logged, and no `reorderAll` lines. Verify:
 - The resource's `getCurrent` callback returns `map[int]OrderRule` and is invoked from `reorderWithBeforeReorder` (do not reimplement the loop).
 - The vendored Zscaler SDK is ≥ v3.8.32 so parent-collection cache invalidation fires on non-GET requests (otherwise `GetAll` returns a pre-PUT snapshot and the diff calculation is wrong).
 
@@ -404,6 +426,9 @@ The internal mechanics — "the reorder engine now…", "parent-collection cache
 # Build the provider
 go build ./...
 
+# Unit tests (offline: in-memory mock of the ZIA API, no credentials)
+TF_ACC= go test ./zia -run 'TestOrderedRules_|TestURLFilteringRules_|TestIsStaleOrderError|TestReorder' -count=1 -race
+
 # Run a specific acceptance test
 TF_ACC=1 go test ./zia/ -v -run TestAccResource<Name>Basic -timeout 120m
 
@@ -413,6 +438,14 @@ go test ./zia/ -v -sweep=global -sweep-run=zia_<name> -timeout 30m
 # Debug logging
 TF_LOG=DEBUG ZSCALER_SDK_VERBOSE=true ZSCALER_SDK_LOG=true terraform apply -no-color 2>&1 | tee /tmp/tf-debug.log
 ```
+
+### Unit tests for rule ordering
+
+- `zia/unit_fixture_test.go`: `newUnitFixture` (SDK OneAPI mock harness `common.NewZIATest`, reorder engine reset, 10ms tick) and `fakeRuleList` — a JSON rule list that behaves like the API: contiguous orders, a PUT moves the rule and shifts the others, an order past the end is rejected with `Rule is not allowed at order N`, writes are serialized, `deleteDelay` makes a delete slow and `onGetRule` lands a delete between a read and the following write.
+- `zia/common_rule_order_unit_test.go`: `orderedRuleSpecs()` lists every rule resource (paths, ID attribute, extra state such as `type` / `parent_rule` / an SSL `action` block); `TestOrderedRules_OrderOnlyUpdateSendsNoWrite` and `TestOrderedRules_InPlaceUpdateKeepsPosition` run on all of them. **Add a spec when adding a rule resource.**
+- `zia/resource_zia_url_filtering_rules_unit_test.go`: the end-to-end delete-and-renumber race, stale-position retries on update and create, rank change.
+- Build updates with `f.updateData(r, id, state, config)` (a real plan via `r.Diff`). A `ResourceData` built from state plus `d.Set` has no diff, so `HasChangesExcept` sees nothing and every update looks order-only.
+- Unit tests import `github.com/zscaler/zscaler-sdk-go/v3/tests/unit/common`; the local `vendor/` is gitignored — run `go mod vendor` after `go.mod` changes so `make build13` keeps working.
 
 ## Release Versioning
 
@@ -431,7 +464,8 @@ Every release MUST update:
 5. ALWAYS add a sweeper for resources with Delete
 6. ALWAYS add `ValidateFunc: validation.IntAtLeast(1)` to `order` fields on rule resources
 7. ALWAYS strip read-only fields in `updateOrder` callbacks for rule resources
-8. ALWAYS include the four predefined-rule / order-validation / reordering-duration notes in rule resource docs
-9. Use existing helpers from `common.go` and `utils.go` — never reimplement
-10. NEVER reference SDK identifiers, internal helpers, or implementation primitives in user-facing docs, changelog entries, or release notes — see "User-Facing Writing Conventions"
-11. NEVER label a change as a breaking change unless a previously working configuration genuinely breaks — argument renames where the capability is preserved are a one-line inline note, not a banner
+8. ALWAYS route rule `Update` writes through `updateOrderedRule`, and retry a create's cached starting order on `isStaleOrderError` — NEVER write a position computed from a rule list read earlier
+9. ALWAYS include the four predefined-rule / order-validation / reordering-duration notes in rule resource docs
+10. Use existing helpers from `common.go` and `utils.go` — never reimplement
+11. NEVER reference SDK identifiers, internal helpers, or implementation primitives in user-facing docs, changelog entries, or release notes — see "User-Facing Writing Conventions"
+12. NEVER label a change as a breaking change unless a previously working configuration genuinely breaks — argument renames where the capability is preserved are a one-line inline note, not a banner

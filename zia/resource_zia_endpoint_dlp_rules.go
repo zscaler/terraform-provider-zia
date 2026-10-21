@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -271,6 +270,7 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
+	staleOrderRetries := 0
 	for {
 		endpointDlpRulesLock.Lock()
 		if endpointDlpStartingOrder == 0 {
@@ -291,6 +291,16 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 		req.Order = endpointDlpStartingOrder
 
 		resp, _, err := endpoint_dlp_rules.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			endpointDlpRulesLock.Lock()
+			endpointDlpStartingOrder = 0
+			endpointDlpRulesLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -500,35 +510,50 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	req := expandEndpointDLPRules(d)
 
 	// Drop the resource from state if it no longer exists.
-	if _, err := endpoint_dlp_rules.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := endpoint_dlp_rules.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	// Park the rule at the tail order before reordering. Writing the intended
-	// order directly makes parallel updates fight over positions and can leave
-	// the rules in a rotated order; the shared reorder loop then moves this rule
-	// to its intended position. Mirrors firewall_filtering / ssl_inspection.
-	existingRules, err := endpoint_dlp_rules.GetAll(ctx, service)
-	if err != nil {
-		log.Printf("[ERROR] error getting all endpoint dlp rules: %v", err)
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	if len(existingRules) > 0 {
-		req.Order = existingRules[len(existingRules)-1].Order
-	}
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, _, err := endpoint_dlp_rules.Update(ctx, service, id, &req)
+		// A rank change parks the rule at the tail order with its declared rank,
+		// as before; the shared reorder loop then moves it to its intended position.
+		err := updateOrderedRule(d, known,
+			func() (OrderRule, error) {
+				rule, err := endpoint_dlp_rules.Get(ctx, service, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+			},
+			func() (OrderRule, error) {
+				rules, err := endpoint_dlp_rules.GetAll(ctx, service)
+				if err != nil {
+					return OrderRule{}, fmt.Errorf("error getting all endpoint dlp rules: %w", err)
+				}
+				orders := make([]int, 0, len(rules))
+				for _, r := range rules {
+					orders = append(orders, r.Order)
+				}
+				return OrderRule{Order: endOfList(orders).Order, Rank: intendedRank}, nil
+			},
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, _, err := endpoint_dlp_rules.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {

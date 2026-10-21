@@ -350,6 +350,7 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
+	staleOrderRetries := 0
 	for {
 		cloudCasbDlpRuleLock.Lock()
 		if cloudCasbDlpRuleStartingOrder == 0 {
@@ -370,6 +371,16 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		req.Order = cloudCasbDlpRuleStartingOrder
 
 		resp, err := casb_dlp_rules.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			cloudCasbDlpRuleLock.Lock()
+			cloudCasbDlpRuleStartingOrder = 0
+			cloudCasbDlpRuleLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -597,18 +608,38 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[INFO] Updating zia cloud application control rule ID: %v\n", id)
 	req := expandCasbDlpRules(d)
 
-	if _, err := casb_dlp_rules.GetByRuleID(ctx, service, ruleType, id); err != nil {
+	var known *OrderRule
+	if existing, err := casb_dlp_rules.GetByRuleID(ctx, service, ruleType, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
+	intendedOrder := req.Order
+	intendedRank := req.Rank
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, err := casb_dlp_rules.Update(ctx, service, id, &req)
+		// A rank change is written at the declared position, as before.
+		err := updateOrderedRule(d, known,
+			func() (OrderRule, error) {
+				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, ruleType, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder, Rank: intendedRank}, nil },
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, err := casb_dlp_rules.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -626,7 +657,7 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error updating resource: %v", err)
 		}
 
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "casb_dlp_rules",
+		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "casb_dlp_rules",
 			func() (map[int]OrderRule, error) {
 				list, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
 				if err != nil {

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -315,6 +314,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
+	staleOrderRetries := 0
 	for {
 		firewallDNSLock.Lock()
 		if firewallDNSStartingOrder == 0 {
@@ -340,6 +340,16 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		req.Order = firewallDNSStartingOrder
 
 		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			firewallDNSLock.Lock()
+			firewallDNSStartingOrder = 0
+			firewallDNSLock.Unlock()
+			req.Order, req.Rank = intendedOrder, intendedRank
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -599,33 +609,47 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	req := expandFirewallDNSRules(d)
 	rememberDNSRedirectIP(id, req.RedirectIP)
 
-	if _, err := firewalldnscontrolpolicies.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := firewalldnscontrolpolicies.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
 
-	existingRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all firewall dns rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
 
-	req.Order = nextAvailableOrder
-
-	_, err = firewalldnscontrolpolicies.Update(ctx, service, id, &req)
-	if customErr := failFastOnErrorCodes(err); customErr != nil {
-		return diag.Errorf("%v", customErr)
-	}
-	if err != nil {
+	if err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
+			if err != nil {
+				return OrderRule{}, err
+			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) {
+			rules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+			if err != nil {
+				return OrderRule{}, fmt.Errorf("error getting all firewall dns rules: %w", err)
+			}
+			orders := make([]int, 0, len(rules))
+			for _, r := range rules {
+				orders = append(orders, r.Order)
+			}
+			return endOfList(orders), nil
+		},
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			_, err := firewalldnscontrolpolicies.Update(ctx, service, id, &req)
+			return err
+		},
+	); err != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
+		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

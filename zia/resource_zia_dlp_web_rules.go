@@ -348,6 +348,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 	start := time.Now()
 	// Determine whether it's a sub-rule
 	isSubRule := req.ParentRule != 0
+	staleOrderRetries := 0
 	for {
 		dlpWebRulesLock.Lock()
 		if isSubRule {
@@ -390,6 +391,20 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		resp, err := dlp_web_rules.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			dlpWebRulesLock.Lock()
+			if isSubRule {
+				dlpWebSubRulesStartingOrder[req.ParentRule] = 0
+			} else {
+				dlpWebStartingOrder = 0
+			}
+			dlpWebRulesLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -656,11 +671,29 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
+	intendedOrder := req.Order
+	intendedRank := req.Rank
+
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, err := dlp_web_rules.Update(ctx, service, id, &req)
+		// A rank change is written at the declared position, as before.
+		err := updateOrderedRule(d, nil,
+			func() (OrderRule, error) {
+				rule, err := dlp_web_rules.Get(ctx, service, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder, Rank: intendedRank}, nil },
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, err := dlp_web_rules.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -690,7 +723,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 		resourceType = fmt.Sprintf("dlp_web_rules_sub_%d", req.ParentRule)
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: dlpWebRuleStoredRank(ctx, service, id, req.Rank)}, id, resourceType,
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: dlpWebRuleStoredRank(ctx, service, id, intendedRank)}, id, resourceType,
 		func() (map[int]OrderRule, error) {
 			if isSubRule {
 				parent, err := dlp_web_rules.Get(ctx, service, req.ParentRule)

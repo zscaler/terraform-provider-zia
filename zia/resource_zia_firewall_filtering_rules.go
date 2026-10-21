@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -222,21 +221,30 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 
 	start := time.Now()
 
-	firewallFilteringLock.Lock()
-	if firewallFilteringStartingOrder == 0 {
-		list, _ := filteringrules.GetAll(ctx, service, nil)
-		for _, r := range list {
-			if r.Order > firewallFilteringStartingOrder {
-				firewallFilteringStartingOrder = r.Order
-			}
+	// startingOrder returns the cached starting order, reading it from the
+	// API when it is not set yet or refresh is true.
+	startingOrder := func(refresh bool) int {
+		firewallFilteringLock.Lock()
+		defer firewallFilteringLock.Unlock()
+		if refresh {
+			firewallFilteringStartingOrder = 0
 		}
 		if firewallFilteringStartingOrder == 0 {
-			firewallFilteringStartingOrder = 1
-		} else {
-			firewallFilteringStartingOrder++
+			list, _ := filteringrules.GetAll(ctx, service, nil)
+			for _, r := range list {
+				if r.Order > firewallFilteringStartingOrder {
+					firewallFilteringStartingOrder = r.Order
+				}
+			}
+			if firewallFilteringStartingOrder == 0 {
+				firewallFilteringStartingOrder = 1
+			} else {
+				firewallFilteringStartingOrder++
+			}
 		}
+		return firewallFilteringStartingOrder
 	}
-	firewallFilteringLock.Unlock()
+	startingOrder(false)
 	startWithoutLocking := time.Now()
 
 	// Store the intended order from HCL
@@ -248,6 +256,12 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	}
 	req.Order = firewallFilteringStartingOrder
 	resp, err := filteringrules.Create(ctx, service, &req)
+	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
+		// The cached starting order was read before rules of this type were
+		// deleted (in this apply or outside Terraform): read it again.
+		req.Order = startingOrder(true)
+		resp, err = filteringrules.Create(ctx, service, &req)
+	}
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -487,32 +501,47 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 	log.Printf("[INFO] Updating firewall filtering rule ID: %v\n", id)
 	req := expandFirewallFilteringRules(d)
 
-	if _, err := filteringrules.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := filteringrules.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
-	existingRules, err := filteringrules.GetAll(ctx, service, nil)
-	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting all filtering rules: %w", err))
-	}
-	sort.Slice(existingRules, func(i, j int) bool {
-		return existingRules[i].Rank < existingRules[j].Rank || (existingRules[i].Rank == existingRules[j].Rank && existingRules[i].Order < existingRules[j].Order)
-	})
+
 	intendedOrder := req.Order
 	intendedRank := req.Rank
-	nextAvailableOrder := existingRules[len(existingRules)-1].Order
-	// always start rank 7 rules at the next available order after all ranked rules
-	req.Rank = 7
 
-	req.Order = nextAvailableOrder
-
-	_, err = filteringrules.Update(ctx, service, id, &req)
-	if customErr := failFastOnErrorCodes(err); customErr != nil {
-		return diag.Errorf("%v", customErr)
-	}
-	if err != nil {
+	if err := updateOrderedRule(d, known,
+		func() (OrderRule, error) {
+			rule, err := filteringrules.Get(ctx, service, id)
+			if err != nil {
+				return OrderRule{}, err
+			}
+			return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+		},
+		func() (OrderRule, error) {
+			rules, err := filteringrules.GetAll(ctx, service, nil)
+			if err != nil {
+				return OrderRule{}, fmt.Errorf("error getting all filtering rules: %w", err)
+			}
+			orders := make([]int, 0, len(rules))
+			for _, r := range rules {
+				orders = append(orders, r.Order)
+			}
+			return endOfList(orders), nil
+		},
+		func(pos OrderRule) error {
+			req.Order, req.Rank = pos.Order, pos.Rank
+			_, err := filteringrules.Update(ctx, service, id, &req)
+			return err
+		},
+	); err != nil {
+		if customErr := failFastOnErrorCodes(err); customErr != nil {
+			return diag.Errorf("%v", customErr)
+		}
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 

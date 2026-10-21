@@ -235,6 +235,7 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 	isSubRule := req.ParentRule != 0
+	staleOrderRetries := 0
 	for {
 		outboundEmailDlpLock.Lock()
 		if isSubRule {
@@ -280,6 +281,20 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		resp, _, err := outbound_email_dlp.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			outboundEmailDlpLock.Lock()
+			if isSubRule {
+				outboundEmailDlpSubRulesStartingOrder[req.ParentRule] = 0
+			} else {
+				outboundEmailDlpStartingOrder = 0
+			}
+			outboundEmailDlpLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
 			return diag.Errorf("%v", customErr)
@@ -485,11 +500,28 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 
 	req := expandOutboundEmailDLP(d)
 
+	intendedOrder := req.Order
+
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, _, err := outbound_email_dlp.Update(ctx, service, id, &req)
+		// This rule type has no rank: an update is never a rank change.
+		err := updateOrderedRule(d, nil,
+			func() (OrderRule, error) {
+				rule, err := outbound_email_dlp.Get(ctx, service, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order}, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder}, nil },
+			func(pos OrderRule) error {
+				req.Order = pos.Order
+				_, _, err := outbound_email_dlp.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
 			return diag.Errorf("%v", customErr)
@@ -517,7 +549,7 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 		resourceType = fmt.Sprintf("outbound_email_dlp_sub_%d", req.ParentRule)
 	}
 
-	reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: 0}, id, resourceType,
+	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: 0}, id, resourceType,
 		func() (map[int]OrderRule, error) {
 			if isSubRule {
 				parent, err := outbound_email_dlp.Get(ctx, service, req.ParentRule)

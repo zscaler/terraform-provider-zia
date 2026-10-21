@@ -183,6 +183,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
+	staleOrderRetries := 0
 	for {
 		natControlRuleLock.Lock()
 		if natControlRuleStartingOrder == 0 {
@@ -208,6 +209,16 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		req.Order = natControlRuleStartingOrder
 
 		resp, err := nat_control_policies.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			natControlRuleLock.Lock()
+			natControlRuleStartingOrder = 0
+			natControlRuleLock.Unlock()
+			req.Order, req.Rank = intendedOrder, intendedRank
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -417,18 +428,38 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[INFO] Updating nat control rule ID: %v\n", id)
 	req := expandNatControlRules(d)
 
-	if _, err := nat_control_policies.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := nat_control_policies.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
+	intendedOrder := req.Order
+	intendedRank := req.Rank
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, err := nat_control_policies.Update(ctx, service, id, &req)
+		// A rank change is written at the declared position, as before.
+		err := updateOrderedRule(d, known,
+			func() (OrderRule, error) {
+				rule, err := nat_control_policies.Get(ctx, service, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder, Rank: intendedRank}, nil },
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, err := nat_control_policies.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -446,7 +477,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "nat_control_rules",
+		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "nat_control_rules",
 			func() (map[int]OrderRule, error) {
 				allRules, err := nat_control_policies.GetAll(ctx, service)
 				if err != nil {

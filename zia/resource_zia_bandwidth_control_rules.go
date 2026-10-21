@@ -130,6 +130,7 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 	timeout := d.Timeout(schema.TimeoutCreate)
 	start := time.Now()
 
+	staleOrderRetries := 0
 	for {
 		bandwidthControlLock.Lock()
 		if bandwidthControlStartingOrder == 0 {
@@ -154,6 +155,16 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 		req.Order = bandwidthControlStartingOrder
 
 		resp, err := bandwidth_control_rules.Create(ctx, service, &req)
+		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
+			// The cached starting order was read before rules of this type were
+			// deleted (in this apply or outside Terraform): read it again.
+			staleOrderRetries++
+			bandwidthControlLock.Lock()
+			bandwidthControlStartingOrder = 0
+			bandwidthControlLock.Unlock()
+			req.Order = order
+			continue
+		}
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -306,18 +317,39 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 	log.Printf("[INFO] Updating bandwidth control rule ID: %v\n", id)
 	req := expandBandwdithControlRules(d)
 
-	if _, err := bandwidth_control_rules.Get(ctx, service, id); err != nil {
+	var known *OrderRule
+	if existing, err := bandwidth_control_rules.Get(ctx, service, id); err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			d.SetId("")
 			return nil
 		}
+	} else {
+		known = &OrderRule{Order: existing.Order, Rank: existing.Rank}
 	}
+	intendedOrder := req.Order
+	intendedRank := req.Rank
 
 	timeout := d.Timeout(schema.TimeoutUpdate)
 	start := time.Now()
 
 	for {
-		_, err := bandwidth_control_rules.Update(ctx, service, id, &req)
+		// A rank change is written at the declared position: this resource's
+		// reorder writes only the order.
+		err := updateOrderedRule(d, known,
+			func() (OrderRule, error) {
+				rule, err := bandwidth_control_rules.Get(ctx, service, id)
+				if err != nil {
+					return OrderRule{}, err
+				}
+				return OrderRule{Order: rule.Order, Rank: rule.Rank}, nil
+			},
+			func() (OrderRule, error) { return OrderRule{Order: intendedOrder, Rank: intendedRank}, nil },
+			func(pos OrderRule) error {
+				req.Order, req.Rank = pos.Order, pos.Rank
+				_, err := bandwidth_control_rules.Update(ctx, service, id, &req)
+				return err
+			},
+		)
 
 		// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 		if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -335,7 +367,7 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
-		reorderWithBeforeReorder(OrderRule{Order: req.Order, Rank: req.Rank}, req.ID, "bandwidth_control_rule",
+		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "bandwidth_control_rule",
 			func() (map[int]OrderRule, error) {
 				list, err := bandwidth_control_rules.GetAll(ctx, service)
 				if err != nil {
