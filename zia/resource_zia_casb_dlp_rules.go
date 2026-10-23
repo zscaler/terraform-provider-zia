@@ -368,7 +368,9 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		startWithoutLocking := time.Now()
 
 		order := req.Order
+		cloudCasbDlpRuleLock.Lock()
 		req.Order = cloudCasbDlpRuleStartingOrder
+		cloudCasbDlpRuleLock.Unlock()
 
 		resp, err := casb_dlp_rules.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -399,12 +401,20 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		log.Printf("[INFO] Created zia casb dlp rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		cloudCasbDlpRuleLock.Lock()
+		cloudCasbDlpRuleStartingOrder++
+		cloudCasbDlpRuleLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"casb_dlp_rules",
 			func() (map[int]OrderRule, error) {
-				list, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+				list, err := casb_dlp_rules.GetByRuleType(reorderCtx, service, req.Type)
 				if err != nil {
 					return nil, err
 				}
@@ -415,7 +425,7 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
+				rule, err := casb_dlp_rules.GetByRuleID(reorderCtx, service, req.Type, id)
 				if err != nil {
 					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
 				}
@@ -426,7 +436,7 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				// Strip read-only fields that cause "Request body is invalid" for predefined rules
 				rule.AccessControl = ""
 				rule.Order = order.Order
-				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
+				_, err = casb_dlp_rules.Update(reorderCtx, service, id, rule)
 				if err != nil {
 					return fmt.Errorf("failed to update rule order: %v", err)
 				}
@@ -657,9 +667,12 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return diag.Errorf("error updating resource: %v", err)
 		}
 
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "casb_dlp_rules",
 			func() (map[int]OrderRule, error) {
-				list, err := casb_dlp_rules.GetByRuleType(ctx, service, req.Type)
+				list, err := casb_dlp_rules.GetByRuleType(reorderCtx, service, req.Type)
 				if err != nil {
 					return nil, err
 				}
@@ -670,7 +683,7 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := casb_dlp_rules.GetByRuleID(ctx, service, req.Type, id)
+				rule, err := casb_dlp_rules.GetByRuleID(reorderCtx, service, req.Type, id)
 				if err != nil {
 					return fmt.Errorf("failed to retrieve rule by ID: %v", err)
 				}
@@ -681,7 +694,7 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 				// Strip read-only fields that cause "Request body is invalid" for predefined rules
 				rule.AccessControl = ""
 				rule.Order = order.Order
-				_, err = casb_dlp_rules.Update(ctx, service, id, rule)
+				_, err = casb_dlp_rules.Update(reorderCtx, service, id, rule)
 				if err != nil {
 					return fmt.Errorf("failed to update rule order: %v", err)
 				}

@@ -228,7 +228,9 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
+		firewallIPSLock.Lock()
 		req.Order = firewallIPSStartingOrder
+		firewallIPSLock.Unlock()
 
 		resp, err := ips_policies.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -266,12 +268,20 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "firewall_ips_rule"
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		firewallIPSLock.Lock()
+		firewallIPSStartingOrder++
+		firewallIPSLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				allRules, err := ips_policies.GetAll(ctx, service)
+				allRules, err := ips_policies.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -283,7 +293,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := ips_policies.Get(ctx, service, id)
+				rule, err := ips_policies.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -296,7 +306,7 @@ func resourceFirewallIPSRulesCreate(ctx context.Context, d *schema.ResourceData,
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = ips_policies.Update(ctx, service, id, rule)
+				_, err = ips_policies.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -502,9 +512,12 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_ips_rule",
 		func() (map[int]OrderRule, error) {
-			allRules, err := ips_policies.GetAll(ctx, service)
+			allRules, err := ips_policies.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -515,7 +528,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := ips_policies.Get(ctx, service, id)
+			rule, err := ips_policies.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -528,7 +541,7 @@ func resourceFirewallIPSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = ips_policies.Update(ctx, service, id, rule)
+			_, err = ips_policies.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map

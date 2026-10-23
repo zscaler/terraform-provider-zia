@@ -175,7 +175,13 @@ The ZIA API does not provide a native bulk-reorder endpoint, so the provider run
 
    The `end` closure passed to `updateOrderedRule` (the end-of-list position, see below) must return the error from its rule list call, never just log it and index an empty result.
 
-When adding a new rule resource, register `reorderWithBeforeReorder(resourceType, getCurrent, updateOrder, beforeReorder)` from the resource's `Create`/`Update` paths. The shared loop handles everything above — do not write a per-resource reorder loop.
+8. **Relative placement while rules are still being created (`relativeTargets`, PR #615, SUP-4231).** While a registered rule's declared order is past the orderable count, the list is incomplete (Terraform creates in batches of ~10). Placing in-range rules at their final absolute positions then is wasted work: each later batch is inserted among them and shifts them, so they were moved again after every batch — the customer's 150-rule firewall deployment made ~3,500 moves for 125 rules (~800 PUT/hr against the API's 400/hr per endpoint), took 4.5h and failed. While incomplete, the present registered rules are placed in declared order directly below the unregistered rules above them (`min(others, d-1) + rank`); once complete, absolute declared orders are used, so the final order is unchanged. Unit test: `TestFirewallFilteringRules_BatchCreatePlacesEachRuleAboutOnce` (~150 moves; ~7,000 on 4.8.14).
+
+9. **Two-phase pass with an up-to-date snapshot.** A move shifts the rules between the old and new position, so after each PUT the pass updates its snapshot (`applyMove`) instead of comparing the next rules against stale positions (which re-PUT rules already in place). Phase 1 leaves the longest run of rules already in relative order (`inOrderRun`, longest increasing subsequence of current positions) and moves only the others; phase 2 moves anything still off target. A swap costs 2 PUTs, a new rule 1. The test fake (`fakeAPI.updateOrder`) models the same shifting — keep it realistic.
+
+10. **The reorder runs on its own context.** The `getCurrent`/`updateOrder` closures use `reorderCtx := context.WithoutCancel(ctx)`: the cycle serves every waiting rule, so it must not die with the create timeout (default 60m) of the rule that started it — that produced SUP-4231's bursts of `context deadline exceeded` exactly 60 minutes after each cycle's first create. Test: `TestFirewallFilteringRules_ReorderSurvivesCancelledCreate`.
+
+When adding a new rule resource, register `reorderWithBeforeReorder(resourceType, getCurrent, updateOrder, beforeReorder)` from the resource's `Create`/`Update` paths, with closures over `reorderCtx`. The shared loop handles everything above — do not write a per-resource reorder loop.
 
 ### Create/Update Placement (`updateOrderedRule` in `common.go`, PR #614)
 
@@ -196,6 +202,8 @@ Every rule `Update` writes through `updateOrderedRule(d, known, current, end, wr
 - `writeAtFreshPosition` retries a write rejected by `isStaleOrderError` (INVALID_INPUT_ARGUMENT + `not allowed at order N`) up to `maxStaleOrderRetries` (3), re-reading the position each time. It must run **before** `failFastOnErrorCodes`, which treats every INVALID_INPUT_ARGUMENT as fatal (so the old in-loop INVALID_INPUT_ARGUMENT retries never ran).
 
 **Create:** creates post at a starting order cached per apply (`<resource>StartingOrder`, per rule type / per parent where scoped). On `isStaleOrderError`, reset the cache and read it again (loop-based creates: reset + restore `req.Order`/`req.Rank` to the declared values + `continue`, bounded by `staleOrderRetries`; loop-free creates: a `startingOrder(refresh bool)` closure and a bounded retry after the POST; url_filtering uses `writeAtFreshPosition`). One concurrent delete is tolerated anyway (a create may use count+1); two or more are not.
+
+**Create at the end of the list (PR #615):** after a successful create, advance the cached starting order (`<resource>StartingOrder++` under its lock) so the next rule is created after it instead of at the same position, which pushed every rule already placed down by one. Read the cached value under the lock too (`-race` flags it otherwise).
 
 **Delete** needs no ordering logic: once nothing writes a stale position, there is nothing to race.
 

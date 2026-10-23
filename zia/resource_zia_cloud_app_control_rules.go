@@ -284,7 +284,9 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
+		cloudAppRuleLock.Lock()
 		req.Order = cloudAppRuleStartingOrder[req.Type]
+		cloudAppRuleLock.Unlock()
 
 		resp, err := cloudappcontrol.Create(ctx, service, req.Type, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -321,12 +323,20 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		// to this cycle's GetByRuleType and would be skipped forever.
 		resourceType := cloudAppRuleResourceType(req.Type)
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		cloudAppRuleLock.Lock()
+		cloudAppRuleStartingOrder[req.Type]++
+		cloudAppRuleLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				list, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+				list, err := cloudappcontrol.GetByRuleType(reorderCtx, service, req.Type)
 				if err != nil {
 					return nil, err
 				}
@@ -338,7 +348,7 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
+				rule, err := cloudappcontrol.GetByRuleID(reorderCtx, service, req.Type, id)
 				if err != nil {
 					return err
 				}
@@ -349,7 +359,7 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+				_, err = cloudappcontrol.Update(reorderCtx, service, req.Type, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -570,9 +580,12 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	resourceType := cloudAppRuleResourceType(req.Type)
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, resourceType,
 		func() (map[int]OrderRule, error) {
-			list, err := cloudappcontrol.GetByRuleType(ctx, service, req.Type)
+			list, err := cloudappcontrol.GetByRuleType(reorderCtx, service, req.Type)
 			if err != nil {
 				return nil, err
 			}
@@ -583,7 +596,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := cloudappcontrol.GetByRuleID(ctx, service, req.Type, id)
+			rule, err := cloudappcontrol.GetByRuleID(reorderCtx, service, req.Type, id)
 			if err != nil {
 				return err
 			}
@@ -594,7 +607,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = cloudappcontrol.Update(ctx, service, req.Type, id, rule)
+			_, err = cloudappcontrol.Update(reorderCtx, service, req.Type, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map

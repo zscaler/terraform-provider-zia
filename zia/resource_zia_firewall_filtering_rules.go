@@ -254,7 +254,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		// always start rank 7 rules at the next available order after all ranked rules
 		req.Rank = 7
 	}
-	req.Order = firewallFilteringStartingOrder
+	req.Order = startingOrder(false)
 	resp, err := filteringrules.Create(ctx, service, &req)
 	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
 		// The cached starting order was read before rules of this type were
@@ -282,12 +282,20 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 	resourceType := "firewall_filtering_rules"
 
+	// The next rule of this type is created after this one, at the end of
+	// the list, so creating it does not move the rules already placed.
+	firewallFilteringLock.Lock()
+	firewallFilteringStartingOrder++
+	firewallFilteringLock.Unlock()
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
 		func() (map[int]OrderRule, error) {
-			allRules, err := filteringrules.GetAll(ctx, service, nil)
+			allRules, err := filteringrules.GetAll(reorderCtx, service, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -298,7 +306,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := filteringrules.Get(ctx, service, id)
+			rule, err := filteringrules.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -311,7 +319,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filteringrules.Update(ctx, service, id, rule)
+			_, err = filteringrules.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -545,9 +553,12 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_filtering_rules",
 		func() (map[int]OrderRule, error) {
-			allRules, err := filteringrules.GetAll(ctx, service, nil)
+			allRules, err := filteringrules.GetAll(reorderCtx, service, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -558,7 +569,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := filteringrules.Get(ctx, service, id)
+			rule, err := filteringrules.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -571,7 +582,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filteringrules.Update(ctx, service, id, rule)
+			_, err = filteringrules.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map

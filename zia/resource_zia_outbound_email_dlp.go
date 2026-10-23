@@ -275,9 +275,13 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 
 		order := req.Order
 		if isSubRule {
+			outboundEmailDlpLock.Lock()
 			req.Order = outboundEmailDlpSubRulesStartingOrder[req.ParentRule]
+			outboundEmailDlpLock.Unlock()
 		} else {
+			outboundEmailDlpLock.Lock()
 			req.Order = outboundEmailDlpStartingOrder
+			outboundEmailDlpLock.Unlock()
 		}
 
 		resp, _, err := outbound_email_dlp.Create(ctx, service, &req)
@@ -317,13 +321,25 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 			resourceType = fmt.Sprintf("outbound_email_dlp_sub_%d", req.ParentRule)
 		}
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		outboundEmailDlpLock.Lock()
+		if isSubRule {
+			outboundEmailDlpSubRulesStartingOrder[req.ParentRule]++
+		} else {
+			outboundEmailDlpStartingOrder++
+		}
+		outboundEmailDlpLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: order, Rank: 0},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
 				if isSubRule {
-					parent, err := outbound_email_dlp.Get(ctx, service, req.ParentRule)
+					parent, err := outbound_email_dlp.Get(reorderCtx, service, req.ParentRule)
 					if err != nil {
 						return nil, err
 					}
@@ -333,7 +349,7 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 					}
 					return m, nil
 				}
-				allRules, err := outbound_email_dlp.GetAll(ctx, service, nil)
+				allRules, err := outbound_email_dlp.GetAll(reorderCtx, service, nil)
 				if err != nil {
 					return nil, err
 				}
@@ -344,7 +360,7 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := outbound_email_dlp.Get(ctx, service, id)
+				rule, err := outbound_email_dlp.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -356,7 +372,7 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 
-				_, _, err = outbound_email_dlp.Update(ctx, service, id, rule)
+				_, _, err = outbound_email_dlp.Update(reorderCtx, service, id, rule)
 				if err != nil {
 					log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
 				}
@@ -549,10 +565,13 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 		resourceType = fmt.Sprintf("outbound_email_dlp_sub_%d", req.ParentRule)
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: 0}, id, resourceType,
 		func() (map[int]OrderRule, error) {
 			if isSubRule {
-				parent, err := outbound_email_dlp.Get(ctx, service, req.ParentRule)
+				parent, err := outbound_email_dlp.Get(reorderCtx, service, req.ParentRule)
 				if err != nil {
 					return nil, err
 				}
@@ -562,7 +581,7 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 				}
 				return m, nil
 			}
-			allRules, err := outbound_email_dlp.GetAll(ctx, service, nil)
+			allRules, err := outbound_email_dlp.GetAll(reorderCtx, service, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -573,7 +592,7 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := outbound_email_dlp.Get(ctx, service, id)
+			rule, err := outbound_email_dlp.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -585,7 +604,7 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 
-			_, _, err = outbound_email_dlp.Update(ctx, service, id, rule)
+			_, _, err = outbound_email_dlp.Update(reorderCtx, service, id, rule)
 			if err != nil {
 				log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
 			}

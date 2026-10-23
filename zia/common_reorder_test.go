@@ -65,10 +65,12 @@ func (f *fakeAPI) getCurrent() (map[int]OrderRule, error) {
 	return out, nil
 }
 
+// updateOrder moves rule id to ord. Like the API, the rules between the old
+// and new position shift by one.
 func (f *fakeAPI) updateOrder(id int, ord OrderRule) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.state[id] = ord
+	applyMove(f.state, id, ord)
 	f.putsByID[id]++
 	return nil
 }
@@ -497,9 +499,9 @@ func TestReorder_OnlyDriftedRulesArePut(t *testing.T) {
 	for i := 1; i <= 10; i++ {
 		api.preSeed(900+i, i, 7) // matches target by default
 	}
-	// Now drift two rules.
-	api.preSeed(900+3, 99, 7) // rule 903: drifted
-	api.preSeed(900+7, 99, 7) // rule 907: drifted
+	// Now drift two rules: swap 903 and 907.
+	api.preSeed(900+3, 7, 7) // rule 903: drifted
+	api.preSeed(900+7, 3, 7) // rule 907: drifted
 
 	for i := 1; i <= 10; i++ {
 		reorderWithBeforeReorder(

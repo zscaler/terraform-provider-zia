@@ -231,6 +231,16 @@ provider "zia" {
 }
 ```
 
+### Large rule deployments slow down and fail with `context deadline exceeded`
+
+```sh
+│ Error: Get "https://api.zsapi.net/zia/api/v1/firewallFilteringRules?&pageSize=5000&page=1": context deadline exceeded
+```
+
+Before v4.8.15, creating many rules of the same type in one apply (for example 150 firewall filtering rules) placed each batch of new rules at its final positions while later rules did not exist yet. Every later batch shifted the rules already placed, so they were moved again after each batch. The number of order updates grew with every batch until the run hit the ZIA API rate limits and slowed to an hour or more per batch, and placing the rules then exceeded the create timeout.
+
+**Solution**: Upgrade to v4.8.15 or later, where each rule is moved about once.
+
 ### Error: `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N` after deleting a rule
 
 ```sh

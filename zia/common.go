@@ -1416,19 +1416,32 @@ func reorderAll(
 				beforeReorder()
 			}
 
+			// While rules are still being created, place them relative to
+			// each other instead of at their final positions (see
+			// relativeTargets); nil once the list is complete.
+			relative := relativeTargets(sorted, current, count)
+			if relative != nil {
+				log.Printf("[INFO] reorderAll: %s — rule list incomplete (%d orderable, declared orders reach past it); placing registered rules relative to each other", resourceType, count)
+			}
+
 			puterrs := 0
 			skipped := 0
 			putsIssued := 0
 			alreadyAtTarget := 0
 			var putDetails []string
+
+			// Rules to place this pass, in declared order, with their target.
+			var candidates []placement
 			for _, v := range sorted {
 				desired := v.Order
-				cur, exists := current[v.ID]
+				if t, ok := relative[v.ID]; ok {
+					desired = t
+				}
 
 				// Rule POSTed but not yet visible to GetAll
 				// (cache lag / API eventual consistency).
 				// Skip and try next tick.
-				if !exists {
+				if _, exists := current[v.ID]; !exists {
 					skipped++
 					continue
 				}
@@ -1441,25 +1454,52 @@ func reorderAll(
 					skipped++
 					continue
 				}
+				candidates = append(candidates, placement{id: v.ID, target: desired})
+			}
 
-				// Diff check: skip rules already at the right
-				// Order AND Rank — no GET, no PUT, no traffic.
-				// This is the core optimization: with N rules
-				// fully in place, a stable pass costs ONE GetAll
-				// (the one we already did above) and ZERO PUTs.
-				if cur.Order == desired.Order && cur.Rank == desired.Rank {
-					alreadyAtTarget++
-					continue
-				}
-
-				log.Printf("[INFO] reorderAll: %s — moving rule %d from order %d (rank %d) to order %d (rank %d)", resourceType, v.ID, cur.Order, cur.Rank, desired.Order, desired.Rank)
-				if err := updateOrder(v.ID, desired); err != nil {
-					log.Printf("[ERROR] reorderAll: PUT for rule %d failed in %s: %v", v.ID, resourceType, err)
+			move := func(c placement) {
+				cur := current[c.id]
+				log.Printf("[INFO] reorderAll: %s — moving rule %d from order %d (rank %d) to order %d (rank %d)", resourceType, c.id, cur.Order, cur.Rank, c.target.Order, c.target.Rank)
+				if err := updateOrder(c.id, c.target); err != nil {
+					log.Printf("[ERROR] reorderAll: PUT for rule %d failed in %s: %v", c.id, resourceType, err)
 					puterrs++
+					return
+				}
+				putDetails = append(putDetails, fmt.Sprintf("rule %d (API order %d, declared order %d)", c.id, cur.Order, c.target.Order))
+				putsIssued++
+				// The move shifts the rules between the two positions; keep
+				// this pass's view in step so the following rules are compared
+				// against where they are now, not where they were when the list
+				// was read. The next pass reads the list again.
+				applyMove(current, c.id, c.target)
+			}
+
+			// Phase 1: leave the longest run of rules already in the right
+			// relative order where they are, and move only the others. Moving
+			// those into place also brings the run to its positions, so each
+			// misplaced rule is moved once (a new rule, or two swapped rules)
+			// instead of every rule it displaces.
+			keep := inOrderRun(candidates, current)
+			moved := map[int]bool{}
+			for _, c := range candidates {
+				if keep[c.id] || atTarget(current[c.id], c.target) {
 					continue
 				}
-				putDetails = append(putDetails, fmt.Sprintf("rule %d (API order %d, declared order %d)", v.ID, cur.Order, desired.Order))
-				putsIssued++
+				move(c)
+				moved[c.id] = true
+			}
+			// Phase 2: move anything still not at its target (for example
+			// when rules not registered in this cycle shifted the run).
+			// Diff check: rules already at the right Order AND Rank get no
+			// GET and no PUT, so a stable pass costs ONE GetAll and ZERO PUTs.
+			for _, c := range candidates {
+				if atTarget(current[c.id], c.target) {
+					if !moved[c.id] {
+						alreadyAtTarget++
+					}
+					continue
+				}
+				move(c)
 			}
 
 			log.Printf("[INFO] reorderAll: %s pass — registered=%d apiOrderable=%d alreadyAtTarget=%d putsIssued=%d skipped=%d errors=%d", resourceType, size, count, alreadyAtTarget, putsIssued, skipped, puterrs)
@@ -1659,6 +1699,122 @@ func waitForReorder(resourceType string) {
 
 func reorder(order OrderRule, id int, resourceType string, getCurrent func() (map[int]OrderRule, error), updateOrder func(id int, order OrderRule) error) {
 	reorderWithBeforeReorder(order, id, resourceType, getCurrent, updateOrder, nil)
+}
+
+// placement is a registered rule and the position a reorder pass places it at.
+type placement struct {
+	id     int
+	target OrderRule
+}
+
+func atTarget(cur, target OrderRule) bool {
+	return cur.Order == target.Order && cur.Rank == target.Rank
+}
+
+// inOrderRun returns the rules (candidates are in target order) that form the
+// longest run whose current positions are already in that order: the rules
+// that do not need to move for the others to be placed around them.
+func inOrderRun(candidates []placement, current map[int]OrderRule) map[int]bool {
+	// Longest strictly increasing subsequence of the current positions.
+	tails := []int{} // tails[k]: index of the smallest tail of a run of length k+1
+	prev := make([]int, len(candidates))
+	for i, c := range candidates {
+		pos := current[c.id].Order
+		lo, hi := 0, len(tails)
+		for lo < hi {
+			mid := (lo + hi) / 2
+			if current[candidates[tails[mid]].id].Order < pos {
+				lo = mid + 1
+			} else {
+				hi = mid
+			}
+		}
+		prev[i] = -1
+		if lo > 0 {
+			prev[i] = tails[lo-1]
+		}
+		if lo == len(tails) {
+			tails = append(tails, i)
+		} else {
+			tails[lo] = i
+		}
+	}
+	keep := make(map[int]bool, len(tails))
+	if len(tails) > 0 {
+		for i := tails[len(tails)-1]; i >= 0; i = prev[i] {
+			keep[candidates[i].id] = true
+		}
+	}
+	return keep
+}
+
+// applyMove updates a snapshot of rule positions for a rule moved to order:
+// like the API, the rules between its old and new position shift by one.
+func applyMove(current map[int]OrderRule, id int, to OrderRule) {
+	from := current[id].Order
+	for other, c := range current {
+		if other == id || c.Order < 1 {
+			continue
+		}
+		switch {
+		case from < to.Order && c.Order > from && c.Order <= to.Order:
+			c.Order--
+		case from > to.Order && c.Order >= to.Order && c.Order < from:
+			c.Order++
+		default:
+			continue
+		}
+		current[other] = c
+	}
+	current[id] = to
+}
+
+// relativeTargets returns the positions to place the registered rules at while
+// the rule list is incomplete, or nil when it is complete.
+//
+// The list is incomplete while a registered rule's declared order is past the
+// number of orderable rules: Terraform creates rules in batches, and the rules
+// of later batches do not exist yet. Placing the rules of the first batches at
+// their final (absolute) positions then is wasted work: every later batch is
+// inserted among them and shifts them, so they would be moved again after each
+// batch (SUP-4231: ~3,500 moves for 125 rules, beyond the API's hourly write
+// limits). Instead, the registered rules that exist are placed in their
+// declared order directly below the rules not registered in this cycle that
+// come before them, so each new rule is moved once and the rules already
+// placed keep their relative order. Once the list is complete the declared
+// (absolute) orders are used, so the final order is unchanged.
+func relativeTargets(sorted RuleIDOrderPairList, current map[int]OrderRule, count int) map[int]OrderRule {
+	registered := make(map[int]bool, len(sorted))
+	incomplete := false
+	for _, v := range sorted {
+		registered[v.ID] = true
+		if v.Order.Order > count {
+			incomplete = true
+		}
+	}
+	if !incomplete {
+		return nil
+	}
+	others := 0 // orderable rules not registered in this cycle
+	for id, c := range current {
+		if !registered[id] && c.Order >= 1 {
+			others++
+		}
+	}
+	targets := make(map[int]OrderRule, len(sorted))
+	placed := 0
+	for _, v := range sorted { // declared order
+		if _, ok := current[v.ID]; !ok {
+			continue // not visible yet
+		}
+		placed++
+		above := v.Order.Order - 1 // the other rules declared above this one
+		if above > others {
+			above = others
+		}
+		targets[v.ID] = OrderRule{Order: above + placed, Rank: v.Order.Rank}
+	}
+	return targets
 }
 
 // ruleUpdateMode is how an update of an ordered rule writes the rule before

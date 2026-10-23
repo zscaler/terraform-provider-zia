@@ -152,7 +152,9 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 		startWithoutLocking := time.Now()
 
 		order := req.Order
+		bandwidthControlLock.Lock()
 		req.Order = bandwidthControlStartingOrder
+		bandwidthControlLock.Unlock()
 
 		resp, err := bandwidth_control_rules.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -187,12 +189,20 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 		}
 
 		log.Printf("[INFO] Created zia bandwidth control rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		bandwidthControlLock.Lock()
+		bandwidthControlStartingOrder++
+		bandwidthControlLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			"bandwidth_control_rule",
 			func() (map[int]OrderRule, error) {
-				list, err := bandwidth_control_rules.GetAll(ctx, service)
+				list, err := bandwidth_control_rules.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -204,7 +214,7 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := bandwidth_control_rules.Get(ctx, service, id)
+				rule, err := bandwidth_control_rules.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -216,7 +226,7 @@ func resourceBandwdithControlRulesCreate(ctx context.Context, d *schema.Resource
 				rule.DefaultRule = false
 				rule.AccessControl = ""
 				rule.Order = order.Order
-				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
+				_, err = bandwidth_control_rules.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil)
@@ -367,9 +377,12 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "bandwidth_control_rule",
 			func() (map[int]OrderRule, error) {
-				list, err := bandwidth_control_rules.GetAll(ctx, service)
+				list, err := bandwidth_control_rules.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -381,7 +394,7 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := bandwidth_control_rules.Get(ctx, service, id)
+				rule, err := bandwidth_control_rules.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -393,7 +406,7 @@ func resourceBandwdithControlRulesUpdate(ctx context.Context, d *schema.Resource
 				rule.DefaultRule = false
 				rule.AccessControl = ""
 				rule.Order = order.Order
-				_, err = bandwidth_control_rules.Update(ctx, service, id, rule)
+				_, err = bandwidth_control_rules.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil)

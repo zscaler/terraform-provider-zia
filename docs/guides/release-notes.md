@@ -12,9 +12,23 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.14``
+``Last updated: v4.8.15``
 
 ---
+
+## 4.8.15 (Unreleased)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Rule resources: creating many rules of the same type in one apply (for example 150 firewall filtering rules) no longer slows down with every batch and fails after several hours with `context deadline exceeded`. New rules are added at the end of the rule list and, until all rules of the apply exist, placed relative to each other, so each rule is moved about once instead of again after every batch, which keeps the run within the ZIA API rate limits. Placing the rules is no longer stopped by the create timeout of a single rule. Applies to `zia_bandwidth_control_rule`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`, `zia_cloud_app_control_rule`, `zia_dlp_web_rules`, `zia_endpoint_dlp_rules`, `zia_endpoint_dlp_sub_rules`, `zia_file_type_control_rules`, `zia_firewall_dns_rule`, `zia_firewall_filtering_rule`, `zia_firewall_ips_rule`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_outbound_email_dlp`, `zia_sandbox_rules`, `zia_ssl_inspection_rules`, `zia_traffic_capture_rules` and `zia_url_filtering_rules`.
+
+### Dependencies
+
+- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Upgraded to zscaler-sdk-go v3.8.56, which applies the ZIA API rate limits per endpoint, as the API enforces them.
 
 ## 4.8.14 (October 21, 2026)
 

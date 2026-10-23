@@ -110,6 +110,7 @@ type fakeRuleList struct {
 	puts        []map[string]any // accepted PUT bodies
 	rejected    int              // writes rejected for an invalid order
 	onGetRule   func(id int)
+	onGetAll    func() // runs after a read of the list has built its response
 }
 
 // newFakeRuleList serves n rules with IDs 1001..1000+n, each carrying fields.
@@ -186,8 +187,13 @@ func notAllowedAt(order int) common.MockResponse {
 
 func (f *fakeRuleList) getAll(*http.Request, []byte) common.MockResponse {
 	f.mu.Lock()
-	defer f.mu.Unlock()
-	return common.MockResponse{StatusCode: http.StatusOK, Body: f.numbered()}
+	resp := common.MockResponse{StatusCode: http.StatusOK, Body: f.numbered()}
+	hook := f.onGetAll
+	f.mu.Unlock()
+	if hook != nil {
+		hook()
+	}
+	return resp
 }
 
 func (f *fakeRuleList) get(req *http.Request, _ []byte) common.MockResponse {
