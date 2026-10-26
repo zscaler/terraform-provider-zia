@@ -382,7 +382,7 @@ func resourceCloudAppControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceCloudAppControlRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceCloudAppControlRulesRead, resourceType)
 	}
 }
 
@@ -627,7 +627,7 @@ func resourceCloudAppControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCloudAppControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceCloudAppControlRulesRead, resourceType)
 }
 
 func resourceCloudAppControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -381,6 +381,7 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 
 		markOrderRuleAsDone(resp.ID, resourceType)
 		waitForReorder(resourceType)
+		recordRegisteredOrder(d, resourceType)
 		break
 	}
 
@@ -632,7 +633,7 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	markOrderRuleAsDone(id, resourceType)
 	waitForReorder(resourceType)
 
-	return resourceEndpointDLPRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPRulesRead, resourceType)
 }
 
 func resourceEndpointDLPRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

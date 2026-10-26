@@ -359,7 +359,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFileTypeControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFileTypeControlRulesRead, "file_type_control_rules")
 }
 
 func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -549,7 +549,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFileTypeControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFileTypeControlRulesRead, "file_type_control_rules")
 }
 
 func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

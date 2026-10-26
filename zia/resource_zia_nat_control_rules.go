@@ -300,6 +300,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 		markOrderRuleAsDone(resp.ID, "nat_control_rules")
 		waitForReorder("nat_control_rules")
+		recordRegisteredOrder(d, "nat_control_rules")
 		break
 	}
 
@@ -544,7 +545,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceNatControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceNatControlRulesRead, "nat_control_rules")
 }
 
 func resourceNatControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

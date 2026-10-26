@@ -396,7 +396,7 @@ func resourceForwardingControlRuleCreate(ctx context.Context, d *schema.Resource
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceForwardingControlRuleRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceForwardingControlRuleRead, "forwarding_control_rule")
 	}
 }
 
@@ -657,7 +657,7 @@ func resourceForwardingControlRuleUpdate(ctx context.Context, d *schema.Resource
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceForwardingControlRuleRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceForwardingControlRuleRead, "forwarding_control_rule")
 }
 
 func resourceForwardingControlRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

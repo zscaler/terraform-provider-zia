@@ -493,7 +493,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSSLInspectionRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSSLInspectionRulesRead, "ssl_inspection_rules")
 }
 
 func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -702,7 +702,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSSLInspectionRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSSLInspectionRulesRead, "ssl_inspection_rules")
 }
 
 func resourceSSLInspectionRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -478,7 +478,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceURLFilteringRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceURLFilteringRulesRead, "url_filtering_rules")
 	}
 }
 
@@ -742,7 +742,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceURLFilteringRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceURLFilteringRulesRead, "url_filtering_rules")
 }
 
 func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

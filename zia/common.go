@@ -1,8 +1,10 @@
 package zia
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"maps"
 	"regexp"
 	"sort"
 	"strconv"
@@ -10,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/cloudappcontrol"
@@ -1258,6 +1261,7 @@ type listrules struct {
 	orders      map[string]map[int]orderWithState
 	orderer     map[string]int
 	reorderDone map[string]chan struct{}
+	revisions   map[string]uint64
 	sync.Mutex
 }
 
@@ -1336,11 +1340,10 @@ const maxNonImprovingPutTicks = 6
 //     since SUP-3988 was first opened: don't PUT a rule whose order
 //     hasn't changed.
 //
-// Rules whose desired Order is outside the API's orderable range
-// (1..count, where count is the number of rules in the API with
-// Order >= 1) are deferred to the next tick rather than being PUT —
-// the API rejects out-of-range orders with INVALID_INPUT_ARGUMENT.
-// This typically means more rules are still being POSTed by terraform.
+// If a registered Order exceeds the number of API rules with Order >= 1,
+// release this batch without order PUTs so more creates can extend the list.
+// The next registration starts a new cycle with the same declared targets.
+// This avoids repeated intermediate moves and rejected out-of-range PUTs.
 //
 // Progress detection: a pass made progress if size grew (new rule
 // registered), OR a PUT was issued successfully, OR the deferred set
@@ -1352,7 +1355,8 @@ func reorderAll(
 	getCurrent func() (map[int]OrderRule, error),
 	updateOrder func(id int, order OrderRule) error,
 	beforeReorder func(),
-) {
+) uint64 {
+	var revision uint64
 	ticker := time.NewTicker(reorderTickInterval)
 	defer ticker.Stop()
 	lastSize := -1
@@ -1382,6 +1386,7 @@ func reorderAll(
 				continue
 			}
 			sorted := sortOrders(rules.orders[resourceType])
+			revision = rules.revisions[resourceType]
 			rules.Unlock()
 
 			// One GetAll per pass. This is the cache-friendly call
@@ -1400,7 +1405,7 @@ func reorderAll(
 				readFailures++
 				if readFailures >= maxNoProgressTicks {
 					log.Printf("[WARN] reorderAll: %s — could not read the current rule order for %d consecutive passes, giving up. Last error: %v", resourceType, readFailures, err)
-					return
+					return revision
 				}
 				continue
 			}
@@ -1416,12 +1421,21 @@ func reorderAll(
 				beforeReorder()
 			}
 
-			// While rules are still being created, place them relative to
-			// each other instead of at their final positions (see
-			// relativeTargets); nil once the list is complete.
-			relative := relativeTargets(sorted, current, count)
-			if relative != nil {
-				log.Printf("[INFO] reorderAll: %s — rule list incomplete (%d orderable, declared orders reach past it); placing registered rules relative to each other", resourceType, count)
+			// Terraform creates rules in batches. If this batch includes a
+			// position that does not exist yet, let the next batch extend the
+			// list before moving any rules. Moving the reachable subset now
+			// makes later insertions displace it and repeats that work for
+			// every batch. Keep every declared target unchanged; never invent
+			// temporary positions or reserve slots for unmanaged rules.
+			deferred := 0
+			for _, v := range sorted {
+				if v.Order.Order > count {
+					deferred++
+				}
+			}
+			if deferred > 0 {
+				log.Printf("[INFO] reorderAll: deferring placement for %s: %d declared orders exceed the current %d orderable rules; releasing this batch without order PUTs so later creates can extend the list", resourceType, deferred, count)
+				return revision
 			}
 
 			puterrs := 0
@@ -1434,9 +1448,6 @@ func reorderAll(
 			var candidates []placement
 			for _, v := range sorted {
 				desired := v.Order
-				if t, ok := relative[v.ID]; ok {
-					desired = t
-				}
 
 				// Rule POSTed but not yet visible to GetAll
 				// (cache lag / API eventual consistency).
@@ -1481,12 +1492,16 @@ func reorderAll(
 			// instead of every rule it displaces.
 			keep := inOrderRun(candidates, current)
 			moved := map[int]bool{}
-			for _, c := range candidates {
-				if keep[c.id] || atTarget(current[c.id], c.target) {
-					continue
+			if preferDirectPlacement(candidates, current, keep) {
+				log.Printf("[INFO] reorderAll: %s — direct placement reaches the same declared targets with fewer order updates", resourceType)
+			} else {
+				for _, c := range candidates {
+					if keep[c.id] || atTarget(current[c.id], c.target) {
+						continue
+					}
+					move(c)
+					moved[c.id] = true
 				}
-				move(c)
-				moved[c.id] = true
 			}
 			// Phase 2: move anything still not at its target (for example
 			// when rules not registered in this cycle shifted the run).
@@ -1511,7 +1526,7 @@ func reorderAll(
 			cyclePuts += putsIssued
 			if putsIssued == 0 && skipped == 0 && puterrs == 0 && cyclePuts == 0 {
 				log.Printf("[INFO] reorder complete for %s: %d rules, all already in place", resourceType, size)
-				return
+				return revision
 			}
 
 			// Convergence: a clean pass = nothing to do AND no
@@ -1523,7 +1538,7 @@ func reorderAll(
 				cleanPasses++
 				if cleanPasses >= 2 {
 					log.Printf("[INFO] reorder complete for %s: %d rules", resourceType, size)
-					return
+					return revision
 				}
 			} else {
 				cleanPasses = 0
@@ -1558,7 +1573,7 @@ func reorderAll(
 				stuckOnSkippedTicks++
 				if stuckOnSkippedTicks >= maxStuckOnSkippedTicks {
 					log.Printf("[INFO] reorderAll: %s — %d in-range rule(s) at target, %d deferred (declared orders > apiOrderable=%d). Returning so the next batch of Creates can extend the orderable range.", resourceType, alreadyAtTarget, skipped, count)
-					return
+					return revision
 				}
 			} else {
 				stuckOnSkippedTicks = 0
@@ -1589,7 +1604,7 @@ func reorderAll(
 				nonImprovingPutTicks++
 				if nonImprovingPutTicks >= maxNonImprovingPutTicks {
 					log.Printf("[WARN] reorderAll: %s — %d pass(es) kept re-issuing order updates without converging (best %d/%d rules at target). The declared orders appear unsatisfiable (duplicate order values in the tenant, or rules not managed by Terraform occupying positions in the declared range). Giving up so the apply can complete; re-run terraform plan to see the remaining differences. Contested in the last pass: %s", resourceType, nonImprovingPutTicks, bestAtTarget, size, strings.Join(putDetails, "; "))
-					return
+					return revision
 				}
 			default:
 				nonImprovingPutTicks = 0
@@ -1614,7 +1629,7 @@ func reorderAll(
 
 			if noProgressTicks >= maxNoProgressTicks {
 				log.Printf("[WARN] reorderAll: no progress for %d ticks for %s — giving up. Likely the declared orders exceed the count of orderable rules (gaps in order numbers, or earlier Create failures). Re-run terraform apply to retry.", noProgressTicks, resourceType)
-				return
+				return revision
 			}
 
 			lastSize = size
@@ -1645,6 +1660,7 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 	if rules.orderer == nil {
 		rules.orderer = map[string]int{}
 		rules.reorderDone = map[string]chan struct{}{}
+		rules.revisions = map[string]uint64{}
 	}
 	if rules.orders == nil {
 		rules.orders = map[string]map[int]orderWithState{}
@@ -1671,6 +1687,7 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 		rules.orders[resourceType] = map[int]orderWithState{}
 	}
 	rules.orders[resourceType][id] = orderWithState{order, false}
+	rules.revisions[resourceType]++
 	// Capture the done channel while still holding the lock: concurrent
 	// registrations write rules.reorderDone under the lock, so reading the
 	// map after Unlock races with them.
@@ -1679,8 +1696,19 @@ func reorderWithBeforeReorder(order OrderRule, id int, resourceType string, getC
 	if shouldCallReorder {
 		log.Printf("[INFO] starting to reorder the rules, delegating to rule:%d, order:%d", id, order)
 		go func() {
-			reorderAll(resourceType, getCurrent, updateOrder, beforeReorder)
-			close(doneCh)
+			for {
+				revision := reorderAll(resourceType, getCurrent, updateOrder, beforeReorder)
+				rules.Lock()
+				if revision != rules.revisions[resourceType] {
+					rules.Unlock()
+					continue
+				}
+				// Closing the cycle and checking for new registrations must
+				// be atomic with registration's decision to start a new one.
+				close(doneCh)
+				rules.Unlock()
+				return
+			}
 		}()
 	}
 }
@@ -1697,6 +1725,44 @@ func waitForReorder(resourceType string) {
 	}
 }
 
+// crudFunc is the signature of a resource CRUD function.
+type crudFunc = func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics
+
+// recordRegisteredOrder writes the position registered with the reorder
+// engine for the rule in d (its API id is d.Id()) into state. waitForReorder
+// returns before the rule reaches that position whenever the engine releases
+// a batch early — placement deferred until later creates extend the list, the
+// deadlock-breaker, the oscillation breaker, failed reads — so the Read that
+// follows records a transient position, and nothing rewrites state once a
+// later cycle moves the rule. A registered target never changes, so it is the
+// position the apply converges to; a refresh reads the API and reports any
+// divergence that remains. Resources without a rank attribute ignore the rank
+// write.
+func recordRegisteredOrder(d *schema.ResourceData, resourceType string) {
+	id, err := strconv.Atoi(d.Id())
+	if err != nil {
+		return
+	}
+	rules.Lock()
+	reg, ok := rules.orders[resourceType][id]
+	rules.Unlock()
+	if !ok {
+		return
+	}
+	_ = d.Set("order", reg.order.Order)
+	if reg.order.Rank != 0 {
+		_ = d.Set("rank", reg.order.Rank)
+	}
+}
+
+// readOrderedRule runs the resource's Read after waitForReorder and then
+// records the registered position, see recordRegisteredOrder.
+func readOrderedRule(ctx context.Context, d *schema.ResourceData, meta interface{}, read crudFunc, resourceType string) diag.Diagnostics {
+	diags := read(ctx, d, meta)
+	recordRegisteredOrder(d, resourceType)
+	return diags
+}
+
 func reorder(order OrderRule, id int, resourceType string, getCurrent func() (map[int]OrderRule, error), updateOrder func(id int, order OrderRule) error) {
 	reorderWithBeforeReorder(order, id, resourceType, getCurrent, updateOrder, nil)
 }
@@ -1709,6 +1775,82 @@ type placement struct {
 
 func atTarget(cur, target OrderRule) bool {
 	return cur.Order == target.Order && cur.Rank == target.Rank
+}
+
+// preferDirectPlacement skips the relative-order phase only when a simulation
+// proves that the final placement phase alone reaches every declared target
+// with fewer PUTs. Both trials use copies of the same snapshot and move only
+// registered rules to their unchanged HCL targets. Actual writes and final
+// verification still use the existing reorder loop.
+func preferDirectPlacement(candidates []placement, current map[int]OrderRule, keep map[int]bool) bool {
+	if len(candidates) < 2 {
+		return false
+	}
+	// Restrict this optimization to an ordinary contiguous list with one
+	// unchanged rank. Preserve the existing path for rank transitions,
+	// ambiguous positions, and special API order data.
+	rank := candidates[0].target.Rank
+	positions := make(map[int]bool, len(current))
+	count, maxOrder := 0, 0
+	for _, cur := range current {
+		if cur.Order < 1 {
+			continue
+		}
+		if cur.Rank != rank || positions[cur.Order] {
+			return false
+		}
+		positions[cur.Order] = true
+		count++
+		if cur.Order > maxOrder {
+			maxOrder = cur.Order
+		}
+	}
+	if maxOrder != count {
+		return false
+	}
+	previous := 0
+	for _, c := range candidates {
+		cur, exists := current[c.id]
+		if !exists || cur.Order < 1 || cur.Rank != c.target.Rank || c.target.Rank != rank || c.target.Order <= previous || c.target.Order > count {
+			return false
+		}
+		previous = c.target.Order
+	}
+
+	direct := maps.Clone(current)
+	directPuts := 0
+	for _, c := range candidates {
+		if !atTarget(direct[c.id], c.target) {
+			applyMove(direct, c.id, c.target)
+			directPuts++
+		}
+	}
+	if directPuts == 0 {
+		return false
+	}
+	for _, c := range candidates {
+		if !atTarget(direct[c.id], c.target) {
+			return false
+		}
+	}
+
+	relative := maps.Clone(current)
+	relativePuts := 0
+	move := func(c placement) {
+		if !atTarget(relative[c.id], c.target) {
+			applyMove(relative, c.id, c.target)
+			relativePuts++
+		}
+	}
+	for _, c := range candidates {
+		if !keep[c.id] {
+			move(c)
+		}
+	}
+	for _, c := range candidates {
+		move(c)
+	}
+	return directPuts < relativePuts
 }
 
 // inOrderRun returns the rules (candidates are in target order) that form the
@@ -1767,54 +1909,6 @@ func applyMove(current map[int]OrderRule, id int, to OrderRule) {
 		current[other] = c
 	}
 	current[id] = to
-}
-
-// relativeTargets returns the positions to place the registered rules at while
-// the rule list is incomplete, or nil when it is complete.
-//
-// The list is incomplete while a registered rule's declared order is past the
-// number of orderable rules: Terraform creates rules in batches, and the rules
-// of later batches do not exist yet. Placing the rules of the first batches at
-// their final (absolute) positions then is wasted work: every later batch is
-// inserted among them and shifts them, so they would be moved again after each
-// batch (SUP-4231: ~3,500 moves for 125 rules, beyond the API's hourly write
-// limits). Instead, the registered rules that exist are placed in their
-// declared order directly below the rules not registered in this cycle that
-// come before them, so each new rule is moved once and the rules already
-// placed keep their relative order. Once the list is complete the declared
-// (absolute) orders are used, so the final order is unchanged.
-func relativeTargets(sorted RuleIDOrderPairList, current map[int]OrderRule, count int) map[int]OrderRule {
-	registered := make(map[int]bool, len(sorted))
-	incomplete := false
-	for _, v := range sorted {
-		registered[v.ID] = true
-		if v.Order.Order > count {
-			incomplete = true
-		}
-	}
-	if !incomplete {
-		return nil
-	}
-	others := 0 // orderable rules not registered in this cycle
-	for id, c := range current {
-		if !registered[id] && c.Order >= 1 {
-			others++
-		}
-	}
-	targets := make(map[int]OrderRule, len(sorted))
-	placed := 0
-	for _, v := range sorted { // declared order
-		if _, ok := current[v.ID]; !ok {
-			continue // not visible yet
-		}
-		placed++
-		above := v.Order.Order - 1 // the other rules declared above this one
-		if above > others {
-			above = others
-		}
-		targets[v.ID] = OrderRule{Order: above + placed, Rank: v.Order.Rank}
-	}
-	return targets
 }
 
 // ruleUpdateMode is how an update of an ordered rule writes the rule before

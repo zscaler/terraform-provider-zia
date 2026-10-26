@@ -8,11 +8,12 @@
 
 ### Bug Fixes
 
-- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Rule resources: creating many rules of the same type in one apply (for example 150 firewall filtering rules) no longer slows down with every batch and fails after several hours with `context deadline exceeded`. New rules are added at the end of the rule list and, until all rules of the apply exist, placed relative to each other, so each rule is moved about once instead of again after every batch, which keeps the run within the ZIA API rate limits. Placing the rules is no longer stopped by the create timeout of a single rule. Applies to `zia_bandwidth_control_rule`, `zia_casb_dlp_rules`, `zia_casb_malware_rules`, `zia_cloud_app_control_rule`, `zia_dlp_web_rules`, `zia_endpoint_dlp_rules`, `zia_endpoint_dlp_sub_rules`, `zia_file_type_control_rules`, `zia_firewall_dns_rule`, `zia_firewall_filtering_rule`, `zia_firewall_ips_rule`, `zia_forwarding_control_rule`, `zia_nat_control_rules`, `zia_outbound_email_dlp`, `zia_sandbox_rules`, `zia_ssl_inspection_rules`, `zia_traffic_capture_rules` and `zia_url_filtering_rules`.
+- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Rule resources: reduced repeated order updates during large deployments while preserving the positions declared in HCL. Batches wait for the required positions to exist before placing rules, and new rules are added at the end of the list. Concurrent firewall filtering creates no longer reuse the same insertion position. Shared ordering continues independently of the timeout of the individual rule that started it. A rule registering during final verification is processed before waiting operations return.
 
-### Dependencies
+- Rule ordering: avoid unnecessary intermediate order updates when a shorter sequence reaches the same configured positions. The existing handling remains in use for rank changes and ambiguous API order data.
 
-- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Upgraded to zscaler-sdk-go v3.8.56, which applies the ZIA API rate limits per endpoint, as the API enforces them.
+- Rule resources: the state written when a rule is created or updated now records the configured `order` and `rank`. Previously, during large deployments, rules were recorded at the interim position they held while the ordering of the remaining rules was still in progress, so the state file disagreed with both the configuration and the service even though `terraform plan` reported no changes (the plan compared against a refreshed view that was never written back). A plan now reports an `order` difference only when the rule order in the service actually differs from the configuration. Newly created `zia_traffic_capture_rules` are now ordered together with other traffic capture rules instead of with firewall filtering rules.
+
 
 ## 4.8.14 (October 21, 2026)
 

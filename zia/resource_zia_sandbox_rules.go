@@ -310,7 +310,7 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceSandboxRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceSandboxRulesRead, "sandbox_rules")
 	}
 }
 
@@ -497,7 +497,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSandboxRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSandboxRulesRead, "sandbox_rules")
 }
 
 func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

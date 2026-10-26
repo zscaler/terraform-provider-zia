@@ -470,7 +470,7 @@ func resourceCasbDlpRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCasbDlpRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceCasbDlpRulesRead, "casb_dlp_rules")
 }
 
 func resourceCasbDlpRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -718,7 +718,7 @@ func resourceCasbDlpRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceCasbDlpRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceCasbDlpRulesRead, "casb_dlp_rules")
 }
 
 func resourceCasbDlpRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -114,6 +114,36 @@ func TestOrderedRules_OrderOnlyUpdateSendsNoWrite(t *testing.T) {
 	}
 }
 
+// An order past the current end of the list cannot be placed until later
+// creates extend the list, so the engine releases the batch and the update
+// returns with the rule still at its old position. The state it returns must
+// nevertheless carry the declared order: that state is what Terraform
+// persists, nothing rewrites it once a later cycle moves the rule, and the
+// next plan compares the API against it.
+func TestOrderedRules_DeferredPlacementRecordsDeclaredOrder(t *testing.T) {
+	for _, s := range orderedRuleSpecs() {
+		s := s
+		t.Run(s.name, func(t *testing.T) {
+			f := newUnitFixture(t)
+			fake := newFakeRuleList(f, 20, s.listPath, s.itemPath, s.parentPath, s.fields)
+
+			d := s.updateOf(f, 9, func(c map[string]any) { c["order"] = 21 })
+			if e := f.run(s.update, d); e != "" {
+				t.Fatalf("unexpected error: %s", e)
+			}
+			if got := d.Get("order").(int); got != 21 {
+				t.Errorf("state order %d after a deferred placement, want declared 21", got)
+			}
+			if n := fake.putCount(1009); n != 0 {
+				t.Errorf("sent %d PUTs for a position that does not exist yet, want 0", n)
+			}
+			if got := fake.orderOf(1009); got != 9 {
+				t.Errorf("upstream order %d, want 9 until the list grows", got)
+			}
+		})
+	}
+}
+
 // An update of another attribute writes the rule once, at its current position.
 func TestOrderedRules_InPlaceUpdateKeepsPosition(t *testing.T) {
 	for _, s := range orderedRuleSpecs() {

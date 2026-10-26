@@ -394,6 +394,7 @@ func resourceOutboundEmailDLPCreate(ctx context.Context, d *schema.ResourceData,
 
 		markOrderRuleAsDone(resp.ID, resourceType)
 		waitForReorder(resourceType)
+		recordRegisteredOrder(d, resourceType)
 		break
 	}
 
@@ -622,7 +623,7 @@ func resourceOutboundEmailDLPUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	return resourceOutboundEmailDLPRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceOutboundEmailDLPRead, resourceType)
 }
 
 func resourceOutboundEmailDLPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -261,8 +261,9 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[INFO] Created zia traffic capture rules rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
-	resourceType := "firewall_filtering_rules"
+	// Same reorder domain as Update: traffic capture rules are ordered
+	// separately from firewall filtering rules.
+	resourceType := "traffic_capture_rules"
 
 	// The next rule of this type is created after this one, at the end of
 	// the list, so creating it does not move the rules already placed.
@@ -323,7 +324,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFiresourceTrafficCaptureRulesRead, "traffic_capture_rules")
 }
 
 func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -560,7 +561,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFiresourceTrafficCaptureRulesRead, "traffic_capture_rules")
 }
 
 func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

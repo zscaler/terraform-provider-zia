@@ -406,7 +406,7 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 	// Record state from a live read of the parent's subRules block after the
 	// reorder has converged, so the persisted order reflects the API (and the
 	// declared configuration) rather than an intermediate position.
-	return resourceEndpointDLPSubRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPSubRulesRead, resourceType)
 }
 
 func resourceEndpointDLPSubRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -628,7 +628,7 @@ func resourceEndpointDLPSubRulesUpdate(ctx context.Context, d *schema.ResourceDa
 
 	// Record state from a live read of the parent's subRules block after the
 	// reorder has converged.
-	return resourceEndpointDLPSubRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPSubRulesRead, resourceType)
 }
 
 func resourceEndpointDLPSubRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

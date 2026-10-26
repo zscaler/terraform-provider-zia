@@ -514,6 +514,7 @@ func resourceDlpWebRulesCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		markOrderRuleAsDone(resp.ID, resourceType)
 		waitForReorder(resourceType)
+		recordRegisteredOrder(d, resourceType)
 		break
 	}
 
@@ -802,7 +803,7 @@ func resourceDlpWebRulesUpdate(ctx context.Context, d *schema.ResourceData, meta
 	markOrderRuleAsDone(id, resourceType)
 	waitForReorder(resourceType)
 
-	return resourceDlpWebRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceDlpWebRulesRead, resourceType)
 }
 
 func resourceDlpWebRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

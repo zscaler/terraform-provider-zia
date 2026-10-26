@@ -221,32 +221,6 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 
 	start := time.Now()
 
-	// startingOrder returns the cached starting order, reading it from the
-	// API when it is not set yet or refresh is true.
-	startingOrder := func(refresh bool) int {
-		firewallFilteringLock.Lock()
-		defer firewallFilteringLock.Unlock()
-		if refresh {
-			firewallFilteringStartingOrder = 0
-		}
-		if firewallFilteringStartingOrder == 0 {
-			list, _ := filteringrules.GetAll(ctx, service, nil)
-			for _, r := range list {
-				if r.Order > firewallFilteringStartingOrder {
-					firewallFilteringStartingOrder = r.Order
-				}
-			}
-			if firewallFilteringStartingOrder == 0 {
-				firewallFilteringStartingOrder = 1
-			} else {
-				firewallFilteringStartingOrder++
-			}
-		}
-		return firewallFilteringStartingOrder
-	}
-	startingOrder(false)
-	startWithoutLocking := time.Now()
-
 	// Store the intended order from HCL
 	intendedOrder := req.Order
 	intendedRank := req.Rank
@@ -254,14 +228,44 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		// always start rank 7 rules at the next available order after all ranked rules
 		req.Rank = 7
 	}
-	req.Order = startingOrder(false)
-	resp, err := filteringrules.Create(ctx, service, &req)
-	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
-		// The cached starting order was read before rules of this type were
-		// deleted (in this apply or outside Terraform): read it again.
-		req.Order = startingOrder(true)
-		resp, err = filteringrules.Create(ctx, service, &req)
-	}
+	var resp *filteringrules.FirewallFilteringRules
+	var startWithoutLocking time.Time
+	err := func() error {
+		// Keep choosing the append position, POSTing, and advancing the
+		// position atomic. Otherwise parallel creates can reuse the same
+		// position and displace rules that have already been placed.
+		firewallFilteringLock.Lock()
+		defer firewallFilteringLock.Unlock()
+		startWithoutLocking = time.Now()
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		return writeAtFreshPosition(func(fresh bool) (OrderRule, error) {
+			if fresh || firewallFilteringStartingOrder == 0 {
+				list, err := filteringrules.GetAll(ctx, service, nil)
+				if err != nil {
+					firewallFilteringStartingOrder = 0
+					return OrderRule{}, err
+				}
+				next := 1
+				for _, r := range list {
+					if r.Order >= next {
+						next = r.Order + 1
+					}
+				}
+				firewallFilteringStartingOrder = next
+			}
+			return OrderRule{Order: firewallFilteringStartingOrder, Rank: req.Rank}, nil
+		}, func(position OrderRule) error {
+			req.Order = position.Order
+			var err error
+			resp, err = filteringrules.Create(ctx, service, &req)
+			if err == nil {
+				firewallFilteringStartingOrder++
+			}
+			return err
+		})
+	}()
 
 	// Fail immediately if INVALID_INPUT_ARGUMENT is detected
 	if customErr := failFastOnErrorCodes(err); customErr != nil {
@@ -282,11 +286,6 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 	resourceType := "firewall_filtering_rules"
 
-	// The next rule of this type is created after this one, at the end of
-	// the list, so creating it does not move the rules already placed.
-	firewallFilteringLock.Lock()
-	firewallFilteringStartingOrder++
-	firewallFilteringLock.Unlock()
 	// The reorder outlives this request: other rules wait on it, so it must
 	// not be cancelled by this rule's timeout (SUP-4231).
 	reorderCtx := context.WithoutCancel(ctx)
@@ -342,7 +341,7 @@ func resourceFirewallFilteringRulesCreate(ctx context.Context, d *schema.Resourc
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFirewallFilteringRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFirewallFilteringRulesRead, "firewall_filtering_rules")
 }
 
 func resourceFirewallFilteringRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -602,7 +601,7 @@ func resourceFirewallFilteringRulesUpdate(ctx context.Context, d *schema.Resourc
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFirewallFilteringRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFirewallFilteringRulesRead, "firewall_filtering_rules")
 }
 
 func resourceFirewallFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

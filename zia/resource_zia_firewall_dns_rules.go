@@ -446,7 +446,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceFirewallDNSRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceFirewallDNSRulesRead, "firewall_dns_rule")
 	}
 }
 
@@ -719,7 +719,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFirewallDNSRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFirewallDNSRulesRead, "firewall_dns_rule")
 }
 
 func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
