@@ -421,12 +421,20 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "url_filtering_rules"
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		urlFilteringLock.Lock()
+		urlFilteringStartingOrder++
+		urlFilteringLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				allRules, err := urlfilteringpolicies.GetAll(ctx, service)
+				allRules, err := urlfilteringpolicies.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -438,7 +446,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := urlfilteringpolicies.Get(ctx, service, id)
+				rule, err := urlfilteringpolicies.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -447,7 +455,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 				rule.LastModifiedBy = nil
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
+				_, err = urlfilteringpolicies.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -470,7 +478,7 @@ func resourceURLFilteringRulesCreate(ctx context.Context, d *schema.ResourceData
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceURLFilteringRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceURLFilteringRulesRead, "url_filtering_rules")
 	}
 }
 
@@ -689,9 +697,12 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, id, "url_filtering_rules",
 		func() (map[int]OrderRule, error) {
-			allRules, err := urlfilteringpolicies.GetAll(ctx, service)
+			allRules, err := urlfilteringpolicies.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -702,7 +713,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := urlfilteringpolicies.Get(ctx, service, id)
+			rule, err := urlfilteringpolicies.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -711,7 +722,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 			rule.LastModifiedBy = nil
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = urlfilteringpolicies.Update(ctx, service, id, rule)
+			_, err = urlfilteringpolicies.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -731,7 +742,7 @@ func resourceURLFilteringRulesUpdate(ctx context.Context, d *schema.ResourceData
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceURLFilteringRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceURLFilteringRulesRead, "url_filtering_rules")
 }
 
 func resourceURLFilteringRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -337,7 +337,9 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
+		firewallDNSLock.Lock()
 		req.Order = firewallDNSStartingOrder
+		firewallDNSLock.Unlock()
 
 		resp, err := firewalldnscontrolpolicies.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -376,12 +378,20 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "firewall_dns_rule"
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		firewallDNSLock.Lock()
+		firewallDNSStartingOrder++
+		firewallDNSLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				allRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+				allRules, err := firewalldnscontrolpolicies.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -393,7 +403,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
+				rule, err := firewalldnscontrolpolicies.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -413,7 +423,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 				}
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)
+				_, err = firewalldnscontrolpolicies.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -436,7 +446,7 @@ func resourceFirewallDNSRulesCreate(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceFirewallDNSRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceFirewallDNSRulesRead, "firewall_dns_rule")
 	}
 }
 
@@ -653,9 +663,12 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "firewall_dns_rule",
 		func() (map[int]OrderRule, error) {
-			allRules, err := firewalldnscontrolpolicies.GetAll(ctx, service)
+			allRules, err := firewalldnscontrolpolicies.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -666,7 +679,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := firewalldnscontrolpolicies.Get(ctx, service, id)
+			rule, err := firewalldnscontrolpolicies.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -686,7 +699,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = firewalldnscontrolpolicies.Update(ctx, service, id, rule)
+			_, err = firewalldnscontrolpolicies.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -706,7 +719,7 @@ func resourceFirewallDNSRulesUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFirewallDNSRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFirewallDNSRulesRead, "firewall_dns_rule")
 }
 
 func resourceFirewallDNSRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

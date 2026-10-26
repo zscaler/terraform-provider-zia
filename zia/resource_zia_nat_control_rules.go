@@ -206,7 +206,9 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
+		natControlRuleLock.Lock()
 		req.Order = natControlRuleStartingOrder
+		natControlRuleLock.Unlock()
 
 		resp, err := nat_control_policies.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -241,12 +243,20 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		log.Printf("[INFO] Created zia nat control rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		natControlRuleLock.Lock()
+		natControlRuleStartingOrder++
+		natControlRuleLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			"nat_control_rules",
 			func() (map[int]OrderRule, error) {
-				allRules, err := nat_control_policies.GetAll(ctx, service)
+				allRules, err := nat_control_policies.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -258,7 +268,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := nat_control_policies.Get(ctx, service, id)
+				rule, err := nat_control_policies.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -272,7 +282,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = nat_control_policies.Update(ctx, service, id, rule)
+				_, err = nat_control_policies.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -290,6 +300,7 @@ func resourceNatControlRulesCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 		markOrderRuleAsDone(resp.ID, "nat_control_rules")
 		waitForReorder("nat_control_rules")
+		recordRegisteredOrder(d, "nat_control_rules")
 		break
 	}
 
@@ -477,9 +488,12 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 		}
 
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "nat_control_rules",
 			func() (map[int]OrderRule, error) {
-				allRules, err := nat_control_policies.GetAll(ctx, service)
+				allRules, err := nat_control_policies.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -490,7 +504,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := nat_control_policies.Get(ctx, service, id)
+				rule, err := nat_control_policies.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -509,7 +523,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = nat_control_policies.Update(ctx, service, id, rule)
+				_, err = nat_control_policies.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -531,7 +545,7 @@ func resourceNatControlRulesUpdate(ctx context.Context, d *schema.ResourceData, 
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceNatControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceNatControlRulesRead, "nat_control_rules")
 }
 
 func resourceNatControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

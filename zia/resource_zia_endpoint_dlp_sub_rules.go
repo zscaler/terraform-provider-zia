@@ -313,7 +313,9 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 		startWithoutLocking := time.Now()
 
 		order := req.Order
+		endpointDlpSubRulesLock.Lock()
 		req.Order = endpointDlpSubRulesStartingOrder[parentID]
+		endpointDlpSubRulesLock.Unlock()
 
 		resp, _, err := endpoint_dlp_sub_rules.Create(ctx, service, parentID, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -369,12 +371,20 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 		// sub-rules whose order/rank differs from the declared value — exactly
 		// the pattern used by the other rule-based resources, applied to the
 		// nested subRules list.
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		endpointDlpSubRulesLock.Lock()
+		endpointDlpSubRulesStartingOrder[parentID]++
+		endpointDlpSubRulesLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			resourceType,
-			endpointDLPSubRulesGetCurrent(ctx, service, parentID),
-			endpointDLPSubRulesUpdateOrder(ctx, service, parentID),
+			endpointDLPSubRulesGetCurrent(reorderCtx, service, parentID),
+			endpointDLPSubRulesUpdateOrder(reorderCtx, service, parentID),
 			nil,
 		)
 
@@ -396,7 +406,7 @@ func resourceEndpointDLPSubRulesCreate(ctx context.Context, d *schema.ResourceDa
 	// Record state from a live read of the parent's subRules block after the
 	// reorder has converged, so the persisted order reflects the API (and the
 	// declared configuration) rather than an intermediate position.
-	return resourceEndpointDLPSubRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPSubRulesRead, resourceType)
 }
 
 func resourceEndpointDLPSubRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -601,12 +611,15 @@ func resourceEndpointDLPSubRulesUpdate(ctx context.Context, d *schema.ResourceDa
 	// Converge the sub-rule's position within the parent's subRules block after
 	// the update, mirroring the other rule-based resources.
 	resourceType := fmt.Sprintf("endpoint_dlp_sub_rules_%d", parentID)
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		subID,
 		resourceType,
-		endpointDLPSubRulesGetCurrent(ctx, service, parentID),
-		endpointDLPSubRulesUpdateOrder(ctx, service, parentID),
+		endpointDLPSubRulesGetCurrent(reorderCtx, service, parentID),
+		endpointDLPSubRulesUpdateOrder(reorderCtx, service, parentID),
 		nil,
 	)
 
@@ -615,7 +628,7 @@ func resourceEndpointDLPSubRulesUpdate(ctx context.Context, d *schema.ResourceDa
 
 	// Record state from a live read of the parent's subRules block after the
 	// reorder has converged.
-	return resourceEndpointDLPSubRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPSubRulesRead, resourceType)
 }
 
 func resourceEndpointDLPSubRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

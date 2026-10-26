@@ -407,7 +407,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 	if intendedRank < 7 {
 		req.Rank = 7
 	}
-	req.Order = sslInspectionStartingOrder
+	req.Order = startingOrder(false)
 	resp, err := sslinspection.Create(ctx, service, &req)
 	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
 		// The cached starting order was read before rules of this type were
@@ -433,12 +433,20 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[INFO] Created zia ssl inspection rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 	resourceType := "ssl_inspection_rules"
 
+	// The next rule of this type is created after this one, at the end of
+	// the list, so creating it does not move the rules already placed.
+	sslInspectionLock.Lock()
+	sslInspectionStartingOrder++
+	sslInspectionLock.Unlock()
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
 		func() (map[int]OrderRule, error) {
-			allRules, err := sslinspection.GetAll(ctx, service)
+			allRules, err := sslinspection.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -449,7 +457,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := sslinspection.Get(ctx, service, id)
+			rule, err := sslinspection.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -464,7 +472,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = sslinspection.Update(ctx, service, id, rule)
+			_, err = sslinspection.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil,
@@ -485,7 +493,7 @@ func resourceSSLInspectionRulesCreate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSSLInspectionRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSSLInspectionRulesRead, "ssl_inspection_rules")
 }
 
 func resourceSSLInspectionRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -644,12 +652,15 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		req.ID,
 		"ssl_inspection_rules",
 		func() (map[int]OrderRule, error) {
-			allRules, err := sslinspection.GetAll(ctx, service)
+			allRules, err := sslinspection.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -660,7 +671,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := sslinspection.Get(ctx, service, id)
+			rule, err := sslinspection.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -671,7 +682,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = sslinspection.Update(ctx, service, id, rule)
+			_, err = sslinspection.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil,
@@ -691,7 +702,7 @@ func resourceSSLInspectionRulesUpdate(ctx context.Context, d *schema.ResourceDat
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSSLInspectionRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSSLInspectionRulesRead, "ssl_inspection_rules")
 }
 
 func resourceSSLInspectionRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -65,10 +65,12 @@ func (f *fakeAPI) getCurrent() (map[int]OrderRule, error) {
 	return out, nil
 }
 
+// updateOrder moves rule id to ord. Like the API, the rules between the old
+// and new position shift by one.
 func (f *fakeAPI) updateOrder(id int, ord OrderRule) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.state[id] = ord
+	applyMove(f.state, id, ord)
 	f.putsByID[id]++
 	return nil
 }
@@ -497,9 +499,9 @@ func TestReorder_OnlyDriftedRulesArePut(t *testing.T) {
 	for i := 1; i <= 10; i++ {
 		api.preSeed(900+i, i, 7) // matches target by default
 	}
-	// Now drift two rules.
-	api.preSeed(900+3, 99, 7) // rule 903: drifted
-	api.preSeed(900+7, 99, 7) // rule 907: drifted
+	// Now drift two rules: swap 903 and 907.
+	api.preSeed(900+3, 7, 7) // rule 903: drifted
+	api.preSeed(900+7, 3, 7) // rule 907: drifted
 
 	for i := 1; i <= 10; i++ {
 		reorderWithBeforeReorder(
@@ -1201,5 +1203,74 @@ func TestEndOfList(t *testing.T) {
 	}
 	if got := endOfList(nil); got.Order != 1 {
 		t.Errorf("empty list: got order %d, want 1", got.Order)
+	}
+}
+
+func TestReorder_RegistrationDuringFinalReadIsReconciled(t *testing.T) {
+	newUnitFixture(t)
+	api := newFakeAPI()
+	api.preSeed(101, 1, 7)
+	api.preSeed(102, 3, 7)
+	api.preSeed(103, 2, 7)
+	var registered sync.Once
+	get := func() (map[int]OrderRule, error) {
+		registered.Do(func() {
+			// The first pass already took its registration snapshot. A new
+			// rule joins while the API list is being read for completion.
+			reorderWithBeforeReorder(OrderRule{Order: 2, Rank: 7}, 102, "late_during_read", api.getCurrent, api.updateOrder, nil)
+			markOrderRuleAsDone(102, "late_during_read")
+		})
+		return api.getCurrent()
+	}
+	reorderWithBeforeReorder(OrderRule{Order: 1, Rank: 7}, 101, "late_during_read", get, api.updateOrder, nil)
+	markOrderRuleAsDone(101, "late_during_read")
+	waitForReorder("late_during_read")
+	current, _ := api.getCurrent()
+	if got := current[102].Order; got != 2 {
+		t.Errorf("cycle closed with late rule at %d, want 2", got)
+	}
+}
+
+// A batch cannot establish final placement until its requested positions exist.
+// Release its waiters, retain the exact declarations, and make no temporary
+// moves. A later registration must reconcile the original targets.
+func TestReorder_DefersBatchWithoutChangingDeclaredTargets(t *testing.T) {
+	newUnitFixture(t)
+	api := newFakeAPI()
+	for i := 1; i <= 153; i++ {
+		api.preSeed(1000+i, i, 7)
+	}
+	const resourceType = "deferred_declared_targets"
+	reorderWithBeforeReorder(OrderRule{Order: 151, Rank: 7}, 1152, resourceType, api.getCurrent, api.updateOrder, nil)
+	reorderWithBeforeReorder(OrderRule{Order: 160, Rank: 7}, 1153, resourceType, api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(1152, resourceType)
+	markOrderRuleAsDone(1153, resourceType)
+	waitForReorder(resourceType)
+	if got := api.putsTotal(); got != 0 {
+		t.Fatalf("incomplete batch issued %d PUTs; want no temporary placement", got)
+	}
+	rules.Lock()
+	got := rules.orders[resourceType][1153].order.Order
+	rules.Unlock()
+	if got != 160 {
+		t.Fatalf("declared target changed to %d, want 160", got)
+	}
+
+	for i := 154; i <= 160; i++ {
+		api.preSeed(1000+i, i, 7)
+	}
+	reorderWithBeforeReorder(OrderRule{Order: 159, Rank: 7}, 1160, resourceType, api.getCurrent, api.updateOrder, nil)
+	markOrderRuleAsDone(1160, resourceType)
+	waitForReorder(resourceType)
+	current, _ := api.getCurrent()
+	for id, want := range map[int]int{1152: 151, 1153: 160, 1160: 159} {
+		if got := current[id].Order; got != want {
+			t.Errorf("rule %d at %d, want its declared target %d", id, got, want)
+		}
+	}
+	for id, puts := range api.putsByID {
+		if id != 1152 && id != 1153 && id != 1160 {
+			t.Errorf("unmanaged rule %d received %d PUTs", id, puts)
+		}
 	}
 }

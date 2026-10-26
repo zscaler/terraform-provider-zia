@@ -12,9 +12,24 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.14``
+``Last updated: v4.8.15``
 
 ---
+
+## 4.8.15 (Unreleased)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #615](https://github.com/zscaler/terraform-provider-zia/pull/615) - Rule resources: reduced repeated order updates during large deployments while preserving the positions declared in HCL. Batches wait for the required positions to exist before placing rules, and new rules are added at the end of the list. Concurrent firewall filtering creates no longer reuse the same insertion position. Shared ordering continues independently of the timeout of the individual rule that started it. A rule registering during final verification is processed before waiting operations return.
+
+- Rule ordering: avoid unnecessary intermediate order updates when a shorter sequence reaches the same configured positions. The existing handling remains in use for rank changes and ambiguous API order data.
+
+- Rule resources: the state written when a rule is created or updated now records the configured `order` and `rank`. Previously, during large deployments, rules were recorded at the interim position they held while the ordering of the remaining rules was still in progress, so the state file disagreed with both the configuration and the service even though `terraform plan` reported no changes (the plan compared against a refreshed view that was never written back). A plan now reports an `order` difference only when the rule order in the service actually differs from the configuration. Newly created `zia_traffic_capture_rules` are now ordered together with other traffic capture rules instead of with firewall filtering rules.
+
 
 ## 4.8.14 (October 21, 2026)
 

@@ -209,7 +209,9 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			// always start rank 7 rules at the next available order after all ranked rules
 			req.Rank = 7
 		}
+		sandboxLock.Lock()
 		req.Order = sandboxStartingOrder
+		sandboxLock.Unlock()
 
 		resp, err := sandbox_rules.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -247,12 +249,20 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 		// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
 		resourceType := "sandbox_rules"
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		sandboxLock.Lock()
+		sandboxStartingOrder++
+		sandboxLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: intendedOrder, Rank: intendedRank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				list, err := sandbox_rules.GetAll(ctx, service)
+				list, err := sandbox_rules.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -265,7 +275,7 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			},
 			func(id int, order OrderRule) error {
 				// Custom updateOrder that handles predefined rules
-				rule, err := sandbox_rules.Get(ctx, service, id)
+				rule, err := sandbox_rules.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -277,7 +287,7 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 				rule.AccessControl = ""
 				rule.Order = order.Order
 				rule.Rank = order.Rank
-				_, err = sandbox_rules.Update(ctx, service, id, rule)
+				_, err = sandbox_rules.Update(reorderCtx, service, id, rule)
 				return err
 			},
 			nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -300,7 +310,7 @@ func resourceSandboxRulesCreate(ctx context.Context, d *schema.ResourceData, met
 			log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 		}
 
-		return resourceSandboxRulesRead(ctx, d, meta)
+		return readOrderedRule(ctx, d, meta, resourceSandboxRulesRead, "sandbox_rules")
 	}
 }
 
@@ -438,9 +448,12 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "sandbox_rules",
 		func() (map[int]OrderRule, error) {
-			list, err := sandbox_rules.GetAll(ctx, service)
+			list, err := sandbox_rules.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -452,7 +465,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := sandbox_rules.Get(ctx, service, id)
+			rule, err := sandbox_rules.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -464,7 +477,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = sandbox_rules.Update(ctx, service, id, rule)
+			_, err = sandbox_rules.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -484,7 +497,7 @@ func resourceSandboxRulesUpdate(ctx context.Context, d *schema.ResourceData, met
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceSandboxRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceSandboxRulesRead, "sandbox_rules")
 }
 
 func resourceSandboxRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

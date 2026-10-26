@@ -288,7 +288,9 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 		startWithoutLocking := time.Now()
 
 		order := req.Order
+		endpointDlpRulesLock.Lock()
 		req.Order = endpointDlpStartingOrder
+		endpointDlpRulesLock.Unlock()
 
 		resp, _, err := endpoint_dlp_rules.Create(ctx, service, &req)
 		if isStaleOrderError(err) && staleOrderRetries < maxStaleOrderRetries {
@@ -321,12 +323,20 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 
 		resourceType := "endpoint_dlp_rules"
 
+		// The next rule of this type is created after this one, at the end of
+		// the list, so creating it does not move the rules already placed.
+		endpointDlpRulesLock.Lock()
+		endpointDlpStartingOrder++
+		endpointDlpRulesLock.Unlock()
+		// The reorder outlives this request: other rules wait on it, so it must
+		// not be cancelled by this rule's timeout (SUP-4231).
+		reorderCtx := context.WithoutCancel(ctx)
 		reorderWithBeforeReorder(
 			OrderRule{Order: order, Rank: req.Rank},
 			resp.ID,
 			resourceType,
 			func() (map[int]OrderRule, error) {
-				allRules, err := endpoint_dlp_rules.GetAll(ctx, service)
+				allRules, err := endpoint_dlp_rules.GetAll(reorderCtx, service)
 				if err != nil {
 					return nil, err
 				}
@@ -337,7 +347,7 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 				return m, nil
 			},
 			func(id int, order OrderRule) error {
-				rule, err := endpoint_dlp_rules.Get(ctx, service, id)
+				rule, err := endpoint_dlp_rules.Get(reorderCtx, service, id)
 				if err != nil {
 					return err
 				}
@@ -349,7 +359,7 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 
 				log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
 
-				_, _, err = endpoint_dlp_rules.Update(ctx, service, id, rule)
+				_, _, err = endpoint_dlp_rules.Update(reorderCtx, service, id, rule)
 				if err != nil {
 					log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
 				}
@@ -371,6 +381,7 @@ func resourceEndpointDLPRulesCreate(ctx context.Context, d *schema.ResourceData,
 
 		markOrderRuleAsDone(resp.ID, resourceType)
 		waitForReorder(resourceType)
+		recordRegisteredOrder(d, resourceType)
 		break
 	}
 
@@ -579,9 +590,12 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	// Handle ordering update after a successful rule update
 	resourceType := "endpoint_dlp_rules"
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, id, resourceType,
 		func() (map[int]OrderRule, error) {
-			allRules, err := endpoint_dlp_rules.GetAll(ctx, service)
+			allRules, err := endpoint_dlp_rules.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -592,7 +606,7 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := endpoint_dlp_rules.Get(ctx, service, id)
+			rule, err := endpoint_dlp_rules.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -607,7 +621,7 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 
 			log.Printf("[DEBUG] Updating parent rule ID %d to order %d", id, order.Order)
 
-			_, _, err = endpoint_dlp_rules.Update(ctx, service, id, rule)
+			_, _, err = endpoint_dlp_rules.Update(reorderCtx, service, id, rule)
 			if err != nil {
 				log.Printf("[ERROR] Failed to update order for rule ID %d: %v", id, err)
 			}
@@ -619,7 +633,7 @@ func resourceEndpointDLPRulesUpdate(ctx context.Context, d *schema.ResourceData,
 	markOrderRuleAsDone(id, resourceType)
 	waitForReorder(resourceType)
 
-	return resourceEndpointDLPRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceEndpointDLPRulesRead, resourceType)
 }
 
 func resourceEndpointDLPRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

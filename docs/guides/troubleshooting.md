@@ -231,6 +231,32 @@ provider "zia" {
 }
 ```
 
+### Large rule deployments slow down and fail with `context deadline exceeded`
+
+```sh
+│ Error: Get "https://api.zsapi.net/zia/api/v1/firewallFilteringRules?&pageSize=5000&page=1": context deadline exceeded
+```
+
+Large deployments can issue repeated order updates when later inserts displace rules already placed by earlier batches. This increases API traffic and rate-limit waits. The v4.8.15 optimization appends new rules and defers placement while registered targets exceed the available positions. Once the positions exist, the provider uses the exact orders declared in HCL. It does not replace them with temporary positions.
+
+### Rule orders remain different after apply
+
+Only rules explicitly managed in HCL receive order updates. Unmanaged predefined rules do not reserve a prefix: managed rules can start at order 1, and the API shifts the other rules automatically. A predefined rule imported into state and declared in HCL is managed like any other rule.
+
+Check the configured orders against the final policy and refresh with `terraform plan`. Do not add an offset merely because predefined rules exist. The provider defers unavailable targets; it does not silently renumber them. The state written by an apply records the configured order, and a refresh records the order the service reports, so a later `terraform plan` shows a difference whenever the two disagree.
+
+### The state file shows a different rule order than the Admin Portal, but `terraform plan` reports no changes
+
+Before v4.8.15, a large deployment could record rules in state at the interim position they held while the ordering of the remaining rules was still in progress. The rules ended up at their configured positions in the service, but the state file kept the interim values. `terraform plan` did not report this, because a plan compares the configuration against a refreshed view of the service — which matched — and never writes that view back to the state file. The mismatch surfaces only when the state file itself is inspected, or when a plan runs with `-refresh=false`.
+
+**Solution**: Upgrade to v4.8.15 or later, where the state written by an apply records the configured order. State files produced by earlier versions are corrected once by refreshing them in place:
+
+```sh
+terraform apply -refresh-only
+```
+
+This reads every rule from the service and writes the result to the state file without changing any rule. The next `terraform plan` then compares against an accurate state file.
+
 ### Error: `INVALID_INPUT_ARGUMENT` `Rule is not allowed at order N` after deleting a rule
 
 ```sh

@@ -76,8 +76,6 @@ func (f *unitFixture) updateData(r *schema.Resource, id string, state, config ma
 	return d
 }
 
-type crudFunc = func(context.Context, *schema.ResourceData, interface{}) diag.Diagnostics
-
 // run calls a CRUD function and returns its first error summary ("" when none).
 func (f *unitFixture) run(fn crudFunc, d *schema.ResourceData) string {
 	f.t.Helper()
@@ -102,14 +100,17 @@ func (f *unitFixture) run(fn crudFunc, d *schema.ResourceData) string {
 // With parentPath set, the rules are the sub-rules of a parent rule: GET
 // parentPath returns the parent with the rules in "subRules".
 type fakeRuleList struct {
-	mu          sync.Mutex // guards the list
-	writeMu     sync.Mutex // serializes writes, as the API does
-	deleteDelay time.Duration
-	list        []map[string]any // position = index + 1
-	nextID      int
-	puts        []map[string]any // accepted PUT bodies
-	rejected    int              // writes rejected for an invalid order
-	onGetRule   func(id int)
+	mu           sync.Mutex // guards the list
+	writeMu      sync.Mutex // serializes writes, as the API does
+	deleteDelay  time.Duration
+	createDelay  time.Duration
+	list         []map[string]any // position = index + 1
+	nextID       int
+	createOrders []int            // accepted POST positions, in API processing order
+	puts         []map[string]any // accepted PUT bodies
+	rejected     int              // writes rejected for an invalid order
+	onGetRule    func(id int)
+	onGetAll     func() // runs after a read of the list has built its response
 }
 
 // newFakeRuleList serves n rules with IDs 1001..1000+n, each carrying fields.
@@ -186,8 +187,13 @@ func notAllowedAt(order int) common.MockResponse {
 
 func (f *fakeRuleList) getAll(*http.Request, []byte) common.MockResponse {
 	f.mu.Lock()
-	defer f.mu.Unlock()
-	return common.MockResponse{StatusCode: http.StatusOK, Body: f.numbered()}
+	resp := common.MockResponse{StatusCode: http.StatusOK, Body: f.numbered()}
+	hook := f.onGetAll
+	f.mu.Unlock()
+	if hook != nil {
+		hook()
+	}
+	return resp
 }
 
 func (f *fakeRuleList) get(req *http.Request, _ []byte) common.MockResponse {
@@ -233,6 +239,7 @@ func (f *fakeRuleList) create(_ *http.Request, body []byte) common.MockResponse 
 	_ = json.Unmarshal(body, &in)
 	f.writeMu.Lock()
 	defer f.writeMu.Unlock()
+	time.Sleep(f.createDelay)
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	order := asInt(in["order"])
@@ -240,6 +247,7 @@ func (f *fakeRuleList) create(_ *http.Request, body []byte) common.MockResponse 
 		f.rejected++
 		return notAllowedAt(order)
 	}
+	f.createOrders = append(f.createOrders, order)
 	f.nextID++
 	in["id"] = f.nextID
 	f.list = append(f.list[:order-1], append([]map[string]any{in}, f.list[order-1:]...)...)

@@ -236,7 +236,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		// always start rank 7 rules at the next available order after all ranked rules
 		req.Rank = 7
 	}
-	req.Order = trafficCaptureStartingOrder
+	req.Order = startingOrder(false)
 	resp, err := traffic_capture.Create(ctx, service, &req)
 	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
 		// The cached starting order was read before rules of this type were
@@ -261,15 +261,24 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[INFO] Created zia traffic capture rules rule request. took:%s, without locking:%s,  ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
-	// Use separate resource type for rank 7 rules to avoid mixing with ranked rules
-	resourceType := "firewall_filtering_rules"
+	// Same reorder domain as Update: traffic capture rules are ordered
+	// separately from firewall filtering rules.
+	resourceType := "traffic_capture_rules"
 
+	// The next rule of this type is created after this one, at the end of
+	// the list, so creating it does not move the rules already placed.
+	trafficCaptureLock.Lock()
+	trafficCaptureStartingOrder++
+	trafficCaptureLock.Unlock()
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
 		func() (map[int]OrderRule, error) {
-			allRules, err := traffic_capture.GetAll(ctx, service, nil)
+			allRules, err := traffic_capture.GetAll(reorderCtx, service, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -281,7 +290,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		},
 		func(id int, order OrderRule) error {
 			// Custom updateOrder that handles predefined rules
-			rule, err := traffic_capture.Get(ctx, service, id)
+			rule, err := traffic_capture.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -292,7 +301,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = traffic_capture.Update(ctx, service, id, rule)
+			_, err = traffic_capture.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -315,7 +324,7 @@ func resourceFiresourceTrafficCaptureRulesCreate(ctx context.Context, d *schema.
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFiresourceTrafficCaptureRulesRead, "traffic_capture_rules")
 }
 
 func resourceFiresourceTrafficCaptureRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -501,9 +510,12 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "traffic_capture_rules",
 		func() (map[int]OrderRule, error) {
-			allRules, err := traffic_capture.GetAll(ctx, service, nil)
+			allRules, err := traffic_capture.GetAll(reorderCtx, service, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -514,7 +526,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := traffic_capture.Get(ctx, service, id)
+			rule, err := traffic_capture.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -529,7 +541,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = traffic_capture.Update(ctx, service, id, rule)
+			_, err = traffic_capture.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -549,7 +561,7 @@ func resourceFiresourceTrafficCaptureRulesUpdate(ctx context.Context, d *schema.
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFiresourceTrafficCaptureRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFiresourceTrafficCaptureRulesRead, "traffic_capture_rules")
 }
 
 func resourceFiresourceTrafficCaptureRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

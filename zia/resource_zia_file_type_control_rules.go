@@ -279,7 +279,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 	if intendedRank < 7 {
 		req.Rank = 7
 	}
-	req.Order = fileTypeStartingOrder
+	req.Order = startingOrder(false)
 	resp, err := filetypecontrol.Create(ctx, service, &req)
 	for retries := 0; isStaleOrderError(err) && retries < maxStaleOrderRetries; retries++ {
 		// The cached starting order was read before rules of this type were
@@ -305,12 +305,20 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 	log.Printf("[INFO] Created zia file type control rule rule request. Took: %s, without locking: %s, ID: %v\n", time.Since(start), time.Since(startWithoutLocking), resp)
 	resourceType := "file_type_control_rules"
 
+	// The next rule of this type is created after this one, at the end of
+	// the list, so creating it does not move the rules already placed.
+	fileTypeLock.Lock()
+	fileTypeStartingOrder++
+	fileTypeLock.Unlock()
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(
 		OrderRule{Order: intendedOrder, Rank: intendedRank},
 		resp.ID,
 		resourceType,
 		func() (map[int]OrderRule, error) {
-			allRules, err := filetypecontrol.GetAll(ctx, service)
+			allRules, err := filetypecontrol.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -321,7 +329,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
+			rule, err := filetypecontrol.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -330,7 +338,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
+			_, err = filetypecontrol.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil,
@@ -351,7 +359,7 @@ func resourceFileTypeControlRulesCreate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFileTypeControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFileTypeControlRulesRead, "file_type_control_rules")
 }
 
 func resourceFileTypeControlRulesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -494,9 +502,12 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(fmt.Errorf("error updating resource: %s", err))
 	}
 
+	// The reorder outlives this request: other rules wait on it, so it must
+	// not be cancelled by this rule's timeout (SUP-4231).
+	reorderCtx := context.WithoutCancel(ctx)
 	reorderWithBeforeReorder(OrderRule{Order: intendedOrder, Rank: intendedRank}, req.ID, "file_type_control_rules",
 		func() (map[int]OrderRule, error) {
-			allRules, err := filetypecontrol.GetAll(ctx, service)
+			allRules, err := filetypecontrol.GetAll(reorderCtx, service)
 			if err != nil {
 				return nil, err
 			}
@@ -507,7 +518,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			return m, nil
 		},
 		func(id int, order OrderRule) error {
-			rule, err := filetypecontrol.Get(ctx, service, id)
+			rule, err := filetypecontrol.Get(reorderCtx, service, id)
 			if err != nil {
 				return err
 			}
@@ -518,7 +529,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 			rule.AccessControl = ""
 			rule.Order = order.Order
 			rule.Rank = order.Rank
-			_, err = filetypecontrol.Update(ctx, service, id, rule)
+			_, err = filetypecontrol.Update(reorderCtx, service, id, rule)
 			return err
 		},
 		nil, // Remove beforeReorder function to avoid adding too many rules to the map
@@ -538,7 +549,7 @@ func resourceFileTypeControlRulesUpdate(ctx context.Context, d *schema.ResourceD
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceFileTypeControlRulesRead(ctx, d, meta)
+	return readOrderedRule(ctx, d, meta, resourceFileTypeControlRulesRead, "file_type_control_rules")
 }
 
 func resourceFileTypeControlRulesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
