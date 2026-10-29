@@ -422,11 +422,23 @@ func resourceURLCategoriesUpdate(ctx context.Context, d *schema.ResourceData, me
 	hasOnlyRemoves := hasRemoves && !hasAdds
 	hasBoth := hasAdds && hasRemoves
 
+	// REMOVE_FROM_LIST cannot take away a category's last custom URL: the API
+	// rejects it with "At least 1 URL or keyword or IP range should be entered",
+	// even when URLs retaining the parent category remain. This happens when urls
+	// is emptied, and when every URL is replaced (the remove runs before the add).
+	// A full update without an action makes the same change, as the UI does.
+	removesAllURLs := hasRemoves && len(urlsToRemove) == len(currentUrls)
+
 	log.Printf("[DEBUG] URL changes detected - Adds: %d, Removes: %d", len(urlsToAdd), len(urlsToRemove))
 
 	// Use incremental updates when we have URL changes
 	// The action parameter only affects URLs; other attributes are still updated normally
-	if hasOnlyAdds {
+	if removesAllURLs {
+		log.Printf("[INFO] All %d current URLs are removed, using full update with %d URLs", len(urlsToRemove), len(desiredCategory.Urls))
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &desiredCategory, ""); err != nil {
+			return diag.FromErr(err)
+		}
+	} else if hasOnlyAdds {
 		log.Printf("[INFO] Using incremental update with ADD_TO_LIST for %d URLs", len(urlsToAdd))
 		// Send full desired category structure, but only URLs in payload are added to existing list
 		// Other attributes in desiredCategory will be updated normally
@@ -612,8 +624,21 @@ var urlsReorderSuppressionCache sync.Map
 // planned config as multisets and, when they are equal, returns true so the
 // per-index diff is suppressed and the overall list diff collapses to a
 // no-op. Add/remove changes still produce diffs as expected.
-func suppressURLCategoriesReorderDiff(k, _, _ string, d *schema.ResourceData) bool {
+func suppressURLCategoriesReorderDiff(k, oldValue, newValue string, d *schema.ResourceData) bool {
 	if k != "urls.#" && !strings.HasPrefix(k, "urls.") {
+		return false
+	}
+
+	// A reorder never changes the number of URLs or adds or drops an index, so
+	// such a key is always a real change. Decide it from the key's own values:
+	// when urls is removed from the configuration, GetChange below returns the
+	// prior state as the new value, the lists compare equal, and the removal
+	// would be suppressed.
+	if k == "urls.#" {
+		if oldValue != newValue {
+			return false
+		}
+	} else if oldValue == "" || newValue == "" {
 		return false
 	}
 

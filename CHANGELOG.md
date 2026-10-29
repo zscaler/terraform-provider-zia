@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.8.16 (Unreleased)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #618](https://github.com/zscaler/terraform-provider-zia/pull/618) - `zia_firewall_filtering_network_service`: the data source no longer fails with `INVALID_INPUT_ARGUMENT` `Invalid Page Size` when looking up a network service by `name`, `protocol` or `locale` on clouds that reject a page size for network services. The lookup now retrieves all network services in a single request. Importing a `zia_firewall_filtering_network_service` resource by name is fixed the same way. Fixes [issue #617](https://github.com/zscaler/terraform-provider-zia/issues/617).
+
+- [PR #618](https://github.com/zscaler/terraform-provider-zia/pull/618) - `zia_url_categories`: removing every entry from `urls` no longer fails with `INVALID_INPUT_ARGUMENT` `At least 1 URL or keyword or IP range should be entered` when the category has other entries, such as `db_categorized_urls`. Replacing all `urls` with different ones failed the same way and is also fixed. In both cases the category is now updated as a whole, as in the ZIA Admin Portal. Removing the `urls` argument from the configuration was not detected as a change, so the URLs remained in ZIA without any reported drift. It is now planned as removing every URL. Adding, removing or reordering some of the `urls` is unchanged.
+
+
 ## 4.8.15 (Unreleased)
 
 ### Notes
