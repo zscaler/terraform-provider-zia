@@ -18,11 +18,13 @@ import (
 )
 
 // fakeURLCategory serves one custom URL category the way the ZIA API handles
-// updates: ADD_TO_LIST / REMOVE_FROM_LIST change only the custom URLs, and a
-// REMOVE_FROM_LIST that would leave no custom URL, keyword or IP range is
-// rejected even when URLs retaining the parent category remain. An update
-// without an action replaces the category, and an empty custom URL list is
-// accepted there (as in the UI).
+// updates, as observed on a tenant (issue #615): ADD_TO_LIST /
+// REMOVE_FROM_LIST apply to urls, dbCategorizedUrls and ipRanges alike (a
+// REMOVE_FROM_LIST carrying the full dbCategorizedUrls or ipRanges list
+// removed them all), while keywords present in the request replace the
+// existing ones. A REMOVE_FROM_LIST that would leave no custom URL, keyword or
+// IP range is rejected. An update without an action replaces every list, and
+// an empty custom URL list is accepted there (as in the UI).
 type fakeURLCategory struct {
 	mu      sync.Mutex
 	cat     map[string]any
@@ -33,7 +35,26 @@ type urlCategoryUpdate struct {
 	action   string
 	urls     []string
 	dbURLs   []string
+	ipRanges []string
 	rejected bool
+}
+
+// fullUpdateLists are the lists an update without an action replaces.
+var fullUpdateLists = []string{"urls", "dbCategorizedUrls", "keywords", "ipRanges",
+	"keywordsRetainingParentCategory", "ipRangesRetainingParentCategory"}
+
+// setList sets a list of the category, e.g. "ipRanges".
+func (f *fakeURLCategory) setList(field string, values ...string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.cat[field] = values
+}
+
+// list returns a list of the category, sorted.
+func (f *fakeURLCategory) list(field string) []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return sortedURLs(urlStrs(f.cat[field]))
 }
 
 func newFakeURLCategory(f *unitFixture, id string, urls, dbURLs []string) *fakeURLCategory {
@@ -64,26 +85,37 @@ func (f *fakeURLCategory) update(req *http.Request, body []byte) common.MockResp
 	in := map[string]any{}
 	_ = json.Unmarshal(body, &in)
 	action := req.URL.Query().Get("action")
-	sent := urlCategoryUpdate{action: action, urls: urlStrs(in["urls"]), dbURLs: urlStrs(in["dbCategorizedUrls"])}
+	sent := urlCategoryUpdate{action: action, urls: urlStrs(in["urls"]), dbURLs: urlStrs(in["dbCategorizedUrls"]), ipRanges: urlStrs(in["ipRanges"])}
 
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	current := urlStrs(f.cat["urls"])
+	if action != "" {
+		if kw, ok := in["keywords"]; ok {
+			f.cat["keywords"] = urlStrs(kw)
+		}
+	}
 	switch action {
 	case "ADD_TO_LIST":
 		f.cat["urls"] = urlUnion(current, sent.urls)
+		f.cat["dbCategorizedUrls"] = urlUnion(urlStrs(f.cat["dbCategorizedUrls"]), sent.dbURLs)
+		f.cat["ipRanges"] = urlUnion(urlStrs(f.cat["ipRanges"]), sent.ipRanges)
 	case "REMOVE_FROM_LIST":
 		remaining := urlMinus(current, sent.urls)
-		if len(remaining) == 0 && len(urlStrs(f.cat["keywords"])) == 0 && len(urlStrs(f.cat["ipRanges"])) == 0 {
+		remainingIPs := urlMinus(urlStrs(f.cat["ipRanges"]), sent.ipRanges)
+		if len(remaining) == 0 && len(urlStrs(f.cat["keywords"])) == 0 && len(remainingIPs) == 0 {
 			sent.rejected = true
 			f.updates = append(f.updates, sent)
 			return common.MockResponse{StatusCode: http.StatusBadRequest, Body: map[string]any{
 				"code": "INVALID_INPUT_ARGUMENT", "message": "At least 1 URL or keyword or IP range should be entered"}}
 		}
 		f.cat["urls"] = remaining
+		f.cat["dbCategorizedUrls"] = urlMinus(urlStrs(f.cat["dbCategorizedUrls"]), sent.dbURLs)
+		f.cat["ipRanges"] = remainingIPs
 	default:
-		f.cat["urls"] = sent.urls
-		f.cat["dbCategorizedUrls"] = sent.dbURLs
+		for _, field := range fullUpdateLists {
+			f.cat[field] = urlStrs(in[field])
+		}
 	}
 	f.updates = append(f.updates, sent)
 	return common.MockResponse{StatusCode: http.StatusOK, Body: f.cat}
@@ -216,33 +248,79 @@ func TestURLCategories_ReplacingAllURLsUsesFullUpdate(t *testing.T) {
 	}
 }
 
+// assertRetainedURLs checks that every incremental request carried no URLs
+// retaining the parent category, and that the category still holds want.
+func assertRetainedURLs(t *testing.T, fake *fakeURLCategory, want []string) {
+	t.Helper()
+	fake.mu.Lock()
+	updates := append([]urlCategoryUpdate{}, fake.updates...)
+	fake.mu.Unlock()
+	for i, u := range updates {
+		if u.action != "" && len(u.dbURLs) != 0 {
+			t.Fatalf("update %d (%s) sent dbCategorizedUrls %v, want none", i, u.action, u.dbURLs)
+		}
+	}
+	if _, dbURLs := fake.state(); !reflect.DeepEqual(dbURLs, sortedURLs(want)) {
+		t.Fatalf("category db_categorized_urls = %v, want %v", dbURLs, sortedURLs(want))
+	}
+}
+
+// Issue #615: removing some URLs from a category with URLs retaining the
+// parent category removed those retained URLs as well.
 func TestURLCategories_PartialRemovalKeepsRemoveAction(t *testing.T) {
-	fake, errMsg := applyURLCategoryUpdate(t, "CUSTOM_93", []string{"a.example.com", "b.example.com"},
-		[]string{"a.example.com"}, []string{".retained.example.com"})
+	db := []string{"keep-c.example.net", "keep-d.example.net"}
+	fake, errMsg := applyURLCategoryUpdate(t, "CUSTOM_93", []string{"partial-a.example.com", "partial-b.example.com"},
+		[]string{"partial-a.example.com"}, db)
 	if errMsg != "" {
 		t.Fatalf("update failed: %s", errMsg)
 	}
-	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "REMOVE_FROM_LIST", urls: []string{"b.example.com"}})
+	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "REMOVE_FROM_LIST", urls: []string{"partial-b.example.com"}})
+	assertRetainedURLs(t, fake, db)
+	if urls, _ := fake.state(); !reflect.DeepEqual(urls, []string{"partial-a.example.com"}) {
+		t.Fatalf("category urls = %v, want [partial-a.example.com]", urls)
+	}
 }
 
 func TestURLCategories_AdditionKeepsAddAction(t *testing.T) {
+	db := []string{"keep-c.example.net"}
 	fake, errMsg := applyURLCategoryUpdate(t, "CUSTOM_94", []string{"a.example.com"},
-		[]string{"a.example.com", "b.example.com"}, nil)
+		[]string{"a.example.com", "b.example.com"}, db)
 	if errMsg != "" {
 		t.Fatalf("update failed: %s", errMsg)
 	}
 	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "ADD_TO_LIST", urls: []string{"b.example.com"}})
+	assertRetainedURLs(t, fake, db)
+}
+
+// URLs and retained URLs changed in one apply: a single full update makes both
+// changes, since the incremental requests no longer carry retained URLs.
+func TestURLCategories_URLsAndRetainedURLsChangedUsesFullUpdate(t *testing.T) {
+	f := newUnitFixture(t)
+	id := "CUSTOM_97"
+	fake := newFakeURLCategory(f, id, []string{"a.example.com", "b.example.com"}, []string{"keep-c.example.net", "keep-d.example.net"})
+	r := resourceURLCategories()
+	state := urlCategoryPlanConfig(id, urlAnyList("a.example.com", "b.example.com"), []string{"keep-c.example.net", "keep-d.example.net"})
+	config := urlCategoryPlanConfig(id, urlAnyList("a.example.com", "e.example.com"), []string{"keep-c.example.net"})
+	if errMsg := f.run(r.UpdateContext, f.updateData(r, id, state, config)); errMsg != "" {
+		t.Fatalf("update failed: %s", errMsg)
+	}
+	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "", urls: []string{"a.example.com", "e.example.com"}})
+	urls, dbURLs := fake.state()
+	if !reflect.DeepEqual(urls, []string{"a.example.com", "e.example.com"}) || !reflect.DeepEqual(dbURLs, []string{"keep-c.example.net"}) {
+		t.Fatalf("category urls = %v, db_categorized_urls = %v", urls, dbURLs)
+	}
 }
 
 func TestURLCategories_SwapWithOverlapKeepsRemoveThenAdd(t *testing.T) {
 	fake, errMsg := applyURLCategoryUpdate(t, "CUSTOM_95", []string{"a.example.com", "b.example.com"},
-		[]string{"a.example.com", "c.example.com"}, nil)
+		[]string{"a.example.com", "c.example.com"}, []string{"keep-c.example.net"})
 	if errMsg != "" {
 		t.Fatalf("update failed: %s", errMsg)
 	}
 	assertURLCategoryUpdates(t, fake,
 		urlCategoryUpdate{action: "REMOVE_FROM_LIST", urls: []string{"b.example.com"}},
 		urlCategoryUpdate{action: "ADD_TO_LIST", urls: []string{"c.example.com"}})
+	assertRetainedURLs(t, fake, []string{"keep-c.example.net"})
 	if urls, _ := fake.state(); !reflect.DeepEqual(urls, []string{"a.example.com", "c.example.com"}) {
 		t.Fatalf("category urls = %v, want [a.example.com c.example.com]", urls)
 	}
@@ -330,5 +408,107 @@ func TestURLCategories_RemovingURLsAttributeClearsURLs(t *testing.T) {
 	urls, dbURLs := fake.state()
 	if len(urls) != 0 || !reflect.DeepEqual(dbURLs, sortedURLs(db)) {
 		t.Fatalf("category urls = %v, db_categorized_urls = %v; want none and %v", urls, dbURLs, db)
+	}
+}
+
+// runURLCategoryUpdateWithLists runs Update for a category whose state and
+// configuration hold urls from -> to plus the given extra list attributes
+// (Terraform name -> API name -> values) in both, unless overridden in
+// configLists. db_categorized_urls is db in both.
+func runURLCategoryUpdateWithLists(t *testing.T, id string, from, to, db []string,
+	lists map[string][]string, configLists map[string][]string) (*fakeURLCategory, string) {
+	t.Helper()
+	apiName := map[string]string{
+		"keywords": "keywords", "ip_ranges": "ipRanges",
+		"keywords_retaining_parent_category":  "keywordsRetainingParentCategory",
+		"ip_ranges_retaining_parent_category": "ipRangesRetainingParentCategory",
+	}
+	f := newUnitFixture(t)
+	fake := newFakeURLCategory(f, id, from, db)
+	state := urlCategoryPlanConfig(id, urlAnyList(from...), db)
+	config := urlCategoryPlanConfig(id, urlAnyList(to...), db)
+	for attr, values := range lists {
+		fake.setList(apiName[attr], values...)
+		state[attr] = urlAnyList(values...)
+		config[attr] = urlAnyList(values...)
+	}
+	for attr, values := range configLists {
+		config[attr] = urlAnyList(values...)
+	}
+	r := resourceURLCategories()
+	return fake, f.run(r.UpdateContext, f.updateData(r, id, state, config))
+}
+
+// Step 2 of the tenant test for issue #615: removing one URL also removed the
+// IP range, because ipRanges was sent in full with REMOVE_FROM_LIST.
+func TestURLCategories_PartialRemovalKeepsIPRangesAndKeywords(t *testing.T) {
+	db := []string{".creditkarma9.com", ".youku9.com"}
+	fake, errMsg := runURLCategoryUpdateWithLists(t, "CUSTOM_98",
+		[]string{"partial-a.example.com", "partial-b.example.com"}, []string{"partial-a.example.com"}, db,
+		map[string][]string{"keywords": {"tfissue615kw"}, "ip_ranges": {"3.217.240.0/25"}}, nil)
+	if errMsg != "" {
+		t.Fatalf("update failed: %s", errMsg)
+	}
+	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "REMOVE_FROM_LIST", urls: []string{"partial-b.example.com"}})
+	if sent := fake.updates[0].ipRanges; len(sent) != 0 {
+		t.Fatalf("REMOVE_FROM_LIST sent ipRanges %v, want none", sent)
+	}
+	assertRetainedURLs(t, fake, db)
+	if got := fake.list("ipRanges"); !reflect.DeepEqual(got, []string{"3.217.240.0/25"}) {
+		t.Fatalf("category ip_ranges = %v, want [3.217.240.0/25]", got)
+	}
+	if got := fake.list("keywords"); !reflect.DeepEqual(got, []string{"tfissue615kw"}) {
+		t.Fatalf("category keywords = %v, want [tfissue615kw]", got)
+	}
+}
+
+func TestURLCategories_AdditionKeepsIPRanges(t *testing.T) {
+	fake, errMsg := runURLCategoryUpdateWithLists(t, "CUSTOM_99",
+		[]string{"a.example.com"}, []string{"a.example.com", "b.example.com"}, nil,
+		map[string][]string{"ip_ranges": {"3.217.240.0/25"}}, nil)
+	if errMsg != "" {
+		t.Fatalf("update failed: %s", errMsg)
+	}
+	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "ADD_TO_LIST", urls: []string{"b.example.com"}})
+	if sent := fake.updates[0].ipRanges; len(sent) != 0 {
+		t.Fatalf("ADD_TO_LIST sent ipRanges %v, want none", sent)
+	}
+	if got := fake.list("ipRanges"); !reflect.DeepEqual(got, []string{"3.217.240.0/25"}) {
+		t.Fatalf("category ip_ranges = %v, want [3.217.240.0/25]", got)
+	}
+}
+
+// URLs and IP ranges changed in one apply: one full update makes both changes.
+func TestURLCategories_URLsAndIPRangesChangedUsesFullUpdate(t *testing.T) {
+	fake, errMsg := runURLCategoryUpdateWithLists(t, "CUSTOM_100",
+		[]string{"a.example.com", "b.example.com"}, []string{"a.example.com"}, nil,
+		map[string][]string{"ip_ranges": {"3.217.240.0/25"}},
+		map[string][]string{"ip_ranges": {"3.217.240.0/25", "3.217.241.0/25"}})
+	if errMsg != "" {
+		t.Fatalf("update failed: %s", errMsg)
+	}
+	assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "", urls: []string{"a.example.com"}})
+	if got := fake.list("ipRanges"); !reflect.DeepEqual(got, []string{"3.217.240.0/25", "3.217.241.0/25"}) {
+		t.Fatalf("category ip_ranges = %v", got)
+	}
+}
+
+// Lists whose behaviour with an action is not verified keep the category on
+// full updates, so a partial URL change cannot strip them.
+func TestURLCategories_UnverifiedListsUseFullUpdate(t *testing.T) {
+	for _, attr := range []string{"keywords_retaining_parent_category", "ip_ranges_retaining_parent_category"} {
+		t.Run(attr, func(t *testing.T) {
+			value := "retainedkw"
+			if attr == "ip_ranges_retaining_parent_category" {
+				value = "13.107.10.154/31"
+			}
+			fake, errMsg := runURLCategoryUpdateWithLists(t, "CUSTOM_"+attr,
+				[]string{"a.example.com", "b.example.com"}, []string{"a.example.com"}, nil,
+				map[string][]string{attr: {value}}, nil)
+			if errMsg != "" {
+				t.Fatalf("update failed: %s", errMsg)
+			}
+			assertURLCategoryUpdates(t, fake, urlCategoryUpdate{action: "", urls: []string{"a.example.com"}})
+		})
 	}
 }

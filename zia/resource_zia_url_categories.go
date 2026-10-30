@@ -429,52 +429,60 @@ func resourceURLCategoriesUpdate(ctx context.Context, d *schema.ResourceData, me
 	// A full update without an action makes the same change, as the UI does.
 	removesAllURLs := hasRemoves && len(urlsToRemove) == len(currentUrls)
 
-	log.Printf("[DEBUG] URL changes detected - Adds: %d, Removes: %d", len(urlsToAdd), len(urlsToRemove))
+	// ADD_TO_LIST / REMOVE_FROM_LIST apply to more lists than urls (issue #615).
+	// Verified against the API: sent with REMOVE_FROM_LIST, the full desired
+	// dbCategorizedUrls and ipRanges were removed from the category, while
+	// keywords (which the API replaces when present) were kept. The incremental
+	// requests therefore carry the full payload with urls holding only the URLs
+	// to add or remove, and dbCategorizedUrls and ipRanges empty.
+	//
+	// A full update is used instead when the incremental request cannot make the
+	// change safely:
+	//   - every current URL is removed (the API rejects removing the last one);
+	//   - dbCategorizedUrls or ipRanges change in the same apply (they are sent
+	//     empty with the action, so their change would be lost);
+	//   - the category has entries in a list whose behaviour with an action has
+	//     not been verified (keywordsRetainingParentCategory,
+	//     ipRangesRetainingParentCategory, regexPatterns and
+	//     regexPatternsRetainingParentCategory), now or after the update.
+	actionListsChanged := !stringSetsEqual(currentCategory.DBCategorizedUrls, desiredCategory.DBCategorizedUrls) ||
+		!stringSetsEqual(currentCategory.IPRanges, desiredCategory.IPRanges)
+	hasUnverifiedLists := hasUnverifiedActionLists(currentCategory) || hasUnverifiedActionLists(&desiredCategory)
 
-	// Use incremental updates when we have URL changes
-	// The action parameter only affects URLs; other attributes are still updated normally
-	if removesAllURLs {
-		log.Printf("[INFO] All %d current URLs are removed, using full update with %d URLs", len(urlsToRemove), len(desiredCategory.Urls))
+	log.Printf("[DEBUG] URL changes detected - Adds: %d, Removes: %d, retained URLs or IP ranges changed: %t, unverified lists present: %t",
+		len(urlsToAdd), len(urlsToRemove), actionListsChanged, hasUnverifiedLists)
+
+	if removesAllURLs || ((hasAdds || hasRemoves) && (actionListsChanged || hasUnverifiedLists)) {
+		log.Printf("[INFO] Using full update: removing all %d current URLs: %t, retained URLs or IP ranges changed: %t, unverified lists present: %t",
+			len(currentUrls), removesAllURLs, actionListsChanged, hasUnverifiedLists)
 		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &desiredCategory, ""); err != nil {
 			return diag.FromErr(err)
 		}
 	} else if hasOnlyAdds {
 		log.Printf("[INFO] Using incremental update with ADD_TO_LIST for %d URLs", len(urlsToAdd))
-		// Send full desired category structure, but only URLs in payload are added to existing list
-		// Other attributes in desiredCategory will be updated normally
-		addCategory := desiredCategory
-		addCategory.Urls = urlsToAdd
+		addCategory := incrementalURLRequest(desiredCategory, urlsToAdd)
 		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &addCategory, "ADD_TO_LIST"); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to add URLs: %w", err))
 		}
 	} else if hasOnlyRemoves {
 		log.Printf("[INFO] Using incremental update with REMOVE_FROM_LIST for %d URLs", len(urlsToRemove))
-		// Send full desired category structure, but only URLs in payload are removed from existing list
-		// Other attributes in desiredCategory will be updated normally
-		removeCategory := desiredCategory
-		removeCategory.Urls = urlsToRemove
+		removeCategory := incrementalURLRequest(desiredCategory, urlsToRemove)
 		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to remove URLs: %w", err))
 		}
 	} else if hasBoth {
-		// When both adds and removes are present, we need to do both operations
-		// First remove URLs, then add new ones
+		// Remove first, then add. Not every URL is removed (removesAllURLs above),
+		// so the category keeps at least one custom URL in between.
 		log.Printf("[INFO] Using incremental updates - removing %d URLs, then adding %d URLs", len(urlsToRemove), len(urlsToAdd))
 
-		// First, remove URLs (send full desired category structure for other attribute updates)
-		removeCategory := desiredCategory
-		removeCategory.Urls = urlsToRemove
+		removeCategory := incrementalURLRequest(desiredCategory, urlsToRemove)
 		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &removeCategory, "REMOVE_FROM_LIST"); err != nil {
 			return diag.FromErr(fmt.Errorf("failed to remove URLs: %w", err))
 		}
 
-		// Then, add URLs (send full desired category structure for other attribute updates)
-		if len(urlsToAdd) > 0 {
-			addCategory := desiredCategory
-			addCategory.Urls = urlsToAdd
-			if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &addCategory, "ADD_TO_LIST"); err != nil {
-				return diag.FromErr(fmt.Errorf("failed to add URLs: %w", err))
-			}
+		addCategory := incrementalURLRequest(desiredCategory, urlsToAdd)
+		if _, _, err := urlcategories.UpdateURLCategories(ctx, service, id, &addCategory, "ADD_TO_LIST"); err != nil {
+			return diag.FromErr(fmt.Errorf("failed to add URLs: %w", err))
 		}
 	} else {
 		// No URL changes, but other attributes might have changed - use full update
@@ -598,6 +606,43 @@ func expandURLCategoryScopes(d *schema.ResourceData) []urlcategories.Scopes {
 		}
 	}
 	return scopes
+}
+
+// incrementalURLRequest returns the body of an ADD_TO_LIST / REMOVE_FROM_LIST
+// update: the full desired category, with urls holding only the URLs to add or
+// remove, and dbCategorizedUrls and ipRanges empty, since the action applies to
+// those lists too.
+func incrementalURLRequest(desired urlcategories.URLCategory, urls []string) urlcategories.URLCategory {
+	req := desired
+	req.Urls = urls
+	req.DBCategorizedUrls = []string{}
+	req.IPRanges = []string{}
+	return req
+}
+
+// hasUnverifiedActionLists reports whether the category has entries in a list
+// whose behaviour with ADD_TO_LIST / REMOVE_FROM_LIST has not been verified.
+// Such categories are updated with a full update only.
+func hasUnverifiedActionLists(c *urlcategories.URLCategory) bool {
+	return len(c.KeywordsRetainingParentCategory) > 0 ||
+		len(c.IPRangesRetainingParentCategory) > 0 ||
+		len(c.RegexPatterns) > 0 ||
+		len(c.RegexPatternsRetainingParentCategory) > 0
+}
+
+// stringSetsEqual reports whether a and b hold the same strings, ignoring order
+// and duplicates.
+func stringSetsEqual(a, b []string) bool {
+	am, bm := stringSliceToMap(a), stringSliceToMap(b)
+	if len(am) != len(bm) {
+		return false
+	}
+	for s := range am {
+		if !bm[s] {
+			return false
+		}
+	}
+	return true
 }
 
 // stringSliceToMap converts a string slice to a map for efficient lookups

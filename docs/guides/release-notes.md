@@ -12,9 +12,19 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.16``
+``Last updated: v4.8.17``
 
 ---
+
+## 4.8.17 (October 30, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #620](https://github.com/zscaler/terraform-provider-zia/pull/620) - `zia_url_categories`: adding or removing some of the `urls` no longer removes other entries of the category. Removing one URL from a category that also had `db_categorized_urls` or `ip_ranges` removed those entries as well, so the category in ZIA no longer matched the configuration and the next plan reported drift. Updates that change `urls` together with `db_categorized_urls` or `ip_ranges`, and updates of categories that use `keywords_retaining_parent_category`, `ip_ranges_retaining_parent_category`, `regex_patterns` or `regex_patterns_retaining_parent_category`, now update the category as a whole. Fixes [issue #615](https://github.com/zscaler/terraform-provider-zia/issues/615).
 
 ## 4.8.16 (October 29, 2026)
 
