@@ -12,9 +12,20 @@ description: |-
 Track all ZIA Terraform provider's releases. New resources, features, and bug fixes will be tracked here.
 
 ---
-``Last updated: v4.8.17``
+``Last updated: v4.8.18``
 
 ---
+
+## 4.8.18 (Unreleased)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #621](https://github.com/zscaler/terraform-provider-zia/pull/621) - Destroying a resource no longer fails with `404 RESOURCE_NOT_FOUND` for an object that was deleted. When several objects were deleted at the same time, especially with configuration activation enabled, ZIA could delete an object but report a conflict; the provider tried the deletion again, which failed because the object no longer existed, and the destroy stopped. Such a deletion is now reported as successful. A delete of an object that never existed is still reported as an error. Applies to all resources. Fixes [issue #619](https://github.com/zscaler/terraform-provider-zia/issues/619).
+- Upgraded the Zscaler Go SDK to v3.8.59.
 
 ## 4.8.17 (October 30, 2026)
 
