@@ -16,7 +16,7 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 
 ---
 
-## 4.8.18 (Unreleased)
+## 4.8.18 (November 19, 2026)
 
 ### Notes
 
@@ -25,7 +25,9 @@ Track all ZIA Terraform provider's releases. New resources, features, and bug fi
 ### Bug Fixes
 
 - [PR #621](https://github.com/zscaler/terraform-provider-zia/pull/621) - Destroying a resource no longer fails with `404 RESOURCE_NOT_FOUND` for an object that was deleted. When several objects were deleted at the same time, especially with configuration activation enabled, ZIA could delete an object but report a conflict; the provider tried the deletion again, which failed because the object no longer existed, and the destroy stopped. Such a deletion is now reported as successful. A delete of an object that never existed is still reported as an error. Applies to all resources. Fixes [issue #619](https://github.com/zscaler/terraform-provider-zia/issues/619).
-- Upgraded the Zscaler Go SDK to v3.8.59.
+- [PR #622](https://github.com/zscaler/terraform-provider-zia/pull/622) - The `zia_firewall_filtering_network_service_groups` data source, and import of `zia_firewall_filtering_network_service_groups` by name, no longer fail with `INVALID_INPUT_ARGUMENT` `Invalid Page Size 1,000`. ZIA now rejects a page size above the tenant's service group limit (127 by default), and the lookups requested 1,000 groups per page. The `zia_firewall_filtering_network_service` data source, and import of `zia_firewall_filtering_network_service` by name, now find network services beyond the first 127 returned by the API. Both lookups now read the whole list, 127 items per page.
+- [PR #622](https://github.com/zscaler/terraform-provider-zia/pull/622) - Creating, updating or deleting many objects of the same type no longer stalls for up to an hour. Requests now follow the rate limits that ZIA documents for each method and resource (for most resources, 1 create, update or delete per second and 400 per hour). Before, several requests to the same resource were sent at once, ZIA rejected most of them, and the rejected requests counted toward the hourly limit. Creating 127 network service groups stopped after 76 groups and waited 53 minutes; it now completes in under 3 minutes. Resources with lower documented limits, such as `zia_endpoint_dlp_rules`, now wait between requests instead of being rejected by ZIA.
+- Upgraded the Zscaler Go SDK to v3.8.61.
 
 ## 4.8.17 (October 30, 2026)
 
