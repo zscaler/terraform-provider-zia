@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.8.18 (Unreleased)
+## 4.8.18 (November 19, 2026)
 
 ### Notes
 
