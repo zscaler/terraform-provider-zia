@@ -30,6 +30,7 @@ import (
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sandbox/sandbox_rules"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/sslinspection"
 	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/urlfilteringpolicies"
+	"github.com/zscaler/zscaler-sdk-go/v3/zscaler/zia/services/usermanagement/users"
 )
 
 func intPtr(n int) *int {
@@ -948,4 +949,121 @@ func suppressEquivalentIntListOrdering(k, old, new string, d *schema.ResourceDat
 		}
 	}
 	return true
+}
+
+// Shared user list
+//
+// zia_user_management refreshes, the zia_user_management data source and
+// import by name look users up in the GET /users list, because the per-ID
+// endpoint returns names and emails encoded on Zidentity tenants (PR #579).
+// ZIA limits GET /users to 10 requests per minute and 40 per hour, and a
+// lookup filtered by name serves only one user, so a configuration with N
+// users sent N list requests per plan: 334 users could not be refreshed
+// within the limit.
+//
+// After the first userLookupsBeforeSharedList lookups of a provider instance,
+// lookups use one copy of the whole list instead: read once, shared by every
+// lookup for userListTTL, and read by a single request for all the lookups
+// that need it at the same time. Small configurations keep the single
+// filtered request per lookup, which is cheaper than reading a large tenant's
+// whole list. Creating, updating or deleting a user discards the copy, and a
+// user missing from the copy is looked up again in a list read after the
+// lookup started before it is reported as missing.
+
+const (
+	// userLookupsBeforeSharedList is the number of user lookups of a provider
+	// instance that use a request filtered by name before lookups use the
+	// shared list.
+	userLookupsBeforeSharedList = 3
+	// userListTTL is how long the shared list serves lookups. The provider
+	// process lives for one Terraform command, so in practice the list is
+	// read once per plan or apply.
+	userListTTL = 5 * time.Minute
+)
+
+type sharedUserList struct {
+	mu      sync.Mutex
+	lookups int
+	gen     uint64        // incremented when the copy is discarded
+	users   []users.Users // the copy; shared, never modified
+	readAt  time.Time     // start of the request that read the copy; zero when there is none
+	pending *userListRead
+}
+
+type userListRead struct {
+	gen     uint64
+	started time.Time
+	done    chan struct{}
+	users   []users.Users
+	err     error
+}
+
+var sharedUserLists sync.Map // *zscaler.Service -> *sharedUserList
+
+// userListFor returns the shared user list of a provider instance. Each
+// provider configuration (alias) has its own service, and so its own list.
+func userListFor(service *zscaler.Service) *sharedUserList {
+	v, _ := sharedUserLists.LoadOrStore(service, &sharedUserList{})
+	return v.(*sharedUserList)
+}
+
+// useShared counts a lookup and reports whether it uses the shared list.
+func (s *sharedUserList) useShared() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.lookups++
+	return s.lookups > userLookupsBeforeSharedList
+}
+
+// invalidate discards the copy after a user is created, updated or deleted. A
+// read already in progress is not kept and not shared with later lookups.
+func (s *sharedUserList) invalidate() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.gen++
+	s.users, s.readAt = nil, time.Time{}
+}
+
+// readSince returns the user list read by a request that started at or after
+// since: the copy when it is recent enough, otherwise a new read, shared with
+// every lookup that needs one at the same time.
+func (s *sharedUserList) readSince(ctx context.Context, service *zscaler.Service, since time.Time) ([]users.Users, error) {
+	s.mu.Lock()
+	if !s.readAt.IsZero() && !s.readAt.Before(since) {
+		list := s.users
+		s.mu.Unlock()
+		return list, nil
+	}
+	r := s.pending
+	if r == nil || r.gen != s.gen || r.started.Before(since) {
+		r = &userListRead{gen: s.gen, started: time.Now(), done: make(chan struct{})}
+		s.pending = r
+		go s.read(ctx, service, r)
+	}
+	s.mu.Unlock()
+
+	select {
+	case <-r.done:
+		return r.users, r.err
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+}
+
+func (s *sharedUserList) read(ctx context.Context, service *zscaler.Service, r *userListRead) {
+	// The read serves every lookup waiting for it, so it does not stop when the
+	// lookup that started it is cancelled, and it does not apply that lookup's
+	// search (JMESPath) expression.
+	readCtx := zscaler.ContextWithJMESPath(context.WithoutCancel(ctx), "")
+	r.users, r.err = users.GetAllUsers(readCtx, service, nil)
+
+	s.mu.Lock()
+	if s.pending == r {
+		s.pending = nil
+	}
+	if r.err == nil && r.gen == s.gen && r.started.After(s.readAt) {
+		s.users, s.readAt = r.users, r.started
+	}
+	s.mu.Unlock()
+	close(r.done)
 }

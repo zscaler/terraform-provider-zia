@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.8.20 (November 23, 2026)
+
+### Notes
+
+- Supported Terraform version: **v1.x**
+
+### Bug Fixes
+
+- [PR #624](https://github.com/zscaler/terraform-provider-zia/pull/624) - Refreshing many `zia_user_management` resources no longer fails with `429` `Rate Limit (1/SECOND) exceeded` or `context deadline exceeded`. Each refresh of a `zia_user_management` resource, each lookup of the `zia_user_management` data source and each import of `zia_user_management` by name sent its own request to ZIA's user list, which ZIA limits to 10 requests per minute and 40 per hour, so a configuration with 334 users could not be refreshed within the limit. After the first few lookups, the provider now reads the user list once and uses it for all of these lookups during a plan or apply, plus one request for every 10,000 users in the tenant. On a tenant with 249 users, refreshing all 249 users sent 1 request instead of 249, and 737 data source lookups sent 4 requests instead of 737. Configurations with only a few users still send one request per lookup, and the `zia_user_management` data source sends its own request when `search` is set, as before. Creating, updating or deleting a user reads the list again for later lookups.
+- [PR #624](https://github.com/zscaler/terraform-provider-zia/pull/624) - Upgraded the Zscaler Go SDK to v3.8.62.
+
 ## 4.8.19 (November 19, 2026)
 
 ### Notes
@@ -8,7 +19,6 @@
 
 ### Bug Fixes
 
-- [PR #621](https://github.com/zscaler/terraform-provider-zia/pull/621) - Destroying a resource no longer fails with `404 RESOURCE_NOT_FOUND` for an object that was deleted. When several objects were deleted at the same time, especially with configuration activation enabled, ZIA could delete an object but report a conflict; the provider tried the deletion again, which failed because the object no longer existed, and the destroy stopped. Such a deletion is now reported as successful. A delete of an object that never existed is still reported as an error. Applies to all resources. Fixes [issue #619](https://github.com/zscaler/terraform-provider-zia/issues/619).
 - [PR #622](https://github.com/zscaler/terraform-provider-zia/pull/622) - The `zia_firewall_filtering_network_service_groups` data source, and import of `zia_firewall_filtering_network_service_groups` by name, no longer fail with `INVALID_INPUT_ARGUMENT` `Invalid Page Size 1,000`. ZIA now rejects a page size above the tenant's service group limit (127 by default), and the lookups requested 1,000 groups per page. The `zia_firewall_filtering_network_service` data source, and import of `zia_firewall_filtering_network_service` by name, now find network services beyond the first 127 returned by the API. Both lookups now read the whole list, 127 items per page.
 - [PR #622](https://github.com/zscaler/terraform-provider-zia/pull/622) - Creating, updating or deleting many objects of the same type no longer stalls for up to an hour. Requests now follow the rate limits that ZIA documents for each method and resource (for most resources, 1 create, update or delete per second and 400 per hour). Before, several requests to the same resource were sent at once, ZIA rejected most of them, and the rejected requests counted toward the hourly limit. Creating 127 network service groups stopped after 76 groups and waited 53 minutes; it now completes in under 3 minutes. Resources with lower documented limits, such as `zia_endpoint_dlp_rules`, now wait between requests instead of being rejected by ZIA.
 - Upgraded the Zscaler Go SDK to v3.8.61.
