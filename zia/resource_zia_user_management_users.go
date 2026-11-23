@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -33,7 +34,7 @@ func resourceUserManagement() *schema.Resource {
 				if parseIDErr == nil {
 					_ = d.Set("user_id", idInt)
 				} else {
-					resp, err := users.GetUserByName(ctx, service, id)
+					resp, err := findUserByName(ctx, service, id)
 					if err == nil {
 						d.SetId(strconv.Itoa(resp.ID))
 						_ = d.Set("user_id", resp.ID)
@@ -146,6 +147,7 @@ func resourceUserManagementCreate(ctx context.Context, d *schema.ResourceData, m
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	userListFor(service).invalidate()
 	// Sleep for 5 seconds before triggering the activation
 	time.Sleep(5 * time.Second)
 
@@ -182,10 +184,19 @@ func resourceUserManagementCreate(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
-	return resourceUserManagementRead(ctx, d, meta)
+	userListFor(service).invalidate()
+	return readUserManagement(ctx, d, meta, false)
 }
 
 func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return readUserManagement(ctx, d, meta, true)
+}
+
+// readUserManagement reads a user into state. A refresh (shared true) may use
+// the shared user list; the read at the end of a create or update looks the
+// user up with a request filtered by its name, so a large apply does not read
+// the whole list again after every write.
+func readUserManagement(ctx context.Context, d *schema.ResourceData, meta interface{}, shared bool) diag.Diagnostics {
 	zClient := meta.(*Client)
 	service := zClient.Service
 
@@ -197,11 +208,10 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 	// Resolve the user from the list endpoint rather than the per-ID endpoint.
 	// On tenants migrated to Zidentity, the per-ID lookup returns the user's
 	// name and email in an encoded form, which produces spurious drift on every
-	// plan. The list endpoint returns these fields in plaintext. Looking the
-	// user up from the list also helps conserve the per-tenant GET budget,
-	// since a name-filtered list call is cheaper than repeated single-user
-	// reads across a large configuration.
-	resp, err := findUserByID(ctx, service, id, d.Get("name").(string))
+	// plan. The list endpoint returns these fields in plaintext. ZIA limits the
+	// list endpoint to 10 requests per minute and 40 per hour, so refreshes
+	// share one read of the list (see sharedUserList in utils.go).
+	resp, err := findUserByID(ctx, service, id, d.Get("name").(string), shared)
 	if err != nil {
 		if respErr, ok := err.(*errorx.ErrorResponse); ok && respErr.IsObjectNotFound() {
 			log.Printf("[WARN] Removing user %s from state because it no longer exists in ZIA", d.Id())
@@ -237,23 +247,36 @@ func resourceUserManagementRead(ctx context.Context, d *schema.ResourceData, met
 
 // findUserByID resolves a user by numeric ID from the list endpoint, which
 // returns name and email in plaintext (the per-ID endpoint returns them
-// encoded on Zidentity-migrated tenants). When a name hint is available it is
-// passed as a server-side filter to keep the candidate pool small; if the
-// user is not present in that narrowed pool (for example because the stored
-// name drifted), the lookup falls back to an unfiltered list scan. Returns
-// (nil, nil) when no user with the given ID exists.
-func findUserByID(ctx context.Context, service *zscaler.Service, id int, nameHint string) (*users.Users, error) {
-	match := func(list []users.Users) *users.Users {
-		for i := range list {
-			if list[i].ID == id {
-				u := list[i]
+// encoded on Zidentity-migrated tenants). With shared set, the user is looked
+// up in the shared user list once the provider has made a few lookups;
+// otherwise, and for the first lookups, a request filtered by the name hint
+// keeps the candidate pool small. A user not found that way is looked up
+// again in a list read after this lookup started (for example because the
+// stored name drifted). Returns (nil, nil) when no user with the given ID
+// exists.
+func findUserByID(ctx context.Context, service *zscaler.Service, id int, nameHint string, shared bool) (*users.Users, error) {
+	start := time.Now()
+	list := userListFor(service)
+	match := func(candidates []users.Users) *users.Users {
+		for i := range candidates {
+			if candidates[i].ID == id {
+				u := candidates[i]
 				return &u
 			}
 		}
 		return nil
 	}
 
-	if nameHint != "" {
+	if shared && list.useShared() {
+		candidates, err := list.readSince(ctx, service, start.Add(-userListTTL))
+		if err != nil {
+			return nil, err
+		}
+		if found := match(candidates); found != nil {
+			return found, nil
+		}
+		log.Printf("[DEBUG] user %d not found in the shared user list; reading the list again", id)
+	} else if nameHint != "" {
 		filtered, err := users.GetAllUsers(ctx, service, &users.GetAllUsersFilterOptions{Name: nameHint})
 		if err != nil {
 			return nil, err
@@ -264,11 +287,34 @@ func findUserByID(ctx context.Context, service *zscaler.Service, id int, nameHin
 		log.Printf("[DEBUG] user %d not found in name-filtered pool (name=%q); falling back to full list", id, nameHint)
 	}
 
-	allUsers, err := users.GetAllUsers(ctx, service, nil)
+	allUsers, err := list.readSince(ctx, service, start)
 	if err != nil {
 		return nil, err
 	}
 	return match(allUsers), nil
+}
+
+// findUserByName resolves a user by name (case-insensitive), as import by name
+// does, from the shared user list once the provider has made a few lookups.
+func findUserByName(ctx context.Context, service *zscaler.Service, name string) (*users.Users, error) {
+	list := userListFor(service)
+	if !list.useShared() {
+		return users.GetUserByName(ctx, service, name)
+	}
+	start := time.Now()
+	for _, since := range []time.Time{start.Add(-userListTTL), start} {
+		candidates, err := list.readSince(ctx, service, since)
+		if err != nil {
+			return nil, err
+		}
+		for i := range candidates {
+			if strings.EqualFold(candidates[i].Name, name) {
+				u := candidates[i]
+				return &u, nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no user found with name: %s", name)
 }
 
 func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -291,6 +337,7 @@ func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, m
 	if _, _, err := users.Update(ctx, service, id, &req); err != nil {
 		return diag.FromErr(err)
 	}
+	userListFor(service).invalidate()
 
 	// Sleep for 5 seconds before triggering the activation
 	time.Sleep(5 * time.Second)
@@ -327,7 +374,8 @@ func resourceUserManagementUpdate(ctx context.Context, d *schema.ResourceData, m
 		log.Printf("[INFO] Skipping configuration activation due to ZIA_ACTIVATION env var not being set to true.")
 	}
 
-	return resourceUserManagementRead(ctx, d, meta)
+	userListFor(service).invalidate()
+	return readUserManagement(ctx, d, meta, false)
 }
 
 func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -358,6 +406,7 @@ func resourceUserManagementDelete(ctx context.Context, d *schema.ResourceData, m
 	if _, err := users.Delete(ctx, service, id); err != nil {
 		return diag.FromErr(err)
 	}
+	userListFor(service).invalidate()
 
 	d.SetId("")
 	log.Printf("[INFO] user deleted")

@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -164,77 +165,51 @@ func dataSourceUserManagementRead(ctx context.Context, d *schema.ResourceData, m
 	// "users whose name/email contains <lookup>", which produces confusing
 	// "user not found" errors when the JMESPath expression itself is
 	// misconfigured.
-	filterOpts := &users.GetAllUsersFilterOptions{}
-	if !searchProvided {
-		switch {
-		case nameStr != "":
-			filterOpts.Name = nameStr
-		case emailStr != "":
-			filterOpts.Name = emailStr
-		}
-	}
+	//
+	// Without `search`, once the provider has made a few user lookups, the
+	// lookup uses the shared user list instead (see sharedUserList in
+	// utils.go): ZIA limits GET /users to 10 requests per minute and 40 per
+	// hour, so one request per data source does not scale.
+	lookupStart := time.Now()
+	userList := userListFor(service)
+	useSharedList := !searchProvided && userList.useShared()
 
-	log.Printf("[INFO] Fetching users (server-side filter: name=%q, jmespath=%q)\n", filterOpts.Name, searchExpr)
-	allUsers, err := users.GetAllUsers(ctx, service, filterOpts)
+	var allUsers []users.Users
+	var err error
+	if useSharedList {
+		log.Printf("[INFO] Looking up user in the shared user list\n")
+		allUsers, err = userList.readSince(ctx, service, lookupStart.Add(-userListTTL))
+	} else {
+		filterOpts := &users.GetAllUsersFilterOptions{}
+		if !searchProvided {
+			switch {
+			case nameStr != "":
+				filterOpts.Name = nameStr
+			case emailStr != "":
+				filterOpts.Name = emailStr
+			}
+		}
+		log.Printf("[INFO] Fetching users (server-side filter: name=%q, jmespath=%q)\n", filterOpts.Name, searchExpr)
+		allUsers, err = users.GetAllUsers(ctx, service, filterOpts)
+	}
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting all users: %s", err))
 	}
 
 	log.Printf("[DEBUG] Retrieved %d users (after server-side filter and JMESPath)\n", len(allUsers))
 
-	// Helper to surface a clearer error when the candidate pool is empty
-	// because of an over-restrictive or malformed `search` expression. This
-	// is the most common cause of "user not found" when `search` is used.
-	notFoundf := func(key, value string) error {
-		base := fmt.Sprintf("error getting user by %s %s: user not found", key, value)
-		if searchProvided {
-			return fmt.Errorf("%s. The `search` (JMESPath) expression %q filtered the candidate pool down to %d user(s) before the %s match. Verify the expression references valid camelCase fields (e.g. `department.name`, not `department.email`) and that the target user satisfies the predicate", base, searchExpr, len(allUsers), key)
+	resp, lookupErr := matchUserLookup(allUsers, id, idProvided, nameStr, emailStr, searchProvided, searchExpr)
+	if lookupErr != nil && useSharedList {
+		// The shared list may predate the user: look again in a list read
+		// after this lookup started.
+		allUsers, err = userList.readSince(ctx, service, lookupStart)
+		if err != nil {
+			return diag.FromErr(fmt.Errorf("error getting all users: %s", err))
 		}
-		return errors.New(base)
+		resp, lookupErr = matchUserLookup(allUsers, id, idProvided, nameStr, emailStr, searchProvided, searchExpr)
 	}
-
-	var resp *users.Users
-
-	if idProvided {
-		log.Printf("[INFO] Searching for user by ID: %d\n", id)
-		for _, user := range allUsers {
-			if user.ID == id {
-				u := user
-				resp = &u
-				break
-			}
-		}
-		if resp == nil {
-			return diag.FromErr(notFoundf("ID", strconv.Itoa(id)))
-		}
-	}
-
-	if resp == nil && emailStr != "" {
-		log.Printf("[INFO] Searching for user by email: %s\n", emailStr)
-		for _, user := range allUsers {
-			if strings.EqualFold(user.Email, emailStr) {
-				u := user
-				resp = &u
-				break
-			}
-		}
-		if resp == nil {
-			return diag.FromErr(notFoundf("email", emailStr))
-		}
-	}
-
-	if resp == nil && nameStr != "" {
-		log.Printf("[INFO] Searching for user by name: %s\n", nameStr)
-		for _, user := range allUsers {
-			if user.Name == nameStr {
-				u := user
-				resp = &u
-				break
-			}
-		}
-		if resp == nil {
-			return diag.FromErr(notFoundf("name", nameStr))
-		}
+	if lookupErr != nil {
+		return diag.FromErr(lookupErr)
 	}
 
 	if resp == nil {
@@ -302,4 +277,52 @@ func flattenUserGroupsDetailed(list []common.UserGroups) []interface{} {
 		})
 	}
 	return groups
+}
+
+// matchUserLookup finds the user a zia_user_management data source asks for in
+// candidates: by ID, then email (case-insensitive), then name.
+func matchUserLookup(candidates []users.Users, id int, idProvided bool, nameStr, emailStr string, searchProvided bool, searchExpr string) (*users.Users, error) {
+	// Surface a clearer error when the candidate pool is empty because of an
+	// over-restrictive or malformed `search` expression. This is the most
+	// common cause of "user not found" when `search` is used.
+	notFoundf := func(key, value string) error {
+		base := fmt.Sprintf("error getting user by %s %s: user not found", key, value)
+		if searchProvided {
+			return fmt.Errorf("%s. The `search` (JMESPath) expression %q filtered the candidate pool down to %d user(s) before the %s match. Verify the expression references valid camelCase fields (e.g. `department.name`, not `department.email`) and that the target user satisfies the predicate", base, searchExpr, len(candidates), key)
+		}
+		return errors.New(base)
+	}
+
+	find := func(match func(users.Users) bool) *users.Users {
+		for i := range candidates {
+			if match(candidates[i]) {
+				u := candidates[i]
+				return &u
+			}
+		}
+		return nil
+	}
+
+	if idProvided {
+		log.Printf("[INFO] Searching for user by ID: %d\n", id)
+		if u := find(func(u users.Users) bool { return u.ID == id }); u != nil {
+			return u, nil
+		}
+		return nil, notFoundf("ID", strconv.Itoa(id))
+	}
+	if emailStr != "" {
+		log.Printf("[INFO] Searching for user by email: %s\n", emailStr)
+		if u := find(func(u users.Users) bool { return strings.EqualFold(u.Email, emailStr) }); u != nil {
+			return u, nil
+		}
+		return nil, notFoundf("email", emailStr)
+	}
+	if nameStr != "" {
+		log.Printf("[INFO] Searching for user by name: %s\n", nameStr)
+		if u := find(func(u users.Users) bool { return u.Name == nameStr }); u != nil {
+			return u, nil
+		}
+		return nil, notFoundf("name", nameStr)
+	}
+	return nil, nil
 }
